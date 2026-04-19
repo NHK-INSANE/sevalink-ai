@@ -3,6 +3,21 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 /**
+ * Strictly maps any Gemini response text to a valid urgency label.
+ * Iterates in priority order so partial matches like "The urgency is Critical."
+ * are still handled correctly. Falls back to "Low" if nothing matches.
+ */
+const cleanUrgency = (text) => {
+  const valid = ["Critical", "High", "Medium", "Low"];
+  for (const word of valid) {
+    if (text.toLowerCase().includes(word.toLowerCase())) {
+      return word;
+    }
+  }
+  return "Low"; // safe fallback
+};
+
+/**
  * Fallback logic to determine urgency based on keywords if AI fails.
  * Ensures the system remains functional during demos.
  */
@@ -51,13 +66,8 @@ Respond with ONLY the single word: Critical, High, Medium, or Low.
 Problem: ${description}`;
 
     const result = await model.generateContent(prompt);
-    const urgencyRaw = result.response.text().trim();
-
-    // Sanitize to valid enum values
-    const validUrgencies = ["Critical", "High", "Medium", "Low"];
-    const urgency = validUrgencies.find((u) =>
-      urgencyRaw.toLowerCase().includes(u.toLowerCase())
-    ) || "Medium";
+    const raw = result.response.text().trim();
+    const urgency = cleanUrgency(raw);
 
     res.json({ urgency });
   } catch (err) {
