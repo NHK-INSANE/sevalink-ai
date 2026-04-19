@@ -2,6 +2,31 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+/**
+ * Fallback logic to determine urgency based on keywords if AI fails.
+ * Ensures the system remains functional during demos.
+ */
+const getFallbackUrgency = (text) => {
+  const lower = text.toLowerCase();
+
+  if (
+    lower.includes("death") ||
+    lower.includes("emergency") ||
+    lower.includes("no food") ||
+    lower.includes("no water")
+  ) {
+    return "Critical";
+  }
+  if (lower.includes("medical") || lower.includes("injury")) {
+    return "High";
+  }
+  if (lower.includes("school") || lower.includes("education")) {
+    return "Medium";
+  }
+
+  return "Low";
+};
+
 exports.getUrgency = async (req, res) => {
   const { description } = req.body;
 
@@ -36,8 +61,12 @@ Problem: ${description}`;
 
     res.json({ urgency });
   } catch (err) {
-    console.error("Gemini API error:", err.message);
-    // Graceful fallback — don't block submission
-    res.json({ urgency: "Medium", note: "AI unavailable, default assigned" });
+    console.error("AI failed, using fallback:", err.message);
+
+    const fallback = getFallbackUrgency(description);
+    res.json({
+      urgency: fallback,
+      note: "AI unavailable, local fallback assigned",
+    });
   }
 };
