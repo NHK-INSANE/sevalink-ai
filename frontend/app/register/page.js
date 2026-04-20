@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 
-const RegisterMap = dynamic(() => import("../components/RegisterMap"), { ssr: false });
+
 
 const ROLES = ["User", "Volunteer", "NGO", "Worker"];
 
@@ -333,13 +333,10 @@ export default function RegisterPage() {
                 </button>
               </label>
               
-              {/* Map */}
-              <RegisterMap location={location} setLocation={setLocation} />
-
               {/* Show Selected Location */}
               {location && (
-                <p className="text-sm text-gray-500 mt-2 text-center">
-                  Selected: {location[0]}, {location[1]}
+                <p className="text-sm text-indigo-400 mt-2 text-center font-medium">
+                  📍 GPS Location: {location[0].toFixed(4)}, {location[1].toFixed(4)}
                 </p>
               )}
             </div>
