@@ -82,7 +82,7 @@ export default function RegisterPage() {
           location: location ? { lat: location.lat, lng: location.lng } : null,
         }
       : {
-          role: form.role.toLowerCase(),
+          role: form.role,
           name: form.name,
           username: form.username,
           email: form.email,
