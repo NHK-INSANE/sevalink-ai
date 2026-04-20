@@ -7,6 +7,7 @@ import Link from "next/link";
 
 export default function LoginPage() {
   const [form, setForm] = useState({ identifier: "", password: "" });
+  const [mode, setMode] = useState("user");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -53,13 +54,38 @@ export default function LoginPage() {
 
         {/* Card */}
         <div className="glass rounded-2xl p-8 border border-white/8">
+          
+          {/* Tabs */}
+          <div className="flex gap-2 mb-6 p-1 bg-white/5 rounded-xl border border-white/10">
+            <button
+              type="button"
+              onClick={() => setMode("user")}
+              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+                mode === "user" ? "bg-indigo-600/30 text-white shadow" : "text-slate-400 hover:text-slate-300"
+              }`}
+            >
+              👤 User / Volunteer
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("ngo")}
+              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+                mode === "ngo" ? "bg-indigo-600/30 text-white shadow" : "text-slate-400 hover:text-slate-300"
+              }`}
+            >
+              🏢 NGO Login
+            </button>
+          </div>
+
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1.5">Email / Username / Phone</label>
+              <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                {mode === "ngo" ? "NGO Name or Email" : "Email / Username / Phone"}
+              </label>
               <input
                 id="login-identifier"
                 type="text"
-                placeholder="Enter Email / Username / Phone"
+                placeholder={mode === "ngo" ? "Enter NGO Name or Email" : "Enter Email / Username / Phone"}
                 value={form.identifier}
                 onChange={update("identifier")}
                 className="w-full glass border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all text-sm"

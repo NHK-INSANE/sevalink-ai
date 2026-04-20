@@ -34,6 +34,8 @@ router.post("/login", async (req, res) => {
         { email: identifier },
         { username: identifier },
         { phone: identifier },
+        { name: identifier },
+        { ngoName: identifier },
       ],
       password,
     });

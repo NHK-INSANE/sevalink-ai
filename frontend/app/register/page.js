@@ -52,28 +52,39 @@ export default function RegisterPage() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.password) {
-      setError("Name, email and password are required.");
-      return;
-    }
-    if (form.role === "NGO" && (!form.ngoName || !form.email)) {
-      setError("Please enter your NGO name and email.");
-      return;
+    if (form.role === "NGO") {
+      if (!form.ngoName || !form.email || !form.password) {
+        setError("NGO Name, email and password are required.");
+        return;
+      }
+    } else {
+      if (!form.name || !form.email || !form.password) {
+        setError("Name, email and password are required.");
+        return;
+      }
     }
 
-    const data = {
-      ...form,
-      // ✅ normalize role to lowercase so dashboard filters work correctly
-      role: form.role.toLowerCase(),
-      skills: selectedSkills,
-      // primary skill = first selected (for matching)
-      skill: selectedSkills.includes("Other")
-        ? form.otherSkill || "Other"
-        : selectedSkills[0] || form.skill || "",
-      location: location
-        ? { lat: location[0], lng: location[1] }
-        : null,
-    };
+    const data = form.role === "NGO" 
+      ? {
+          role: "ngo",
+          name: form.ngoName, // Backend expects `name`
+          ngoName: form.ngoName,
+          email: form.email,
+          phone: form.phone,
+          ngoContact: form.ngoContact,
+          address: form.address,
+          password: form.password,
+          location: location ? { lat: location[0], lng: location[1] } : null,
+        }
+      : {
+          ...form,
+          role: form.role.toLowerCase(),
+          skills: selectedSkills,
+          skill: selectedSkills.includes("Other")
+            ? form.otherSkill || "Other"
+            : selectedSkills[0] || form.skill || "",
+          location: location ? { lat: location[0], lng: location[1] } : null,
+        };
 
     setLoading(true);
     setError("");
@@ -252,16 +263,7 @@ export default function RegisterPage() {
                     className={INPUT_CLS}
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Representative Name *</label>
-                  <input
-                    id="reg-name"
-                    type="text"
-                    placeholder="Contact Person Name"
-                    onChange={update("name")}
-                    className={INPUT_CLS}
-                  />
-                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-slate-400 mb-1.5">NGO Email *</label>
