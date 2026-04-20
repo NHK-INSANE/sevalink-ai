@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 
-import MapPicker from "../components/MapPicker";
+const MapPicker = dynamic(() => import("../components/MapPicker"), { ssr: false });
 
 
 

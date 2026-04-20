@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 
-import ProblemMap from "./components/ProblemMap";
+const ProblemMap = dynamic(() => import("./components/ProblemMap"), { ssr: false });
 const STAT_CONFIG = [
   {
     key: "total",

@@ -8,7 +8,7 @@ import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 
-import MapPicker from "../components/MapPicker";
+const MapPicker = dynamic(() => import("../components/MapPicker"), { ssr: false });
 
 const CATEGORIES = [
   "Food & Water",
