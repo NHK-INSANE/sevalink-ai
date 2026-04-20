@@ -115,10 +115,23 @@ export default function RegisterPage() {
       return;
     }
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         setLocation({ lat, lng });
+
+        // 🌍 Reverse Geocoding via Nominatim
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+          );
+          const data = await res.json();
+          if (data.display_name) {
+            setAddress(data.display_name);
+          }
+        } catch (err) {
+          console.error("GPS Reverse geocoding error:", err);
+        }
       },
       () => {
         alert("Unable to fetch your location. Please allow location access.");
@@ -364,12 +377,17 @@ export default function RegisterPage() {
               {/* Pin-to-map restoration */}
               <div className="mt-4">
                 <p className="text-sm font-medium text-slate-300 mb-1">Pin your location on map <span className="text-gray-500">(click on map)</span></p>
-                <div style={{ height: "250px" }} className="rounded-xl overflow-hidden border border-white/10">
-                  <MapPicker setLocation={setLocation} />
+                <div style={{ height: "250px" }} className="rounded-xl overflow-hidden border border-white/10 shadow-lg bg-slate-900">
+                  <MapPicker 
+                    setLocation={setLocation} 
+                    setAddress={setAddress} 
+                    initialLocation={location}
+                  />
                 </div>
                 {location && (
-                  <p className="text-xs text-emerald-400 mt-1.5 font-medium">
-                    ✓ Location selected: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+                  <p className="text-xs text-emerald-400 mt-2.5 font-medium flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    Verified Pin: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
                   </p>
                 )}
               </div>

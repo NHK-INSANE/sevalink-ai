@@ -75,14 +75,19 @@ export default function SubmitPage() {
     navigator.geolocation.getCurrentPosition(async (pos) => {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
+      setLocation({ lat, lng });
+
+      // 🌍 Reverse Geocoding via Nominatim
       try {
-        const r = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
         );
-        const d = await r.json();
-        setLocation({ lat, lng, address: d.display_name || `${lat}, ${lng}` });
-      } catch {
-        setLocation({ lat, lng, address: `${lat}, ${lng}` });
+        const data = await res.json();
+        if (data.display_name) {
+          setAddress(data.display_name);
+        }
+      } catch (err) {
+        console.error("Submit GPS Reverse geocoding error:", err);
       }
     });
   };
@@ -129,13 +134,8 @@ export default function SubmitPage() {
   };
 
   const handleUseMyLocation = async () => {
-    try {
-      const loc = await getUserLocation();
-      setLocation(loc);
-      toast.success("Location pinned! 📍");
-    } catch (err) {
-      toast.error("Location access denied");
-    }
+    detectLocation();
+    toast.success("Current location detected! 📍");
   };
 
   const handleSubmit = async (e) => {
@@ -416,12 +416,17 @@ export default function SubmitPage() {
 
             <div className="mt-4">
               <p className="text-sm font-medium text-slate-300 mb-2">Pin your location on map <span className="text-gray-400 font-normal opacity-50">(click on map)</span></p>
-              <div style={{ height: "300px" }} className="rounded-xl overflow-hidden border border-white/10">
-                <MapPicker setLocation={setLocation} />
+              <div style={{ height: "300px" }} className="rounded-xl overflow-hidden border border-white/10 shadow-lg bg-slate-900">
+                <MapPicker 
+                  setLocation={setLocation} 
+                  setAddress={setAddress} 
+                  initialLocation={location}
+                />
               </div>
               {location && (
-                <p className="text-xs text-emerald-400 mt-2 font-medium">
-                  ✓ Pin set at: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+                <p className="text-xs text-emerald-400 mt-2 font-medium flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Verified Pin: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
                 </p>
               )}
             </div>
