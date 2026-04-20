@@ -1,88 +1,20 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
-import dynamic from "next/dynamic";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import MapLibreView from "./MapLibreView";
 
-// Dynamically import Leaflet components
-const MapContainer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.MapContainer),
-  { ssr: false }
-);
-const TileLayer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.TileLayer),
-  { ssr: false }
-);
-const Marker = dynamic(
-  () => import("react-leaflet").then((mod) => mod.Marker),
-  { ssr: false }
-);
-const Popup = dynamic(
-  () => import("react-leaflet").then((mod) => mod.Popup),
-  { ssr: false }
-);
-
-// We need a wrapper for hooks that depend on map context
-function MapEventsWrapper({ pickMode, setPickedLocation, onSelect }) {
-  const { useMapEvents } = require("react-leaflet");
-  useMapEvents({
-    click(e) {
-      if (pickMode && setPickedLocation) {
-        setPickedLocation([e.latlng.lat, e.latlng.lng]);
-      }
-    },
-  });
-  return null;
-}
-
-function InvalidateSizeWrapper() {
-  const { useMap } = require("react-leaflet");
-  const map = useMap();
-  useEffect(() => {
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 500);
-  }, [map]);
-  return null;
-}
-
-const getProblemIcon = (urgency) => {
-  const colors = {
-    Critical: "#ef4444",
-    High: "#f97316",
-    Medium: "#eab308",
-    Low: "#22c55e",
-  };
-  const color = colors[urgency] || "#6b7280";
-  return new L.DivIcon({
-    html: `<div style="background:${color};width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 6px ${color}"></div>`,
-    className: "",
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
-  });
-};
-
-const ngoIcon = new L.DivIcon({
-  html: `<div style="background:#10b981;width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 6px #10b981"></div>`,
-  className: "",
-  iconSize: [14, 14],
-  iconAnchor: [7, 7],
-});
-
-const helperIcon = new L.DivIcon({
-  html: `<div style="background:#3b82f6;width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 6px #3b82f6"></div>`,
-  className: "",
-  iconSize: [14, 14],
-  iconAnchor: [7, 7],
-});
-
-const userIcon = new L.DivIcon({
-  html: `<div style="background:#8b5cf6;width:16px;height:16px;border-radius:50%;border:2px solid white;box-shadow:0 0 8px #8b5cf6"></div>`,
-  className: "",
-  iconSize: [16, 16],
-  iconAnchor: [8, 8],
-});
-
+/**
+ * MapView component - main global map for SevaLink
+ * 
+ * @param {Array} problems - Array of problem objects
+ * @param {Array} ngos - Array of NGO objects
+ * @param {Array} helpers - Array of helper objects
+ * @param {String} type - "problems" | "ngo" | "helpers" | "all"
+ * @param {Object} userLocation - { lat, lng }
+ * @param {Array} center - [lat, lng]
+ * @param {Function} onSelect - Callback when marker selected
+ * @param {Boolean} pickMode - If true, allow clicking to pick location
+ * @param {Object} pickedLocation - { lat, lng }
+ * @param {Function} setPickedLocation - Callback to update picked location
+ */
 export default function MapView({
   problems = [],
   ngos = [],
@@ -95,112 +27,115 @@ export default function MapView({
   pickedLocation = null,
   setPickedLocation = null,
 }) {
-  const [mounted, setMounted] = useState(false);
+  const markerList = [];
 
-  useEffect(() => {
-    setMounted(true);
-    // Force re-render
-    setTimeout(() => {
-      window.dispatchEvent(new Event("resize"));
-    }, 500);
-  }, []);
+  // 1. ADD USER LOCATION
+  if (userLocation) {
+    markerList.push({
+      lat: userLocation.lat || userLocation[0],
+      lng: userLocation.lng || userLocation[1],
+      id: "user-loc",
+      color: "#8b5cf6", // Purple
+      popupContent: <strong>📍 You are here</strong>
+    });
+  }
 
-  if (!mounted) return (
-    <div style={{ height: "100%", width: "100%", background: "#1a1a2e", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <p className="text-slate-400">Loading Global Map...</p>
-    </div>
-  );
+  // 2. ADD PICKED LOCATION (IF IN PICK MODE)
+  if (pickMode && pickedLocation) {
+    markerList.push({
+      lat: pickedLocation.lat || pickedLocation[0],
+      lng: pickedLocation.lng || pickedLocation[1],
+      id: "picked-loc",
+      color: "#8b5cf6",
+      popupContent: <strong>📍 Selected location</strong>
+    });
+  }
 
-  const tileUrl = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
-  const attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+  // 3. ADD PROBLEMS
+  if (type === "problems" || type === "all") {
+    problems.filter(p => p.location?.lat && p.location?.lng).forEach((p, i) => {
+      markerList.push({
+        lat: p.location.lat,
+        lng: p.location.lng,
+        id: `p-${p._id || i}`,
+        color: p.urgency === 'Critical' ? '#ef4444' : 
+               p.urgency === 'High' ? '#f97316' : 
+               p.urgency === 'Medium' ? '#eab308' : '#22c55e',
+        popupContent: (
+          <div className="p-1">
+            <strong className="text-slate-900">{p.title}</strong>
+            <div className="text-[10px] text-slate-500 mb-1">Urgency: <b className="text-slate-700">{p.urgency}</b></div>
+            <p className="text-xs text-slate-600 line-clamp-3">{p.description}</p>
+            {onSelect && (
+              <button 
+                onClick={() => onSelect(p)}
+                className="mt-2 w-full text-[10px] py-1 bg-slate-900 text-white rounded hover:bg-slate-700 transition-colors"
+                type="button"
+              >
+                View Details
+              </button>
+            )}
+          </div>
+        )
+      });
+    });
+  }
+
+  // 4. ADD NGOs
+  if (type === "ngo" || type === "all") {
+    ngos.filter(n => n.location?.lat && n.location?.lng).forEach((n, i) => {
+      markerList.push({
+        lat: n.location.lat,
+        lng: n.location.lng,
+        id: `n-${n._id || i}`,
+        color: "#10b981", // Emerald
+        popupContent: (
+          <div className="p-1">
+            <strong className="text-slate-900">🏢 {n.name}</strong>
+            <p className="text-[10px] text-slate-500">{n.email}</p>
+          </div>
+        )
+      });
+    });
+  }
+
+  // 5. ADD HELPERS
+  if (type === "helpers" || type === "all") {
+    helpers.filter(h => h.location?.lat && h.location?.lng).forEach((h, i) => {
+      markerList.push({
+        lat: h.location.lat,
+        lng: h.location.lng,
+        id: `h-${h._id || i}`,
+        color: "#3b82f6", // Blue
+        popupContent: (
+          <div className="p-1">
+            <strong className="text-slate-900">🤝 {h.name}</strong>
+            <p className="text-[10px] text-slate-500">{h.role} — {h.skill}</p>
+          </div>
+        )
+      });
+    });
+  }
+
+  const handleMapClick = (coords) => {
+    if (pickMode && setPickedLocation) {
+      setPickedLocation(coords);
+    }
+  };
+
+  const centerObj = Array.isArray(center) 
+    ? { lat: center[0], lng: center[1] } 
+    : (center || { lat: 22.3, lng: 87.3 });
 
   return (
-    <MapContainer
-      key={`${type}-${center.toString()}`}
-      center={center}
-      zoom={10}
-      style={{ height: "100%", width: "100%", zIndex: 0 }}
-    >
-      <InvalidateSizeWrapper />
-      <TileLayer url={tileUrl} attribution={attribution} />
-      <MapEventsWrapper pickMode={pickMode} setPickedLocation={setPickedLocation} />
-
-      {/* User location pin */}
-      {userLocation && (
-        <Marker position={userLocation} icon={userIcon}>
-          <Popup>📍 You are here</Popup>
-        </Marker>
-      )}
-
-      {/* Picked location pin */}
-      {pickMode && pickedLocation && (
-        <Marker position={pickedLocation} icon={userIcon}>
-          <Popup>📍 Selected location</Popup>
-        </Marker>
-      )}
-
-      {/* PROBLEMS */}
-      {(type === "problems" || type === "all") &&
-        problems
-          .filter((p) => p.location?.lat && p.location?.lng)
-          .map((p, i) => (
-            <Marker
-              key={`p-${i}`}
-              position={[p.location.lat, p.location.lng]}
-              icon={getProblemIcon(p.urgency)}
-              eventHandlers={{ click: () => onSelect && onSelect(p) }}
-            >
-              <Popup>
-                <div className="p-1">
-                  <strong>{p.title}</strong>
-                  <br />
-                  Urgency: <b>{p.urgency}</b>
-                  <br />
-                  <p className="text-xs text-gray-600 mt-1">{p.description?.slice(0, 80)}...</p>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-
-      {/* NGOs */}
-      {(type === "ngo" || type === "all") &&
-        ngos
-          .filter((n) => n.location?.lat && n.location?.lng)
-          .map((n, i) => (
-            <Marker
-              key={`n-${i}`}
-              position={[n.location.lat, n.location.lng]}
-              icon={ngoIcon}
-            >
-              <Popup>
-                <div className="p-1">
-                  <strong>🏢 {n.name}</strong>
-                  <br />
-                  <span className="text-xs text-gray-600">{n.email}</span>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-
-      {/* Helpers */}
-      {(type === "helpers" || type === "all") &&
-        helpers
-          .filter((h) => h.location?.lat && h.location?.lng)
-          .map((h, i) => (
-            <Marker
-              key={`h-${i}`}
-              position={[h.location.lat, h.location.lng]}
-              icon={helperIcon}
-            >
-              <Popup>
-                <div className="p-1">
-                  <strong>🤝 {h.name}</strong>
-                  <br />
-                  <span className="text-xs text-gray-600">{h.role} — {h.skill}</span>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-    </MapContainer>
+    <div className="h-full w-full">
+      <MapLibreView
+        height="100%"
+        markers={markerList}
+        center={centerObj}
+        zoom={10}
+        onMapClick={handleMapClick}
+      />
+    </div>
   );
 }
