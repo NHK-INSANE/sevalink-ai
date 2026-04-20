@@ -93,19 +93,18 @@ export default function MapView({
     return () => obs.disconnect();
   }, []);
 
-  const tileUrl = isDark
-    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+  const tileUrl = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+  const attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
   return (
     <MapContainer
       key={`${type}-${center.toString()}`}
       center={center}
       zoom={10}
-      style={{ height: "100%", width: "100%" }}
+      style={{ height: "100%", width: "100%", zIndex: 0 }}
     >
       <FixMap />
-      <TileLayer url={tileUrl} attribution="&copy; OpenStreetMap contributors" />
+      <TileLayer url={tileUrl} attribution={attribution} />
 
       {/* User location pin */}
       {userLocation && (
