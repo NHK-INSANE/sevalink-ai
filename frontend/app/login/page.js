@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function LoginPage() {
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ email: "", username: "", phone: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -48,7 +48,7 @@ export default function LoginPage() {
             </span>
           </div>
           <h1 className="text-2xl font-bold text-white">Welcome back</h1>
-          <p className="text-slate-400 mt-1 text-sm">Sign in to continue helping your community</p>
+          <p className="text-slate-400 mt-1 text-sm">Login to continue helping your community</p>
         </div>
 
         {/* Card */}
@@ -62,6 +62,30 @@ export default function LoginPage() {
                 placeholder="you@example.com"
                 value={form.email}
                 onChange={update("email")}
+                className="w-full glass border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1.5">Username</label>
+              <input
+                id="login-username"
+                type="text"
+                placeholder="your_username"
+                value={form.username}
+                onChange={update("username")}
+                className="w-full glass border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1.5">Phone Number</label>
+              <input
+                id="login-phone"
+                type="tel"
+                placeholder="+91 98765 43210"
+                value={form.phone}
+                onChange={update("phone")}
                 className="w-full glass border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all text-sm"
               />
             </div>
@@ -93,10 +117,10 @@ export default function LoginPage() {
               {loading ? (
                 <>
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Signing in…
+                  Logging in…
                 </>
               ) : (
-                "Sign In →"
+                "Login →"
               )}
             </button>
           </form>
