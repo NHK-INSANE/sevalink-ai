@@ -27,11 +27,19 @@ router.post("/register", async (req, res) => {
 // POST /api/auth/login
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { identifier, password } = req.body;
 
-    const user = await User.findOne({ email, password });
+    const user = await User.findOne({
+      $or: [
+        { email: identifier },
+        { username: identifier },
+        { phone: identifier },
+      ],
+      password,
+    });
+
     if (!user) {
-      return res.status(401).json({ error: "Invalid email or password" });
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
     // Return user without password

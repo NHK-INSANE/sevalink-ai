@@ -86,6 +86,27 @@ export default function RegisterPage() {
 
   const needsSkills = form.role === "Volunteer" || form.role === "Worker";
 
+  const detectLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setForm((prev) => ({
+          ...prev,
+          address: `Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`,
+        }));
+        setPinnedLocation({ lat, lng });
+      },
+      () => {
+        alert("Unable to fetch your location. Please allow location access.");
+      }
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg">
@@ -219,9 +240,18 @@ export default function RegisterPage() {
                 id="reg-address"
                 type="text"
                 placeholder="e.g. Kolkata, West Bengal"
+                value={form.address || ""}
                 onChange={update("address")}
                 className={`${INPUT_CLS} mb-2`}
               />
+              <button
+                type="button"
+                id="detect-location-btn"
+                onClick={detectLocation}
+                className="flex items-center gap-1.5 text-xs font-medium text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 hover:border-indigo-400/60 bg-indigo-500/10 hover:bg-indigo-500/20 px-3 py-1.5 rounded-lg transition-all mb-2"
+              >
+                📍 Detect My Location
+              </button>
               <LocationPicker
                 onLocationSelect={(latlng) => setPinnedLocation(latlng)}
               />

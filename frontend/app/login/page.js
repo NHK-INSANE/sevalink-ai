@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function LoginPage() {
-  const [form, setForm] = useState({ email: "", username: "", phone: "", password: "" });
+  const [form, setForm] = useState({ identifier: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -16,7 +16,7 @@ export default function LoginPage() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!form.email || !form.password) {
+    if (!form.identifier || !form.password) {
       setError("Please fill in all fields.");
       return;
     }
@@ -55,37 +55,13 @@ export default function LoginPage() {
         <div className="glass rounded-2xl p-8 border border-white/8">
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1.5">Email</label>
+              <label className="block text-xs font-medium text-slate-400 mb-1.5">Email / Username / Phone</label>
               <input
-                id="login-email"
-                type="email"
-                placeholder="you@example.com"
-                value={form.email}
-                onChange={update("email")}
-                className="w-full glass border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1.5">Username</label>
-              <input
-                id="login-username"
+                id="login-identifier"
                 type="text"
-                placeholder="your_username"
-                value={form.username}
-                onChange={update("username")}
-                className="w-full glass border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1.5">Phone Number</label>
-              <input
-                id="login-phone"
-                type="tel"
-                placeholder="+91 98765 43210"
-                value={form.phone}
-                onChange={update("phone")}
+                placeholder="Enter Email / Username / Phone"
+                value={form.identifier}
+                onChange={update("identifier")}
                 className="w-full glass border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all text-sm"
               />
             </div>
