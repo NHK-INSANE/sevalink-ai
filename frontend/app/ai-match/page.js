@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
-import { getProblems } from "../utils/api";
+import { getProblems, getUsers } from "../utils/api";
 
 export default function AIMatchPage() {
   const [problems, setProblems] = useState([]);

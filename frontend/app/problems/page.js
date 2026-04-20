@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import ProblemCard from "../components/ProblemCard";
-import { getProblems, updateProblemStatus } from "../utils/api";
+import { getProblems, updateProblemStatus, deleteProblem } from "../utils/api";
 import { getUserLocation } from "../utils/location";
 import toast from "react-hot-toast";
 

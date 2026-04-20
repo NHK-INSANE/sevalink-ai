@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Navbar from "../components/Navbar";
-import { getProblems } from "../utils/api";
+import { getProblems, getUsers } from "../utils/api";
 import { motion } from "framer-motion";
 
 // Import MapView dynamically to avoid SSR issues with Leaflet

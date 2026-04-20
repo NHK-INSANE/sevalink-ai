@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Navbar from "./components/Navbar";
 import ProblemCard from "./components/ProblemCard";
-import { getProblems, updateProblemStatus } from "./utils/api";
+import { getProblems, updateProblemStatus, getUsers } from "./utils/api";
 import { getUser } from "./utils/auth";
 import { getUserLocation } from "./utils/location";
 import toast from "react-hot-toast";
