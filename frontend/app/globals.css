@@ -24,6 +24,13 @@ html {
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+/* Solid opaque navbar — no bleed-through */
+.navbar-solid {
+  background: #12121a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.4);
+}
+
 /* Glow button */
 .btn-primary {
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
@@ -81,8 +88,11 @@ html.light-mode .glass {
   color: #1e1e2e;
 }
 
-html.light-mode nav.glass {
-  background: rgba(255, 255, 255, 0.9) !important;
+html.light-mode nav.glass,
+html.light-mode .navbar-solid {
+  background: #ffffff !important;
+  border-bottom-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08) !important;
 }
 
 html.light-mode .text-white   { color: #1e1e2e !important; }

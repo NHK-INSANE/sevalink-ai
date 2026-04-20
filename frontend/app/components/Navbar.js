@@ -47,7 +47,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 glass border-b border-white/5">
+    <nav className="sticky top-0 z-50 navbar-solid">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
