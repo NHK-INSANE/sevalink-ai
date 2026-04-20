@@ -1,14 +1,50 @@
 "use client";
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import dynamic from "next/dynamic";
 import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-});
+// Dynamically import Leaflet components
+const MapContainer = dynamic(
+  () => import("react-leaflet").then((mod) => mod.MapContainer),
+  { ssr: false }
+);
+const TileLayer = dynamic(
+  () => import("react-leaflet").then((mod) => mod.TileLayer),
+  { ssr: false }
+);
+const Marker = dynamic(
+  () => import("react-leaflet").then((mod) => mod.Marker),
+  { ssr: false }
+);
+const Popup = dynamic(
+  () => import("react-leaflet").then((mod) => mod.Popup),
+  { ssr: false }
+);
+
+// We need a wrapper for hooks that depend on map context
+function MapEventsWrapper({ pickMode, setPickedLocation, onSelect }) {
+  const { useMapEvents } = require("react-leaflet");
+  useMapEvents({
+    click(e) {
+      if (pickMode && setPickedLocation) {
+        setPickedLocation([e.latlng.lat, e.latlng.lng]);
+      }
+    },
+  });
+  return null;
+}
+
+function InvalidateSizeWrapper() {
+  const { useMap } = require("react-leaflet");
+  const map = useMap();
+  useEffect(() => {
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 500);
+  }, [map]);
+  return null;
+}
 
 const getProblemIcon = (urgency) => {
   const colors = {
@@ -47,28 +83,6 @@ const userIcon = new L.DivIcon({
   iconAnchor: [8, 8],
 });
 
-function FixMap() {
-  const map = useMap();
-  useEffect(() => {
-    setTimeout(() => map.invalidateSize(), 600);
-  }, [map]);
-  return null;
-}
-
-// For register/submit - click to place pin
-export function LocationPicker({ location, setLocation }) {
-  useMapEvents({
-    click(e) {
-      setLocation([e.latlng.lat, e.latlng.lng]);
-    },
-  });
-  return location ? (
-    <Marker position={location} icon={userIcon}>
-      <Popup>📍 Selected location</Popup>
-    </Marker>
-  ) : null;
-}
-
 export default function MapView({
   problems = [],
   ngos = [],
@@ -77,21 +91,25 @@ export default function MapView({
   userLocation = null,
   center = [22.3, 87.3],
   onSelect = null,
-  // For register/submit pin picking
   pickMode = false,
   pickedLocation = null,
   setPickedLocation = null,
 }) {
-  const [isDark, setIsDark] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const check = () =>
-      setIsDark(document.documentElement.classList.contains("dark"));
-    check();
-    const obs = new MutationObserver(check);
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => obs.disconnect();
+    setMounted(true);
+    // Force re-render
+    setTimeout(() => {
+      window.dispatchEvent(new Event("resize"));
+    }, 500);
   }, []);
+
+  if (!mounted) return (
+    <div style={{ height: "100%", width: "100%", background: "#1a1a2e", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <p className="text-slate-400">Loading Global Map...</p>
+    </div>
+  );
 
   const tileUrl = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
   const attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
@@ -103,8 +121,9 @@ export default function MapView({
       zoom={10}
       style={{ height: "100%", width: "100%", zIndex: 0 }}
     >
-      <FixMap />
+      <InvalidateSizeWrapper />
       <TileLayer url={tileUrl} attribution={attribution} />
+      <MapEventsWrapper pickMode={pickMode} setPickedLocation={setPickedLocation} />
 
       {/* User location pin */}
       {userLocation && (
@@ -113,9 +132,11 @@ export default function MapView({
         </Marker>
       )}
 
-      {/* Pin picker mode (register/submit) */}
-      {pickMode && (
-        <LocationPicker location={pickedLocation} setLocation={setPickedLocation} />
+      {/* Picked location pin */}
+      {pickMode && pickedLocation && (
+        <Marker position={pickedLocation} icon={userIcon}>
+          <Popup>📍 Selected location</Popup>
+        </Marker>
       )}
 
       {/* PROBLEMS */}
@@ -130,11 +151,13 @@ export default function MapView({
               eventHandlers={{ click: () => onSelect && onSelect(p) }}
             >
               <Popup>
-                <strong>{p.title}</strong>
-                <br />
-                Urgency: <b>{p.urgency}</b>
-                <br />
-                {p.description?.slice(0, 80)}
+                <div className="p-1">
+                  <strong>{p.title}</strong>
+                  <br />
+                  Urgency: <b>{p.urgency}</b>
+                  <br />
+                  <p className="text-xs text-gray-600 mt-1">{p.description?.slice(0, 80)}...</p>
+                </div>
               </Popup>
             </Marker>
           ))}
@@ -150,11 +173,11 @@ export default function MapView({
               icon={ngoIcon}
             >
               <Popup>
-                <strong>🏢 {n.name}</strong>
-                <br />
-                {n.email}
-                <br />
-                {n.phone}
+                <div className="p-1">
+                  <strong>🏢 {n.name}</strong>
+                  <br />
+                  <span className="text-xs text-gray-600">{n.email}</span>
+                </div>
               </Popup>
             </Marker>
           ))}
@@ -170,9 +193,11 @@ export default function MapView({
               icon={helperIcon}
             >
               <Popup>
-                <strong>🤝 {h.name}</strong>
-                <br />
-                {h.role} — {h.skill}
+                <div className="p-1">
+                  <strong>🤝 {h.name}</strong>
+                  <br />
+                  <span className="text-xs text-gray-600">{h.role} — {h.skill}</span>
+                </div>
               </Popup>
             </Marker>
           ))}
