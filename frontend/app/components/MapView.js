@@ -45,14 +45,41 @@ export default function MapView({ problems = [], onSelect, center }) {
   const leafletMapRef = useRef(null);
   const heatLayerRef  = useRef(null);
   const clusterRef    = useRef(null);
+  const tileLayerRef  = useRef(null);  // 🎨 swappable tile layer
   const [mapMode, setMapMode] = useState("markers");
   const [mounted,  setMounted]  = useState(false);
+  const [isDark,   setIsDark]   = useState(true);  // default dark
 
   const validProblems = problems.filter(
     (p) => p.location?.lat && p.location?.lng
   );
 
   useEffect(() => { setMounted(true); }, []);
+
+  // 🌙☀️ Watch <html> class list for light-mode toggle
+  useEffect(() => {
+    const check = () =>
+      setIsDark(!document.documentElement.classList.contains("light-mode"));
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  // 🔄 Swap tile layer instantly when theme toggles
+  useEffect(() => {
+    const map  = leafletMapRef.current;
+    const tile = tileLayerRef.current;
+    if (!map || !tile) return;
+
+    const DARK_URL  = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+    const LIGHT_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+    tile.setUrl(isDark ? DARK_URL : LIGHT_URL);
+  }, [isDark]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -83,16 +110,19 @@ export default function MapView({ problems = [], onSelect, center }) {
         zoomControl: true,
       });
 
-      // 🌑 CartoDB Dark Matter — modern dark tile
-      L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-        {
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
-          subdomains: "abcd",
-          maxZoom: 19,
-        }
-      ).addTo(map);
+      // 🎨 Tile layer stored in ref so we can swap it on theme change
+      const DARK_URL  = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+      const LIGHT_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+      const tileUrl = document.documentElement.classList.contains("light-mode") ? LIGHT_URL : DARK_URL;
+
+      const tile = L.tileLayer(tileUrl, {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+        subdomains: "abcd",
+        maxZoom: 19,
+      });
+      tile.addTo(map);
+      tileLayerRef.current = tile;
 
       leafletMapRef.current = map;
 
