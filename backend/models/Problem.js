@@ -24,6 +24,10 @@ const problemSchema = new mongoose.Schema({
     enum: ["Critical", "High", "Medium", "Low"],
     default: "Medium",
   },
+  score: {
+    type: Number,
+    default: 0,
+  },
   requiredSkill: {
     type: String,
     default: "",

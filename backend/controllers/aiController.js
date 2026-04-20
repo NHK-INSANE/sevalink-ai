@@ -30,16 +30,16 @@ const getFallbackUrgency = (text) => {
     lower.includes("no food") ||
     lower.includes("no water")
   ) {
-    return "Critical";
+    return { urgency: "Critical", score: 90 };
   }
   if (lower.includes("medical") || lower.includes("injury")) {
-    return "High";
+    return { urgency: "High", score: 70 };
   }
   if (lower.includes("school") || lower.includes("education")) {
-    return "Medium";
+    return { urgency: "Medium", score: 40 };
   }
 
-  return "Low";
+  return { urgency: "Low", score: 10 };
 };
 
 exports.getUrgency = async (req, res) => {
@@ -52,30 +52,43 @@ exports.getUrgency = async (req, res) => {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const prompt = `You are a crisis assessment AI for a civic platform.
-Classify the following problem description into exactly ONE of these urgency levels: Critical, High, Medium, or Low.
+    const prompt = `
+You are an emergency classification system.
+
+Classify the urgency into EXACTLY one word:
+Critical, High, Medium, or Low.
 
 Rules:
-- Critical: Immediate threat to life, mass casualties, no food/water/shelter in emergency
-- High: Serious issue affecting many people, needs urgent action within hours
-- Medium: Important issue but not life-threatening, needs resolution within days
-- Low: Minor inconvenience, can wait weeks
+- Critical: life-threatening, no food/water, severe injury, disaster
+- High: serious issue needing quick action (medical, safety)
+- Medium: important but not urgent
+- Low: minor inconvenience
 
-Respond with ONLY the single word: Critical, High, Medium, or Low.
+Also give a score from 0 to 100 (100 = most urgent).
 
-Problem: ${description}`;
+Respond ONLY in this format:
+Urgency: <level>
+Score: <number>
+
+Problem: ${description}
+`;
 
     const result = await model.generateContent(prompt);
-    const raw = result.response.text().trim();
-    const urgency = cleanUrgency(raw);
+    const text = result.response.text();
 
-    res.json({ urgency });
+    const urgencyMatch = text.match(/Urgency:\s*(Critical|High|Medium|Low)/i);
+    const scoreMatch = text.match(/Score:\s*(\d+)/i);
+
+    const urgency = urgencyMatch ? urgencyMatch[1] : cleanUrgency(text);
+    const score = scoreMatch ? parseInt(scoreMatch[1]) : 10;
+
+    res.json({ urgency, score });
   } catch (err) {
     console.error("AI failed, using fallback:", err.message);
 
     const fallback = getFallbackUrgency(description);
     res.json({
-      urgency: fallback,
+      ...fallback,
       note: "AI unavailable, local fallback assigned",
     });
   }

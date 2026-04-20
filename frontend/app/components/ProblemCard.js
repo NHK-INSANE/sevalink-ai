@@ -1,4 +1,6 @@
 "use client";
+import { useState } from "react";
+import { matchVolunteers } from "../data/volunteers";
 
 const urgencyConfig = {
   Critical: {
@@ -43,8 +45,25 @@ function timeAgo(date) {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
+const getScoreColor = (score) => {
+  if (score > 80) return "text-red-400";
+  if (score > 60) return "text-orange-400";
+  if (score > 30) return "text-yellow-400";
+  return "text-green-400";
+};
+
+const getScoreBarColor = (score) => {
+  if (score > 80) return "bg-red-500";
+  if (score > 60) return "bg-orange-500";
+  if (score > 30) return "bg-yellow-500";
+  return "bg-green-500";
+};
+
 export default function ProblemCard({ problem, onStatusChange }) {
   const config = urgencyConfig[problem.urgency] || urgencyConfig.Medium;
+  const matched = matchVolunteers(problem.requiredSkill);
+  const [assigned, setAssigned] = useState(null);
+  const [showVolunteers, setShowVolunteers] = useState(false);
 
   return (
     <div
@@ -67,6 +86,24 @@ export default function ProblemCard({ problem, onStatusChange }) {
         {problem.description}
       </p>
 
+      {/* Priority Score */}
+      {typeof problem.score === "number" && problem.score > 0 && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-slate-500">Priority Score</span>
+            <span className={`text-xs font-bold ${getScoreColor(problem.score)}`}>
+              {problem.score} / 100
+            </span>
+          </div>
+          <div className="w-full bg-white/5 rounded-full h-1.5">
+            <div
+              className={`h-1.5 rounded-full transition-all ${getScoreBarColor(problem.score)}`}
+              style={{ width: `${problem.score}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Tags */}
       <div className="flex flex-wrap gap-2 mb-4">
         {problem.category && (
@@ -85,6 +122,68 @@ export default function ProblemCard({ problem, onStatusChange }) {
           {problem.status}
         </span>
       </div>
+
+      {/* Volunteer Matching */}
+      {problem.requiredSkill && (
+        <div className="mb-4 rounded-lg border border-white/8 bg-white/3 p-3">
+          <button
+            onClick={() => setShowVolunteers((v) => !v)}
+            className="w-full flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white transition-colors"
+          >
+            <span>
+              🤝 Matched Volunteers
+              <span
+                className={`ml-2 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  matched.length > 0
+                    ? "bg-emerald-500/20 text-emerald-400"
+                    : "bg-white/5 text-slate-500"
+                }`}
+              >
+                {matched.length}
+              </span>
+            </span>
+            <span className="text-slate-500">{showVolunteers ? "▲" : "▼"}</span>
+          </button>
+
+          {showVolunteers && (
+            <div className="mt-2 space-y-1.5 pt-2 border-t border-white/8">
+              {matched.length > 0 ? (
+                matched.map((v) => (
+                  <div
+                    key={v.id}
+                    className="flex items-center justify-between"
+                  >
+                    <div>
+                      <span className="text-xs text-emerald-400 font-medium">
+                        {v.name}
+                      </span>
+                      <span className="text-xs text-slate-500 ml-1.5">
+                        {v.skill} · {v.location}
+                      </span>
+                    </div>
+                    {assigned === v.id ? (
+                      <span className="text-[10px] text-emerald-400 font-semibold">
+                        ✓ Assigned
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => setAssigned(v.id)}
+                        className="text-[10px] px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition-colors font-medium"
+                      >
+                        Assign
+                      </button>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-slate-500 text-center py-1">
+                  No volunteers matched for this skill
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Footer */}
       <div className="flex items-center justify-between">

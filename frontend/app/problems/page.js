@@ -46,6 +46,8 @@ export default function ProblemsPage() {
         return (
           (URGENCY_ORDER[a.urgency] ?? 9) - (URGENCY_ORDER[b.urgency] ?? 9)
         );
+      if (sortBy === "score")
+        return (b.score ?? 0) - (a.score ?? 0);
       return 0;
     });
 
@@ -113,6 +115,7 @@ export default function ProblemsPage() {
           >
             <option value="newest">Newest First</option>
             <option value="urgency">By Urgency</option>
+            <option value="score">By Priority Score</option>
           </select>
         </div>
 

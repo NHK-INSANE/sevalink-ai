@@ -127,19 +127,7 @@ export default function Dashboard() {
             <h2 className="text-xl font-semibold text-white">
               🗺️ Live Crisis Map
             </h2>
-            <div className="flex gap-3 text-xs text-slate-500">
-              {[
-                { color: "bg-red-500", label: "Critical" },
-                { color: "bg-orange-500", label: "High" },
-                { color: "bg-yellow-500", label: "Medium" },
-                { color: "bg-green-500", label: "Low" },
-              ].map(({ color, label }) => (
-                <span key={label} className="flex items-center gap-1">
-                  <span className={`w-2.5 h-2.5 rounded-full ${color}`} />
-                  {label}
-                </span>
-              ))}
-            </div>
+            <span className="text-xs text-slate-500 italic">Toggle markers / heatmap →</span>
           </div>
           <div className="glass rounded-xl overflow-hidden border border-white/5">
             {!loading && <MapView problems={problems} />}

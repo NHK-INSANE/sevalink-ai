@@ -42,6 +42,7 @@ export default function SubmitPage() {
   });
   const [location, setLocation] = useState({ lat: 22.3, lng: 87.3, address: "" });
   const [aiUrgency, setAiUrgency] = useState(null);
+  const [aiScore, setAiScore] = useState(null);
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -73,8 +74,10 @@ export default function SubmitPage() {
     try {
       const result = await getUrgency(form.description);
       setAiUrgency(result.urgency);
+      setAiScore(result.score ?? null);
     } catch {
       setAiUrgency("Medium");
+      setAiScore(null);
     } finally {
       setAiLoading(false);
     }
@@ -91,16 +94,20 @@ export default function SubmitPage() {
     setError(null);
     try {
       let urgency = aiUrgency;
+      let score = aiScore;
       if (!urgency) {
         const result = await getUrgency(form.description);
         urgency = result.urgency;
+        score = result.score ?? 0;
         setAiUrgency(urgency);
+        setAiScore(score);
       }
 
-      await createProblem({ ...form, urgency, location });
+      await createProblem({ ...form, urgency, score: score ?? 0, location });
       setSuccess(true);
       setForm({ title: "", description: "", category: "", requiredSkill: "" });
       setAiUrgency(null);
+      setAiScore(null);
     } catch {
       setError("Failed to submit. Make sure the backend is running.");
     } finally {
@@ -208,7 +215,7 @@ export default function SubmitPage() {
               className={`p-4 rounded-xl border ${URGENCY_INFO[aiUrgency].bg} flex items-center gap-3`}
             >
               <span className="text-2xl">🤖</span>
-              <div>
+              <div className="flex-1">
                 <div className={`font-semibold ${URGENCY_INFO[aiUrgency].color}`}>
                   {aiUrgency} Urgency
                 </div>
@@ -216,6 +223,14 @@ export default function SubmitPage() {
                   {URGENCY_INFO[aiUrgency].desc}
                 </div>
               </div>
+              {aiScore !== null && (
+                <div className="text-right">
+                  <div className={`text-2xl font-bold ${URGENCY_INFO[aiUrgency].color}`}>
+                    {aiScore}
+                  </div>
+                  <div className="text-xs text-slate-500">/ 100</div>
+                </div>
+              )}
             </div>
           )}
 
