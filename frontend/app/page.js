@@ -153,6 +153,7 @@ export default function Dashboard() {
   
   const volunteers = usersList.filter(u => u.role?.toLowerCase() === "volunteer");
   const ngos = usersList.filter(u => u.role?.toLowerCase() === "ngo");
+  const workers = usersList.filter(u => u.role?.toLowerCase() === "worker");
   
   const volunteerCount = volunteers.length;
   const ngoCount = ngos.length;
