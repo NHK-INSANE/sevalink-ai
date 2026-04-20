@@ -144,6 +144,7 @@ export default function Dashboard() {
       (pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
+        console.log("📍 User location detected:", lat, lng);
         setUserLocation([lat, lng]);
         setMapCenter([lat, lng]);
         toast.success("You are here! 📍");
