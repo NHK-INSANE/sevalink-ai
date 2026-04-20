@@ -8,6 +8,10 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ["User", "Volunteer", "NGO", "Worker"], default: "User" },
   phone: { type: String, default: "" },
   address: { type: String, default: "" },
+  location: {
+    lat: { type: Number },
+    lng: { type: Number },
+  },
   skill: { type: String, default: "" },
   skills: { type: [String], default: [] },
   otherSkill: { type: String, default: "" },

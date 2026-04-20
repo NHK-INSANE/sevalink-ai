@@ -3,6 +3,7 @@
 export const login = (user) => {
   if (typeof window !== "undefined") {
     localStorage.setItem("seva_user", JSON.stringify(user));
+    localStorage.setItem("token", JSON.stringify(user)); // Mock token
   }
 };
 

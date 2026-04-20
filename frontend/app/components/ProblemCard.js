@@ -1,5 +1,5 @@
-"use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getUser } from "../utils/auth";
 import { matchVolunteers } from "../data/volunteers";
 
 const urgencyConfig = {
@@ -59,11 +59,15 @@ const getScoreBarColor = (score) => {
   return "bg-green-500";
 };
 
-export default function ProblemCard({ problem, onStatusChange }) {
+export default function ProblemCard({ problem, onStatusChange, onDelete }) {
   const config = urgencyConfig[problem.urgency] || urgencyConfig.Medium;
-  const matched = matchVolunteers(problem.requiredSkill);
   const [assigned, setAssigned] = useState(null);
   const [showVolunteers, setShowVolunteers] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    setUser(getUser());
+  }, []);
 
   return (
     <div
@@ -204,6 +208,18 @@ export default function ProblemCard({ problem, onStatusChange }) {
             <option value="Resolved">Resolved</option>
           </select>
         )}
+
+        {/* 🔒 Delete button logic */}
+        {user &&
+          (user.role === "user" || user.role === "volunteer") &&
+          user.id === problem.createdBy && (
+            <button
+              onClick={() => onDelete && onDelete(problem._id)}
+              className="px-3 py-1 text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/30 rounded-md hover:bg-red-500 hover:text-white transition-all shadow-lg shadow-red-500/10"
+            >
+              Delete
+            </button>
+          )}
       </div>
     </div>
   );

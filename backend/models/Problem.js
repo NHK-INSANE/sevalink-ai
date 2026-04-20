@@ -19,6 +19,10 @@ const problemSchema = new mongoose.Schema({
     lng: { type: Number, default: 87.3 },
     address: { type: String, default: "" },
   },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
   urgency: {
     type: String,
     enum: ["Critical", "High", "Medium", "Low"],

@@ -289,6 +289,52 @@ export default function MapView({
           url={isDark ? DARK_URL : LIGHT_URL}
         />
 
+        {type === "all" && (
+          <>
+            {/* Problems Layer in ALL mode */}
+            {validProblems.map((p, idx) => (
+              <Marker
+                key={`p-all-${p._id || idx}`}
+                position={[p.location.lat, p.location.lng]}
+                icon={makeIcon(p.urgency)}
+              >
+                <Popup>
+                  <strong style={{ color: URGENCY_COLOR[p.urgency] }}>Problem: {p.title}</strong><br />
+                  <span>Urgency: {p.urgency}</span>
+                </Popup>
+              </Marker>
+            ))}
+
+            {/* NGOs Layer in ALL mode */}
+            {ngos.map((n, i) => n.location && (
+              <Marker
+                key={`n-all-${i}`}
+                position={[n.location.lat, n.location.lng]}
+                icon={ngoIcon}
+              >
+                <Popup>
+                  <strong style={{ color: "#22c55e" }}>NGO: {n.name}</strong><br />
+                  <span>{n.address || "Community Center"}</span>
+                </Popup>
+              </Marker>
+            ))}
+
+            {/* Helpers Layer in ALL mode */}
+            {helpers.map((h, i) => h.location && (
+              <Marker
+                key={`h-all-${i}`}
+                position={[h.location.lat, h.location.lng]}
+                icon={helperIcon}
+              >
+                <Popup>
+                  <strong style={{ color: "#3b82f6" }}>Helper: {h.name}</strong><br />
+                  <span>{h.role} ({h.skill || "General"})</span>
+                </Popup>
+              </Marker>
+            ))}
+          </>
+        )}
+
         {type === "problems" && mapMode === "markers" && (
           <MarkerClusterGroup
             maxClusterRadius={60}
@@ -366,10 +412,10 @@ export default function MapView({
 
         {type === "problems" && mapMode === "heat" && <HeatLayer problems={problems} />}
 
-        {type === "ngo" && ngos.map((n, i) => (
+        {type === "ngo" && ngos.map((n, i) => n.location && (
           <Marker
             key={`ngo-${i}`}
-            position={[n.lat, n.lng]}
+            position={[n.location.lat, n.location.lng]}
             icon={ngoIcon}
           >
             <Popup>
@@ -386,10 +432,10 @@ export default function MapView({
           </Marker>
         ))}
 
-        {type === "helpers" && helpers.map((h, i) => (
+        {type === "helpers" && helpers.map((h, i) => h.location && (
           <Marker
             key={`helper-${i}`}
-            position={[h.lat, h.lng]}
+            position={[h.location.lat, h.location.lng]}
             icon={helperIcon}
           >
             <Popup>

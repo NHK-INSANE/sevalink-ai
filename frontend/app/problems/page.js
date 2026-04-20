@@ -27,6 +27,24 @@ export default function ProblemsPage() {
     );
   };
 
+  const handleDelete = async (id) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/problems/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || data.error || "Delete failed");
+      
+      setProblems((prev) => prev.filter((p) => p._id !== id));
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert(err.message);
+    }
+  };
+
   const filtered = problems
     .filter((p) => {
       if (filterUrgency !== "All" && p.urgency !== filterUrgency) return false;
@@ -141,6 +159,7 @@ export default function ProblemsPage() {
                 key={p._id}
                 problem={p}
                 onStatusChange={handleStatusChange}
+                onDelete={handleDelete}
               />
             ))}
           </div>
