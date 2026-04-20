@@ -13,7 +13,7 @@ export default function AIMatchPage() {
     const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
     Promise.all([
       getProblems(),
-      fetch(`${API}/api/users`).then((r) => {
+      fetch(`${API}/users`).then((r) => {
         if (!r.ok) throw new Error("API failed");
         return r.json();
       }),

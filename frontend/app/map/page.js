@@ -44,7 +44,7 @@ export default function MapPage() {
         // Fetch Users (NGOs & Helpers)
         const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
         if (BASE_URL) {
-          const res = await fetch(`${BASE_URL}/api/users`);
+          const res = await fetch(`${BASE_URL}/users`);
           if (res.ok) {
             const users = await res.json();
             setNgos(users.filter((u) => u.role === "ngo"));

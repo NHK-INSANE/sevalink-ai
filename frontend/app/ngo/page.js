@@ -9,7 +9,7 @@ export default function NGOPage() {
   useEffect(() => {
     setLoading(true);
     const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-    fetch(`${API}/api/users`)
+    fetch(`${API}/users`)
       .then((res) => res.json())
       .then((data) => {
         const onlyNgos = data.filter(

@@ -111,17 +111,24 @@ export default function SubmitPage() {
     if (!form.description.trim()) return;
     setSuggestLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ai/suggest`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/suggest`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: form.description }),
       });
-      const data = await res.json();
+      
+      const text = await res.text();
+      console.log("🤖 AI SUGGEST RAW RESPONSE:", text);
+      
+      if (!res.ok) throw new Error("AI suggestion failed");
+      
+      const data = JSON.parse(text);
       if (data.result) {
         setAiSuggestion(data.result);
         toast.success("AI suggestion ready!");
       }
     } catch (err) {
+      console.error("AI Suggest Error:", err);
       toast.error("Failed to get AI suggestion");
     } finally {
       setSuggestLoading(false);
