@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
 import { createProblem, getUrgency } from "../utils/api";
 import { getUser } from "../utils/auth";
+import toast from "react-hot-toast";
+import { motion } from "framer-motion";
 
 const CATEGORIES = [
   "Food & Water",
@@ -94,7 +96,7 @@ export default function SubmitPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title || !form.description) {
-      setError("Title and description are required.");
+      toast.error("Title and description are required.");
       return;
     }
 
@@ -112,12 +114,13 @@ export default function SubmitPage() {
       }
 
       await createProblem({ ...form, urgency, score: score ?? 0, location });
+      toast.success("Problem submitted! AI classified it as " + urgency + " urgency.");
       setSuccess(true);
       setForm({ title: "", description: "", category: "", requiredSkill: "" });
       setAiUrgency(null);
       setAiScore(null);
     } catch {
-      setError("Failed to submit. Make sure the backend is running.");
+      toast.error("Failed to submit. Make sure the backend is running.");
     } finally {
       setLoading(false);
     }
@@ -159,7 +162,12 @@ export default function SubmitPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
       <Navbar />
-      <main className="max-w-2xl mx-auto px-6 py-12">
+      <motion.main
+        className="max-w-2xl mx-auto px-6 py-12"
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+      >
         {/* Header */}
         <div className="mb-10">
           <h1 className="text-3xl font-bold text-white mb-2">
@@ -325,7 +333,7 @@ export default function SubmitPage() {
             )}
           </button>
         </form>
-      </main>
+      </motion.main>
     </div>
   );
 }

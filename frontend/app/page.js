@@ -1,10 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Navbar from "./components/Navbar";
 import ProblemCard from "./components/ProblemCard";
 import { getProblems, updateProblemStatus } from "./utils/api";
 import { getUser } from "./utils/auth";
+import toast from "react-hot-toast";
+import { motion } from "framer-motion";
 
 const MapView = dynamic(() => import("./components/MapView"), { ssr: false });
 
@@ -56,6 +58,7 @@ export default function Dashboard() {
   const [locationQuery, setLocationQuery] = useState("");
   const [locationLoading, setLocationLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(null);
+  const prevCriticalRef = useRef(0);
 
   useEffect(() => {
     setUser(getUser());
@@ -65,6 +68,16 @@ export default function Dashboard() {
     try {
       setError(null);
       const data = await getProblems();
+      // 🚨 Toast if new Critical problems arrive after initial load
+      const newCritical = data.filter((p) => p.urgency === "Critical").length;
+      if (prevCriticalRef.current > 0 && newCritical > prevCriticalRef.current) {
+        toast("🚨 New critical issue reported!", {
+          icon: "⚠️",
+          style: { background: "#1e1e2e", color: "#f87171", border: "1px solid #ef444440" },
+          duration: 5000,
+        });
+      }
+      prevCriticalRef.current = newCritical;
       setProblems(data);
       setLastUpdate(new Date().toLocaleTimeString());
     } catch (e) {
@@ -124,7 +137,12 @@ export default function Dashboard() {
     <div className="min-h-screen bg-[#0a0a0f]">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-6 py-10">
+      <motion.main
+        className="max-w-7xl mx-auto px-6 py-10"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+      >
         {/* Hero */}
         <div className="mb-10">
           <h1 className="text-4xl font-bold tracking-tight mb-2">
@@ -393,7 +411,7 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-      </main>
+      </motion.main>
     </div>
   );
 }
