@@ -11,9 +11,9 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 if (typeof window !== "undefined") {
   delete L.Icon.Default.prototype._getIconUrl;
   L.Icon.Default.mergeOptions({
-    iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-    iconUrl:       "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-    shadowUrl:     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+    iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+    iconUrl:       "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+    shadowUrl:     "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
   });
 }
 
@@ -104,31 +104,25 @@ function HeatLayer({ problems }) {
   const map = useMap();
 
   useEffect(() => {
+    if (!problems.length) return;
+
     let heatLayer;
-    const initHeat = async () => {
+    const loadHeat = async () => {
       await import("leaflet.heat");
-      const validPoints = problems
+      const points = problems
         .filter(p => p.location?.lat && p.location?.lng)
-        .map(p => [
-          p.location.lat,
-          p.location.lng,
-          Math.max((p.score || 30) / 100, 0.1)
-        ]);
-      
-      heatLayer = L.heatLayer(validPoints, {
-        radius: 35,
-        blur:   20,
+        .map(p => [p.location.lat, p.location.lng, Math.max((p.score || 30) / 100, 0.1)]);
+
+      heatLayer = L.heatLayer(points, {
+        radius: 25,
+        blur: 15,
         maxZoom: 14,
-        gradient: {
-          0.0: "#22c55e",
-          0.4: "#eab308",
-          0.7: "#f97316",
-          1.0: "#ef4444",
-        },
+        gradient: { 0.4: "blue", 0.6: "cyan", 0.7: "lime", 0.8: "yellow", 1.0: "red" }
       }).addTo(map);
     };
 
-    initHeat();
+    loadHeat();
+
     return () => {
       if (heatLayer) map.removeLayer(heatLayer);
     };
