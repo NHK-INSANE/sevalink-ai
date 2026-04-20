@@ -23,7 +23,7 @@ export default function Helper() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen premium-bg text-white">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-6 py-10">

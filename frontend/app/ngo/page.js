@@ -7,8 +7,6 @@ export default function NGOPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-  useEffect(() => {
     setLoading(true);
     const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
     fetch(`${API}/api/users`)
@@ -24,7 +22,7 @@ export default function NGOPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f]">
+    <div className="min-h-screen premium-bg text-white">
       <Navbar />
 
       <main className="max-w-5xl mx-auto px-6 py-10">
