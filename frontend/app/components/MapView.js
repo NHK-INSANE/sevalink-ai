@@ -134,7 +134,15 @@ function HeatLayer({ problems }) {
   return null;
 }
 
-export default function MapView({ problems = [], onSelect, center, userLocation }) {
+export default function MapView({
+  problems = [],
+  ngos = [],
+  helpers = [],
+  type = "problems",
+  onSelect,
+  center,
+  userLocation,
+}) {
   const [mapMode, setMapMode] = useState("markers");
   const [isDark, setIsDark] = useState(true);
 
@@ -157,6 +165,34 @@ export default function MapView({ problems = [], onSelect, center, userLocation 
 
   const DARK_URL  = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
   const LIGHT_URL = "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png";
+
+  const ngoIcon = useMemo(() => new L.DivIcon({
+    className: "",
+    iconSize:  [18, 18],
+    iconAnchor:[9, 9],
+    html: `
+      <div style="
+        width:18px;height:18px;border-radius:50%;
+        background:#22c55e;
+        box-shadow:0 0 0 4px rgba(34,197,94,0.35), 0 0 16px rgba(34,197,94,0.7);
+        border:2px solid #fff;
+      "></div>
+    `,
+  }), []);
+
+  const helperIcon = useMemo(() => new L.DivIcon({
+    className: "",
+    iconSize:  [18, 18],
+    iconAnchor:[9, 9],
+    html: `
+      <div style="
+        width:18px;height:18px;border-radius:50%;
+        background:#3b82f6;
+        box-shadow:0 0 0 4px rgba(59,130,246,0.35), 0 0 16px rgba(59,130,246,0.7);
+        border:2px solid #fff;
+      "></div>
+    `,
+  }), []);
 
   const userIcon = useMemo(() => new L.DivIcon({
     className: "",
@@ -186,41 +222,55 @@ export default function MapView({ problems = [], onSelect, center, userLocation 
         >
           🔵 Markers
         </button>
-        <button
-          onClick={() => setMapMode("heat")}
-          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-            mapMode === "heat"
-              ? "bg-orange-500 text-white shadow"
-              : "text-slate-400 hover:text-white"
-          }`}
-        >
-          🔥 Heatmap
-        </button>
+        {type === "problems" && (
+          <button
+            onClick={() => setMapMode("heat")}
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              mapMode === "heat"
+                ? "bg-orange-500 text-white shadow"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            🔥 Heatmap
+          </button>
+        )}
       </div>
 
       {/* Legends */}
       <div className="absolute bottom-3 left-3 z-[1000] glass rounded-lg p-2 text-xs space-y-1 pointer-events-none">
-        {mapMode === "markers" ? (
-          [
-            { label: "Critical", color: "#ef4444" },
-            { label: "High",     color: "#f97316" },
-            { label: "Medium",   color: "#eab308" },
-            { label: "Low",      color: "#22c55e" },
-          ].map(({ label, color }) => (
-            <div key={label} className="flex items-center gap-2">
-              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: color, boxShadow: `0 0 4px ${color}` }} />
-              <span className="text-slate-300">{label}</span>
-            </div>
-          ))
+        {type === "problems" ? (
+          mapMode === "markers" ? (
+            [
+              { label: "Critical", color: "#ef4444" },
+              { label: "High",     color: "#f97316" },
+              { label: "Medium",   color: "#eab308" },
+              { label: "Low",      color: "#22c55e" },
+            ].map(({ label, color }) => (
+              <div key={label} className="flex items-center gap-2">
+                <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: color, boxShadow: `0 0 4px ${color}` }} />
+                <span className="text-slate-300">{label}</span>
+              </div>
+            ))
+          ) : (
+            <>
+              <div className="text-slate-400 font-medium mb-1">Intensity</div>
+              <div className="w-24 h-2 rounded-full" style={{ background: "linear-gradient(to right, #22c55e, #eab308, #f97316, #ef4444)" }} />
+              <div className="flex justify-between text-[10px] text-slate-500">
+                <span>Low</span>
+                <span>Critical</span>
+              </div>
+            </>
+          )
+        ) : type === "ngo" ? (
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: "#22c55e", boxShadow: "0 0 4px #22c55e" }} />
+            <span className="text-slate-300">NGO Location</span>
+          </div>
         ) : (
-          <>
-            <div className="text-slate-400 font-medium mb-1">Intensity</div>
-            <div className="w-24 h-2 rounded-full" style={{ background: "linear-gradient(to right, #22c55e, #eab308, #f97316, #ef4444)" }} />
-            <div className="flex justify-between text-[10px] text-slate-500">
-              <span>Low</span>
-              <span>Critical</span>
-            </div>
-          </>
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: "#3b82f6", boxShadow: "0 0 4px #3b82f6" }} />
+            <span className="text-slate-300">Helper / Volunteer</span>
+          </div>
         )}
       </div>
 
@@ -239,7 +289,7 @@ export default function MapView({ problems = [], onSelect, center, userLocation 
           url={isDark ? DARK_URL : LIGHT_URL}
         />
 
-        {mapMode === "markers" && (
+        {type === "problems" && mapMode === "markers" && (
           <MarkerClusterGroup
             maxClusterRadius={60}
             iconCreateFunction={(group) => {
@@ -314,7 +364,47 @@ export default function MapView({ problems = [], onSelect, center, userLocation 
           </MarkerClusterGroup>
         )}
 
-        {mapMode === "heat" && <HeatLayer problems={problems} />}
+        {type === "problems" && mapMode === "heat" && <HeatLayer problems={problems} />}
+
+        {type === "ngo" && ngos.map((n, i) => (
+          <Marker
+            key={`ngo-${i}`}
+            position={[n.lat, n.lng]}
+            icon={ngoIcon}
+          >
+            <Popup>
+              <div style={{ fontFamily: "system-ui", minWidth: "150px" }}>
+                <strong style={{ color: "#22c55e", fontSize: "14px" }}>{n.name}</strong><br />
+                <span style={{ fontSize: "12px", color: "#666" }}>Registered NGO</span>
+                <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #eee" }}>
+                  <button className="w-full py-1.5 rounded bg-green-50 text-green-600 text-[10px] font-bold border border-green-200">
+                    View Details
+                  </button>
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+
+        {type === "helpers" && helpers.map((h, i) => (
+          <Marker
+            key={`helper-${i}`}
+            position={[h.lat, h.lng]}
+            icon={helperIcon}
+          >
+            <Popup>
+              <div style={{ fontFamily: "system-ui", minWidth: "150px" }}>
+                <strong style={{ color: "#3b82f6", fontSize: "14px" }}>{h.name}</strong><br />
+                <span style={{ fontSize: "12px", color: "#666" }}>{h.role}</span>
+                <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #eee" }}>
+                  <button className="w-full py-1.5 rounded bg-blue-50 text-blue-600 text-[10px] font-bold border border-blue-200">
+                    Contact {h.role}
+                  </button>
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        ))      }
 
         {userLocation && (
           <Marker position={userLocation} icon={userIcon} zIndexOffset={1000}>

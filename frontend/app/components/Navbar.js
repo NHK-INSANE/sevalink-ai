@@ -6,11 +6,10 @@ import { getUser, logout, getRoleLabel } from "../utils/auth";
 
 const navLinks = [
   { href: "/", label: "Dashboard", icon: "⚡" },
-  { href: "/problems", label: "All Problems", icon: "📋" },
-  { href: "/ngo", label: "NGO", icon: "🏢" },
-  { href: "/volunteers", label: "Workers", icon: "🔧" },
+  { href: "/submit", label: "Submit", icon: "➕" },
+  { href: "/problems", label: "Problems", icon: "📋" },
+  { href: "/helper", label: "Helper", icon: "🤝" },
   { href: "/map", label: "Map", icon: "🗺️" },
-  { href: "/ai-match", label: "AI Match", icon: "🤖" },
 ];
 
 export default function Navbar() {
