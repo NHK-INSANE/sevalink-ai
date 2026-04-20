@@ -32,12 +32,11 @@ export default function MapPage() {
         setProblems(problemsData);
         
         // Filter users for Helpers and NGOs
-        setHelpers(usersData.filter(u => 
-          u.role?.toLowerCase() === "volunteer" || 
-          u.role?.toLowerCase() === "worker"
-        ));
+        const helpersList = usersData.filter(u => u.role === "Volunteer" || u.role === "Worker");
+        const ngosList = usersData.filter(u => u.role === "NGO");
         
-        setNgos(usersData.filter(u => u.role?.toLowerCase() === "ngo"));
+        setHelpers(helpersList);
+        setNgos(ngosList);
         
       } catch (err) {
         console.error("Map page data fetch error:", err);

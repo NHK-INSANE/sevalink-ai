@@ -94,8 +94,8 @@ function MapUpdater({ center, problems }) {
   useEffect(() => {
     if (problems.length > 0) {
       const bounds = problems
-        .filter(p => p.location?.lat && p.location?.lng)
-        .map(p => [p.location.lat, p.location.lng]);
+        .filter(p => (p.location?.lat || p.location?.latitude) && (p.location?.lng || p.location?.longitude))
+        .map(p => [p.location?.lat || p.location?.latitude, p.location?.lng || p.location?.longitude]);
       if (bounds.length > 0) {
         try {
           map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
@@ -120,8 +120,12 @@ function HeatLayer({ problems }) {
     const loadHeat = async () => {
       await import("leaflet.heat");
       const points = problems
-        .filter(p => p.location?.lat && p.location?.lng)
-        .map(p => [p.location.lat, p.location.lng, Math.max((p.score || 30) / 100, 0.1)]);
+        .filter(p => (p.location?.lat || p.location?.latitude) && (p.location?.lng || p.location?.longitude))
+        .map(p => [
+          p.location?.lat || p.location?.latitude, 
+          p.location?.lng || p.location?.longitude, 
+          Math.max((p.score || 30) / 100, 0.1)
+        ]);
 
       heatLayer = L.heatLayer(points, {
         radius: 25,
@@ -154,7 +158,7 @@ export default function MapView({
   const [isDark, setIsDark] = useState(true);
 
   const validProblems = useMemo(() => 
-    problems.filter((p) => p.location?.lat && p.location?.lng),
+    problems.filter((p) => (p.location?.lat || p.location?.latitude) && (p.location?.lng || p.location?.longitude)),
   [problems]);
 
   // 🌙☀️ Watch <html> class list for light-mode toggle
@@ -282,6 +286,7 @@ export default function MapView({
       </div>
 
       <MapContainer
+        key={type}
         center={center || [22.3, 87.3]}
         zoom={10}
         scrollWheelZoom={true}
@@ -302,8 +307,11 @@ export default function MapView({
             {validProblems.map((p, idx) => (
               <Marker
                 key={`p-all-${p._id || idx}`}
-                position={[p.location?.lat || 22.3, p.location?.lng || 87.3]}
-                icon={makeIcon(p.urgency)}
+                position={[
+                  p.location?.lat || p.location?.latitude || 22.3,
+                  p.location?.lng || p.location?.longitude || 87.3
+                ]}
+                icon={makeIcon(p.urgency || "Medium")}
               >
                 <Popup>
                   <strong style={{ color: URGENCY_COLOR[p.urgency] }}>Problem: {p.title}</strong><br />
@@ -313,10 +321,13 @@ export default function MapView({
             ))}
 
             {/* NGOs Layer in ALL mode */}
-            {ngos.map((n, i) => n.location?.lat && (
+            {ngos.map((n, i) => (
               <Marker
                 key={`n-all-${i}`}
-                position={[n.location.lat, n.location.lng]}
+                position={[
+                  n.location?.lat || n.location?.latitude || 22.3,
+                  n.location?.lng || n.location?.longitude || 87.3
+                ]}
                 icon={ngoIcon}
               >
                 <Popup>
@@ -327,10 +338,13 @@ export default function MapView({
             ))}
 
             {/* Helpers Layer in ALL mode */}
-            {helpers.map((h, i) => h.location?.lat && (
+            {helpers.map((h, i) => (
               <Marker
                 key={`h-all-${i}`}
-                position={[h.location.lat, h.location.lng]}
+                position={[
+                  h.location?.lat || h.location?.latitude || 22.3,
+                  h.location?.lng || h.location?.longitude || 87.3
+                ]}
                 icon={helperIcon}
               >
                 <Popup>
@@ -377,14 +391,18 @@ export default function MapView({
             }}
           >
             {validProblems.map((p, idx) => {
-              const icon = makeIcon(p.urgency);
-              icon.options.urgency = p.urgency; // attach for cluster logic
-              const color = URGENCY_COLOR[p.urgency] || URGENCY_COLOR.Medium;
+              const urgency = p.urgency || "Medium";
+              const icon = makeIcon(urgency);
+              icon.options.urgency = urgency; // attach for cluster logic
+              const color = URGENCY_COLOR[urgency] || URGENCY_COLOR.Medium;
 
               return (
                 <Marker
                   key={p._id || idx}
-                  position={[p.location?.lat || 22.3, p.location?.lng || 87.3]}
+                  position={[
+                    p.location?.lat || p.location?.latitude || 22.3,
+                    p.location?.lng || p.location?.longitude || 87.3
+                  ]}
                   icon={icon}
                   eventHandlers={{
                     click: () => onSelect && onSelect(p)
@@ -419,10 +437,13 @@ export default function MapView({
 
         {type === "problems" && mapMode === "heat" && <HeatLayer problems={problems} />}
 
-        {type === "ngo" && ngos.map((n, i) => n.location?.lat && (
+        {type === "ngo" && ngos.map((n, i) => (
           <Marker
             key={`ngo-${i}`}
-            position={[n.location.lat, n.location.lng]}
+            position={[
+              n.location?.lat || n.location?.latitude || 22.3,
+              n.location?.lng || n.location?.longitude || 87.3
+            ]}
             icon={ngoIcon}
           >
             <Popup>
@@ -439,10 +460,13 @@ export default function MapView({
           </Marker>
         ))}
 
-        {type === "helpers" && helpers.map((h, i) => h.location?.lat && (
+        {type === "helpers" && helpers.map((h, i) => (
           <Marker
             key={`helper-${i}`}
-            position={[h.location.lat, h.location.lng]}
+            position={[
+              h.location?.lat || h.location?.latitude || 22.3,
+              h.location?.lng || h.location?.longitude || 87.3
+            ]}
             icon={helperIcon}
           >
             <Popup>
