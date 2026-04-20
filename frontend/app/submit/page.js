@@ -332,9 +332,7 @@ export default function SubmitPage() {
               )}
             </div>
           </div>
-
           {/* Location */}
-            </div>
 
             {/* Pin-to-map restoration */}
             <div className="mt-4">
@@ -356,7 +354,6 @@ export default function SubmitPage() {
                 </p>
               )}
             </div>
-          </div>
 
           {/* Error */}
           {error && (

@@ -328,12 +328,6 @@ export default function Dashboard() {
           </div>
         )}
 
-
-
-
-
-        </div>
-
         {/* Map Section */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow p-4 mt-6">
           <h2 className="text-lg font-semibold mb-3">Live Problem Map</h2>
