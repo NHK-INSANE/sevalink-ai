@@ -161,75 +161,161 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Name + Username */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                  Full Name *
-                </label>
-                <input
-                  id="reg-name"
-                  type="text"
-                  placeholder="Rahul Sharma"
-                  onChange={update("name")}
-                  className={INPUT_CLS}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                  Username
-                </label>
-                <input
-                  id="reg-username"
-                  type="text"
-                  placeholder="rahul99"
-                  onChange={update("username")}
-                  className={INPUT_CLS}
-                />
-              </div>
-            </div>
+            {/* ===== CONDITIONAL FIELDS BASED ON ROLE ===== */}
 
-            {/* Phone + Email */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                  Phone
-                </label>
-                <input
-                  id="reg-phone"
-                  type="tel"
-                  placeholder="+91 98765 43210"
-                  onChange={update("phone")}
-                  className={INPUT_CLS}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                  Email *
-                </label>
-                <input
-                  id="reg-email"
-                  type="email"
-                  placeholder="you@example.com"
-                  onChange={update("email")}
-                  className={INPUT_CLS}
-                />
-              </div>
-            </div>
+            {/* User / Volunteer / Worker fields */}
+            {form.role !== "NGO" && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                      Full Name *
+                    </label>
+                    <input
+                      id="reg-name"
+                      type="text"
+                      placeholder="Rahul Sharma"
+                      onChange={update("name")}
+                      className={INPUT_CLS}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                      Username
+                    </label>
+                    <input
+                      id="reg-username"
+                      type="text"
+                      placeholder="rahul99"
+                      onChange={update("username")}
+                      className={INPUT_CLS}
+                    />
+                  </div>
+                </div>
 
-            {/* Password */}
-            <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                Password *
-              </label>
-              <input
-                id="reg-password"
-                type="password"
-                placeholder="••••••••"
-                onChange={update("password")}
-                className={INPUT_CLS}
-              />
-            </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                      Phone
+                    </label>
+                    <input
+                      id="reg-phone"
+                      type="tel"
+                      placeholder="+91 98765 43210"
+                      onChange={update("phone")}
+                      className={INPUT_CLS}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                      Email *
+                    </label>
+                    <input
+                      id="reg-email"
+                      type="email"
+                      placeholder="you@example.com"
+                      onChange={update("email")}
+                      className={INPUT_CLS}
+                    />
+                  </div>
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                    Password *
+                  </label>
+                  <input
+                    id="reg-password"
+                    type="password"
+                    placeholder="••••••••"
+                    onChange={update("password")}
+                    className={INPUT_CLS}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* NGO-specific fields */}
+            {form.role === "NGO" && (
+              <div className="p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 space-y-3">
+                <p className="text-xs font-semibold text-indigo-300 mb-1">
+                  🏢 NGO Registration
+                </p>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">NGO Name *</label>
+                  <input
+                    id="reg-ngo-name"
+                    type="text"
+                    placeholder="Organisation Name"
+                    onChange={update("ngoName")}
+                    className={INPUT_CLS}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Representative Name *</label>
+                  <input
+                    id="reg-name"
+                    type="text"
+                    placeholder="Contact Person Name"
+                    onChange={update("name")}
+                    className={INPUT_CLS}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1.5">NGO Email *</label>
+                    <input
+                      id="reg-email"
+                      type="email"
+                      placeholder="ngo@example.com"
+                      onChange={update("email")}
+                      className={INPUT_CLS}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1.5">NGO Phone</label>
+                    <input
+                      id="reg-ngo-phone"
+                      type="tel"
+                      placeholder="+91 98765 43210"
+                      onChange={update("phone")}
+                      className={INPUT_CLS}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">NGO Address</label>
+                  <input
+                    id="reg-ngo-address"
+                    type="text"
+                    placeholder="City / Full Address"
+                    onChange={update("address")}
+                    className={INPUT_CLS}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Website / Contact</label>
+                  <input
+                    id="reg-ngo-contact"
+                    type="text"
+                    placeholder="https://yourorganisation.org"
+                    onChange={update("ngoContact")}
+                    className={INPUT_CLS}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Password *</label>
+                  <input
+                    id="reg-password"
+                    type="password"
+                    placeholder="••••••••"
+                    onChange={update("password")}
+                    className={INPUT_CLS}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Location — manual + map pin */}
             <div className="pt-2">
@@ -256,42 +342,7 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* NGO details */}
-            {form.role === "NGO" && (
-              <div className="p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 space-y-3">
-                <p className="text-xs font-semibold text-indigo-300 mb-1">
-                  🏢 NGO Details
-                </p>
-                <input
-                  id="reg-ngo-name"
-                  type="text"
-                  placeholder="Organisation Name *"
-                  onChange={update("ngoName")}
-                  className={INPUT_CLS}
-                />
-                <input
-                  id="reg-ngo-phone"
-                  type="tel"
-                  placeholder="NGO Phone Number"
-                  onChange={update("phone")}
-                  className={INPUT_CLS}
-                />
-                <input
-                  id="reg-ngo-address"
-                  type="text"
-                  placeholder="NGO Address / City"
-                  onChange={update("address")}
-                  className={INPUT_CLS}
-                />
-                <input
-                  id="reg-ngo-contact"
-                  type="text"
-                  placeholder="Public Contact / Website"
-                  onChange={update("ngoContact")}
-                  className={INPUT_CLS}
-                />
-              </div>
-            )}
+
 
             {/* Multi-skill for Volunteer + Worker */}
             {needsSkills && (
