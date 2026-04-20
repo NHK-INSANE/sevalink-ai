@@ -92,11 +92,11 @@ export default function Dashboard() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch("https://sevalink-backend-bmre.onrender.com/api/users");
-      if (res.ok) {
-        const data = await res.json();
-        setUsersList(data);
-      }
+      const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const res = await fetch(`${BASE_URL}/api/users`);
+      if (!res.ok) throw new Error("API failed");
+      const data = await res.json();
+      setUsersList(data);
     } catch (err) {
       console.error(err);
     }

@@ -1,9 +1,10 @@
-const BASE_URL = "https://sevalink-backend-bmre.onrender.com";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 // Get all problems
 export const getProblems = async () => {
   try {
     const res = await fetch(`${BASE_URL}/api/problems`);
+    if (!res.ok) throw new Error("Failed to fetch problems");
     return await res.json();
   } catch (err) {
     console.error("Error fetching problems:", err);
@@ -21,9 +22,11 @@ export const createProblem = async (data) => {
       },
       body: JSON.stringify(data),
     });
+    if (!res.ok) throw new Error("Failed to create problem");
     return await res.json();
   } catch (err) {
     console.error("Error creating problem:", err);
+    throw err;
   }
 };
 
@@ -37,10 +40,11 @@ export const getUrgency = async (description) => {
       },
       body: JSON.stringify({ description }),
     });
+    if (!res.ok) throw new Error("AI analysis failed");
     return await res.json();
   } catch (err) {
     console.error("AI error:", err);
-    return { urgency: "Low" };
+    return { urgency: "Low", score: 0 };
   }
 };
 
@@ -54,9 +58,11 @@ export const updateProblemStatus = async (id, status) => {
       },
       body: JSON.stringify({ status }),
     });
+    if (!res.ok) throw new Error("Failed to update status");
     return await res.json();
   } catch (err) {
     console.error("Error updating status:", err);
+    throw err;
   }
 };
 

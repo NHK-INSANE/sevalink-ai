@@ -8,7 +8,10 @@ export default function Helper() {
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("API failed");
+        return res.json();
+      })
       .then((data) => {
         // Filter roles (case-insensitive for safety)
         const filtered = data.filter(

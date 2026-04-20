@@ -10,9 +10,13 @@ export default function AIMatchPage() {
   const [matches, setMatches] = useState([]);
 
   useEffect(() => {
+    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
     Promise.all([
       getProblems(),
-      fetch("https://sevalink-backend-bmre.onrender.com/api/users").then((r) => r.json()),
+      fetch(`${API}/api/users`).then((r) => {
+        if (!r.ok) throw new Error("API failed");
+        return r.json();
+      }),
     ])
       .then(([probs, allUsers]) => {
         setProblems(probs);
