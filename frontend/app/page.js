@@ -124,14 +124,41 @@ export default function Dashboard() {
         const { lat, lon } = data[0];
         setMapCenter([parseFloat(lat), parseFloat(lon)]);
       } else {
-        alert("Location not found. Try a different search term.");
+        toast.error("Location not found. Try a different search term.");
       }
     } catch {
-      alert("Search failed. Check your connection.");
+      toast.error("Search failed. Check your connection.");
     } finally {
       setLocationLoading(false);
     }
   };
+
+  // 📍 My Location — GPS detect
+  const handleMyLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation not supported by your browser");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setMapCenter([pos.coords.latitude, pos.coords.longitude]);
+        toast.success("Map centred on your location!");
+      },
+      () => toast.error("Location permission denied")
+    );
+  };
+
+  // 🔴 Auto-focus first Critical problem when problems load
+  useEffect(() => {
+    if (problems.length === 0) return;
+    const critical = problems.find(
+      (p) => p.urgency === "Critical" && p.location?.lat && p.location?.lng
+    );
+    if (critical) {
+      setMapCenter([critical.location.lat, critical.location.lng]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [problems.length === 0 ? 0 : problems[0]?._id]); // only on first load
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
@@ -234,7 +261,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Location Search */}
+          {/* Location Search + My Location */}
           <div className="flex gap-2 mb-3">
             <input
               value={locationQuery}
@@ -249,6 +276,14 @@ export default function Dashboard() {
               className="btn-primary px-4 py-2.5 rounded-xl text-white text-sm font-semibold disabled:opacity-60"
             >
               {locationLoading ? "…" : "Go"}
+            </button>
+            <button
+              id="my-location-btn"
+              onClick={handleMyLocation}
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold glass border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-400/50 transition-all"
+              title="Centre map on my location"
+            >
+              📍 Me
             </button>
           </div>
 
@@ -291,6 +326,25 @@ export default function Dashboard() {
             {loading && (
               <div className="h-[500px] flex items-center justify-center text-slate-600">
                 Loading map…
+              </div>
+            )}
+            {/* No-data empty state */}
+            {!loading && filteredProblems.filter(p => p.location?.lat).length === 0 && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-[500]">
+                <div className="glass border border-white/10 rounded-2xl px-6 py-5 text-center shadow-xl">
+                  <div className="text-4xl mb-2">🌍</div>
+                  <p className="text-slate-400 text-sm font-medium">
+                    {filter === "All" ? "No problems reported yet" : `No ${filter} problems on the map`}
+                  </p>
+                  {filter !== "All" && (
+                    <button
+                      className="mt-3 text-xs text-indigo-400 hover:text-indigo-300 transition-colors pointer-events-auto"
+                      onClick={() => setFilter("All")}
+                    >
+                      Show all →
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>
