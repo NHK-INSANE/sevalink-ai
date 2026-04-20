@@ -40,12 +40,13 @@ function makeIcon(L, urgency) {
   });
 }
 
-export default function MapView({ problems = [], onSelect, center }) {
+export default function MapView({ problems = [], onSelect, center, userLocation }) {
   const mapRef        = useRef(null);
   const leafletMapRef = useRef(null);
   const heatLayerRef  = useRef(null);
   const clusterRef    = useRef(null);
   const tileLayerRef  = useRef(null);  // 🎨 swappable tile layer
+  const userMarkerRef = useRef(null);  // 📍 "You are here" pin
   const [mapMode, setMapMode] = useState("markers");
   const [mounted,  setMounted]  = useState(false);
   const [isDark,   setIsDark]   = useState(true);  // default dark
@@ -80,6 +81,46 @@ export default function MapView({ problems = [], onSelect, center }) {
 
     tile.setUrl(isDark ? DARK_URL : LIGHT_URL);
   }, [isDark]);
+
+  // 📍 Drop / move "You are here" pin when userLocation prop changes
+  useEffect(() => {
+    const map = leafletMapRef.current;
+    if (!map || !userLocation) return;
+
+    // Dynamically import L so this works in SSR-safe context
+    import("leaflet").then(({ default: L }) => {
+      const userIcon = new L.DivIcon({
+        className: "",
+        iconSize:  [22, 22],
+        iconAnchor:[11, 11],
+        html: `
+          <div style="
+            width:22px;height:22px;border-radius:50%;
+            background:#6366f1;
+            box-shadow:0 0 0 4px rgba(99,102,241,0.35), 0 0 16px rgba(99,102,241,0.7);
+            border:2px solid #fff;
+          "></div>
+        `,
+      });
+
+      if (userMarkerRef.current) {
+        // Already exists — just move it
+        userMarkerRef.current.setLatLng(userLocation);
+      } else {
+        // Create fresh marker with popup
+        const marker = L.marker(userLocation, { icon: userIcon, zIndexOffset: 1000 })
+          .addTo(map)
+          .bindPopup(
+            `<div style="font-family:system-ui;text-align:center;padding:4px 2px">
+              <strong style="color:#6366f1;font-size:13px">📍 You are here</strong>
+            </div>`,
+            { maxWidth: 140 }
+          )
+          .openPopup();
+        userMarkerRef.current = marker;
+      }
+    });
+  }, [userLocation]);
 
   useEffect(() => {
     if (!mounted) return;

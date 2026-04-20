@@ -58,6 +58,7 @@ export default function Dashboard() {
   const [locationQuery, setLocationQuery] = useState("");
   const [locationLoading, setLocationLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [userLocation, setUserLocation] = useState(null); // 📍 "You are here" pin
   const prevCriticalRef = useRef(0);
 
   useEffect(() => {
@@ -133,7 +134,7 @@ export default function Dashboard() {
     }
   };
 
-  // 📍 My Location — GPS detect
+  // 📍 Locate Me — GPS detect + drop user pin
   const handleMyLocation = () => {
     if (!navigator.geolocation) {
       toast.error("Geolocation not supported by your browser");
@@ -141,8 +142,11 @@ export default function Dashboard() {
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setMapCenter([pos.coords.latitude, pos.coords.longitude]);
-        toast.success("Map centred on your location!");
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setUserLocation([lat, lng]);
+        setMapCenter([lat, lng]);
+        toast.success("You are here! 📍");
       },
       () => toast.error("Location permission denied")
     );
@@ -280,10 +284,10 @@ export default function Dashboard() {
             <button
               id="my-location-btn"
               onClick={handleMyLocation}
-              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold glass border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-400/50 transition-all"
-              title="Centre map on my location"
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold glass border border-purple-500/40 text-purple-300 hover:bg-purple-500/10 hover:border-purple-400/60 transition-all"
+              title="Drop a pin at your current location"
             >
-              📍 Me
+              📍 Locate Me
             </button>
           </div>
 
@@ -321,6 +325,7 @@ export default function Dashboard() {
                 problems={filteredProblems}
                 onSelect={setSelected}
                 center={mapCenter}
+                userLocation={userLocation}
               />
             )}
             {loading && (
