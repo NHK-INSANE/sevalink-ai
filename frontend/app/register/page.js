@@ -52,17 +52,22 @@ export default function RegisterPage() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.password) {
-      setError("Name, email and password are required.");
-      return;
-    }
-    if (form.role === "NGO" && !form.ngoName) {
-      setError("Please enter your NGO name.");
+    
+    // Normalize properties dynamically to prevent DB mismatch if NGO form is active
+    const mappedName = form.role === "NGO" ? form.ngoName : form.name;
+    const mappedEmail = form.role === "NGO" ? form.ngoEmail : form.email;
+    const mappedPhone = form.role === "NGO" ? form.ngoPhone : form.phone;
+
+    if (!mappedName || !mappedEmail || !form.password) {
+      setError("Name/Organisation, email, and password are required.");
       return;
     }
 
     const data = {
       ...form,
+      name: mappedName,
+      email: mappedEmail,
+      phone: mappedPhone,
       skills: selectedSkills,
       // primary skill = first selected (for matching)
       skill: selectedSkills.includes("Other")
@@ -159,61 +164,65 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Name + Username */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                  Full Name *
-                </label>
-                <input
-                  id="reg-name"
-                  type="text"
-                  placeholder="Rahul Sharma"
-                  onChange={update("name")}
-                  className={INPUT_CLS}
-                />
+            {/* Name + Username - Hidden for NGOs */}
+            {form.role !== "NGO" && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                    Full Name *
+                  </label>
+                  <input
+                    id="reg-name"
+                    type="text"
+                    placeholder="Rahul Sharma"
+                    onChange={update("name")}
+                    className={INPUT_CLS}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                    Username
+                  </label>
+                  <input
+                    id="reg-username"
+                    type="text"
+                    placeholder="rahul99"
+                    onChange={update("username")}
+                    className={INPUT_CLS}
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                  Username
-                </label>
-                <input
-                  id="reg-username"
-                  type="text"
-                  placeholder="rahul99"
-                  onChange={update("username")}
-                  className={INPUT_CLS}
-                />
-              </div>
-            </div>
+            )}
 
-            {/* Phone + Email */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                  Phone
-                </label>
-                <input
-                  id="reg-phone"
-                  type="tel"
-                  placeholder="+91 98765 43210"
-                  onChange={update("phone")}
-                  className={INPUT_CLS}
-                />
+            {/* Phone + Email - Hidden for NGOs */}
+            {form.role !== "NGO" && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                    Phone
+                  </label>
+                  <input
+                    id="reg-phone"
+                    type="tel"
+                    placeholder="+91 98765 43210"
+                    onChange={update("phone")}
+                    className={INPUT_CLS}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                    Email *
+                  </label>
+                  <input
+                    id="reg-email"
+                    type="email"
+                    placeholder="you@example.com"
+                    onChange={update("email")}
+                    className={INPUT_CLS}
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                  Email *
-                </label>
-                <input
-                  id="reg-email"
-                  type="email"
-                  placeholder="you@example.com"
-                  onChange={update("email")}
-                  className={INPUT_CLS}
-                />
-              </div>
-            </div>
+            )}
 
             {/* Password */}
             <div>
@@ -254,26 +263,44 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* NGO details */}
+            {/* NGO details - Exclusively visible for NGO role */}
             {form.role === "NGO" && (
               <div className="p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 space-y-3">
                 <p className="text-xs font-semibold text-indigo-300 mb-1">
-                  🏢 NGO Details
+                  🏢 NGO Registration Details
                 </p>
-                <input
-                  id="reg-ngo-name"
-                  type="text"
-                  placeholder="Organisation Name *"
-                  onChange={update("ngoName")}
-                  className={INPUT_CLS}
-                />
-                <input
-                  id="reg-ngo-contact"
-                  type="text"
-                  placeholder="Public Contact / Website"
-                  onChange={update("ngoContact")}
-                  className={INPUT_CLS}
-                />
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    id="reg-ngo-name"
+                    type="text"
+                    placeholder="Organisation Name *"
+                    onChange={update("ngoName")}
+                    className={INPUT_CLS}
+                  />
+                  <input
+                    id="reg-ngo-email"
+                    type="email"
+                    placeholder="Official Email *"
+                    onChange={update("ngoEmail")}
+                    className={INPUT_CLS}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    id="reg-ngo-phone"
+                    type="tel"
+                    placeholder="Official Phone"
+                    onChange={update("ngoPhone")}
+                    className={INPUT_CLS}
+                  />
+                  <input
+                    id="reg-ngo-contact"
+                    type="text"
+                    placeholder="Public Contact / Website"
+                    onChange={update("ngoContact")}
+                    className={INPUT_CLS}
+                  />
+                </div>
               </div>
             )}
 
