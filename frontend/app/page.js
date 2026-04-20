@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 
 const ProblemMap = dynamic(() => import("./components/ProblemMap"), { ssr: false });
+const SimpleMap = dynamic(() => import("./components/SimpleMap"), { ssr: false });
 const STAT_CONFIG = [
   {
     key: "total",
@@ -340,6 +341,31 @@ export default function Dashboard() {
             <span className="flex items-center gap-1"><span style={{background:"#22c55e",width:10,height:10,borderRadius:"50%",display:"inline-block"}}></span>Low</span>
           </div>
         </div>
+
+        {/* SimpleMap Demo (Step 2 & 3) */}
+        {recentProblems.length > 0 && (
+          <div className="mt-10">
+            <h2 className="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent mb-6">
+              📍 Quick View (Recent Problems)
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {recentProblems.map((p, i) => (
+                <div key={i} className="glass rounded-2xl p-4 border border-white/10 hover:border-indigo-500/30 transition-all duration-300">
+                  <h3 className="text-white font-semibold mb-3 truncate">{p.title}</h3>
+                  <SimpleMap 
+                    lat={p.location?.lat || 22.3} 
+                    lng={p.location?.lng || 87.3} 
+                    height={200}
+                  />
+                  <div className="mt-3 flex justify-between items-center text-xs text-slate-400">
+                    <span>{p.urgency}</span>
+                    <span>{p.category}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </motion.main>
     </div>
   );

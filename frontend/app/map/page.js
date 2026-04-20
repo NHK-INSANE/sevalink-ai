@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import dynamic from "next/dynamic";
 
 const MapView = dynamic(() => import("../components/MapView"), { ssr: false });
+const SimpleMap = dynamic(() => import("../components/SimpleMap"), { ssr: false });
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -15,6 +16,7 @@ export default function MapPage() {
   const [filter, setFilter] = useState("All");
   const [selected, setSelected] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
+  const [mapMode, setMapMode] = useState("interactive"); // "interactive" or "simple"
 
   useEffect(() => {
     fetch(`${API}/api/problems`)
@@ -72,13 +74,31 @@ export default function MapPage() {
         </h1>
 
         {/* Map type buttons */}
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
+          <div className="bg-white dark:bg-gray-800 p-1 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex">
+            {["interactive", "simple"].map((m) => (
+              <button
+                key={m}
+                onClick={() => setMapMode(m)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                  mapMode === m
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+                }`}
+              >
+                {m === "interactive" ? "🚀 Interactive" : "🌐 Basic (Legacy)"}
+              </button>
+            ))}
+          </div>
+
+          <div className="h-6 w-[1px] bg-gray-300 dark:bg-gray-700 mx-1" />
+
           {["all", "problems", "ngo", "helpers"].map((t) => (
             <button key={t} onClick={() => setType(t)} className={btnClass(type === t)}>
               {t === "all" ? "All" : t === "problems" ? "Problems" : t === "ngo" ? "NGOs" : "Helpers"}
             </button>
           ))}
-          <button onClick={handleLocateMe} className="px-4 py-2 rounded-lg text-sm font-medium bg-purple-600 text-white">
+          <button onClick={handleLocateMe} className="px-4 py-2 rounded-lg text-sm font-medium bg-purple-600 text-white shadow-md hover:bg-purple-700 transition">
             📍 Locate Me
           </button>
         </div>
@@ -94,17 +114,24 @@ export default function MapPage() {
           </div>
         )}
 
-        {/* Map */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-2 border border-white/5 overflow-hidden">
           <div style={{ height: "500px" }}>
-            <MapView
-              type={type}
-              problems={filteredProblems}
-              ngos={ngos}
-              helpers={helpers}
-              userLocation={userLocation}
-              onSelect={setSelected}
-            />
+            {mapMode === "interactive" ? (
+              <MapView
+                type={type}
+                problems={filteredProblems}
+                ngos={ngos}
+                helpers={helpers}
+                userLocation={userLocation}
+                onSelect={setSelected}
+              />
+            ) : (
+              <SimpleMap 
+                lat={userLocation ? userLocation[0] : 22.3} 
+                lng={userLocation ? userLocation[1] : 87.3} 
+                height={500}
+              />
+            )}
           </div>
         </div>
 
