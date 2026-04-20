@@ -65,6 +65,16 @@ export default function MapView({ problems = [], onSelect, center }) {
       await import("leaflet.markercluster/dist/MarkerCluster.css");
       await import("leaflet.markercluster/dist/MarkerCluster.Default.css");
 
+      // 🔧 Fix Webpack/Next.js breaking Leaflet's default icon paths in production
+      // eslint-disable-next-line no-proto
+      delete L.Icon.Default.prototype._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+        iconUrl:       "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+        shadowUrl:     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      });
+
+
       if (leafletMapRef.current) return;
 
       const map = L.map(mapRef.current, {
