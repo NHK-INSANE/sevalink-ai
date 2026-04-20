@@ -48,6 +48,7 @@ const STAT_CONFIG = [
 
 export default function Dashboard() {
   const [problems, setProblems] = useState([]);
+  const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
@@ -89,9 +90,25 @@ export default function Dashboard() {
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch("https://sevalink-backend-bmre.onrender.com/api/users");
+      if (res.ok) {
+        const data = await res.json();
+        setUsersList(data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchProblems();
-    const interval = setInterval(fetchProblems, 5000); // real-time: every 5s
+    fetchUsers();
+    const interval = setInterval(() => {
+      fetchProblems();
+      fetchUsers();
+    }, 5000); // real-time: every 5s
     return () => clearInterval(interval);
   }, []);
 
@@ -134,8 +151,11 @@ export default function Dashboard() {
   
   const COLORS = ["#6366f1", "#ec4899", "#8b5cf6", "#14b8a6", "#f59e0b"];
   
-  const volunteerCount = Math.max(12, problems.length * 2);
-  const ngoCount = Math.max(4, Math.floor(problems.length / 2) + 2);
+  const volunteers = usersList.filter(u => u.role?.toLowerCase() === "volunteer");
+  const ngos = usersList.filter(u => u.role?.toLowerCase() === "ngo");
+  
+  const volunteerCount = volunteers.length;
+  const ngoCount = ngos.length;
 
   const stats = { total: problems.length };
 

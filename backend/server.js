@@ -12,6 +12,18 @@ app.use(cors({
 }));
 app.use(express.json());
 
+const User = require("./models/User");
+
+// API Check
+app.get("/api/users", async (req, res) => {
+  try {
+    const users = await User.find().select("-password");
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
+});
+
 // Routes
 const problemRoutes = require("./routes/problemRoutes");
 const aiRoutes = require("./routes/aiRoutes");
