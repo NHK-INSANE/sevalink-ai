@@ -34,7 +34,7 @@ export default function MapPickerInner({ onPick }) {
       style={{ background: "#1a1a2e" }}
     >
       <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
         attribution='&copy; OpenStreetMap'
       />
       <ClickHandler onPick={onPick} />

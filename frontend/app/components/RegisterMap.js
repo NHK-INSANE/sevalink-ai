@@ -60,7 +60,7 @@ export default function RegisterMap({ location, setLocation }) {
           url={
             isDark
               ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              : "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
           }
         />
         <FixMap />

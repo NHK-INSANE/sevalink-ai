@@ -156,7 +156,7 @@ export default function MapView({ problems = [], onSelect, center, userLocation 
   }, []);
 
   const DARK_URL  = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
-  const LIGHT_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+  const LIGHT_URL = "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png";
 
   const userIcon = useMemo(() => new L.DivIcon({
     className: "",
