@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import Navbar from "../components/Navbar";
+import { getUsers } from "../utils/api";
 
 export default function VolunteersPage() {
   const [users, setUsers] = useState([]);
@@ -8,12 +8,7 @@ export default function VolunteersPage() {
   const [filterRole, setFilterRole] = useState("all");
 
   useEffect(() => {
-    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-    fetch(`${API}/api/users`)
-      .then((res) => {
-        if (!res.ok) throw new Error("API failed");
-        return res.json();
-      })
+    getUsers()
       .then((data) => {
         const workers = data.filter(
           (u) =>

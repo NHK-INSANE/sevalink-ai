@@ -69,32 +69,12 @@ export default function ProblemsPage() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this problem?")) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/problems/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-      
-      const text = await res.text();
-      console.log("🗑️ DELETE PROBLEM RAW RESPONSE:", text);
-      
-      if (!res.ok) {
-        let errorMsg = "Delete failed";
-        try {
-          const data = JSON.parse(text);
-          errorMsg = data.message || data.error || errorMsg;
-        } catch {
-          errorMsg = text.substring(0, 50) || errorMsg;
-        }
-        throw new Error(errorMsg);
-      }
-      
-      
+      await deleteProblem(id);
       setProblems((prev) => prev.filter((p) => p._id !== id));
+      toast.success("Problem deleted successfully!");
     } catch (err) {
       console.error("Delete error:", err);
-      alert(err.message);
+      toast.error(err.message || "Failed to delete problem");
     }
   };
 

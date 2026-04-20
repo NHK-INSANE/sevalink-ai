@@ -42,15 +42,10 @@ export default function MapPage() {
         setProblems(problemData);
 
         // Fetch Users (NGOs & Helpers)
-        const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-        if (BASE_URL) {
-          const res = await fetch(`${BASE_URL}/api/users`);
-          if (res.ok) {
-            const users = await res.json();
-            setNgos(users.filter((u) => u.role === "ngo"));
-            setHelpers(users.filter((u) => u.role === "volunteer" || u.role === "worker"));
-          }
-        }
+        getUsers().then((users) => {
+          setNgos(users.filter((u) => u.role === "ngo" || u.role === "NGO"));
+          setHelpers(users.filter((u) => u.role === "volunteer" || u.role === "worker"));
+        });
       } catch (err) {
         console.error("Map Fetch Error:", err);
       } finally {

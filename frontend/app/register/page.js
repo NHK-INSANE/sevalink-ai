@@ -82,8 +82,12 @@ export default function RegisterPage() {
           location: location ? { lat: location.lat, lng: location.lng } : null,
         }
       : {
-          ...form,
           role: form.role.toLowerCase(),
+          name: form.name,
+          username: form.username,
+          email: form.email,
+          phone: form.phone,
+          password: form.password,
           skills: selectedSkills,
           skill: selectedSkills.includes("Other")
             ? form.otherSkill || "Other"

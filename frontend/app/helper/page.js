@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import Navbar from "../components/Navbar";
+import { getUsers } from "../utils/api";
 
 export default function Helper() {
   const [helpers, setHelpers] = useState([]);
@@ -8,8 +8,7 @@ export default function Helper() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users`)
-      .then((res) => res.json())
+    getUsers()
       .then((data) => {
         const filtered = data.filter(
           (u) => 

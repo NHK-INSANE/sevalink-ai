@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
+import { getUsers } from "../utils/api";
 
 export default function NGOPage() {
   const [ngos, setNgos] = useState([]);
@@ -8,12 +9,10 @@ export default function NGOPage() {
 
   useEffect(() => {
     setLoading(true);
-    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-    fetch(`${API}/api/users`)
-      .then((res) => res.json())
+    getUsers()
       .then((data) => {
         const onlyNgos = data.filter(
-          (u) => u.role?.toLowerCase() === "ngo"
+          (u) => u.role?.toLowerCase() === "ngo" || u.role === "NGO"
         );
         setNgos(onlyNgos);
       })

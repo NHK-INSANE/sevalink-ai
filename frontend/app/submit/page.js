@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
-import { createProblem, getUrgency } from "../utils/api";
+import { createProblem, getUrgency, getAISuggestion } from "../utils/api";
 import { getUser } from "../utils/auth";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
@@ -107,22 +107,11 @@ export default function SubmitPage() {
     }
   };
 
-  const getAISuggestion = async () => {
+  const getAISuggestionHandler = async () => {
     if (!form.description.trim()) return;
     setSuggestLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ai/suggest`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: form.description }),
-      });
-      
-      const text = await res.text();
-      console.log("🤖 AI SUGGEST RAW RESPONSE:", text);
-      
-      if (!res.ok) throw new Error("AI suggestion failed");
-      
-      const data = JSON.parse(text);
+      const data = await getAISuggestion(form.description);
       if (data.result) {
         setAiSuggestion(data.result);
         toast.success("AI suggestion ready!");
@@ -291,7 +280,7 @@ export default function SubmitPage() {
               </button>
               <button
                 type="button"
-                onClick={getAISuggestion}
+                onClick={getAISuggestionHandler}
                 disabled={!form.description.trim() || suggestLoading}
                 className="text-xs text-purple-400 hover:text-purple-300 disabled:opacity-40 transition-colors flex items-center gap-1"
               >
