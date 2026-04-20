@@ -45,6 +45,8 @@ export default function SubmitPage() {
     category: "",
     requiredSkill: "",
   });
+  const [customCategory, setCustomCategory] = useState("");
+  const [customSkill, setCustomSkill] = useState("");
   const [location, setLocation] = useState({ lat: 22.3, lng: 87.3, address: "" });
   const [aiUrgency, setAiUrgency] = useState(null);
   const [aiScore, setAiScore] = useState(null);
@@ -71,9 +73,9 @@ export default function SubmitPage() {
           `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
         );
         const d = await r.json();
-        setLocation({ lat, lng, address: d.display_name || "" });
+        setLocation({ lat, lng, address: d.display_name || `${lat}, ${lng}` });
       } catch {
-        setLocation({ lat, lng, address: "" });
+        setLocation({ lat, lng, address: `${lat}, ${lng}` });
       }
     });
   };
@@ -113,10 +115,22 @@ export default function SubmitPage() {
         setAiScore(score);
       }
 
-      await createProblem({ ...form, urgency, score: score ?? 0, location });
+      const finalCategory = form.category === "Other" && customCategory.trim() ? customCategory : form.category;
+      const finalSkill = form.requiredSkill === "Other" && customSkill.trim() ? customSkill : form.requiredSkill;
+
+      await createProblem({ 
+        ...form, 
+        category: finalCategory, 
+        requiredSkill: finalSkill, 
+        urgency, 
+        score: score ?? 0, 
+        location 
+      });
       toast.success("Problem submitted! AI classified it as " + urgency + " urgency.");
       setSuccess(true);
       setForm({ title: "", description: "", category: "", requiredSkill: "" });
+      setCustomCategory("");
+      setCustomSkill("");
       setAiUrgency(null);
       setAiScore(null);
     } catch {
@@ -276,6 +290,15 @@ export default function SubmitPage() {
                   </option>
                 ))}
               </select>
+              {form.category === "Other" && (
+                <input
+                  type="text"
+                  placeholder="Enter custom category"
+                  value={customCategory}
+                  onChange={(e) => setCustomCategory(e.target.value)}
+                  className="w-full glass border border-white/10 rounded-xl px-4 py-3 mt-3 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 transition-all bg-[#12121a]"
+                />
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -294,6 +317,15 @@ export default function SubmitPage() {
                   </option>
                 ))}
               </select>
+              {form.requiredSkill === "Other" && (
+                <input
+                  type="text"
+                  placeholder="Enter custom skill"
+                  value={customSkill}
+                  onChange={(e) => setCustomSkill(e.target.value)}
+                  className="w-full glass border border-white/10 rounded-xl px-4 py-3 mt-3 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 transition-all bg-[#12121a]"
+                />
+              )}
             </div>
           </div>
 
@@ -302,14 +334,18 @@ export default function SubmitPage() {
             <label className="block text-sm font-medium text-slate-300 mb-2">
               Location
             </label>
-            <div className="glass border border-white/10 rounded-xl px-4 py-3 flex items-center justify-between">
-              <span className="text-slate-400 text-sm flex-1 truncate">
-                {location.address || `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`}
-              </span>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={location.address}
+                onChange={(e) => setLocation(prev => ({ ...prev, address: e.target.value }))}
+                placeholder="Enter location manually or detect"
+                className="flex-1 glass border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 transition-all bg-[#12121a]"
+              />
               <button
                 type="button"
                 onClick={detectLocation}
-                className="ml-3 text-xs text-indigo-400 hover:text-indigo-300 whitespace-nowrap transition-colors"
+                className="px-4 py-3 rounded-xl text-sm font-semibold glass border border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/10 transition-all whitespace-nowrap"
               >
                 📍 Detect
               </button>

@@ -14,29 +14,31 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState(null);
-  const [dark, setDark] = useState(true);
+  const [theme, setTheme] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     setUser(getUser());
     // Read saved theme
-    const saved = localStorage.getItem("seva_theme");
+    const saved = localStorage.getItem("theme");
     if (saved === "light") {
       document.documentElement.classList.add("light-mode");
-      setDark(false);
+      setTheme("light");
+    } else {
+      document.documentElement.classList.remove("light-mode");
+      setTheme("dark");
     }
   }, [pathname]); // re-check on route change
 
   const toggleTheme = () => {
-    const isNowLight = !dark;
-    setDark(!dark);
-    if (isNowLight) {
+    const newTheme = theme === "dark" ? "light" : "dark";
+    if (newTheme === "light") {
       document.documentElement.classList.add("light-mode");
-      localStorage.setItem("seva_theme", "light");
     } else {
       document.documentElement.classList.remove("light-mode");
-      localStorage.setItem("seva_theme", "dark");
     }
+    localStorage.setItem("theme", newTheme);
+    setTheme(newTheme);
   };
 
   const handleLogout = () => {
@@ -94,10 +96,9 @@ export default function Navbar() {
           <button
             id="theme-toggle"
             onClick={toggleTheme}
-            title={dark ? "Switch to light mode" : "Switch to dark mode"}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/8 transition-all text-base"
+            className="flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/8 transition-all px-3 py-1.5 text-sm gap-2 whitespace-nowrap"
           >
-            {dark ? "🌙" : "☀️"}
+            {theme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode"}
           </button>
 
           {/* Auth */}

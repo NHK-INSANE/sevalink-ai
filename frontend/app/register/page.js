@@ -4,7 +4,9 @@ import { login } from "../utils/auth";
 import { registerUser } from "../utils/api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import LocationPicker from "../components/LocationPicker";
+import dynamic from "next/dynamic";
+
+const RegisterMap = dynamic(() => import("../components/RegisterMap"), { ssr: false });
 
 const ROLES = ["User", "Volunteer", "NGO", "Worker"];
 
@@ -34,7 +36,7 @@ const INPUT_CLS =
 export default function RegisterPage() {
   const [form, setForm] = useState({ role: "User" });
   const [selectedSkills, setSelectedSkills] = useState([]);
-  const [pinnedLocation, setPinnedLocation] = useState(null);
+  const [location, setLocation] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -66,8 +68,8 @@ export default function RegisterPage() {
       skill: selectedSkills.includes("Other")
         ? form.otherSkill || "Other"
         : selectedSkills[0] || form.skill || "",
-      location: pinnedLocation
-        ? { lat: pinnedLocation.lat, lng: pinnedLocation.lng }
+      location: location
+        ? { lat: location[0], lng: location[1] }
         : null,
     };
 
@@ -95,11 +97,7 @@ export default function RegisterPage() {
       (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        setForm((prev) => ({
-          ...prev,
-          address: `Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`,
-        }));
-        setPinnedLocation({ lat, lng });
+        setLocation([lat, lng]);
       },
       () => {
         alert("Unable to fetch your location. Please allow location access.");
@@ -232,29 +230,28 @@ export default function RegisterPage() {
             </div>
 
             {/* Location — manual + map pin */}
-            <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                📍 Your Location
+            <div className="pt-2">
+              <label className="block text-xs font-medium text-slate-400 mb-1.5 flex justify-between items-center">
+                <span>📍 Your Location</span>
+                <button
+                  type="button"
+                  id="detect-location-btn"
+                  onClick={detectLocation}
+                  className="text-indigo-400 hover:text-indigo-300 font-semibold text-[10px]"
+                >
+                  Auto-Detect GPS
+                </button>
               </label>
-              <input
-                id="reg-address"
-                type="text"
-                placeholder="e.g. Kolkata, West Bengal"
-                value={form.address || ""}
-                onChange={update("address")}
-                className={`${INPUT_CLS} mb-2`}
-              />
-              <button
-                type="button"
-                id="detect-location-btn"
-                onClick={detectLocation}
-                className="flex items-center gap-1.5 text-xs font-medium text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 hover:border-indigo-400/60 bg-indigo-500/10 hover:bg-indigo-500/20 px-3 py-1.5 rounded-lg transition-all mb-2"
-              >
-                📍 Detect My Location
-              </button>
-              <LocationPicker
-                onLocationSelect={(latlng) => setPinnedLocation(latlng)}
-              />
+              
+              {/* Map */}
+              <RegisterMap location={location} setLocation={setLocation} />
+
+              {/* Show Selected Location */}
+              {location && (
+                <p className="text-sm text-gray-500 mt-2 text-center">
+                  Selected: {location[0]}, {location[1]}
+                </p>
+              )}
             </div>
 
             {/* NGO details */}
