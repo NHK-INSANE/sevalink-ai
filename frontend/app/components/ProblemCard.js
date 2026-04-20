@@ -90,7 +90,10 @@ export default function ProblemCard({ problem, onStatusChange }) {
       {typeof problem.score === "number" && problem.score > 0 && (
         <div className="mb-4">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-slate-500">Priority Score</span>
+            <span className="text-xs text-slate-500 flex items-center gap-1.5">
+              Priority Score
+              <span className="px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 text-[9px] font-bold tracking-wide">⚡ AI</span>
+            </span>
             <span className={`text-xs font-bold ${getScoreColor(problem.score)}`}>
               {problem.score} / 100
             </span>

@@ -58,6 +58,23 @@ html {
   background: #0a0a0f;
   z-index: 0;
 }
+
+/* ── Fix tile grid seam lines ─────────────────────────────────── */
+/* Eliminates 1‑px hairline gaps between tiles on HiDPI screens  */
+.leaflet-tile {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  /* Prevent sub-pixel rounding that creates hairline seams */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: pixelated;
+}
+.leaflet-tile-container img {
+  position: absolute;
+  /* Slight oversize trick — closes gap without visual distortion */
+  width: calc(100% + 1px) !important;
+  height: calc(100% + 1px) !important;
+}
 /* CartoDB Dark Matter tiles are already dark — NO filter needed */
 /* .leaflet-tile filter was removed because it destroyed CartoDB tiles */
 
@@ -117,8 +134,8 @@ html.light-mode select {
 html.light-mode input::placeholder,
 html.light-mode textarea::placeholder { color: #94a3b8 !important; }
 
-html.light-mode .bg-\[#0a0a0f\]  { background-color: #f0f2f8 !important; }
-html.light-mode .bg-\[#12121a\]  { background-color: #f8faff !important; }
+/* Dark-bg Tailwind utilities -- override via body in light mode */
+html.light-mode body { background-color: #f0f2f8 !important; }
 
 html.light-mode .leaflet-tile {
   filter: none !important;

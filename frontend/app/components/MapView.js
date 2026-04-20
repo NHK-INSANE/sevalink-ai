@@ -56,11 +56,14 @@ function makeIcon(urgency) {
 }
 
 /**
- * FixMap — Manually invalidateSize with delay (fixes blank tile grid)
+ * FixMap — Invalidates size twice:
+ * 1) immediately (catches quick unmount/remount)
+ * 2) after 800ms (catches CSS transitions and tab switches)
  */
 function FixMap() {
   const map = useMap();
   useEffect(() => {
+    map.invalidateSize(); // immediate
     const timer = setTimeout(() => {
       map.invalidateSize();
     }, 800);
@@ -222,7 +225,6 @@ export default function MapView({ problems = [], onSelect, center, userLocation 
       </div>
 
       <MapContainer
-        key={center ? center.toString() : "default"}
         center={center || [22.3, 87.3]}
         zoom={10}
         scrollWheelZoom={true}
@@ -296,6 +298,14 @@ export default function MapView({ problems = [], onSelect, center, userLocation 
                         {p.urgency} Urgency
                       </span>
                       &nbsp;<span style={{ fontSize: "11px", color: "#888" }}>{p.status}</span>
+                      {typeof p.score === "number" && p.score > 0 && (
+                        <div style={{ marginTop: "6px", fontSize: "11px", color: "#818cf8" }}>
+                          ⚡ AI Score: <strong>{p.score}/100</strong>
+                        </div>
+                      )}
+                      <div style={{ marginTop: "6px", fontSize: "10px", color: "#555", fontStyle: "italic" }}>
+                        Click marker for details & directions
+                      </div>
                     </div>
                   </Popup>
                 </Marker>

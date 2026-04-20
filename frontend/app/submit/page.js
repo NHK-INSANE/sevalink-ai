@@ -177,6 +177,10 @@ export default function SubmitPage() {
             Describe the issue and our AI will instantly assess urgency and
             match volunteers.
           </p>
+          <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-xs font-semibold text-indigo-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse inline-block" />
+            ⚡ AI-powered urgency detection
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -237,6 +241,9 @@ export default function SubmitPage() {
                 </div>
                 <div className="text-xs text-slate-500">
                   {URGENCY_INFO[aiUrgency].desc}
+                </div>
+                <div className="text-[10px] text-indigo-400/70 mt-0.5 font-medium">
+                  ⚡ Powered by Gemini AI
                 </div>
               </div>
               {aiScore !== null && (

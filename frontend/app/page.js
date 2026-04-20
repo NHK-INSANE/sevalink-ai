@@ -188,6 +188,12 @@ export default function Dashboard() {
               : "Real-time civic crisis dashboard powered by AI"}
           </p>
 
+          {/* AI Feature Badge */}
+          <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-xs font-semibold text-indigo-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse inline-block" />
+            ⚡ AI-powered urgency detection & scoring
+          </div>
+
           {/* Role-based action banner */}
           {user?.role === "Volunteer" && (
             <div className="mt-4 inline-flex items-center gap-3 px-4 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/8">
@@ -242,12 +248,31 @@ export default function Dashboard() {
             >
               <div className="text-2xl mb-1">{icon}</div>
               <div className={`text-3xl font-bold ${text}`}>
-                {loading ? "—" : stats[key]}
+                {loading ? (
+                  <span className="inline-block w-10 h-8 rounded-md bg-white/10 animate-pulse" />
+                ) : (
+                  stats[key]
+                )}
               </div>
               <div className="text-slate-500 text-sm mt-1">{label}</div>
             </div>
           ))}
         </div>
+
+        {/* Empty state banner — only when loaded and no data */}
+        {!loading && stats.total === 0 && (
+          <div className="mb-8 p-5 rounded-2xl border border-dashed border-indigo-500/30 bg-indigo-500/5 text-center">
+            <div className="text-4xl mb-3">🌐</div>
+            <p className="text-slate-300 font-semibold mb-1">No active reports yet</p>
+            <p className="text-slate-500 text-sm mb-4">Be the first to report a civic issue in your area</p>
+            <a
+              href="/submit"
+              className="inline-flex items-center gap-2 btn-primary px-5 py-2.5 rounded-xl text-white text-sm font-semibold"
+            >
+              ➕ Submit First Report
+            </a>
+          </div>
+        )}
 
         {/* Map */}
         <div className="mb-10">
