@@ -328,25 +328,6 @@ export default function Dashboard() {
                 Loading map…
               </div>
             )}
-            {/* No-data empty state */}
-            {!loading && filteredProblems.filter(p => p.location?.lat).length === 0 && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-[500]">
-                <div className="glass border border-white/10 rounded-2xl px-6 py-5 text-center shadow-xl">
-                  <div className="text-4xl mb-2">🌍</div>
-                  <p className="text-slate-400 text-sm font-medium">
-                    {filter === "All" ? "No problems reported yet" : `No ${filter} problems on the map`}
-                  </p>
-                  {filter !== "All" && (
-                    <button
-                      className="mt-3 text-xs text-indigo-400 hover:text-indigo-300 transition-colors pointer-events-auto"
-                      onClick={() => setFilter("All")}
-                    >
-                      Show all →
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
