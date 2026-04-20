@@ -40,11 +40,11 @@ function makeIcon(L, urgency) {
   });
 }
 
-export default function MapView({ problems = [] }) {
+export default function MapView({ problems = [], onSelect, center }) {
   const mapRef        = useRef(null);
   const leafletMapRef = useRef(null);
   const heatLayerRef  = useRef(null);
-  const clusterRef    = useRef(null);   // MarkerClusterGroup
+  const clusterRef    = useRef(null);
   const [mapMode, setMapMode] = useState("markers");
   const [mounted,  setMounted]  = useState(false);
 
@@ -91,7 +91,6 @@ export default function MapView({ problems = [] }) {
         maxClusterRadius: 60,
         iconCreateFunction(group) {
           const count    = group.getChildCount();
-          // Pick colour of the highest-urgency child
           const markers  = group.getAllChildMarkers();
           const urgencies = ["Critical","High","Medium","Low"];
           let topColor   = URGENCY_COLOR.Low;
@@ -154,6 +153,11 @@ export default function MapView({ problems = [] }) {
           </div>
         `);
 
+        // 🖱️ Click → fire onSelect with problem data
+        marker.on("click", () => {
+          if (onSelect) onSelect(p);
+        });
+
         cluster.addLayer(marker);
       });
 
@@ -189,6 +193,23 @@ export default function MapView({ problems = [] }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted]);
+
+  // 🗺️ Fly to new center when location search fires
+  useEffect(() => {
+    if (!center || !leafletMapRef.current) return;
+    leafletMapRef.current.flyTo(center, 12, { duration: 1.2 });
+  }, [center]);
+
+  // 📐 Auto fit-bounds whenever filtered problems change
+  useEffect(() => {
+    const map = leafletMapRef.current;
+    if (!map || !mounted) return;
+    const pts = problems.filter((p) => p.location?.lat && p.location?.lng);
+    if (pts.length === 0) return;
+    const bounds = pts.map((p) => [p.location.lat, p.location.lng]);
+    try { map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 }); } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [problems]);
 
   // Toggle layers when mapMode changes
   useEffect(() => {
