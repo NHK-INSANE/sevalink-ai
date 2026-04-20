@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 
-const MapView = dynamic(() => import("../components/MapView"), { ssr: false });
+import MapPicker from "../components/MapPicker";
 
 
 
@@ -39,7 +39,7 @@ export default function RegisterPage() {
   const [form, setForm] = useState({ role: "User" });
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [location, setLocation] = useState(null);
-  const [pickedLocation, setPickedLocation] = useState(null);
+  const [address, setAddress] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -70,14 +70,14 @@ export default function RegisterPage() {
     const data = form.role === "NGO" 
       ? {
           role: "ngo",
-          name: form.ngoName, // Backend expects `name`
+          name: form.ngoName,
           ngoName: form.ngoName,
           email: form.email,
           phone: form.phone,
           ngoContact: form.ngoContact,
-          address: form.address,
+          address: address || form.address || "",
           password: form.password,
-          location: location ? { lat: location[0], lng: location[1] } : null,
+          location: location ? { lat: location.lat, lng: location.lng } : null,
         }
       : {
           ...form,
@@ -86,7 +86,8 @@ export default function RegisterPage() {
           skill: selectedSkills.includes("Other")
             ? form.otherSkill || "Other"
             : selectedSkills[0] || form.skill || "",
-          location: location ? { lat: location[0], lng: location[1] } : null,
+          address: address || form.address || "",
+          location: location ? { lat: location.lat, lng: location.lng } : null,
         };
 
     setLoading(true);
@@ -113,7 +114,7 @@ export default function RegisterPage() {
       (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        setLocation([lat, lng]);
+        setLocation({ lat, lng });
       },
       () => {
         alert("Unable to fetch your location. Please allow location access.");
@@ -324,22 +325,35 @@ export default function RegisterPage() {
 
             {/* Location — manual + map pin */}
             <div className="pt-2">
-              <label className="block text-xs font-medium text-slate-400 mb-1.5 flex justify-between items-center">
-                <span>📍 Your Location</span>
+              <div className="space-y-3">
+                <input
+                  placeholder="Enter your street address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  className={INPUT_CLS}
+                />
+                
                 <button
                   type="button"
                   id="detect-location-btn"
-                  onClick={detectLocation}
+                  onClick={() => {
+                    navigator.geolocation.getCurrentPosition((pos) => {
+                      setLocation({
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude,
+                      });
+                    });
+                  }}
                   className="text-indigo-400 hover:text-indigo-300 font-semibold text-[10px]"
                 >
                   Auto-Detect GPS
                 </button>
-              </label>
+              </div>
               
               {/* Show Selected Location */}
               {location && (
                 <p className="text-sm text-indigo-400 mt-2 text-center font-medium">
-                  📍 GPS Location: {location[0].toFixed(4)}, {location[1].toFixed(4)}
+                  📍 GPS Location: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
                 </p>
               )}
 
@@ -347,19 +361,11 @@ export default function RegisterPage() {
               <div className="mt-4">
                 <p className="text-sm font-medium text-slate-300 mb-1">Pin your location on map <span className="text-gray-500">(click on map)</span></p>
                 <div style={{ height: "250px" }} className="rounded-xl overflow-hidden border border-white/10">
-                  <MapView
-                    pickMode={true}
-                    pickedLocation={pickedLocation}
-                    setPickedLocation={(loc) => {
-                      setPickedLocation(loc);
-                      setLocation(loc); // Sync with location state
-                    }}
-                    type="problems"
-                  />
+                  <MapPicker setLocation={setLocation} />
                 </div>
-                {pickedLocation && (
+                {location && (
                   <p className="text-xs text-emerald-400 mt-1.5 font-medium">
-                    ✓ Location selected: {pickedLocation[0].toFixed(4)}, {pickedLocation[1].toFixed(4)}
+                    ✓ Location selected: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
                   </p>
                 )}
               </div>

@@ -8,7 +8,7 @@ import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 
-const MapView = dynamic(() => import("../components/MapView"), { ssr: false });
+import MapPicker from "../components/MapPicker";
 
 const CATEGORIES = [
   "Food & Water",
@@ -50,8 +50,8 @@ export default function SubmitPage() {
   });
   const [customCategory, setCustomCategory] = useState("");
   const [customSkill, setCustomSkill] = useState("");
-  const [location, setLocation] = useState({ lat: 22.3, lng: 87.3, address: "" });
-  const [pickedLocation, setPickedLocation] = useState(null);
+  const [location, setLocation] = useState(null);
+  const [address, setAddress] = useState("");
   const [aiUrgency, setAiUrgency] = useState(null);
   const [aiScore, setAiScore] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -128,7 +128,11 @@ export default function SubmitPage() {
         requiredSkill: finalSkill, 
         urgency, 
         score: score ?? 0, 
-        location 
+        location: {
+          lat: location?.lat || 22.3,
+          lng: location?.lng || 87.3,
+          address: address || ""
+        } 
       });
       toast.success("Problem submitted! AI classified it as " + urgency + " urgency.");
       setSuccess(true);
@@ -333,27 +337,47 @@ export default function SubmitPage() {
             </div>
           </div>
           {/* Location */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Address / Neighborhood
+              </label>
+              <input
+                placeholder="Enter address manually"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="w-full glass border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all"
+              />
+            </div>
 
-            {/* Pin-to-map restoration */}
+            <button
+              type="button"
+              onClick={() => {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                  setLocation({
+                    lat: pos.coords.latitude,
+                    lng: pos.coords.longitude,
+                  });
+                  toast.success("Location detected!");
+                });
+              }}
+              className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1"
+            >
+              📍 Detect Current Location
+            </button>
+
             <div className="mt-4">
               <p className="text-sm font-medium text-slate-300 mb-2">Pin your location on map <span className="text-gray-400 font-normal opacity-50">(click on map)</span></p>
-              <div style={{ height: "250px" }} className="rounded-xl overflow-hidden border border-white/10">
-                <MapView
-                  pickMode={true}
-                  pickedLocation={pickedLocation}
-                  setPickedLocation={(loc) => {
-                    setPickedLocation(loc);
-                    setLocation(prev => ({ ...prev, lat: loc[0], lng: loc[1] }));
-                  }}
-                  type="problems"
-                />
+              <div style={{ height: "300px" }} className="rounded-xl overflow-hidden border border-white/10">
+                <MapPicker setLocation={setLocation} />
               </div>
-              {pickedLocation && (
+              {location && (
                 <p className="text-xs text-emerald-400 mt-2 font-medium">
-                  ✓ Pin set at: {pickedLocation[0].toFixed(4)}, {pickedLocation[1].toFixed(4)}
+                  ✓ Pin set at: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
                 </p>
               )}
             </div>
+          </div>
 
           {/* Error */}
           {error && (

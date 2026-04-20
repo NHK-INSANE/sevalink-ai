@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 
-const MapView = dynamic(() => import("./components/MapView"), { ssr: false });
+import ProblemMap from "./components/ProblemMap";
 const STAT_CONFIG = [
   {
     key: "total",
@@ -331,9 +331,7 @@ export default function Dashboard() {
         {/* Map Section */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow p-4 mt-6">
           <h2 className="text-lg font-semibold mb-3">Live Problem Map</h2>
-          <div style={{ height: "400px" }}>
-            <MapView problems={problems} type="problems" />
-          </div>
+          <ProblemMap problems={problems} />
           {/* Legend */}
           <div className="flex gap-4 mt-3 text-sm flex-wrap text-gray-600 dark:text-gray-300">
             <span className="flex items-center gap-1"><span style={{background:"#ef4444",width:10,height:10,borderRadius:"50%",display:"inline-block"}}></span>Critical</span>
