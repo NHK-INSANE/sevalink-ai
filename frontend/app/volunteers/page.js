@@ -8,8 +8,12 @@ export default function VolunteersPage() {
   const [filterRole, setFilterRole] = useState("all");
 
   useEffect(() => {
-    fetch("https://sevalink-backend-bmre.onrender.com/api/users")
-      .then((res) => res.json())
+    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    fetch(`${API}/api/users`)
+      .then((res) => {
+        if (!res.ok) throw new Error("API failed");
+        return res.json();
+      })
       .then((data) => {
         const workers = data.filter(
           (u) =>
