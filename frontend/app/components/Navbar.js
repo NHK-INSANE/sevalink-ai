@@ -6,8 +6,11 @@ import { getUser, logout, getRoleLabel } from "../utils/auth";
 
 const navLinks = [
   { href: "/", label: "Dashboard", icon: "⚡" },
-  { href: "/submit", label: "Submit", icon: "➕" },
-  { href: "/problems", label: "Problems", icon: "📋" },
+  { href: "/problems", label: "All Problems", icon: "📋" },
+  { href: "/ngo", label: "NGO", icon: "🏢" },
+  { href: "/volunteers", label: "Workers", icon: "🔧" },
+  { href: "/map", label: "Map", icon: "🗺️" },
+  { href: "/ai-match", label: "AI Match", icon: "🤖" },
 ];
 
 export default function Navbar() {
@@ -74,7 +77,7 @@ export default function Navbar() {
                   ${
                     isActive
                       ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/30"
-                      : "text-slate-400 hover:text-white hover:bg-white/5"
+                      : "text-slate-400 hover:text-blue-400 hover:bg-white/5"
                   }`}
               >
                 <span>{icon}</span>
@@ -118,13 +121,22 @@ export default function Navbar() {
 
               {menuOpen && (
                 <div className="absolute right-0 top-full mt-2 w-52 glass rounded-xl border border-white/10 shadow-xl py-1 z-50">
-                  <div className="px-4 py-2.5 border-b border-white/8">
-                    <div className="text-xs text-slate-500">Signed in as</div>
-                    <div className="text-sm text-white font-medium truncate">{user.email}</div>
-                    <div className="text-xs text-indigo-400 mt-0.5">{getRoleLabel(user.role)}</div>
-                    {user.address && (
-                      <div className="text-xs text-slate-500 mt-0.5">📍 {user.address}</div>
-                    )}
+                  <div className="px-4 py-2.5 border-b border-white/8 space-y-1">
+                    <div className="text-sm font-bold text-white truncate uppercase">{user.name || "User"}</div>
+                    <div className="text-xs text-slate-400 truncate">{user.email}</div>
+                    
+                    <hr className="my-2 border-white/10" />
+                    
+                    <div className="text-xs text-indigo-400 font-medium pb-1">{getRoleLabel(user.role)}</div>
+
+                    {user.phone && <div className="text-xs text-slate-300 mt-0.5">📞 {user.phone}</div>}
+                    {user.address && <div className="text-xs text-slate-300 mt-0.5">📍 {user.address}</div>}
+
+                    {(user.skill || user.ngoName || (user.skills && user.skills.length > 0)) && <hr className="my-2 border-white/10" />}
+
+                    {user.skill && <div className="text-xs text-slate-300 mt-0.5">🛠 Skill: {user.skill}</div>}
+                    {user.skills && user.skills.length > 0 && !user.skill && <div className="text-xs text-slate-300 mt-0.5">🛠 Skills: {user.skills.join(", ")}</div>}
+                    {user.ngoName && <div className="text-xs text-slate-300 mt-0.5">🏢 NGO: {user.ngoName}</div>}
                   </div>
                   <Link
                     href="/profile"
