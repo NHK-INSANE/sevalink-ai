@@ -111,7 +111,7 @@ export default function SubmitPage() {
     if (!form.description.trim()) return;
     setSuggestLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/suggest`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ai/suggest`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: form.description }),

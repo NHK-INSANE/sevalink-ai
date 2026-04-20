@@ -9,7 +9,7 @@ export default function VolunteersPage() {
 
   useEffect(() => {
     const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-    fetch(`${API}/users`)
+    fetch(`${API}/api/users`)
       .then((res) => {
         if (!res.ok) throw new Error("API failed");
         return res.json();

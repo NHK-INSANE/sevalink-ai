@@ -8,7 +8,7 @@ if (!BASE_URL) {
 // Get all problems
 export const getProblems = async () => {
   try {
-    const res = await fetch(`${BASE_URL}/problems`, {
+    const res = await fetch(`${BASE_URL}/api/problems`, {
       signal: AbortSignal.timeout(5000), // 5s timeout
     });
     if (!res.ok) {
@@ -26,7 +26,7 @@ export const getProblems = async () => {
 // Create problem
 export const createProblem = async (data) => {
   try {
-    const res = await fetch(`${BASE_URL}/problems`, {
+    const res = await fetch(`${BASE_URL}/api/problems`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -48,7 +48,7 @@ export const createProblem = async (data) => {
 // Get AI urgency
 export const getUrgency = async (description) => {
   try {
-    const res = await fetch(`${BASE_URL}/ai/urgency`, {
+    const res = await fetch(`${BASE_URL}/api/ai/urgency`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -70,7 +70,7 @@ export const getUrgency = async (description) => {
 // Update problem status
 export const updateProblemStatus = async (id, status) => {
   try {
-    const res = await fetch(`${BASE_URL}/problems/${id}/status`, {
+    const res = await fetch(`${BASE_URL}/api/problems/${id}/status`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -91,7 +91,7 @@ export const updateProblemStatus = async (id, status) => {
 
 // Register new user
 export const registerUser = async (data) => {
-  const res = await fetch(`${BASE_URL}/users/register`, {
+  const res = await fetch(`${BASE_URL}/api/users/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -112,7 +112,7 @@ export const registerUser = async (data) => {
 
 // Login user
 export const loginUser = async (data) => {
-  const res = await fetch(`${BASE_URL}/users/login`, {
+  const res = await fetch(`${BASE_URL}/api/users/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),

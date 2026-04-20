@@ -8,7 +8,7 @@ export default function Helper() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users`)
       .then((res) => res.json())
       .then((data) => {
         const filtered = data.filter(

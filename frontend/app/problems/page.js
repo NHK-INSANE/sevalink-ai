@@ -69,7 +69,7 @@ export default function ProblemsPage() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this problem?")) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/problems/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/problems/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,

@@ -90,7 +90,7 @@ export default function Dashboard() {
   const fetchUsers = async () => {
     try {
       const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-      const res = await fetch(`${BASE_URL}/users`);
+      const res = await fetch(`${BASE_URL}/api/users`);
       const data = await res.json();
       setUsersList(data);
     } catch (err) {
