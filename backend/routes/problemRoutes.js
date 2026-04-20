@@ -57,7 +57,8 @@ router.delete("/:id", auth, async (req, res) => {
     }
 
     // 🔒 CHECK ROLE
-    if (req.user.role !== "user" && req.user.role !== "volunteer") {
+    const allowedRoles = ["user", "volunteer"];
+    if (!allowedRoles.includes(req.user.role.toLowerCase())) {
       return res.status(403).json({ message: "Not allowed: Only Users and Volunteers can delete reports." });
     }
 

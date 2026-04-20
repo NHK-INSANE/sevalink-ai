@@ -16,7 +16,13 @@ export const logout = () => {
 export const getUser = () => {
   if (typeof window === "undefined") return null;
   try {
-    return JSON.parse(localStorage.getItem("seva_user"));
+    const user = JSON.parse(localStorage.getItem("seva_user"));
+    if (user) {
+      user.id = user._id || user.id; // Normalize ID
+      console.log("Auth Debug: User ID normalized to", user.id);
+    }
+    console.log("Auth Debug: getUser called, returning", user);
+    return user;
   } catch {
     return null;
   }

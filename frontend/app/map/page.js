@@ -13,6 +13,7 @@ export default function MapPage() {
   const [helpers, setHelpers] = useState([]);
   const [ngos, setNgos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [mapType, setMapType] = useState("all");
   const [filter, setFilter] = useState("All");

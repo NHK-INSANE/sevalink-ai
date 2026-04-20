@@ -64,6 +64,7 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
   const [assigned, setAssigned] = useState(null);
   const [showVolunteers, setShowVolunteers] = useState(false);
   const [user, setUser] = useState(null);
+  const matched = matchVolunteers(problem.requiredSkill);
 
   useEffect(() => {
     setUser(getUser());
@@ -212,7 +213,7 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
         {/* 🔒 Delete button logic */}
         {user &&
           (user.role === "user" || user.role === "volunteer") &&
-          user.id === problem.createdBy && (
+          (user.id === problem.createdBy || user._id === problem.createdBy) && (
             <button
               onClick={() => onDelete && onDelete(problem._id)}
               className="px-3 py-1 text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/30 rounded-md hover:bg-red-500 hover:text-white transition-all shadow-lg shadow-red-500/10"

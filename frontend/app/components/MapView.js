@@ -295,7 +295,7 @@ export default function MapView({
             {validProblems.map((p, idx) => (
               <Marker
                 key={`p-all-${p._id || idx}`}
-                position={[p.location.lat, p.location.lng]}
+                position={[p.location?.lat || 22.3, p.location?.lng || 87.3]}
                 icon={makeIcon(p.urgency)}
               >
                 <Popup>
@@ -306,7 +306,7 @@ export default function MapView({
             ))}
 
             {/* NGOs Layer in ALL mode */}
-            {ngos.map((n, i) => n.location && (
+            {ngos.map((n, i) => n.location?.lat && (
               <Marker
                 key={`n-all-${i}`}
                 position={[n.location.lat, n.location.lng]}
@@ -320,7 +320,7 @@ export default function MapView({
             ))}
 
             {/* Helpers Layer in ALL mode */}
-            {helpers.map((h, i) => h.location && (
+            {helpers.map((h, i) => h.location?.lat && (
               <Marker
                 key={`h-all-${i}`}
                 position={[h.location.lat, h.location.lng]}
@@ -377,7 +377,7 @@ export default function MapView({
               return (
                 <Marker
                   key={p._id || idx}
-                  position={[p.location.lat, p.location.lng]}
+                  position={[p.location?.lat || 22.3, p.location?.lng || 87.3]}
                   icon={icon}
                   eventHandlers={{
                     click: () => onSelect && onSelect(p)
@@ -412,7 +412,7 @@ export default function MapView({
 
         {type === "problems" && mapMode === "heat" && <HeatLayer problems={problems} />}
 
-        {type === "ngo" && ngos.map((n, i) => n.location && (
+        {type === "ngo" && ngos.map((n, i) => n.location?.lat && (
           <Marker
             key={`ngo-${i}`}
             position={[n.location.lat, n.location.lng]}
@@ -432,7 +432,7 @@ export default function MapView({
           </Marker>
         ))}
 
-        {type === "helpers" && helpers.map((h, i) => h.location && (
+        {type === "helpers" && helpers.map((h, i) => h.location?.lat && (
           <Marker
             key={`helper-${i}`}
             position={[h.location.lat, h.location.lng]}
