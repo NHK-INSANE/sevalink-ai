@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 
+const MapView = dynamic(() => import("../components/MapView"), { ssr: false });
+
 
 
 const ROLES = ["User", "Volunteer", "NGO", "Worker"];
@@ -37,6 +39,7 @@ export default function RegisterPage() {
   const [form, setForm] = useState({ role: "User" });
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [location, setLocation] = useState(null);
+  const [pickedLocation, setPickedLocation] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -339,6 +342,27 @@ export default function RegisterPage() {
                   📍 GPS Location: {location[0].toFixed(4)}, {location[1].toFixed(4)}
                 </p>
               )}
+
+              {/* Pin-to-map restoration */}
+              <div className="mt-4">
+                <p className="text-sm font-medium text-slate-300 mb-1">Pin your location on map <span className="text-gray-500">(click on map)</span></p>
+                <div style={{ height: "250px" }} className="rounded-xl overflow-hidden border border-white/10">
+                  <MapView
+                    pickMode={true}
+                    pickedLocation={pickedLocation}
+                    setPickedLocation={(loc) => {
+                      setPickedLocation(loc);
+                      setLocation(loc); // Sync with location state
+                    }}
+                    type="problems"
+                  />
+                </div>
+                {pickedLocation && (
+                  <p className="text-xs text-emerald-400 mt-1.5 font-medium">
+                    ✓ Location selected: {pickedLocation[0].toFixed(4)}, {pickedLocation[1].toFixed(4)}
+                  </p>
+                )}
+              </div>
             </div>
 
 

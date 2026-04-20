@@ -9,6 +9,7 @@ const navLinks = [
   { href: "/problems", label: "All Problems", icon: "📋" },
   { href: "/helper", label: "Helper", icon: "🤝" },
   { href: "/ngo", label: "NGO", icon: "🏢" },
+  { href: "/map", label: "Map", icon: "🗺️" },
   { href: "/ai-match", label: "AI Match", icon: "🤖" },
 ];
 

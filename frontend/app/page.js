@@ -9,8 +9,7 @@ import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 
-
-
+const MapView = dynamic(() => import("./components/MapView"), { ssr: false });
 const STAT_CONFIG = [
   {
     key: "total",
@@ -333,48 +332,21 @@ export default function Dashboard() {
 
 
 
-        {/* Recent Problems */}
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-white">
-              🚨 Recent Reports
-            </h2>
-            <a href="/problems" className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors">
-              View all →
-            </a>
-          </div>
+        </div>
 
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[...Array(3)].map((_, i) => (
-                <div
-                  key={i}
-                  className="glass rounded-xl h-40 animate-pulse bg-white/3"
-                />
-              ))}
-            </div>
-          ) : recentProblems.length === 0 ? (
-            <div className="text-center py-20 text-slate-600">
-              <div className="text-5xl mb-4">🌐</div>
-              <p className="text-lg">No problems reported yet.</p>
-              <a
-                href="/submit"
-                className="inline-block mt-4 btn-primary px-5 py-2.5 rounded-xl text-white text-sm font-medium"
-              >
-                Submit the first one
-              </a>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {recentProblems.map((p) => (
-                <ProblemCard
-                  key={p._id}
-                  problem={p}
-                  onStatusChange={handleStatusChange}
-                />
-              ))}
-            </div>
-          )}
+        {/* Map Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow p-4 mt-6">
+          <h2 className="text-lg font-semibold mb-3">Live Problem Map</h2>
+          <div style={{ height: "400px" }}>
+            <MapView problems={problems} type="problems" />
+          </div>
+          {/* Legend */}
+          <div className="flex gap-4 mt-3 text-sm flex-wrap text-gray-600 dark:text-gray-300">
+            <span className="flex items-center gap-1"><span style={{background:"#ef4444",width:10,height:10,borderRadius:"50%",display:"inline-block"}}></span>Critical</span>
+            <span className="flex items-center gap-1"><span style={{background:"#f97316",width:10,height:10,borderRadius:"50%",display:"inline-block"}}></span>High</span>
+            <span className="flex items-center gap-1"><span style={{background:"#eab308",width:10,height:10,borderRadius:"50%",display:"inline-block"}}></span>Medium</span>
+            <span className="flex items-center gap-1"><span style={{background:"#22c55e",width:10,height:10,borderRadius:"50%",display:"inline-block"}}></span>Low</span>
+          </div>
         </div>
       </motion.main>
     </div>
