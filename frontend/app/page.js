@@ -10,7 +10,10 @@ import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 
-const SimpleMap = dynamic(() => import("./components/SimpleMap"), { ssr: false });
+const MapView = dynamic(() => import("./components/MapView"), { 
+  ssr: false,
+  loading: () => <div className="h-full w-full bg-slate-900 animate-pulse rounded-xl" />
+});
 
 const STAT_CONFIG = [
   {
@@ -287,8 +290,14 @@ export default function Dashboard() {
         {/* Map */}
         <div className="premium-card p-4 rounded-2xl mb-10">
           <h3 className="font-bold mb-4 flex items-center gap-2">📍 Live Operation Map</h3>
-          <div className="h-[400px] rounded-xl overflow-hidden border border-white/10">
-            <SimpleMap lat={22.3} lng={87.3} />
+          <div className="h-[400px] rounded-xl overflow-hidden border border-white/10 shadow-inner">
+            <MapView 
+              problems={problems} 
+              type="problems" 
+              height="100%" 
+              zoom={6} 
+              center={[22.3, 87.3]}
+            />
           </div>
         </div>
 

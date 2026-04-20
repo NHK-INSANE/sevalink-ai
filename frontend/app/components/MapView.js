@@ -1,141 +1,97 @@
 "use client";
-import MapLibreView from "./MapLibreView";
+
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+// Fix Leaflet Icon Bug (Step 3)
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+});
 
 /**
- * MapView component - main global map for SevaLink
- * 
- * @param {Array} problems - Array of problem objects
- * @param {Array} ngos - Array of NGO objects
- * @param {Array} helpers - Array of helper objects
- * @param {String} type - "problems" | "ngo" | "helpers" | "all"
- * @param {Object} userLocation - { lat, lng }
- * @param {Array} center - [lat, lng]
- * @param {Function} onSelect - Callback when marker selected
- * @param {Boolean} pickMode - If true, allow clicking to pick location
- * @param {Object} pickedLocation - { lat, lng }
- * @param {Function} setPickedLocation - Callback to update picked location
+ * MapView component - main global map for SevaLink (Leaflet Implementation)
  */
 export default function MapView({
   problems = [],
   ngos = [],
   helpers = [],
-  type = "problems",
-  userLocation = null,
-  center = [22.3, 87.3],
-  onSelect = null,
-  pickMode = false,
-  pickedLocation = null,
-  setPickedLocation = null,
+  type = "all",
+  center = [22.57, 88.36],
+  zoom = 5,
+  height = "400px"
 }) {
-  const markerList = [];
-
-  // 1. ADD USER LOCATION
-  if (userLocation) {
-    markerList.push({
-      lat: userLocation.lat || userLocation[0],
-      lng: userLocation.lng || userLocation[1],
-      id: "user-loc",
-      color: "#8b5cf6", // Purple
-      popupContent: <strong>📍 You are here</strong>
-    });
-  }
-
-  // 2. ADD PICKED LOCATION (IF IN PICK MODE)
-  if (pickMode && pickedLocation) {
-    markerList.push({
-      lat: pickedLocation.lat || pickedLocation[0],
-      lng: pickedLocation.lng || pickedLocation[1],
-      id: "picked-loc",
-      color: "#8b5cf6",
-      popupContent: <strong>📍 Selected location</strong>
-    });
-  }
-
-  // 3. ADD PROBLEMS
-  if (type === "problems" || type === "all") {
-    problems.filter(p => p.location?.lat && p.location?.lng).forEach((p, i) => {
-      markerList.push({
-        lat: p.location.lat,
-        lng: p.location.lng,
-        id: `p-${p._id || i}`,
-        color: p.urgency === 'Critical' ? '#ef4444' : 
-               p.urgency === 'High' ? '#f97316' : 
-               p.urgency === 'Medium' ? '#eab308' : '#22c55e',
-        popupContent: (
-          <div className="p-1">
-            <strong className="text-slate-900">{p.title}</strong>
-            <div className="text-[10px] text-slate-500 mb-1">Urgency: <b className="text-slate-700">{p.urgency}</b></div>
-            <p className="text-xs text-slate-600 line-clamp-3">{p.description}</p>
-            {onSelect && (
-              <button 
-                onClick={() => onSelect(p)}
-                className="mt-2 w-full text-[10px] py-1 bg-slate-900 text-white rounded hover:bg-slate-700 transition-colors"
-                type="button"
-              >
-                View Details
-              </button>
-            )}
-          </div>
-        )
-      });
-    });
-  }
-
-  // 4. ADD NGOs
-  if (type === "ngo" || type === "all") {
-    ngos.filter(n => n.location?.lat && n.location?.lng).forEach((n, i) => {
-      markerList.push({
-        lat: n.location.lat,
-        lng: n.location.lng,
-        id: `n-${n._id || i}`,
-        color: "#10b981", // Emerald
-        popupContent: (
-          <div className="p-1">
-            <strong className="text-slate-900">🏢 {n.name}</strong>
-            <p className="text-[10px] text-slate-500">{n.email}</p>
-          </div>
-        )
-      });
-    });
-  }
-
-  // 5. ADD HELPERS
-  if (type === "helpers" || type === "all") {
-    helpers.filter(h => h.location?.lat && h.location?.lng).forEach((h, i) => {
-      markerList.push({
-        lat: h.location.lat,
-        lng: h.location.lng,
-        id: `h-${h._id || i}`,
-        color: "#3b82f6", // Blue
-        popupContent: (
-          <div className="p-1">
-            <strong className="text-slate-900">🤝 {h.name}</strong>
-            <p className="text-[10px] text-slate-500">{h.role} — {h.skill}</p>
-          </div>
-        )
-      });
-    });
-  }
-
-  const handleMapClick = (coords) => {
-    if (pickMode && setPickedLocation) {
-      setPickedLocation(coords);
-    }
-  };
-
-  const centerObj = Array.isArray(center) 
-    ? { lat: center[0], lng: center[1] } 
-    : (center || { lat: 22.3, lng: 87.3 });
-
   return (
-    <div className="h-full w-full">
-      <MapLibreView
-        height="100%"
-        markers={markerList}
-        center={centerObj}
-        zoom={10}
-        onMapClick={handleMapClick}
-      />
+    <div style={{ height, width: "100%" }} className="rounded-xl overflow-hidden shadow-2xl border border-white/5">
+      <MapContainer
+        center={center}
+        zoom={zoom}
+        style={{ height: "100%", width: "100%" }}
+        scrollWheelZoom={true}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+
+        {/* 🔴 Problems */}
+        {(type === "all" || type === "problems") &&
+          problems.filter(p => p.location?.lat && p.location?.lng).map((p, i) => (
+            <Marker key={`p-${i}`} position={[p.location.lat, p.location.lng]}>
+              <Popup>
+                <div className="p-1 min-w-[200px]">
+                  <div className="flex justify-between items-center mb-1">
+                    <strong className="text-slate-900">{p.title}</strong>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded text-white ${
+                      p.urgency === 'Critical' ? 'bg-red-500' : 
+                      p.urgency === 'High' ? 'bg-orange-500' : 
+                      p.urgency === 'Medium' ? 'bg-yellow-500' : 'bg-emerald-500'
+                    }`}>
+                      {p.urgency}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 line-clamp-2 mb-2">{p.description}</p>
+                  <div className="text-[10px] text-slate-400 italic">Category: {p.category}</div>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+
+        {/* 🟢 NGOs */}
+        {(type === "all" || type === "ngo") &&
+          ngos.filter(n => n.location?.lat && n.location?.lng).map((n, i) => (
+            <Marker key={`n-${i}`} position={[n.location.lat, n.location.lng]}>
+              <Popup>
+                <div className="p-1">
+                  <div className="font-bold text-slate-900 flex items-center gap-1">
+                    🏢 {n.name}
+                  </div>
+                  <div className="text-xs text-slate-500 mb-1">{n.ngoContact || n.email}</div>
+                  <div className="text-[10px] text-indigo-600 font-medium">Verified NGO Partner</div>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+
+        {/* 🔵 Helpers */}
+        {(type === "all" || type === "helpers") &&
+          helpers.filter(h => h.location?.lat && h.location?.lng).map((h, i) => (
+            <Marker key={`h-${i}`} position={[h.location.lat, h.location.lng]}>
+              <Popup>
+                <div className="p-1">
+                  <div className="font-bold text-slate-900 flex items-center gap-1">
+                    🤝 {h.name}
+                  </div>
+                  <div className="text-xs text-slate-500">{h.skill || "Volunteer Helper"}</div>
+                  <div className="text-[10px] text-emerald-600 font-medium mt-1">Available to assist</div>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+      </MapContainer>
     </div>
   );
 }

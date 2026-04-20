@@ -6,10 +6,7 @@ require("dotenv").config();
 const app = express();
 
 // Middleware
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "PATCH", "DELETE"],
-}));
+app.use(cors());
 app.use(express.json());
 
 const User = require("./models/User");
@@ -27,11 +24,11 @@ app.get("/api/users", async (req, res) => {
 // Routes
 const problemRoutes = require("./routes/problemRoutes");
 const aiRoutes = require("./routes/aiRoutes");
-const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
 
 app.use("/api/problems", problemRoutes);
 app.use("/api/ai", aiRoutes);
-app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 
 // Health check
 app.get("/", (req, res) => {

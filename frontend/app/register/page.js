@@ -97,6 +97,10 @@ export default function RegisterPage() {
       login(user);
       router.push("/");
     } catch (err) {
+      console.error("❌ Registration Error:", err);
+      if (err.message === "Failed to fetch") {
+        console.error("💡 Tip: Is the backend server running or is there a CORS issue?");
+      }
       setError(err.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);

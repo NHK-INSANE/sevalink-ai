@@ -1,4 +1,9 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!BASE_URL) {
+  console.error("⚠️ API URL NOT FOUND! Please check your .env.local file.");
+}
+
 
 // Get all problems
 export const getProblems = async () => {
@@ -70,7 +75,7 @@ export const updateProblemStatus = async (id, status) => {
 
 // Register new user
 export const registerUser = async (data) => {
-  const res = await fetch(`${BASE_URL}/api/auth/register`, {
+  const res = await fetch(`${BASE_URL}/api/users/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -82,7 +87,7 @@ export const registerUser = async (data) => {
 
 // Login user
 export const loginUser = async (data) => {
-  const res = await fetch(`${BASE_URL}/api/auth/login`, {
+  const res = await fetch(`${BASE_URL}/api/users/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
