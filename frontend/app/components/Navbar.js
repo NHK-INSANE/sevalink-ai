@@ -125,6 +125,13 @@ export default function Navbar() {
                       <div className="text-xs text-slate-500 mt-0.5">📍 {user.address}</div>
                     )}
                   </div>
+                  <Link
+                    href="/profile"
+                    onClick={() => setMenuOpen(false)}
+                    className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 transition-colors flex items-center gap-2"
+                  >
+                    👤 My Profile
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
