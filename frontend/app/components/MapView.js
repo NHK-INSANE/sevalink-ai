@@ -96,6 +96,9 @@ export default function MapView({ problems = [], onSelect, center }) {
 
       leafletMapRef.current = map;
 
+      // 🔧 invalidateSize — fixes blank tiles when container size wasn't ready
+      setTimeout(() => map.invalidateSize(), 300);
+
       // 📍 MarkerClusterGroup with custom styles
       const cluster = L.markerClusterGroup({
         maxClusterRadius: 60,
@@ -240,7 +243,7 @@ export default function MapView({ problems = [], onSelect, center }) {
   if (!mounted) return null;
 
   return (
-    <div className="relative rounded-xl overflow-hidden">
+    <div className="relative rounded-xl" style={{ isolation: "isolate" }}>
       {/* Mode toggle */}
       <div className="absolute top-3 right-3 z-[1000] flex gap-1 glass rounded-lg p-1 shadow-lg">
         <button
@@ -306,7 +309,7 @@ export default function MapView({ problems = [], onSelect, center }) {
       <div
         ref={mapRef}
         className="h-[500px] w-full"
-        style={{ background: "#1a1a2e" }}
+        style={{ height: "500px", width: "100%", background: "#0a0a0f" }}
       />
     </div>
   );
