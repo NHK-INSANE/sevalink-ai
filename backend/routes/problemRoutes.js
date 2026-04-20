@@ -20,7 +20,7 @@ router.post("/", auth, async (req, res) => {
 // GET /api/problems — Get all problems (highest priority first)
 router.get("/", async (req, res) => {
   try {
-    const problems = await Problem.find().sort({ score: -1, createdAt: -1 });
+    const problems = await Problem.find().populate("createdBy", "name").sort({ score: -1, createdAt: -1 });
     res.json(problems);
   } catch (err) {
     res.status(500).json({ error: err.message });

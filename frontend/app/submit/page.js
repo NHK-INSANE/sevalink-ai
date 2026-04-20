@@ -7,6 +7,7 @@ import { getUser } from "../utils/auth";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
+import { getUserLocation } from "../utils/location";
 
 const MapPicker = dynamic(() => import("../components/MapPicker"), { ssr: false });
 
@@ -56,6 +57,8 @@ export default function SubmitPage() {
   const [aiScore, setAiScore] = useState(null);
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [suggestLoading, setSuggestLoading] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState("");
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
 
@@ -99,6 +102,42 @@ export default function SubmitPage() {
     }
   };
 
+  const getAISuggestion = async () => {
+    if (!form.description.trim()) return;
+    setSuggestLoading(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ai/suggest`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: form.description }),
+      });
+      const data = await res.json();
+      if (data.result) {
+        setAiSuggestion(data.result);
+        toast.success("AI suggestion ready!");
+      }
+    } catch (err) {
+      toast.error("Failed to get AI suggestion");
+    } finally {
+      setSuggestLoading(false);
+    }
+  };
+
+  const applySuggestion = () => {
+    setForm(prev => ({ ...prev, description: aiSuggestion }));
+    setAiSuggestion("");
+  };
+
+  const handleUseMyLocation = async () => {
+    try {
+      const loc = await getUserLocation();
+      setLocation(loc);
+      toast.success("Location pinned! 📍");
+    } catch (err) {
+      toast.error("Location access denied");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title || !form.description) {
@@ -134,7 +173,7 @@ export default function SubmitPage() {
           address: address || ""
         } 
       });
-      toast.success("Problem submitted! AI classified it as " + urgency + " urgency.");
+      toast.success("Problem submitted successfully!");
       setSuccess(true);
       setForm({ title: "", description: "", category: "", requiredSkill: "" });
       setCustomCategory("");
@@ -182,7 +221,7 @@ export default function SubmitPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f]">
+    <div className="min-h-screen premium-bg text-white">
       <Navbar />
       <motion.main
         className="max-w-2xl mx-auto px-6 py-12"
@@ -217,7 +256,7 @@ export default function SubmitPage() {
               placeholder="e.g. No clean water in Block C"
               value={form.title}
               onChange={updateForm("title")}
-              className="w-full glass border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+              className="premium-input"
             />
           </div>
 
@@ -232,23 +271,40 @@ export default function SubmitPage() {
               value={form.description}
               onChange={updateForm("description")}
               rows={5}
-              className="w-full glass border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all resize-none"
+              className="premium-input resize-none"
             />
-            <button
-              type="button"
-              onClick={analyzeUrgency}
-              disabled={!form.description.trim() || aiLoading}
-              className="mt-2 text-xs text-indigo-400 hover:text-indigo-300 disabled:opacity-40 transition-colors flex items-center gap-1"
-            >
-              {aiLoading ? (
-                <>
-                  <span className="w-3 h-3 border border-indigo-400/50 border-t-indigo-400 rounded-full animate-spin inline-block" />
-                  Analyzing…
-                </>
-              ) : (
-                "🤖 Analyze urgency with AI"
-              )}
-            </button>
+            <div className="flex gap-4 mt-2">
+              <button
+                type="button"
+                onClick={analyzeUrgency}
+                disabled={!form.description.trim() || aiLoading}
+                className="text-xs text-indigo-400 hover:text-indigo-300 disabled:opacity-40 transition-colors flex items-center gap-1"
+              >
+                {aiLoading ? "Analyzing…" : "🤖 Analyze Urgency"}
+              </button>
+              <button
+                type="button"
+                onClick={getAISuggestion}
+                disabled={!form.description.trim() || suggestLoading}
+                className="text-xs text-purple-400 hover:text-purple-300 disabled:opacity-40 transition-colors flex items-center gap-1"
+              >
+                {suggestLoading ? "Thinking…" : "🤖 Improve with AI"}
+              </button>
+            </div>
+
+            {aiSuggestion && (
+              <div className="mt-4 p-4 rounded-xl bg-indigo-600/10 border border-indigo-500/30">
+                <p className="text-xs text-indigo-300 font-bold mb-1 uppercase tracking-wider">AI Suggested Version:</p>
+                <p className="text-sm text-slate-200 mb-3 leading-relaxed italic">"{aiSuggestion}"</p>
+                <button
+                  type="button"
+                  onClick={applySuggestion}
+                  className="premium-btn text-xs py-1"
+                >
+                  Apply Suggestion
+                </button>
+              </div>
+            )}
           </div>
 
           {/* AI Urgency Result */}
@@ -289,7 +345,7 @@ export default function SubmitPage() {
                 id="problem-category"
                 value={form.category}
                 onChange={updateForm("category")}
-                className="w-full glass border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500/50 transition-all bg-[#12121a] cursor-pointer"
+                className="premium-input cursor-pointer appearance-none"
               >
                 <option value="">Select…</option>
                 {CATEGORIES.map((c) => (
@@ -316,7 +372,7 @@ export default function SubmitPage() {
                 id="problem-skill"
                 value={form.requiredSkill}
                 onChange={updateForm("requiredSkill")}
-                className="w-full glass border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500/50 transition-all bg-[#12121a] cursor-pointer"
+                className="premium-input cursor-pointer appearance-none"
               >
                 <option value="">Select…</option>
                 {SKILLS.map((s) => (
@@ -346,24 +402,16 @@ export default function SubmitPage() {
                 placeholder="Enter address manually"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                className="w-full glass border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all"
+                className="premium-input"
               />
             </div>
 
             <button
               type="button"
-              onClick={() => {
-                navigator.geolocation.getCurrentPosition((pos) => {
-                  setLocation({
-                    lat: pos.coords.latitude,
-                    lng: pos.coords.longitude,
-                  });
-                  toast.success("Location detected!");
-                });
-              }}
-              className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1"
+              onClick={handleUseMyLocation}
+              className="premium-btn text-xs"
             >
-              📍 Detect Current Location
+              📍 Use My Location
             </button>
 
             <div className="mt-4">
@@ -391,12 +439,12 @@ export default function SubmitPage() {
             id="submit-problem-btn"
             type="submit"
             disabled={loading}
-            className="w-full btn-primary py-4 rounded-xl text-white font-semibold text-base disabled:opacity-60 flex items-center justify-center gap-2"
+            className="w-full premium-btn py-4 text-base disabled:opacity-60 flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Getting AI urgency & submitting…
+                Submitting Crisis Report…
               </>
             ) : (
               "Submit Problem"

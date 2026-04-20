@@ -93,3 +93,33 @@ Problem: ${description}
     });
   }
 };
+
+exports.suggestDescription = async (req, res) => {
+  const { text } = req.body;
+
+  if (!text) {
+    return res.status(400).json({ error: "Text is required" });
+  }
+
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    const prompt = `
+You are a professional crisis coordinator. 
+Rewrite the following casual text into a professional, clear, and actionable problem report.
+Make it sound authoritative but concise. Keep it under 60 words.
+
+Text: ${text}
+
+Professional Version:
+`;
+
+    const result = await model.generateContent(prompt);
+    const suggestion = result.response.text().trim();
+
+    res.json({ result: suggestion });
+  } catch (err) {
+    console.error("AI Suggestion failed:", err.message);
+    res.status(500).json({ error: "AI Suggestion failed" });
+  }
+};

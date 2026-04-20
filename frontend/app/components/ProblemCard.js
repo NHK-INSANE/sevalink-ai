@@ -4,27 +4,19 @@ import { matchVolunteers } from "../data/volunteers";
 
 const urgencyConfig = {
   Critical: {
-    badgeClass: "badge-critical",
-    dot: "bg-red-500",
-    pulse: "animate-pulse-critical",
+    bg: "bg-red-500",
     icon: "🔴",
   },
   High: {
-    badgeClass: "badge-high",
-    dot: "bg-orange-500",
-    pulse: "",
+    bg: "bg-orange-500",
     icon: "🟠",
   },
   Medium: {
-    badgeClass: "badge-medium",
-    dot: "bg-yellow-500",
-    pulse: "",
+    bg: "bg-yellow-500",
     icon: "🟡",
   },
   Low: {
-    badgeClass: "badge-low",
-    dot: "bg-green-500",
-    pulse: "",
+    bg: "bg-green-500",
     icon: "🟢",
   },
 };
@@ -72,7 +64,7 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
 
   return (
     <div
-      className={`glass rounded-xl p-5 transition-all duration-300 hover:border-indigo-500/20 hover:-translate-y-0.5 ${config.pulse}`}
+      className="bg-white/10 backdrop-blur-lg p-5 rounded-2xl shadow-xl border border-white/10 transition-all duration-300 hover:border-indigo-500/30 hover:-translate-y-1 hover:shadow-2xl"
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
@@ -80,15 +72,19 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
           {problem.title}
         </h3>
         <span
-          className={`text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${config.badgeClass}`}
+          className={`text-xs font-semibold px-2 py-1 rounded text-white whitespace-nowrap ${config.bg}`}
         >
           {config.icon} {problem.urgency}
         </span>
       </div>
 
-      {/* Description */}
       <p className="text-slate-400 text-sm leading-relaxed mb-4 line-clamp-2">
         {problem.description}
+      </p>
+
+      {/* Submitter info */}
+      <p className="text-xs text-slate-500 mb-4 italic">
+        Submitted by: {problem.createdBy?.name || "Anonymous"}
       </p>
 
       {/* Priority Score */}
@@ -215,8 +211,12 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
           (user.role === "user" || user.role === "volunteer") &&
           (user.id === problem.createdBy || user._id === problem.createdBy) && (
             <button
-              onClick={() => onDelete && onDelete(problem._id)}
-              className="px-3 py-1 text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/30 rounded-md hover:bg-red-500 hover:text-white transition-all shadow-lg shadow-red-500/10"
+              onClick={() => {
+                if (window.confirm("Are you sure you want to delete this problem?")) {
+                  onDelete && onDelete(problem._id);
+                }
+              }}
+              className="bg-red-500 px-3 py-1 rounded text-white mt-2 text-xs font-bold transition-all shadow-lg shadow-red-500/10"
             >
               Delete
             </button>

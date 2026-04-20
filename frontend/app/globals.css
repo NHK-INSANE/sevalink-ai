@@ -126,3 +126,46 @@ html.light-mode textarea::placeholder { color: #94a3b8 !important; }
 
 /* Dark-bg Tailwind utilities -- override via body in light mode */
 html.light-mode body { background-color: #f0f2f8 !important; }
+
+/* ─── Professional UI Utilities ─────────────────────────── */
+.premium-bg {
+  background: radial-gradient(circle at top right, #111827, #000000);
+}
+
+.premium-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.premium-btn {
+  background: linear-gradient(to right, #3b82f6, #8b5cf6);
+  color: white;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 14px 0 rgba(0, 118, 255, 0.39);
+}
+
+.premium-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+}
+
+.premium-input {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background: rgba(31, 41, 55, 0.8);
+  border: 1px solid rgba(75, 85, 99, 0.5);
+  color: white;
+  transition: all 0.2s;
+  outline: none;
+}
+
+.premium-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}

@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import ProblemCard from "../components/ProblemCard";
 import { getProblems, updateProblemStatus } from "../utils/api";
+import { getUserLocation } from "../utils/location";
+import toast from "react-hot-toast";
 
 const URGENCY_ORDER = { Critical: 0, High: 1, Medium: 2, Low: 3 };
 
@@ -13,11 +15,22 @@ export default function ProblemsPage() {
   const [filterUrgency, setFilterUrgency] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
   const [sortBy, setSortBy] = useState("newest");
+  const [userLoc, setUserLoc] = useState(null);
+  const [sortNearest, setSortNearest] = useState(false);
 
-  useEffect(() => {
+  const fetchProblems = () => {
+    setLoading(true);
     getProblems()
       .then(setProblems)
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchProblems();
+    const interval = setInterval(() => {
+      getProblems().then(setProblems);
+    }, 10000); // 10s auto-refresh
+    return () => clearInterval(interval);
   }, []);
 
   const handleStatusChange = async (id, status) => {
@@ -27,7 +40,34 @@ export default function ProblemsPage() {
     );
   };
 
+  const handleLocateAndSort = async () => {
+    if (sortNearest) {
+      setSortNearest(false);
+      return;
+    }
+    try {
+      const loc = await getUserLocation();
+      setUserLoc(loc);
+      setSortNearest(true);
+      toast.success("Sorting by proximity");
+    } catch (err) {
+      toast.error("Could not get location");
+    }
+  };
+
+  function getDistance(lat1, lon1, lat2, lon2) {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+  }
+
   const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this problem?")) return;
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/problems/${id}`, {
         method: "DELETE",
@@ -58,6 +98,11 @@ export default function ProblemsPage() {
       return true;
     })
     .sort((a, b) => {
+      if (sortNearest && userLoc) {
+        const d1 = getDistance(userLoc.lat, userLoc.lng, a.location?.lat, a.location?.lng);
+        const d2 = getDistance(userLoc.lat, userLoc.lng, b.location?.lat, b.location?.lng);
+        return d1 - d2;
+      }
       if (sortBy === "newest")
         return new Date(b.createdAt) - new Date(a.createdAt);
       if (sortBy === "urgency")
@@ -70,7 +115,7 @@ export default function ProblemsPage() {
     });
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f]">
+    <div className="min-h-screen premium-bg text-white">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-6 py-12">
@@ -84,12 +129,20 @@ export default function ProblemsPage() {
               {loading ? "…" : `${filtered.length} of ${problems.length} reports`}
             </p>
           </div>
-          <a
-            href="/submit"
-            className="btn-primary px-5 py-3 rounded-xl text-white font-medium text-sm self-start md:self-auto"
-          >
-            + Report New Problem
-          </a>
+          <div className="flex gap-4">
+            <button
+              onClick={handleLocateAndSort}
+              className={`premium-btn text-xs ${sortNearest ? 'grayscale flex items-center gap-1' : ''}`}
+            >
+              📍 {sortNearest ? "Reset Sort" : "Sort by Nearest"}
+            </button>
+            <a
+              href="/submit"
+              className="premium-btn text-xs bg-none border border-white/20"
+            >
+              + Report New Problem
+            </a>
+          </div>
         </div>
 
         {/* Filters */}
@@ -100,13 +153,13 @@ export default function ProblemsPage() {
             placeholder="🔍 Search problems…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 min-w-[200px] bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-indigo-500/40 transition-all"
+            className="premium-input flex-1"
           />
           <select
             id="filter-urgency"
             value={filterUrgency}
             onChange={(e) => setFilterUrgency(e.target.value)}
-            className="bg-[#12121a] border border-white/10 rounded-lg px-3 py-2.5 text-slate-300 text-sm cursor-pointer"
+            className="premium-input w-auto cursor-pointer"
           >
             <option value="All">All Urgencies</option>
             <option value="Critical">🔴 Critical</option>
@@ -118,7 +171,7 @@ export default function ProblemsPage() {
             id="filter-status"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="bg-[#12121a] border border-white/10 rounded-lg px-3 py-2.5 text-slate-300 text-sm cursor-pointer"
+            className="premium-input w-auto cursor-pointer"
           >
             <option value="All">All Statuses</option>
             <option value="Open">Open</option>
@@ -129,7 +182,7 @@ export default function ProblemsPage() {
             id="sort-problems"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="bg-[#12121a] border border-white/10 rounded-lg px-3 py-2.5 text-slate-300 text-sm cursor-pointer"
+            className="premium-input w-auto cursor-pointer"
           >
             <option value="newest">Newest First</option>
             <option value="urgency">By Urgency</option>
@@ -138,7 +191,7 @@ export default function ProblemsPage() {
         </div>
 
         {/* Grid */}
-        {loading ? (
+        {loading && problems.length === 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {[...Array(6)].map((_, i) => (
               <div
@@ -147,22 +200,26 @@ export default function ProblemsPage() {
               />
             ))}
           </div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-24 text-slate-600">
-            <div className="text-5xl mb-4">🔍</div>
-            <p className="text-lg">No problems match your filters.</p>
-          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filtered.map((p) => (
-              <ProblemCard
-                key={p._id}
-                problem={p}
-                onStatusChange={handleStatusChange}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
+          <>
+            {filtered.length === 0 ? (
+              <div className="text-center py-24 text-slate-400">
+                <div className="text-5xl mb-4">🚫</div>
+                <p className="text-lg">No problems reported yet 🚫</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filtered.map((p) => (
+                  <ProblemCard
+                    key={p._id}
+                    problem={p}
+                    onStatusChange={handleStatusChange}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>

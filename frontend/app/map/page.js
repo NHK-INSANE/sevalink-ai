@@ -1,169 +1,65 @@
 "use client";
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
-import dynamic from "next/dynamic";
-
-const MapView = dynamic(() => import("../components/MapView"), { ssr: false });
-const SimpleMap = dynamic(() => import("../components/SimpleMap"), { ssr: false });
-
-const API = process.env.NEXT_PUBLIC_API_URL;
+import SimpleMap from "../components/SimpleMap";
+import { getProblems } from "../utils/api";
 
 export default function MapPage() {
   const [problems, setProblems] = useState([]);
-  const [helpers, setHelpers] = useState([]);
-  const [ngos, setNgos] = useState([]);
-  const [type, setType] = useState("problems");
-  const [filter, setFilter] = useState("All");
-  const [selected, setSelected] = useState(null);
-  const [userLocation, setUserLocation] = useState(null);
-  const [mapMode, setMapMode] = useState("interactive"); // "interactive" or "simple"
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API}/api/problems`)
-      .then((r) => r.json())
+    getProblems()
       .then(setProblems)
-      .catch(() => {});
-
-    fetch(`${API}/api/users`)
-      .then((r) => r.json())
-      .then((data) => {
-        setHelpers(
-          data.filter(
-            (u) =>
-              u.role?.toLowerCase() === "volunteer" ||
-              u.role?.toLowerCase() === "worker"
-          )
-        );
-        setNgos(data.filter((u) => u.role?.toLowerCase() === "ngo"));
-      })
-      .catch(() => {});
+      .finally(() => setLoading(false));
   }, []);
 
-  const filteredProblems =
-    filter === "All"
-      ? problems
-      : problems.filter((p) => p.urgency === filter);
-
-  const handleLocateMe = () => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition((pos) => {
-      setUserLocation([pos.coords.latitude, pos.coords.longitude]);
-    });
-  };
-
-  const btnClass = (active) =>
-    `px-4 py-2 rounded-lg text-sm font-medium transition ${
-      active
-        ? "bg-blue-600 text-white"
-        : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
-    }`;
-
-  const filterClass = (active) =>
-    `px-3 py-1 rounded-lg text-xs font-medium transition ${
-      active
-        ? "bg-blue-500 text-white"
-        : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
-    }`;
-
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="min-h-screen bg-[#0a0a0f] text-white">
       <Navbar />
-      <div className="pt-20 p-6 space-y-4">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-          Crisis Map
-        </h1>
 
-        {/* Map type buttons */}
-        <div className="flex gap-2 flex-wrap items-center">
-          <div className="bg-white dark:bg-gray-800 p-1 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex">
-            {["interactive", "simple"].map((m) => (
-              <button
-                key={m}
-                onClick={() => setMapMode(m)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                  mapMode === m
-                    ? "bg-indigo-600 text-white shadow-md"
-                    : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
-                }`}
-              >
-                {m === "interactive" ? "🚀 Interactive" : "🌐 Basic (Legacy)"}
-              </button>
+      <main className="max-w-7xl mx-auto px-6 py-10">
+        <h1 className="text-3xl font-bold mb-8 text-white">Map</h1>
+
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="glass h-[300px] rounded-2xl animate-pulse" />
             ))}
           </div>
-
-          <div className="h-6 w-[1px] bg-gray-300 dark:bg-gray-700 mx-1" />
-
-          {["all", "problems", "ngo", "helpers"].map((t) => (
-            <button key={t} onClick={() => setType(t)} className={btnClass(type === t)}>
-              {t === "all" ? "All" : t === "problems" ? "Problems" : t === "ngo" ? "NGOs" : "Helpers"}
-            </button>
-          ))}
-          <button onClick={handleLocateMe} className="px-4 py-2 rounded-lg text-sm font-medium bg-purple-600 text-white shadow-md hover:bg-purple-700 transition">
-            📍 Locate Me
-          </button>
-        </div>
-
-        {/* Urgency filters (only for problems/all) */}
-        {(type === "problems" || type === "all") && (
-          <div className="flex gap-2 flex-wrap">
-            {["All", "Critical", "High", "Medium", "Low"].map((f) => (
-              <button key={f} onClick={() => setFilter(f)} className={filterClass(filter === f)}>
-                {f}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-2 border border-white/5 overflow-hidden">
-          <div style={{ height: "500px" }}>
-            {mapMode === "interactive" ? (
-              <MapView
-                type={type}
-                problems={filteredProblems}
-                ngos={ngos}
-                helpers={helpers}
-                userLocation={userLocation}
-                onSelect={setSelected}
-              />
+        ) : (
+          <>
+            {problems.length === 0 ? (
+              <div className="text-center py-20 bg-white/5 rounded-3xl border border-dashed border-white/10">
+                <p className="text-slate-400 mt-5">No problems reported yet 🚫</p>
+              </div>
             ) : (
-              <SimpleMap 
-                lat={userLocation ? userLocation[0] : 22.3} 
-                lng={userLocation ? userLocation[1] : 87.3} 
-                height={500}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {problems.map((p) => (
+                  <div key={p._id} className="glass p-4 rounded-2xl border border-white/10 hover:border-indigo-500/30 transition-all">
+                    <h3 className="font-bold mb-3 truncate text-white">{p.title}</h3>
+                    <SimpleMap 
+                      lat={p.location?.lat || 22.3} 
+                      lng={p.location?.lng || 87.3} 
+                    />
+                    <div className="mt-3 flex justify-between items-center text-xs text-slate-500">
+                      <span className={`px-2 py-1 rounded text-white ${
+                        p.urgency === "Critical" ? "bg-red-500" :
+                        p.urgency === "High" ? "bg-orange-500" :
+                        p.urgency === "Medium" ? "bg-yellow-500" :
+                        "bg-green-500"
+                      }`}>
+                        {p.urgency}
+                      </span>
+                      <span>{p.category}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
-          </div>
-        </div>
-
-        {/* Legend */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex gap-4 flex-wrap text-sm">
-          <span className="flex items-center gap-2"><span style={{background:"#ef4444",width:10,height:10,borderRadius:"50%",display:"inline-block"}}></span>Critical</span>
-          <span className="flex items-center gap-2"><span style={{background:"#f97316",width:10,height:10,borderRadius:"50%",display:"inline-block"}}></span>High</span>
-          <span className="flex items-center gap-2"><span style={{background:"#eab308",width:10,height:10,borderRadius:"50%",display:"inline-block"}}></span>Medium</span>
-          <span className="flex items-center gap-2"><span style={{background:"#22c55e",width:10,height:10,borderRadius:"50%",display:"inline-block"}}></span>Low</span>
-          <span className="flex items-center gap-2"><span style={{background:"#10b981",width:10,height:10,borderRadius:"50%",display:"inline-block"}}></span>NGO</span>
-          <span className="flex items-center gap-2"><span style={{background:"#3b82f6",width:10,height:10,borderRadius:"50%",display:"inline-block"}}></span>Helper</span>
-          <span className="flex items-center gap-2"><span style={{background:"#8b5cf6",width:10,height:10,borderRadius:"50%",display:"inline-block"}}></span>You</span>
-        </div>
-
-        {/* Selected problem detail */}
-        {selected && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
-            <div className="flex justify-between">
-              <h2 className="font-bold text-lg">{selected.title}</h2>
-              <button onClick={() => setSelected(null)} className="text-red-400 text-sm">✕ Close</button>
-            </div>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">{selected.description}</p>
-            <p className="mt-2 text-sm">Urgency: <b>{selected.urgency}</b> | Category: {selected.category}</p>
-            <button
-              onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${selected.location?.lat},${selected.location?.lng}`)}
-              className="mt-3 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
-            >
-              Get Directions
-            </button>
-          </div>
+          </>
         )}
-      </div>
+      </main>
     </div>
   );
 }
