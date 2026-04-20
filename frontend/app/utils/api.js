@@ -3,12 +3,14 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 // Get all problems
 export const getProblems = async () => {
   try {
-    const res = await fetch(`${BASE_URL}/api/problems`);
-    if (!res.ok) throw new Error("Failed to fetch problems");
+    const res = await fetch(`${BASE_URL}/api/problems`, {
+      signal: AbortSignal.timeout(5000), // 5s timeout
+    });
+    if (!res.ok) throw new Error("Backend server error");
     return await res.json();
   } catch (err) {
-    console.error("Error fetching problems:", err);
-    return [];
+    console.error("❌ Problem API Error:", err.message);
+    return []; // Return empty array to keep UI functional
   }
 };
 

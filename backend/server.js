@@ -39,11 +39,21 @@ app.get("/", (req, res) => {
 });
 
 // Connect DB & Start
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("✅ MongoDB connected");
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 5000, // 5s timeout
+    });
+    console.log("✅ MongoDB connected successfully");
+    
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-  })
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+  } catch (err) {
+    console.error("❌ MongoDB connection error:", err.message);
+    if (err.message.includes("ECONNREFUSED")) {
+      console.error("💡 Hint: Check if your IP is whitelisted in MongoDB Atlas or if DNS SRV is blocked.");
+    }
+  }
+};
+
+connectDB();

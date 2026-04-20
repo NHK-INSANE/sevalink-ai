@@ -63,11 +63,18 @@ function makeIcon(urgency) {
 function FixMap() {
   const map = useMap();
   useEffect(() => {
-    map.invalidateSize(); // immediate
-    const timer = setTimeout(() => {
+    const fix = () => {
       map.invalidateSize();
-    }, 800);
-    return () => clearTimeout(timer);
+    };
+    
+    fix(); // immediate
+    const timer = setTimeout(fix, 800);
+    
+    window.addEventListener("resize", fix);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", fix);
+    };
   }, [map]);
   return null;
 }

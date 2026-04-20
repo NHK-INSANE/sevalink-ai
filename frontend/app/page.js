@@ -387,14 +387,6 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-white">🗺️ Live Crisis Map</h2>
             <div className="flex items-center gap-3">
-              {/* Live pulse indicator */}
-              <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block" />
-                Live
-              </span>
-              {lastUpdate && (
-                <span className="text-xs text-slate-500">Updated {lastUpdate}</span>
-              )}
               <span className="text-xs text-slate-500 italic">Toggle markers / heatmap →</span>
             </div>
           </div>
