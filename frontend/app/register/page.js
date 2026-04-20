@@ -40,6 +40,8 @@ export default function RegisterPage() {
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [location, setLocation] = useState(null);
   const [address, setAddress] = useState("");
+  const [darkMode, setDarkMode] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -111,37 +113,47 @@ export default function RegisterPage() {
 
   const detectLocation = () => {
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
+      alert("Geolocation not supported");
       return;
     }
+
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
         setLocation({ lat, lng });
 
-        // 🌍 Reverse Geocoding via Nominatim
         try {
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
           );
           const data = await res.json();
-          if (data.display_name) {
-            setAddress(data.display_name);
-          }
-        } catch (err) {
-          console.error("GPS Reverse geocoding error:", err);
+          setAddress(data.display_name);
+        } catch {
+          setAddress("Detected location");
         }
       },
       () => {
-        alert("Unable to fetch your location. Please allow location access.");
+        alert("Please allow location access");
       }
     );
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4 py-12">
+    <div className={darkMode ? "dark" : ""}>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0a0a0f] flex items-center justify-center px-4 py-12 transition-colors duration-300">
       <div className="w-full max-w-lg">
+        {/* Dark Mode Toggle */}
+        <div className="mb-4 flex justify-end">
+          <button 
+            type="button"
+            onClick={() => setDarkMode(!darkMode)}
+            className="px-4 py-2 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-white/10 text-gray-800 dark:text-white text-sm font-medium shadow-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+          >
+            {darkMode ? "☀️ Light" : "🌙 Dark"}
+          </button>
+        </div>
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
@@ -257,13 +269,22 @@ export default function RegisterPage() {
                   <label className="block text-xs font-medium text-slate-400 mb-1.5">
                     Password *
                   </label>
-                  <input
-                    id="reg-password"
-                    type="password"
-                    placeholder="••••••••"
-                    onChange={update("password")}
-                    className={INPUT_CLS}
-                  />
+                  <div className="relative">
+                    <input
+                      id="reg-password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      onChange={update("password")}
+                      className={INPUT_CLS}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
                 </div>
               </>
             )}
@@ -329,13 +350,22 @@ export default function RegisterPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-400 mb-1.5">Password *</label>
-                  <input
-                    id="reg-password"
-                    type="password"
-                    placeholder="••••••••"
-                    onChange={update("password")}
-                    className={INPUT_CLS}
-                  />
+                  <div className="relative">
+                    <input
+                      id="reg-ngo-password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      onChange={update("password")}
+                      className={INPUT_CLS}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -344,7 +374,7 @@ export default function RegisterPage() {
             <div className="pt-2">
               <div className="space-y-3">
                 <input
-                  placeholder="Enter your street address"
+                  placeholder="Enter your address"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   className={INPUT_CLS}
@@ -353,17 +383,10 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   id="detect-location-btn"
-                  onClick={() => {
-                    navigator.geolocation.getCurrentPosition((pos) => {
-                      setLocation({
-                        lat: pos.coords.latitude,
-                        lng: pos.coords.longitude,
-                      });
-                    });
-                  }}
-                  className="text-indigo-400 hover:text-indigo-300 font-semibold text-[10px]"
+                  onClick={detectLocation}
+                  className="flex items-center gap-1.5 text-indigo-400 hover:text-indigo-300 font-semibold text-xs"
                 >
-                  Auto-Detect GPS
+                  📍 Auto Detect GPS
                 </button>
               </div>
               
@@ -377,11 +400,11 @@ export default function RegisterPage() {
               {/* Pin-to-map restoration */}
               <div className="mt-4">
                 <p className="text-sm font-medium text-slate-300 mb-1">Pin your location on map <span className="text-gray-500">(click on map)</span></p>
-                <div style={{ height: "250px" }} className="rounded-xl overflow-hidden border border-white/10 shadow-lg bg-slate-900">
+                <div style={{ height: "250px" }} className="rounded-xl overflow-hidden border border-white/10 shadow-lg bg-slate-100 dark:bg-slate-900 transition-colors">
                   <MapPicker 
                     setLocation={setLocation} 
                     setAddress={setAddress} 
-                    initialLocation={location}
+                    darkMode={darkMode}
                   />
                 </div>
                 {location && (
@@ -506,6 +529,7 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }
