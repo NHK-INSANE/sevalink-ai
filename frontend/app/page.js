@@ -55,6 +55,7 @@ export default function Dashboard() {
   const [mapCenter, setMapCenter] = useState(null);
   const [locationQuery, setLocationQuery] = useState("");
   const [locationLoading, setLocationLoading] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState(null);
 
   useEffect(() => {
     setUser(getUser());
@@ -65,6 +66,7 @@ export default function Dashboard() {
       setError(null);
       const data = await getProblems();
       setProblems(data);
+      setLastUpdate(new Date().toLocaleTimeString());
     } catch (e) {
       setError("Could not connect to backend. Make sure the server is running.");
     } finally {
@@ -74,7 +76,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchProblems();
-    const interval = setInterval(fetchProblems, 30000); // auto-refresh every 30s
+    const interval = setInterval(fetchProblems, 5000); // real-time: every 5s
     return () => clearInterval(interval);
   }, []);
 
@@ -201,7 +203,17 @@ export default function Dashboard() {
         <div className="mb-10">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-white">🗺️ Live Crisis Map</h2>
-            <span className="text-xs text-slate-500 italic">Toggle markers / heatmap →</span>
+            <div className="flex items-center gap-3">
+              {/* Live pulse indicator */}
+              <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block" />
+                Live
+              </span>
+              {lastUpdate && (
+                <span className="text-xs text-slate-500">Updated {lastUpdate}</span>
+              )}
+              <span className="text-xs text-slate-500 italic">Toggle markers / heatmap →</span>
+            </div>
           </div>
 
           {/* Location Search */}
@@ -318,6 +330,22 @@ export default function Dashboard() {
                   </div>
                 )}
               </div>
+
+              {/* Get Directions */}
+              {selected.location?.lat && selected.location?.lng && (
+                <div className="mt-4 pt-4 border-t border-white/8">
+                  <button
+                    onClick={() => {
+                      const url = `https://www.google.com/maps/dir/?api=1&destination=${selected.location.lat},${selected.location.lng}`;
+                      window.open(url, "_blank");
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold bg-blue-600/20 border border-blue-500/40 text-blue-300 hover:bg-blue-600/30 hover:border-blue-400/60 transition-all"
+                  >
+                    🧭 Get Directions
+                  </button>
+                  <p className="text-center text-[10px] text-slate-600 mt-1.5">Opens Google Maps from your location</p>
+                </div>
+              )}
             </div>
           </div>
         )}
