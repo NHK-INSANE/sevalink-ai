@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Navbar from "./components/Navbar";
 import ProblemCard from "./components/ProblemCard";
 import { getProblems, updateProblemStatus } from "./utils/api";
+import { getUser } from "./utils/auth";
 
 const MapView = dynamic(() => import("./components/MapView"), { ssr: false });
 
@@ -46,6 +47,11 @@ export default function Dashboard() {
   const [problems, setProblems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    setUser(getUser());
+  }, []);
 
   const fetchProblems = async () => {
     try {
@@ -90,12 +96,51 @@ export default function Dashboard() {
         <div className="mb-10">
           <h1 className="text-4xl font-bold tracking-tight mb-2">
             <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Command Center
+              {user ? `Welcome, ${user.name || user.email?.split("@")[0]} 👋` : "Command Center"}
             </span>
           </h1>
           <p className="text-slate-400 text-lg">
-            Real-time civic crisis dashboard powered by AI
+            {user
+              ? `Signed in as ${user.role || "User"} · Real-time civic crisis dashboard`
+              : "Real-time civic crisis dashboard powered by AI"}
           </p>
+
+          {/* Role-based action banner */}
+          {user?.role === "Volunteer" && (
+            <div className="mt-4 inline-flex items-center gap-3 px-4 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/8">
+              <span className="text-emerald-400 text-lg">🤝</span>
+              <div>
+                <div className="text-sm font-semibold text-emerald-300">You&apos;re a Volunteer{user.skill ? ` · ${user.skill}` : ""}</div>
+                <div className="text-xs text-slate-500">Check problems below to find tasks matching your skill</div>
+              </div>
+              <a href="/problems" className="ml-2 px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 text-xs font-semibold hover:bg-emerald-500/30 transition-colors">
+                Browse Tasks →
+              </a>
+            </div>
+          )}
+
+          {(user?.role === "NGO" || user?.role === "Worker") && (
+            <div className="mt-4 inline-flex items-center gap-3 px-4 py-2.5 rounded-xl border border-indigo-500/30 bg-indigo-500/8">
+              <span className="text-indigo-400 text-lg">{user.role === "NGO" ? "🏢" : "🔧"}</span>
+              <div>
+                <div className="text-sm font-semibold text-indigo-300">
+                  {user.role === "NGO" ? user.ngoName || "Your NGO" : `Worker · ${user.ngoLink || "Independent"}`}
+                </div>
+                <div className="text-xs text-slate-500">Coordinate and manage crisis responses</div>
+              </div>
+              <a href="/problems" className="ml-2 px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 text-xs font-semibold hover:bg-indigo-500/30 transition-colors">
+                Manage Problems →
+              </a>
+            </div>
+          )}
+
+          {(!user || user?.role === "User") && (
+            <div className="mt-4">
+              <a href="/submit" className="inline-flex items-center gap-2 btn-primary px-4 py-2.5 rounded-xl text-white text-sm font-semibold">
+                ➕ Report a Problem
+              </a>
+            </div>
+          )}
         </div>
 
         {/* Error */}

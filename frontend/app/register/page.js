@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { login } from "../utils/auth";
+import { registerUser } from "../utils/api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -21,12 +22,13 @@ const SKILLS = [
 export default function RegisterPage() {
   const [form, setForm] = useState({ role: "User" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const update = (field) => (e) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.password) {
       setError("Name, email and password are required.");
@@ -36,8 +38,17 @@ export default function RegisterPage() {
       setError("Please enter your NGO name.");
       return;
     }
-    login(form);
-    router.push("/");
+    setLoading(true);
+    setError("");
+    try {
+      const user = await registerUser(form);
+      login(user); // save to localStorage
+      router.push("/");
+    } catch (err) {
+      setError(err.message || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -222,9 +233,17 @@ export default function RegisterPage() {
             <button
               id="register-submit"
               type="submit"
-              className="w-full btn-primary py-3 rounded-xl text-white font-semibold text-sm mt-2"
+              disabled={loading}
+              className="w-full btn-primary py-3 rounded-xl text-white font-semibold text-sm mt-2 disabled:opacity-60 flex items-center justify-center gap-2"
             >
-              Create Account →
+              {loading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Creating account…
+                </>
+              ) : (
+                "Create Account →"
+              )}
             </button>
           </form>
 

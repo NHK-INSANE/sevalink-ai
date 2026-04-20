@@ -1,26 +1,36 @@
 "use client";
 import { useState } from "react";
 import { login } from "../utils/auth";
+import { loginUser } from "../utils/api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const update = (field) => (e) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     if (!form.email || !form.password) {
       setError("Please fill in all fields.");
       return;
     }
-    // Frontend-only: store whatever is entered as the logged-in user
-    login({ ...form, name: form.email.split("@")[0], role: "User" });
-    router.push("/");
+    setLoading(true);
+    setError("");
+    try {
+      const user = await loginUser(form);
+      login(user); // save to localStorage
+      router.push("/");
+    } catch (err) {
+      setError(err.message || "Login failed. Check your credentials.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -77,9 +87,17 @@ export default function LoginPage() {
             <button
               id="login-submit"
               type="submit"
-              className="w-full btn-primary py-3 rounded-xl text-white font-semibold text-sm mt-2"
+              disabled={loading}
+              className="w-full btn-primary py-3 rounded-xl text-white font-semibold text-sm mt-2 disabled:opacity-60 flex items-center justify-center gap-2"
             >
-              Sign In →
+              {loading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Signing in…
+                </>
+              ) : (
+                "Sign In →"
+              )}
             </button>
           </form>
 
@@ -90,11 +108,6 @@ export default function LoginPage() {
             </Link>
           </div>
         </div>
-
-        {/* Demo note */}
-        <p className="text-center text-xs text-slate-600 mt-4">
-          Demo mode — any email & password works
-        </p>
       </div>
     </div>
   );

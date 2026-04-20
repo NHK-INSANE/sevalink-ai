@@ -59,3 +59,27 @@ export const updateProblemStatus = async (id, status) => {
     console.error("Error updating status:", err);
   }
 };
+
+// Register new user
+export const registerUser = async (data) => {
+  const res = await fetch(`${BASE_URL}/api/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error || "Registration failed");
+  return json;
+};
+
+// Login user
+export const loginUser = async (data) => {
+  const res = await fetch(`${BASE_URL}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error || "Login failed");
+  return json;
+};

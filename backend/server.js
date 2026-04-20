@@ -15,9 +15,11 @@ app.use(express.json());
 // Routes
 const problemRoutes = require("./routes/problemRoutes");
 const aiRoutes = require("./routes/aiRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 app.use("/api/problems", problemRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/auth", authRoutes);
 
 // Health check
 app.get("/", (req, res) => {
