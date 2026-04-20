@@ -60,3 +60,51 @@ html {
   50%       { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
 }
 .animate-pulse-critical { animation: pulse-glow 2s ease-in-out infinite; }
+
+/* ─── Light Mode ─────────────────────────────────────────────── */
+html.light-mode {
+  --color-bg: #f0f2f8;
+  --color-surface: #ffffff;
+  --color-border: #dde1f0;
+  --color-accent: #4f46e5;
+}
+
+html.light-mode body,
+html.light-mode .min-h-screen {
+  background-color: #f0f2f8 !important;
+  color: #1e1e2e;
+}
+
+html.light-mode .glass {
+  background: rgba(255, 255, 255, 0.82) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  color: #1e1e2e;
+}
+
+html.light-mode nav.glass {
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+
+html.light-mode .text-white   { color: #1e1e2e !important; }
+html.light-mode .text-slate-400 { color: #64748b !important; }
+html.light-mode .text-slate-500 { color: #94a3b8 !important; }
+html.light-mode .text-slate-600 { color: #94a3b8 !important; }
+html.light-mode .text-slate-300 { color: #334155 !important; }
+
+html.light-mode input,
+html.light-mode textarea,
+html.light-mode select {
+  background: rgba(0,0,0,0.04) !important;
+  border-color: rgba(0,0,0,0.12) !important;
+  color: #1e1e2e !important;
+}
+html.light-mode input::placeholder,
+html.light-mode textarea::placeholder { color: #94a3b8 !important; }
+
+html.light-mode .bg-\[#0a0a0f\]  { background-color: #f0f2f8 !important; }
+html.light-mode .bg-\[#12121a\]  { background-color: #f8faff !important; }
+
+html.light-mode .leaflet-tile {
+  filter: none !important;
+}
+html.light-mode .leaflet-container { background: #e8ecf4 !important; }

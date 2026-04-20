@@ -1,7 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
 import { createProblem, getUrgency } from "../utils/api";
+import { getUser } from "../utils/auth";
 
 const CATEGORIES = [
   "Food & Water",
@@ -34,6 +36,7 @@ const URGENCY_INFO = {
 };
 
 export default function SubmitPage() {
+  const router = useRouter();
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -47,6 +50,11 @@ export default function SubmitPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
+
+  // Auth guard — redirect if not logged in
+  useEffect(() => {
+    if (!getUser()) router.push("/login");
+  }, [router]);
 
   const updateForm = (field) => (e) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
