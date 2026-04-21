@@ -16,6 +16,38 @@
   --color-low: #22c55e;
 }
 
+.dark {
+  --primary: #3b82f6;
+  --bg: #0f172a;
+  --card: #1e293b;
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --border: #334155;
+  
+  --color-critical: #f87171;
+}
+
+.dark body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.dark .navbar-solid {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+
+.dark .premium-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+
+.dark .premium-input {
+  background: #1e293b;
+  border-color: #334155;
+  color: white;
+}
+
 body {
   background: var(--bg);
   color: var(--text);

@@ -185,17 +185,45 @@ router.patch("/:id/status", async (req, res) => {
   }
 });
 
-// PATCH /api/problems/:id/assign — Assign a volunteer
+// PATCH /api/problems/:id/assign — Assign a volunteer (With Role Validation)
 router.patch("/:id/assign", async (req, res) => {
   try {
-    const { volunteerId, volunteerName } = req.body;
+    const { volunteerId, volunteerName, assignedBy } = req.body;
     
+    if (!volunteerId || !assignedBy) {
+      return res.status(400).json({ error: "volunteerId and assignedBy are required" });
+    }
+
+    const helper = await User.findById(volunteerId);
+    const assigner = await User.findById(assignedBy);
+
+    if (!helper || !assigner) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // ── NGO Validation ──
+    if (assigner.role?.toLowerCase() === "ngo") {
+      if (helper.role?.toLowerCase() === "worker") {
+        // Ensure worker belongs to this NGO
+        if (helper.ngoId?.toString() !== assigner._id.toString()) {
+          return res.status(403).json({ error: "Unauthorized: This worker belongs to another NGO." });
+        }
+      }
+    }
+
+    // ── Worker Validation ──
+    if (assigner.role?.toLowerCase() === "worker") {
+      if (helper.role?.toLowerCase() !== "volunteer") {
+        return res.status(403).json({ error: "Unauthorized: Workers can only assign volunteers." });
+      }
+    }
+
     const problem = await Problem.findByIdAndUpdate(
       req.params.id,
       {
         assignedTo: volunteerId,
         status: "In Progress",
-        $push: { timeline: { text: `Volunteer assigned (${volunteerName})` } }
+        $push: { timeline: { text: `Assigned to ${helper.role}: ${volunteerName} (by ${assigner.role})` } }
       },
       { new: true }
     );
@@ -203,7 +231,7 @@ router.patch("/:id/assign", async (req, res) => {
     // Notify the assigned user
     if (problem) {
       await User.findByIdAndUpdate(volunteerId, {
-        $push: { notifications: { text: `You were assigned to problem: ${problem.title}`, type: "task" } }
+        $push: { notifications: { text: `You were assigned to problem: ${problem.title}`, type: "task", date: new Date() } }
       });
       
       const io = req.app.get("io");

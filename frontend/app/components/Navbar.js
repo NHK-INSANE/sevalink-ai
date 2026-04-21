@@ -12,26 +12,54 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    setUser(getUser());
+    const currentUser = getUser();
+    setUser(currentUser);
+    
+    // Check initial dark mode
+    if (typeof window !== "undefined") {
+      setIsDarkMode(document.documentElement.classList.contains("dark"));
+    }
 
-    // 🚨 Critical SOS Listener (Preserved "Core" logic)
+    // 🚨 Critical SOS & Social Listeners
     const socket = io(API_BASE);
+
+    if (currentUser) {
+      socket.emit("register-user", currentUser._id || currentUser.id);
+    }
+
     socket.on("sos-alert", (data) => {
       try {
         const audio = new Audio("https://www.soundjay.com/buttons/beep-07a.mp3");
         audio.play().catch(() => {});
       } catch (err) {}
 
-      toast.error(`🚨 SOS ALERT: ${data.message}`, {
-        duration: 10000,
+      toast.error(`🚨 EMERGENCY: ${data.message}`, {
+        duration: 8000,
         position: "top-center",
-        style: { background: "#dc2626", color: "#fff", fontWeight: "bold" },
+        style: { background: "#dc2626", color: "#fff", fontWeight: "bold", borderRadius: "12px" },
       });
     });
+
+    socket.on("connect-request", (data) => {
+      setNotifications(prev => [...prev, data]);
+      toast(`🤝 ${data.fromName} wants to connect!`, {
+        icon: "💬",
+        style: { borderRadius: "12px", background: "#333", color: "#fff" },
+      });
+    });
+
     return () => socket.disconnect();
   }, []);
+
+  const toggleTheme = () => {
+    const isDark = document.documentElement.classList.toggle("dark");
+    setIsDarkMode(isDark);
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+  };
 
   const handleLogout = () => {
     logout();
@@ -70,6 +98,26 @@ export default function Navbar() {
 
       {/* User Actions */}
       <div className="flex items-center gap-6">
+        {/* Dark Mode Toggle */}
+        <button 
+          onClick={toggleTheme}
+          className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition duration-200"
+          title="Toggle Dark Mode"
+        >
+          {isDarkMode ? "☀️" : "🌙"}
+        </button>
+
+        {user && (
+          <div className="relative cursor-pointer" title="Notifications">
+             <span className="text-xl">🔔</span>
+             {notifications.length > 0 && (
+               <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold animate-bounce">
+                 {notifications.length}
+               </span>
+             )}
+          </div>
+        )}
+
         {user ? (
           <div className="flex items-center gap-4">
             <span className="hidden sm:inline text-sm text-gray-600 font-medium border-r border-gray-100 pr-4">

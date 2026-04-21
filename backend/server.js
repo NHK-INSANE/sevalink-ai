@@ -15,9 +15,29 @@ const io = new Server(server, {
 // Attach io to app for use in routes
 app.set("io", io);
 
+// Real-time Socket Mapping
+const userSockets = new Map(); // userId -> socketId
+
 io.on("connection", (socket) => {
-  console.log("🟢 User connected via Socket.IO");
-  socket.on("disconnect", () => console.log("🔴 User disconnected"));
+  console.log("🟢 User connected via Socket.IO:", socket.id);
+
+  socket.on("register-user", (userId) => {
+    if (userId) {
+      userSockets.set(userId, socket.id);
+      console.log(`👤 User ${userId} registered to socket ${socket.id}`);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    // Remove from map on disconnect
+    for (const [uid, sid] of userSockets.entries()) {
+      if (sid === socket.id) {
+        userSockets.delete(uid);
+        break;
+      }
+    }
+    console.log("🔴 User disconnected");
+  });
 });
 
 // Middleware
@@ -56,11 +76,32 @@ app.post("/api/sos", (req, res) => {
     message: message || "Emergency! Immediate help needed!",
     senderName: senderName || "Anonymous",
     type: "SOS",
+    urgency: "critical",
     time: new Date().toISOString(),
   };
   io.emit("sos-alert", sos); // 🔥 broadcast to ALL connected clients
   console.log("🚨 SOS broadcast:", sos);
   res.json({ success: true, sos });
+});
+
+// 🤝 Social Connect Request
+app.post("/api/connect", (req, res) => {
+  const { fromUser, toUser, fromName } = req.body;
+  if (!fromUser || !toUser) {
+    return res.status(400).json({ error: "Missing fromUser or toUser" });
+  }
+
+  const recipientSocketId = userSockets.get(toUser);
+  if (recipientSocketId) {
+    io.to(recipientSocketId).emit("connect-request", {
+      fromId: fromUser,
+      fromName: fromName || "Someone",
+      time: new Date().toISOString()
+    });
+    return res.json({ success: true, message: "Request sent!" });
+  }
+
+  res.json({ success: false, message: "User is currently offline, but they will see this later." });
 });
 
 // Global Error Handler (Prevents HTML leaks on crash)
