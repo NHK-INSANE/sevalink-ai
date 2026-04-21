@@ -244,19 +244,18 @@ router.patch("/:id/assign", async (req, res) => {
   }
 });
 
-// DELETE /api/problems/:id — Delete a problem (Owner only)
-router.delete("/:id", async (req, res) => {
+// DELETE /api/problems/:id — Delete a problem (Owner Only Check)
+router.delete("/:id", auth, async (req, res) => {
   try {
     const problem = await Problem.findById(req.params.id);
 
     if (!problem) {
-      return res.status(404).json({ message: "Not found" });
+      return res.status(404).json({ message: "Problem not found" });
     }
 
-    // 🔒 OWNER CHECK (Body-based comparison as requested)
-    // We check either req.body.userId or some other provided identifier
-    if (problem.createdBy !== req.body.userId) {
-      return res.status(403).json({ message: "Not allowed: Owner mismatch" });
+    // 🔒 SECURE OWNER CHECK (Using JWT user id)
+    if (problem.createdBy !== req.user.id.toString()) {
+      return res.status(403).json({ message: "Unauthorized: Only the creator can delete this report." });
     }
 
     await problem.deleteOne();
@@ -305,6 +304,32 @@ router.post("/force-assign", async (req, res) => {
     }
 
     res.json({ success: true, problem });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/problems/:id/history — Get chat history
+router.get("/:id/history", async (req, res) => {
+  try {
+    const Message = require("../models/Message");
+    const messages = await Message.find({ problemId: req.params.id }).sort({ createdAt: 1 });
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/problems/:id/messages — Save chat message
+router.post("/:id/messages", async (req, res) => {
+  try {
+    const Message = require("../models/Message");
+    const msg = new Message({
+      ...req.body,
+      problemId: req.params.id
+    });
+    await msg.save();
+    res.status(201).json(msg);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

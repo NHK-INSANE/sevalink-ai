@@ -28,6 +28,17 @@ io.on("connection", (socket) => {
     }
   });
 
+  // 📝 Problem Coordination Rooms
+  socket.on("join-discussion", (problemId) => {
+    socket.join(problemId);
+    console.log(`📡 Socket ${socket.id} joined discussion: ${problemId}`);
+  });
+
+  socket.on("send-discussion-message", async (data) => {
+    // Broadcast to all in the problem room
+    io.to(data.problemId).emit("new-discussion-message", data);
+  });
+
   socket.on("disconnect", () => {
     // Remove from map on disconnect
     for (const [uid, sid] of userSockets.entries()) {
