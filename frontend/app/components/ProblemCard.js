@@ -30,7 +30,9 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.2 }}
-      className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow duration-200 group flex flex-col h-full relative"
+      className={`bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 md:p-6 hover:shadow-xl transition-all duration-300 group flex flex-col h-full relative ${
+        problem.urgency === "Critical" ? "border-red-100 dark:border-red-900/30" : ""
+      }`}
     >
       {/* Delete button (Owner only) */}
       {user && user._id === problem.createdBy && (
@@ -53,10 +55,10 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
       </div>
 
       {/* Content */}
-      <h3 className="font-bold text-gray-800 text-lg mb-1 group-hover:text-blue-600 transition truncate">
+      <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate">
         {problem.title}
       </h3>
-      <p className="text-sm text-gray-500 mb-4 line-clamp-2 leading-relaxed">
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2 leading-relaxed">
         {problem.description}
       </p>
 

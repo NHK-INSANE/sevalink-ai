@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
 // POST /api/users/register
@@ -34,19 +35,23 @@ router.post("/login", async (req, res) => {
         { email: identifier },
         { username: identifier },
         { phone: identifier },
-        { name: identifier },
-        { ngoName: identifier },
       ],
-      password,
     });
 
-    if (!user) {
+    if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
+    // Generate JWT
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET || "sevalink_secret",
+      { expiresIn: "7d" }
+    );
+
     // Return user without password
     const { password: _, ...safe } = user.toObject();
-    res.json(safe);
+    res.json({ user: safe, token });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

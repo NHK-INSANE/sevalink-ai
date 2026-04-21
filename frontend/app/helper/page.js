@@ -80,9 +80,9 @@ export default function Helper() {
           >
             {filteredHelpers.length === 0 ? (
               <div className="text-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-200 flex flex-col items-center">
-                <div className="text-5xl mb-4 opacity-50">🤝</div>
-                <p className="text-gray-900 font-bold text-lg">No helpers registered yet</p>
-                <p className="text-gray-500 text-sm mt-1">Invite volunteers and workers to join the SevaLink network.</p>
+                <div className="text-5xl mb-4 opacity-50">👥</div>
+                <p className="text-gray-900 font-bold text-lg text-center px-4">No helpers yet. Invite volunteers 🚀</p>
+                <p className="text-gray-500 text-sm mt-1 text-center px-4">Dedicated individuals will appear here once they register.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -94,8 +94,8 @@ export default function Helper() {
                   >
                     {/* Avatar + Name + Role */}
                     <div className="flex items-center gap-4 mb-4">
-                      <div className="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-2xl flex-shrink-0">
-                        {h.role?.toLowerCase() === "volunteer" ? "🤝" : "🔧"}
+                      <div className="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 dark:bg-blue-900/20 dark:border-blue-800 flex items-center justify-center text-2xl flex-shrink-0 text-blue-600 dark:text-blue-400">
+                        {h.role?.toLowerCase() === "volunteer" ? "V" : "W"}
                       </div>
                       <div>
                         <h2 className="font-bold text-lg text-gray-800 leading-tight">{h.name}</h2>

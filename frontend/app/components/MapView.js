@@ -297,7 +297,7 @@ export default function MapView({
 
           {/* 🔴 Problems — color by urgency */}
           {(type === "all" || type === "problems") &&
-            problems.filter(p => p.location?.lat && p.location?.lng).map((p, i) => {
+            problems.filter(p => p.location?.lat && p.location?.lng).slice(0, 100).map((p, i) => {
               const { bg, glow } = getUrgencyColor(p.urgency);
               const icon = makePulseIcon(bg, glow);
               return (
@@ -331,7 +331,7 @@ export default function MapView({
 
           {/* 🟢 NGOs */}
           {(type === "all" || type === "ngo") &&
-            ngos.filter(n => n.location?.lat && n.location?.lng).map((n, i) => (
+            ngos.filter(n => n.location?.lat && n.location?.lng).slice(0, 50).map((n, i) => (
               <Marker key={`n-${n._id || i}`} position={[n.location.lat, n.location.lng]} icon={ngoIcon}>
                 <Popup>
                   <div style={{ minWidth: 160, fontFamily: "system-ui, sans-serif" }}>
@@ -347,7 +347,7 @@ export default function MapView({
 
           {/* 🔵 Helpers */}
           {(type === "all" || type === "helpers") &&
-            helpers.filter(h => h.location?.lat && h.location?.lng).map((h, i) => (
+            helpers.filter(h => h.location?.lat && h.location?.lng).slice(0, 100).map((h, i) => (
               <Marker key={`h-${h._id || i}`} position={[h.location.lat, h.location.lng]} icon={helperIcon}>
                 <Popup>
                   <div style={{ minWidth: 170, fontFamily: "system-ui, sans-serif" }}>

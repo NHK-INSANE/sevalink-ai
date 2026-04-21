@@ -21,7 +21,9 @@ export default function Navbar() {
     
     // Check initial dark mode
     if (typeof window !== "undefined") {
-      setIsDarkMode(document.documentElement.classList.contains("dark"));
+      const saved = localStorage.getItem("theme") || "light";
+      document.documentElement.className = saved;
+      setIsDarkMode(saved === "dark");
     }
 
     // 🚨 Critical SOS & Social Listeners
@@ -56,9 +58,12 @@ export default function Navbar() {
   }, []);
 
   const toggleTheme = () => {
-    const isDark = document.documentElement.classList.toggle("dark");
-    setIsDarkMode(isDark);
-    localStorage.setItem("theme", isDark ? "dark" : "light");
+    const current = document.documentElement.className;
+    const newTheme = current.includes("dark") ? "light" : "dark";
+    
+    document.documentElement.className = newTheme;
+    setIsDarkMode(newTheme === "dark");
+    localStorage.setItem("theme", newTheme);
   };
 
   const handleLogout = () => {
@@ -83,12 +88,13 @@ export default function Navbar() {
           { href: "/helper",    label: "Helpers" },
           { href: "/ngo",       label: "NGO" },
           { href: "/map",       label: "Map" },
+          { href: "/ai-match",  label: "AI Match" },
         ].map((link) => (
           <Link
             key={link.href}
             href={link.href}
-            className={`hover:text-blue-600 transition ${
-              pathname.includes(link.href) ? "text-blue-600" : ""
+            className={`hover:text-blue-600 transition flex items-center gap-1 ${
+              pathname.includes(link.href) ? "text-blue-600 font-bold" : ""
             }`}
           >
             {link.label}
@@ -120,12 +126,16 @@ export default function Navbar() {
 
         {user ? (
           <div className="flex items-center gap-4">
-            <span className="hidden sm:inline text-sm text-gray-600 font-medium border-r border-gray-100 pr-4">
+            <Link 
+              href="/profile"
+              className="hidden sm:flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200 font-semibold hover:text-blue-600 transition px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800"
+            >
+              <span>👤</span>
               {user.name || user.email?.split("@")[0]}
-            </span>
+            </Link>
             <button
               onClick={handleLogout}
-              className="text-xs font-bold text-red-500 hover:text-red-600 transition uppercase tracking-wider"
+              className="px-4 py-2 bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 text-xs font-bold rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition uppercase tracking-wider"
             >
               Sign Out
             </button>

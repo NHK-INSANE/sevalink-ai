@@ -58,6 +58,7 @@ app.use(cors({
 app.use(express.json());
 
 const User = require("./models/User");
+const SOS = require("./models/SOS");
 
 // API Check
 app.get("/api/users", async (req, res) => {
@@ -79,20 +80,37 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/users", userRoutes);
 
 // 🚨 SOS Emergency Broadcast
-app.post("/api/sos", (req, res) => {
-  const { latitude, longitude, message, senderName } = req.body;
-  const sos = {
-    latitude,
-    longitude,
-    message: message || "Emergency! Immediate help needed!",
-    senderName: senderName || "Anonymous",
-    type: "SOS",
-    urgency: "critical",
-    time: new Date().toISOString(),
-  };
-  io.emit("sos-alert", sos); // 🔥 broadcast to ALL connected clients
-  console.log("🚨 SOS broadcast:", sos);
-  res.json({ success: true, sos });
+app.post("/api/sos", async (req, res) => {
+  try {
+    const { latitude, longitude, message, senderName } = req.body;
+    
+    const sos = new SOS({
+      latitude,
+      longitude,
+      message: message || "Emergency! Immediate help needed!",
+      senderName: senderName || "Anonymous",
+    });
+
+    await sos.save();
+
+    io.emit("sos-alert", sos); // 🔥 broadcast to ALL connected clients
+    console.log("🚨 SOS broadcast saved & emitted:", sos);
+
+    // Auto-remove after 5 minutes for live clients
+    setTimeout(async () => {
+      try {
+        await SOS.deleteOne({ _id: sos._id });
+        io.emit("remove-sos", sos._id);
+        console.log(`🗑️ SOS ${sos._id} auto-removed`);
+      } catch (err) {
+        console.error("SOS removal error:", err);
+      }
+    }, 5 * 60 * 1000);
+
+    res.json({ success: true, sos });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // 🤝 Social Connect Request
@@ -115,17 +133,17 @@ app.post("/api/connect", (req, res) => {
   res.json({ success: false, message: "User is currently offline, but they will see this later." });
 });
 
-// Global Error Handler (Prevents HTML leaks on crash)
-app.use((err, req, res, next) => {
-  console.error("🔥 Global Error:", err);
-  res.status(500).json({
-    message: err.message || "Internal Server Error"
-  });
-});
-
 // Health check
 app.get("/", (req, res) => {
   res.json({ message: "SevaLink AI Backend Running ✅", status: "ok" });
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error("🔥 Global Error:", err);
+  res.status(500).json({
+    error: err.message || "Internal Server Error"
+  });
 });
 
 // Connect DB & Start
