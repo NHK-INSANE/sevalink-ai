@@ -4,7 +4,11 @@ const User = require("./models/User");
 const Problem = require("./models/Problem");
 require("dotenv").config();
 
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://rohan99038:rohan2006@cluster0.xlyakhy.mongodb.net/?appName=Cluster0";
+const MONGO_URI = process.env.MONGO_URI;
+if (!MONGO_URI) {
+  console.error("❌ MONGO_URI is not defined in environment variables.");
+  process.exit(1);
+}
 
 async function seed() {
   try {
