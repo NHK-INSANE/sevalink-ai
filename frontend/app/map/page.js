@@ -155,69 +155,61 @@ export default function MapPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition duration-300">
       <Navbar />
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
-      >
-        <div className="pt-24 px-6 md:px-10 max-w-7xl mx-auto pb-20">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
         
-        {/* Title + Subtitle (Startup Style) */}
+        {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">🌍 Global Crisis Map</h1>
-          <p className="text-gray-500 text-sm mt-1 font-medium">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">🌍 Global Crisis Map</h1>
+          <p className="text-[var(--muted)] text-sm mt-1">
             Live tracking of problems, volunteers, and NGOs in real-time.
           </p>
         </div>
 
-        {/* Action Bar (Preserved functionality) */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
-          <div className="flex flex-wrap gap-2">
-            <div className="bg-gray-50 p-1 rounded-2xl border border-gray-100 flex gap-1">
-              {/* SOS Button */}
-              <button
-                onClick={sendSOS}
-                disabled={sendingSOS}
-                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white px-4 py-2 rounded-xl font-bold text-sm transition duration-200 hover:scale-105 active:scale-95 shadow-md"
-              >
-                <span className={sendingSOS ? "animate-spin" : "animate-pulse"}>🚨</span>
-                {sendingSOS ? "Sending..." : "Send SOS"}
-              </button>
+        {/* Action Bar */}
+        <div className="flex flex-col gap-4 mb-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={sendSOS}
+              disabled={sendingSOS}
+              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white px-4 py-2 rounded-xl font-bold text-sm transition shadow-sm active:scale-95"
+            >
+              <span className={sendingSOS ? "animate-spin" : "animate-pulse"}>🚨</span>
+              {sendingSOS ? "Sending..." : "Send SOS"}
+            </button>
 
-              {/* Mode filter pills */}
-              {MODES.map((mode) => (
-                <button
-                  key={mode.id}
-                  onClick={() => setType(mode.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition duration-200 text-xs font-semibold ${
-                    type === mode.id
-                      ? "bg-blue-600 text-white shadow-sm"
-                      : "text-gray-500 hover:text-blue-600 hover:bg-gray-50"
-                  }`}
-                >
-                  <span>{mode.icon}</span>
-                  {mode.label}
-                </button>
-              ))}
+            <button
+              onClick={() => setShowHeatmap(!showHeatmap)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm border ${
+                showHeatmap
+                  ? "bg-purple-600 text-white border-purple-500"
+                  : "bg-[var(--card)] text-[var(--muted)] border-[var(--border)]"
+              }`}
+            >
+              🔥 {showHeatmap ? "Hide Heatmap" : "Crisis Heatmap"}
+            </button>
+          </div>
 
-              {/* Heatmap Toggle */}
+          <div className="flex flex-wrap gap-1 p-1 bg-[var(--card)] border border-[var(--border)] rounded-2xl w-fit">
+            {MODES.map((mode) => (
               <button
-                onClick={() => setShowHeatmap(!showHeatmap)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition duration-200 shadow-sm border ${
-                  showHeatmap
-                    ? "bg-purple-600 text-white border-purple-500"
-                    : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                key={mode.id}
+                onClick={() => setType(mode.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition text-[10px] sm:text-xs font-bold ${
+                  type === mode.id
+                    ? "bg-[var(--primary)] text-white shadow-sm"
+                    : "text-[var(--muted)] hover:text-[var(--text)]"
                 }`}
               >
-                🔥 {showHeatmap ? "Hide Heatmap" : "Crisis Heatmap"}
+                <span>{mode.icon}</span>
+                <span className={type === mode.id ? "block" : "hidden sm:block"}>{mode.label}</span>
               </button>
-            </div>
+            ))}
           </div>
         </div>
 
-        {/* ── SOS Alert Banner ── */}
+        {/* SOS Alert Banner */}
         <AnimatePresence>
           {sosAlert && (
             <motion.div
@@ -226,31 +218,24 @@ export default function MapPage() {
               exit={{ opacity: 0, y: -20 }}
               className="mb-6 flex items-start gap-4 bg-red-600 text-white px-5 py-4 rounded-2xl shadow-lg border border-red-400"
             >
-              <span className="text-3xl animate-bounce">🚨</span>
-              <div className="flex-1">
-                <div className="font-bold text-lg">SOS EMERGENCY ALERT</div>
-                <div className="text-red-100 text-sm mt-0.5">
-                  {sosAlert.message} — sent by <strong>{sosAlert.senderName || "Unknown"}</strong>
+              <span className="text-2xl sm:text-3xl animate-bounce">🚨</span>
+              <div className="flex-1 min-w-0">
+                <div className="font-bold text-base sm:text-lg">SOS EMERGENCY</div>
+                <div className="text-red-100 text-xs sm:text-sm mt-0.5 truncate">
+                  {sosAlert.message} — <strong>{sosAlert.senderName || "Unknown"}</strong>
                 </div>
-                <div className="text-red-200 text-xs mt-1">
+                <div className="text-red-200 text-[10px] sm:text-xs mt-1">
                   📍 {sosAlert.latitude?.toFixed(4)}, {sosAlert.longitude?.toFixed(4)} · {new Date(sosAlert.time).toLocaleTimeString()}
                 </div>
               </div>
-              <button
-                onClick={() => setSosAlert(null)}
-                className="text-red-200 hover:text-white text-sm mt-1"
-              >✕</button>
+              <button onClick={() => setSosAlert(null)} className="text-red-200 hover:text-white p-1">✕</button>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Map Container (Startup Style) */}
-        <div className="bg-white p-4 rounded-3xl shadow-xl border border-gray-100 relative overflow-hidden">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="h-[65vh] rounded-2xl overflow-hidden border border-gray-100"
-          >
+        {/* Map Container */}
+        <div className="bg-[var(--card)] p-2 sm:p-4 rounded-3xl shadow-xl border border-[var(--border)] relative overflow-hidden">
+          <div className="h-[50vh] sm:h-[65vh] md:h-[70vh] rounded-2xl overflow-hidden">
             <MapView
               problems={problems}
               ngos={ngos}
@@ -262,26 +247,25 @@ export default function MapPage() {
               zoomToUser={true}
               showHeatmap={showHeatmap}
             />
-          </motion.div>
+          </div>
         </div>
 
-        {/* Bottom Stats (Preserved functionality) */}
+        {/* Bottom Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
           {[
-            { label: "Total Problems", val: problems.length, icon: "🔴" },
-            { label: "NGOs",           val: ngos.length,     icon: "🏢" },
-            { label: "Volunteers",     val: helpers.length,  icon: "🤝" },
-            { label: "Critical",       val: problems.filter(p => p.urgency?.toLowerCase() === "critical").length, icon: "⚠️" },
+            { label: "Reports",     val: problems.length, icon: "🔴" },
+            { label: "NGOs",        val: ngos.length,     icon: "🏢" },
+            { label: "Volunteers",  val: helpers.length,  icon: "🤝" },
+            { label: "Critical",    val: problems.filter(p => p.urgency?.toLowerCase() === "critical").length, icon: "⚠️" },
           ].map((s) => (
-            <div key={s.label} className="bg-white/95 backdrop-blur shadow-lg border border-white p-3 rounded-2xl text-center">
-              <div className="text-xl">{s.icon}</div>
-              <div className="text-lg font-bold text-gray-800">{s.val}</div>
-              <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{s.label}</div>
+            <div key={s.label} className="bg-[var(--card)] border border-[var(--border)] p-4 rounded-2xl text-center shadow-sm hover:shadow-md transition">
+              <div className="text-lg">{s.icon}</div>
+              <div className="text-xl font-bold text-[var(--text)] mt-1">{s.val}</div>
+              <div className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-widest mt-0.5">{s.label}</div>
             </div>
           ))}
         </div>
-      </div>
-      </motion.div>
+      </main>
     </div>
   );
 }

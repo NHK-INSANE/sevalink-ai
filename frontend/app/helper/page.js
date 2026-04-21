@@ -38,26 +38,26 @@ export default function Helper() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition duration-300">
       <Navbar />
-      <main className="max-w-7xl mx-auto px-6 md:px-10 pt-24 pb-20">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">🤝 Helpers & Volunteers</h1>
-          <p className="text-gray-500 text-sm mt-1 font-medium">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">🤝 Helpers & Volunteers</h1>
+          <p className="text-[var(--muted)] text-sm mt-1">
             Dedicated individuals and workers supporting the SevaLink network.
           </p>
         </div>
 
-        {/* Filter Pills (Restored) */}
-        <div className="flex gap-2 mb-8 p-1 bg-gray-50 border border-gray-100 rounded-2xl w-fit">
+        {/* Filter Pills */}
+        <div className="flex flex-wrap gap-2 mb-8 p-1 bg-[var(--card)] border border-[var(--border)] rounded-2xl w-fit">
           {FILTERS.map((f) => (
             <button
               key={f.id}
               onClick={() => setFilter(f.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition duration-200 text-xs font-bold ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition text-[10px] sm:text-xs font-bold ${
                 filter === f.id
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "text-gray-500 hover:text-blue-600 hover:bg-gray-100"
+                  ? "bg-[var(--primary)] text-white shadow-sm"
+                  : "text-[var(--muted)] hover:text-[var(--text)]"
               }`}
             >
               <span>{f.icon}</span>
@@ -67,108 +67,68 @@ export default function Helper() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
             {filteredHelpers.length === 0 ? (
-              <div className="text-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-200 flex flex-col items-center">
-                <div className="text-5xl mb-4 opacity-50">👥</div>
-                <p className="text-gray-900 font-bold text-lg text-center px-4">No helpers yet. Invite volunteers 🚀</p>
-                <p className="text-gray-500 text-sm mt-1 text-center px-4">Dedicated individuals will appear here once they register.</p>
+              <div className="text-center py-20 bg-[var(--card)] rounded-2xl border border-dashed border-[var(--border)] flex flex-col items-center">
+                <p className="text-[var(--text)] font-bold text-lg">No helpers yet</p>
+                <p className="text-[var(--muted)] text-sm mt-1">Invite volunteers to join the network.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredHelpers.map((h) => (
-                  <motion.div 
+                  <div 
                     key={h._id || h.id}
-                    whileHover={{ scale: 1.01 }}
-                    className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 transition duration-200"
+                    className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 shadow-sm hover:shadow-md transition"
                   >
-                    {/* Avatar + Name + Role */}
+                    {/* Header */}
                     <div className="flex items-center gap-4 mb-4">
-                      <div className="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 dark:bg-blue-900/20 dark:border-blue-800 flex items-center justify-center text-2xl flex-shrink-0 text-blue-600 dark:text-blue-400">
-                        {h.role?.toLowerCase() === "volunteer" ? "V" : "W"}
+                      <div className="w-12 h-12 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center text-xl text-[var(--primary)] font-bold shrink-0">
+                        {h.name ? h.name[0].toUpperCase() : "U"}
                       </div>
-                      <div>
-                        <h2 className="font-bold text-lg text-gray-800 leading-tight">{h.name}</h2>
-                        <span className={`text-xs font-semibold uppercase tracking-wider ${
-                          h.role?.toLowerCase() === "volunteer" ? "text-blue-600" : "text-orange-600"
-                        }`}>
+                      <div className="min-w-0">
+                        <h2 className="font-bold text-[var(--text)] truncate tracking-tight">{h.name}</h2>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider ${h.role?.toLowerCase() === "volunteer" ? "text-blue-500" : "text-orange-500"}`}>
                           {h.role}
                         </span>
                       </div>
                     </div>
 
-                    {/* Contact Details */}
-                    <div className="space-y-2 text-sm mb-4">
-                      {h.email && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <span>📧</span>
-                          <span className="truncate">{h.email}</span>
-                        </div>
-                      )}
-                      {h.phone && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <span>📞</span>
-                          <span>{h.phone}</span>
-                        </div>
-                      )}
-                      {h.address && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <span>📍</span>
-                          <span className="line-clamp-1">{h.address}</span>
-                        </div>
-                      )}
+                    {/* Contact */}
+                    <div className="space-y-2 mb-6">
+                      {h.email && <div className="text-xs text-[var(--muted)] flex items-center gap-2"><span className="opacity-50">📧</span><span className="truncate">{h.email}</span></div>}
+                      {h.phone && <div className="text-xs text-[var(--muted)] flex items-center gap-2"><span className="opacity-50">📞</span>{h.phone}</div>}
+                      {h.address && <div className="text-xs text-[var(--muted)] flex items-center gap-2"><span className="opacity-50">📍</span><span className="truncate">{h.address}</span></div>}
                     </div>
 
                     {/* Skills */}
                     {(h.skills?.length > 0 || h.skill) && (
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {(h.skills?.length > 0
-                          ? h.skills
-                          : [h.skill]
-                        ).map((s, i) => (
-                          <span
-                            key={i}
-                            className="bg-blue-50 border border-blue-100 text-blue-700 px-2 py-1 rounded-lg text-xs font-medium"
-                          >
+                      <div className="flex flex-wrap gap-2 mb-6">
+                        {(h.skills?.length > 0 ? h.skills : [h.skill]).map((s, i) => (
+                          <span key={i} className="bg-[var(--primary)]/5 border border-[var(--primary)]/10 text-[var(--primary)] px-2 py-0.5 rounded-lg text-[10px] font-bold">
                             {s}
                           </span>
                         ))}
                       </div>
                     )}
 
-                    {/* NGO for workers */}
-                    {h.role?.toLowerCase() === "worker" && h.ngoName && (
-                      <p className="text-xs text-gray-500 mb-3">
-                        🏢 NGO: <span className="font-semibold text-gray-700">{h.ngoName}</span>
-                      </p>
-                    )}
-
-                    <hr className="border-gray-100 mb-3" />
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block" />
-                        Available
-                      </span>
-                      <button className="ripple px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 hover:scale-105 active:scale-95 transition duration-200">
+                    <div className="pt-4 border-t border-[var(--border)] flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Active</span>
+                      </div>
+                      <button className="px-4 py-1.5 rounded-lg bg-[var(--primary)] text-white text-xs font-bold hover:opacity-90 transition active:scale-95">
                         Contact
                       </button>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             )}
-          </motion.div>
+          </div>
         )}
       </main>
     </div>

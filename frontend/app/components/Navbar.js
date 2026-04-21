@@ -15,6 +15,7 @@ export default function Navbar() {
   const [notifications, setNotifications] = useState([]);
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const currentUser = getUser();
@@ -65,9 +66,18 @@ export default function Navbar() {
     localStorage.setItem("theme", isDark ? "dark" : "light");
   };
 
+  const navLinks = [
+    { href: "/dashboard", label: "Dashboard" },
+    { href: "/problems",  label: "Problems" },
+    { href: "/helper",    label: "Helpers" },
+    { href: "/ngo",       label: "NGO" },
+    { href: "/map",       label: "Map" },
+    { href: "/ai-match",  label: "AI Match" },
+  ];
+
   return (
     <header className="sticky top-0 z-50 bg-[var(--bg)]/80 backdrop-blur border-b border-[var(--border)]">
-      <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
         
         {/* Left: Brand */}
         <Link href="/" className="flex items-center gap-2 group">
@@ -76,16 +86,9 @@ export default function Navbar() {
           </h1>
         </Link>
 
-        {/* Center: Navigation Links */}
+        {/* Center: Desktop Navigation Links */}
         <nav className="hidden lg:flex gap-8 text-sm font-medium text-[var(--muted)]">
-          {[
-            { href: "/dashboard", label: "Dashboard" },
-            { href: "/problems",  label: "Problems" },
-            { href: "/helper",    label: "Helpers" },
-            { href: "/ngo",       label: "NGO" },
-            { href: "/map",       label: "Map" },
-            { href: "/ai-match",  label: "AI Match" },
-          ].map((link) => (
+          {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -99,7 +102,7 @@ export default function Navbar() {
         </nav>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           {user ? (
             <>
               {/* Theme Toggle */}
@@ -115,7 +118,7 @@ export default function Navbar() {
               {/* Notification Button */}
               <div className="relative">
                 <button 
-                  onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); }}
+                  onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); setMobileMenuOpen(false); }}
                   className="p-2 rounded-lg text-[var(--muted)] hover:text-[var(--text)] transition-colors relative"
                 >
                   <span className="text-lg">🔔</span>
@@ -145,13 +148,13 @@ export default function Navbar() {
               {/* Profile Dropdown */}
               <div className="relative">
                 <button 
-                  onClick={() => { setProfileOpen(!profileOpen); setNotifOpen(false); }}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--border)] hover:bg-[var(--card)] transition-colors"
+                  onClick={() => { setProfileOpen(!profileOpen); setNotifOpen(false); setMobileMenuOpen(false); }}
+                  className="flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg border border-[var(--border)] hover:bg-[var(--card)] transition-colors"
                 >
                   <div className="w-6 h-6 rounded-full bg-[var(--primary)] text-white flex items-center justify-center font-bold text-[10px]">
                     {user.name ? user.name[0].toUpperCase() : "U"}
                   </div>
-                  <span className="text-sm font-medium text-[var(--text)] hidden sm:inline">{user.name || "User"}</span>
+                  <span className="text-sm font-medium text-[var(--text)] hidden sm:block">{user.name || "User"}</span>
                 </button>
 
                 {profileOpen && (
@@ -179,9 +182,39 @@ export default function Navbar() {
               <Link href="/register" className="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity shadow-sm shadow-indigo-500/10">Register</Link>
             </div>
           )}
+
+          {/* Mobile Menu Toggle */}
+          <button 
+            onClick={() => { setMobileMenuOpen(!mobileMenuOpen); setNotifOpen(false); setProfileOpen(false); }}
+            className="lg:hidden p-2 rounded-lg text-[var(--muted)] hover:text-[var(--text)] transition-colors"
+          >
+            {mobileMenuOpen ? "✕" : "☰"}
+          </button>
         </div>
 
       </div>
+
+      {/* Mobile Navigation Dropdown */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden bg-[var(--card)] border-b border-[var(--border)] animate-in slide-in-from-top duration-200">
+          <nav className="flex flex-col p-4 space-y-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  pathname.includes(link.href) 
+                    ? "bg-[var(--primary)]/10 text-[var(--primary)]" 
+                    : "text-[var(--muted)] hover:bg-[var(--bg)] hover:text-[var(--text)]"
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

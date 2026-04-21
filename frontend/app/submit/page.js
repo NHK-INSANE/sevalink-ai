@@ -238,239 +238,140 @@ export default function SubmitPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-800 transition duration-200">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition duration-300">
       <Navbar />
-      <PageWrapper>
-        <main className="max-w-2xl mx-auto px-4 md:px-10 pt-24 pb-12 bg-white dark:bg-gray-900 rounded-2xl shadow-md border border-gray-100 dark:border-gray-800 transition duration-200 mt-6 mb-12">
-        {/* Header */}
-        <div className="mb-10">
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">
-            Report a Problem
-          </h1>
-          <p className="text-slate-400">
-            Describe the issue and our AI will instantly assess urgency and
-            match volunteers.
-          </p>
-          <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-xs font-semibold text-indigo-300">
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse inline-block" />
-            ⚡ AI-powered urgency detection
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-2">
-              Problem Title *
-            </label>
-            <input
-              id="problem-title"
-              type="text"
-              placeholder="e.g. No clean water in Block C"
-              value={form.title}
-              onChange={updateForm("title")}
-              className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
-            />
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-2">
-              Description *
-            </label>
-            <textarea
-              id="problem-description"
-              placeholder="Describe the situation in detail — who is affected, since when, what is urgently needed…"
-              value={form.description}
-              onChange={updateForm("description")}
-              rows={5}
-              className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 resize-none"
-            />
-            <div className="flex gap-4 mt-2">
-              <button
-                type="button"
-                onClick={analyzeUrgency}
-                disabled={!form.description.trim() || aiLoading}
-                className="text-xs text-indigo-400 hover:text-indigo-300 disabled:opacity-40 transition-colors flex items-center gap-1"
-              >
-                {aiLoading ? "Analyzing…" : "🤖 Analyze Urgency"}
-              </button>
-              <button
-                type="button"
-                onClick={getAISuggestionHandler}
-                disabled={!form.description.trim() || suggestLoading}
-                className="text-xs text-purple-400 hover:text-purple-300 disabled:opacity-40 transition-colors flex items-center gap-1"
-              >
-                {suggestLoading ? "Thinking…" : "🤖 Improve with AI"}
-              </button>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pt-24">
+        <div className="max-w-2xl mx-auto bg-[var(--card)] border border-[var(--border)] rounded-3xl p-6 sm:p-10 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Report a Problem</h1>
+            <p className="text-[var(--muted)] text-sm mt-1">
+              Describe the issue and our AI will assess urgency and match help.
+            </p>
+            <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--primary)]/20 bg-[var(--primary)]/5 text-[10px] font-bold text-[var(--primary)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] animate-pulse" />
+              ⚡ AI Urgency Detection
             </div>
-
-            {aiSuggestion && (
-              <div className="mt-4 p-4 rounded-xl bg-indigo-600/10 border border-indigo-500/30">
-                <p className="text-xs text-indigo-300 font-bold mb-1 uppercase tracking-wider">AI Suggested Version:</p>
-                <p className="text-sm text-slate-200 mb-3 leading-relaxed italic">"{aiSuggestion}"</p>
-                <button
-                  type="button"
-                  onClick={applySuggestion}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200 shadow-sm text-xs mt-3"
-                >
-                  Apply Suggestion
-                </button>
-              </div>
-            )}
           </div>
 
-          {/* AI Urgency Result */}
-          {aiUrgency && URGENCY_INFO[aiUrgency] && (
-            <div
-              className={`p-4 rounded-xl border ${URGENCY_INFO[aiUrgency].bg} flex items-center gap-3`}
-            >
-              <span className="text-2xl">🤖</span>
-              <div className="flex-1">
-                <div className={`font-semibold ${URGENCY_INFO[aiUrgency].color}`}>
-                  {aiUrgency} Urgency
-                </div>
-                <div className="text-xs text-slate-500">
-                  {URGENCY_INFO[aiUrgency].desc}
-                </div>
-                <div className="text-[10px] text-indigo-400/70 mt-0.5 font-medium">
-                  ⚡ Powered by Gemini AI
-                </div>
-              </div>
-              {aiScore !== null && (
-                <div className="text-right">
-                  <div className={`text-2xl font-bold ${URGENCY_INFO[aiUrgency].color}`}>
-                    {aiScore}
-                  </div>
-                  <div className="text-xs text-slate-500">/ 100</div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Category & Skill */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Title */}
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-2">
-                Category
-              </label>
-              <select
-                id="problem-category"
-                value={form.category}
-                onChange={updateForm("category")}
-                className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 cursor-pointer appearance-none bg-white"
-              >
-                <option value="">Select…</option>
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-              {form.category === "Other" && (
-                <input
-                  type="text"
-                  placeholder="Enter custom category"
-                  value={customCategory}
-                  onChange={(e) => setCustomCategory(e.target.value)}
-                  className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 mt-3"
-                />
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-2">
-                Required Skill
-              </label>
-              <select
-                id="problem-skill"
-                value={form.requiredSkill}
-                onChange={updateForm("requiredSkill")}
-                className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 cursor-pointer appearance-none bg-white"
-              >
-                <option value="">Select…</option>
-                {SKILLS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-              {form.requiredSkill === "Other" && (
-                <input
-                  type="text"
-                  placeholder="Enter custom skill"
-                  value={customSkill}
-                  onChange={(e) => setCustomSkill(e.target.value)}
-                  className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 mt-3"
-                />
-              )}
-            </div>
-          </div>
-          {/* Location */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-2">
-                Address / Neighborhood
-              </label>
+              <label className="block text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-2">Problem Title *</label>
               <input
-                placeholder="Enter address manually"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+                type="text"
+                placeholder="e.g. No clean water in Block C"
+                value={form.title}
+                onChange={updateForm("title")}
+                className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-sm focus:ring-2 focus:ring-[var(--primary)] transition outline-none"
               />
             </div>
 
-            <button
-              type="button"
-              onClick={handleUseMyLocation}
-              className="ripple bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-sm text-gray-700 transition duration-200 inline-block hover:scale-105 active:scale-95"
-            >
-              📍 Use My Location
-            </button>
-
-            <div className="mt-4">
-              <p className="text-sm font-medium text-slate-300 mb-2">Pin your location on map <span className="text-gray-400 font-normal opacity-50">(click on map)</span></p>
-              <div style={{ height: "300px" }} className="rounded-xl overflow-hidden border border-white/10 shadow-lg bg-slate-900">
-                <MapPicker 
-                  setLocation={setLocation} 
-                  setAddress={setAddress} 
-                  initialLocation={location}
-                />
+            {/* Description */}
+            <div>
+              <label className="block text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-2">Description *</label>
+              <textarea
+                placeholder="Describe the situation in detail..."
+                value={form.description}
+                onChange={updateForm("description")}
+                rows={4}
+                className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-sm focus:ring-2 focus:ring-[var(--primary)] transition outline-none resize-none"
+              />
+              <div className="flex flex-wrap gap-4 mt-2">
+                <button type="button" onClick={analyzeUrgency} disabled={!form.description.trim() || aiLoading} className="text-[10px] font-bold text-[var(--primary)] hover:opacity-80 disabled:opacity-30">
+                  {aiLoading ? "Analyzing..." : "🤖 Analyze Urgency"}
+                </button>
+                <button type="button" onClick={getAISuggestionHandler} disabled={!form.description.trim() || suggestLoading} className="text-[10px] font-bold text-purple-500 hover:opacity-80 disabled:opacity-30">
+                  {suggestLoading ? "Thinking..." : "🤖 AI Suggestion"}
+                </button>
               </div>
-              {location && (
-                <p className="text-xs text-emerald-400 mt-2 font-medium flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Verified Pin: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
-                </p>
+
+              {aiSuggestion && (
+                <div className="mt-4 p-4 rounded-2xl bg-purple-500/5 border border-purple-500/20">
+                  <p className="text-[10px] font-bold text-purple-500 uppercase tracking-widest mb-2">AI Version:</p>
+                  <p className="text-sm italic opacity-80 mb-3">"{aiSuggestion}"</p>
+                  <button type="button" onClick={applySuggestion} className="bg-purple-500 text-white px-4 py-1.5 rounded-lg text-[10px] font-bold hover:opacity-90">Apply</button>
+                </div>
               )}
             </div>
-          </div>
 
-          {/* Error */}
-          {error && (
-            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm">
-              ⚠️ {error}
-            </div>
-          )}
-
-          {/* Submit */}
-          <button
-            id="submit-problem-btn"
-            type="submit"
-            disabled={loading}
-            className="ripple w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg transition duration-200 shadow-sm text-base font-medium disabled:opacity-60 flex items-center justify-center gap-2 hover:scale-105 active:scale-95"
-          >
-            {loading ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Submitting Crisis Report…
-              </>
-            ) : (
-              "Submit Problem"
+            {/* AI Urgency Result */}
+            {aiUrgency && (
+              <div className="p-4 rounded-2xl bg-[var(--bg)] border border-[var(--border)] flex items-center gap-4">
+                <div className="text-2xl">🤖</div>
+                <div className="flex-1 min-w-0">
+                  <div className={`text-sm font-bold ${URGENCY_INFO[aiUrgency]?.color}`}>{aiUrgency} Urgency</div>
+                  <div className="text-[10px] text-[var(--muted)] truncate">{URGENCY_INFO[aiUrgency]?.desc}</div>
+                </div>
+                {aiScore !== null && (
+                  <div className="text-right">
+                    <div className={`text-lg font-bold ${URGENCY_INFO[aiUrgency]?.color}`}>{aiScore}%</div>
+                    <div className="text-[8px] text-[var(--muted)] font-bold uppercase tracking-widest">Score</div>
+                  </div>
+                )}
+              </div>
             )}
-          </button>
-        </form>
-        </main>
-      </PageWrapper>
+
+            {/* Selects */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-2">Category</label>
+                <select value={form.category} onChange={updateForm("category")} className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none">
+                  <option value="">Select...</option>
+                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-2">Required Skill</label>
+                <select value={form.requiredSkill} onChange={updateForm("requiredSkill")} className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none">
+                  <option value="">Select...</option>
+                  {SKILLS.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* Location */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-2">Address / Neighborhood</label>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    placeholder="Enter address manually"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="flex-1 px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none"
+                  />
+                  <button type="button" onClick={handleUseMyLocation} className="px-4 py-3 rounded-xl bg-[var(--bg)] border border-[var(--border)] text-[var(--text)] text-xs font-bold hover:bg-[var(--card)] active:scale-95 transition">
+                    📍 Locate Me
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-[var(--muted)] uppercase tracking-widest">Pin on Map</label>
+                <div className="h-[250px] sm:h-[300px] rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--bg)]">
+                  <MapPicker setLocation={setLocation} setAddress={setAddress} initialLocation={location} />
+                </div>
+                {location && (
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Coordinates Saved
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[var(--primary)] text-white py-4 rounded-xl font-bold text-base shadow-lg shadow-indigo-500/20 hover:opacity-90 active:scale-[0.98] transition disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {loading ? "Submitting Report..." : "Submit Crisis Report"}
+            </button>
+          </form>
+        </div>
+      </main>
     </div>
   );
 }

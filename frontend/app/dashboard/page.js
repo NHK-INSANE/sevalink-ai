@@ -260,11 +260,11 @@ export default function Dashboard() {
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition duration-300">
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div>
-            <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-bold text-[var(--text)] tracking-tight">
               Command Dashboard
             </h1>
             <p className="text-[var(--muted)] text-sm">
@@ -273,21 +273,21 @@ export default function Dashboard() {
             </p>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex w-full md:w-auto gap-3">
             <button
               onClick={handleLocateAndSort}
-              className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm font-medium text-[var(--text)] hover:bg-[var(--bg)] transition shadow-sm"
+              className="flex-1 md:flex-none px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm font-medium text-[var(--text)] hover:bg-[var(--bg)] transition shadow-sm"
             >
               📍 {sortNearest ? "Reset Sort" : "Sort by Nearest"}
             </button>
-            <Link href="/submit" className="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition shadow-sm">
+            <Link href="/submit" className="flex-1 md:flex-none bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition shadow-sm text-center">
               + Report New
             </Link>
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 shadow-sm hover:shadow-md transition">
             <p className="text-sm text-[var(--muted)] mb-1">Total Problems</p>
             <p className="text-2xl font-bold text-[var(--primary)]">
@@ -318,7 +318,7 @@ export default function Dashboard() {
         </div>
 
         {/* Analytics Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
             <h3 className="font-semibold text-sm text-[var(--text)] mb-4">📈 Problem Flow</h3>
             <div className="space-y-4">
@@ -351,9 +351,9 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 shadow-sm md:col-span-2 lg:col-span-1">
             <h3 className="font-semibold text-sm text-[var(--text)] mb-4">⚡ Urgency</h3>
-            <div className="space-y-3">
+            <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
               {[
                 { name: "Critical", count: criticalCount, dot: "bg-red-500", text: "text-red-500" },
                 { name: "High", count: highCount, dot: "bg-orange-500", text: "text-orange-500" },
@@ -362,8 +362,8 @@ export default function Dashboard() {
               ].map(u => (
                 <div key={u.name} className="flex items-center gap-3">
                   <div className={`w-2 h-2 rounded-full ${u.dot}`} />
-                  <span className="text-sm text-[var(--text)] grow">{u.name}</span>
-                  <span className={`text-sm font-bold ${u.text}`}>{u.count}</span>
+                  <span className="text-xs sm:text-sm text-[var(--text)] grow">{u.name}</span>
+                  <span className={`text-xs sm:text-sm font-bold ${u.text}`}>{u.count}</span>
                 </div>
               ))}
             </div>
@@ -375,7 +375,7 @@ export default function Dashboard() {
           <h2 className="text-sm font-semibold text-[var(--text)] mb-3 pl-2">
             Live Operation Map
           </h2>
-          <div className="h-[400px] rounded-xl overflow-hidden border border-[var(--border)]">
+          <div className="h-[300px] sm:h-[400px] lg:h-[500px] rounded-xl overflow-hidden border border-[var(--border)]">
             <MapView 
               problems={problems} 
               type="problems" 
@@ -389,22 +389,22 @@ export default function Dashboard() {
         {/* Recent Reports */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-[var(--text)] tracking-tight">
+            <h2 className="text-lg sm:text-xl font-bold text-[var(--text)] tracking-tight">
               {sortNearest ? "📍 Nearest Solutions" : "🕒 Recent Reports"}
             </h2>
             <Link href="/problems" className="text-[var(--primary)] text-sm font-medium hover:underline">View All →</Link>
           </div>
 
           {problems.length === 0 ? (
-            <div className="text-center py-20 bg-[var(--card)] rounded-2xl border border-dashed border-[var(--border)] flex flex-col items-center">
+            <div className="text-center py-20 bg-[var(--card)] rounded-2xl border border-dashed border-[var(--border)] flex flex-col items-center p-6">
               <p className="text-[var(--text)] font-bold text-lg">No problems reported yet</p>
               <p className="text-[var(--muted)] text-sm mt-1">Be the first to report and help your community stay safe.</p>
-              <Link href="/submit" className="mt-6 bg-[var(--primary)] text-white px-6 py-2 rounded-lg text-sm font-medium shadow-sm hover:opacity-90 transition">
+              <Link href="/submit" className="mt-6 w-full sm:w-auto bg-[var(--primary)] text-white px-6 py-2 rounded-lg text-sm font-medium shadow-sm hover:opacity-90 transition text-center">
                 + Report Your First Crisis
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {sortedProblems.slice(0, 6).map((p) => (
                 <ProblemCard key={p._id} problem={p} />
               ))}

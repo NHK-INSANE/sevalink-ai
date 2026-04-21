@@ -24,91 +24,84 @@ export default function NGOPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition duration-300">
       <Navbar />
-      <main className="max-w-5xl mx-auto px-6 md:px-10 pt-24 pb-20">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">🏢 Registered NGOs</h1>
-          <p className="text-gray-500 text-sm mt-1 font-medium">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">🏢 Registered NGOs</h1>
+          <p className="text-[var(--muted)] text-sm mt-1">
             Active organizations coordinating response operations on SevaLink.
           </p>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
             {ngos.length === 0 ? (
-              <div className="text-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-200 flex flex-col items-center">
-                <div className="text-5xl mb-4 opacity-50">🏢</div>
-                <p className="text-gray-900 font-bold text-lg">No NGOs registered yet</p>
-                <p className="text-gray-500 text-sm mt-1">Be the first to list an organization and coordinate response.</p>
+              <div className="text-center py-20 bg-[var(--card)] rounded-2xl border border-dashed border-[var(--border)] flex flex-col items-center">
+                <p className="text-[var(--text)] font-bold text-lg">No NGOs registered yet</p>
+                <p className="text-[var(--muted)] text-sm mt-1">Be the first to list an organization.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {ngos.map((ngo, i) => (
-                  <motion.div
+                  <div 
                     key={ngo._id || i}
-                    whileHover={{ scale: 1.01 }}
-                    className="bg-white rounded-2xl shadow-md p-5 border border-gray-100 transition duration-200"
+                    className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 shadow-sm hover:shadow-md transition"
                   >
-                    {/* Header row */}
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-xl">
+                    {/* Header */}
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center text-xl shrink-0">
                         🏢
                       </div>
-                      <div>
-                        <h2 className="text-gray-800 font-bold text-base leading-tight">
+                      <div className="min-w-0">
+                        <h2 className="font-bold text-[var(--text)] truncate tracking-tight">
                           {ngo.ngoName || ngo.name || "Unnamed NGO"}
                         </h2>
-                        <span className="text-xs text-emerald-600 font-semibold uppercase tracking-wider">NGO Partner</span>
+                        <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest">Verified NGO</span>
                       </div>
                     </div>
 
-                    {/* Details — always show all available fields */}
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <span className="text-gray-400 shrink-0">📧</span>
-                        <span className="truncate">{ngo.email || <span className="text-gray-300 italic">Not provided</span>}</span>
+                    {/* Details */}
+                    <div className="space-y-2.5">
+                      <div className="flex items-center gap-2 text-xs text-[var(--muted)]">
+                        <span className="opacity-50">📧</span>
+                        <span className="truncate">{ngo.email || "No email provided"}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <span className="text-gray-400 shrink-0">📞</span>
-                        <span>{ngo.phone || <span className="text-gray-300 italic">Not provided</span>}</span>
+                      <div className="flex items-center gap-2 text-xs text-[var(--muted)]">
+                        <span className="opacity-50">📞</span>
+                        <span>{ngo.phone || "No phone provided"}</span>
                       </div>
                       {ngo.ngoContact && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <span className="text-gray-400 shrink-0">🌐</span>
-                          <a
-                            href={ngo.ngoContact.startsWith("http") ? ngo.ngoContact : `https://${ngo.ngoContact}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="truncate text-blue-600 hover:underline"
-                          >
+                        <div className="flex items-center gap-2 text-xs text-[var(--muted)]">
+                          <span className="opacity-50">🌐</span>
+                          <a href={ngo.ngoContact.startsWith("http") ? ngo.ngoContact : `https://${ngo.ngoContact}`} target="_blank" rel="noreferrer" className="truncate text-[var(--primary)] hover:underline">
                             {ngo.ngoContact}
                           </a>
                         </div>
                       )}
                       {ngo.address && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <span className="text-gray-400 shrink-0">📍</span>
-                          <span className="line-clamp-2">{ngo.address}</span>
+                        <div className="flex items-center gap-2 text-xs text-[var(--muted)]">
+                          <span className="opacity-50">📍</span>
+                          <span className="line-clamp-1">{ngo.address}</span>
                         </div>
                       )}
                     </div>
-                  </motion.div>
+
+                    <div className="mt-6 pt-4 border-t border-[var(--border)]">
+                      <button className="w-full py-2 rounded-lg bg-[var(--primary)] text-white text-xs font-bold hover:opacity-90 transition active:scale-95 shadow-sm">
+                        Connect with NGO
+                      </button>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
-          </motion.div>
+          </div>
         )}
       </main>
     </div>

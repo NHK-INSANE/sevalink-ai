@@ -166,283 +166,220 @@ export default function AdminPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition duration-300">
       <Navbar />
-      <PageWrapper>
-        <main className="max-w-7xl mx-auto px-4 md:px-10 py-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
 
-          {/* ── Header ── */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-100 text-red-600 rounded-full text-xs font-bold mb-2">
-                🛡️ ADMIN PANEL
-              </div>
-              <h1 className="text-3xl font-bold text-gray-800">Control Center</h1>
-              <p className="text-gray-500 text-sm mt-1">
-                Signed in as <span className="font-semibold text-blue-600">{currentUser?.name}</span>
-              </p>
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-6">
+          <div className="animate-in slide-in-from-left-4 duration-500">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 text-red-500 rounded-full text-[10px] font-bold uppercase tracking-widest mb-3 border border-red-500/20">
+              🛡️ Admin System
             </div>
-            <button
-              onClick={() => broadcastSOS()}
-              disabled={sendingSOS}
-              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white px-5 py-3 rounded-xl font-bold text-sm transition hover:scale-105 active:scale-95 shadow-lg"
-            >
-              <span className={sendingSOS ? "animate-spin" : "animate-pulse text-lg"}>🚨</span>
-              {sendingSOS ? "Broadcasting..." : "Broadcast SOS Alert"}
-            </button>
+            <h1 className="text-2xl sm:text-4xl font-bold tracking-tight">Control Center</h1>
+            <p className="text-[var(--muted)] text-sm mt-1">
+              Active session for <span className="text-[var(--primary)] font-bold">{currentUser?.name}</span>
+            </p>
           </div>
+          <button
+            onClick={() => broadcastSOS()}
+            disabled={sendingSOS}
+            className="flex items-center justify-center gap-2 bg-red-600 text-white px-6 py-4 rounded-2xl font-bold text-sm shadow-xl shadow-red-500/20 hover:opacity-90 active:scale-95 transition disabled:opacity-50"
+          >
+            <span className={sendingSOS ? "animate-spin" : "animate-pulse"}>🚨</span>
+            {sendingSOS ? "Broadcasting..." : "Broadcast Global SOS"}
+          </button>
+        </div>
 
-          {/* ── Stat Cards ── */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-            {[
-              { label: "Total Problems",   value: problems.length,    icon: "📊", color: "text-indigo-600",  bg: "bg-indigo-50" },
-              { label: "Critical",         value: criticalCount,       icon: "🔴", color: "text-red-600",     bg: "bg-red-50"    },
-              { label: "Open",             value: openCount,           icon: "📂", color: "text-blue-600",    bg: "bg-blue-50"   },
-              { label: "Helpers",          value: helpers.length,      icon: "🤝", color: "text-emerald-600", bg: "bg-emerald-50"},
-              { label: "Active SOS",       value: sosList.length,      icon: "🚨", color: "text-red-700",     bg: "bg-red-50"    },
-            ].map(s => (
-              <div key={s.label} className={`${s.bg} rounded-2xl p-4 border border-white shadow-sm`}>
-                <div className="text-2xl mb-1">{s.icon}</div>
-                <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
-                <div className="text-xs text-gray-500 font-medium mt-0.5">{s.label}</div>
-              </div>
-            ))}
-          </div>
+        {/* Stat Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          {[
+            { label: "Problems", val: problems.length, color: "text-blue-500" },
+            { label: "Critical", val: criticalCount, color: "text-red-500" },
+            { label: "Open", val: openCount, color: "text-emerald-500" },
+            { label: "Helpers", val: helpers.length, color: "text-purple-500" },
+            { label: "Active SOS", val: sosList.length, color: "text-orange-500" },
+          ].map((s) => (
+            <div key={s.label} className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-4 shadow-sm">
+              <div className={`text-2xl font-bold ${s.color}`}>{s.val}</div>
+              <div className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-widest mt-1">{s.label}</div>
+            </div>
+          ))}
+        </div>
 
-          {/* ── Tabs ── */}
-          <div className="flex flex-wrap gap-1 bg-white border border-gray-200 rounded-2xl p-1 shadow-sm mb-6 w-fit">
-            {TABS.map(t => (
+        {/* Tabs */}
+        <div className="flex overflow-x-auto pb-2 mb-8 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="flex gap-2 p-1 bg-[var(--card)] border border-[var(--border)] rounded-2xl w-fit shrink-0">
+            {TABS.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition duration-200 ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition whitespace-nowrap ${
                   activeTab === t.id
-                    ? "bg-blue-600 text-white shadow"
-                    : "text-gray-500 hover:bg-gray-50 hover:text-blue-600"
+                    ? "bg-[var(--primary)] text-white shadow-lg"
+                    : "text-[var(--muted)] hover:text-[var(--text)]"
                 }`}
               >
                 <span>{t.icon}</span> {t.label}
               </button>
             ))}
           </div>
+        </div>
 
-          {/* ── TAB: Overview ── */}
+        {/* Content Area */}
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
           {activeTab === "overview" && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white rounded-2xl shadow-md p-5 border border-gray-100">
-                <h3 className="font-bold text-gray-700 mb-4">📈 Problem Flow</h3>
-                {[
-                  { label: "Open",        val: openCount,     color: "bg-blue-500" },
-                  { label: "In Progress", val: progressCount, color: "bg-yellow-500" },
-                  { label: "Resolved",    val: resolvedCount, color: "bg-emerald-500" },
-                ].map(r => (
-                  <div key={r.label} className="flex items-center gap-3 mb-3">
-                    <div className={`w-2.5 h-2.5 rounded-full ${r.color}`} />
-                    <span className="text-sm text-gray-600 flex-1">{r.label}</span>
-                    <span className="font-bold text-gray-800">{r.val}</span>
-                  </div>
-                ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Status Breakdown */}
+              <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
+                <h3 className="text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-6">Status Flow</h3>
+                <div className="space-y-4">
+                  {[
+                    { label: "Open", val: openCount, color: "bg-blue-500" },
+                    { label: "In Progress", val: progressCount, color: "bg-yellow-500" },
+                    { label: "Resolved", val: resolvedCount, color: "bg-emerald-500" },
+                  ].map(r => (
+                    <div key={r.label} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs font-bold text-[var(--muted)]">
+                        <div className={`w-2 h-2 rounded-full ${r.color}`} /> {r.label}
+                      </div>
+                      <div className="text-sm font-bold">{r.val}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
-
-              <div className="bg-white rounded-2xl shadow-md p-5 border border-gray-100">
-                <h3 className="font-bold text-gray-700 mb-4">⚡ Urgency Breakdown</h3>
-                {[
-                  { label: "Critical", val: criticalCount, color: "text-red-600" },
-                  { label: "High",     val: problems.filter(p => p.urgency?.toLowerCase() === "high").length, color: "text-orange-600" },
-                  { label: "Medium",   val: problems.filter(p => p.urgency?.toLowerCase() === "medium").length, color: "text-yellow-600" },
-                  { label: "Low",      val: problems.filter(p => p.urgency?.toLowerCase() === "low").length, color: "text-green-600" },
-                ].map(r => (
-                  <div key={r.label} className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-600">{r.label}</span>
-                    <span className={`font-bold ${r.color}`}>{r.val}</span>
-                  </div>
-                ))}
+              {/* Urgency Breakdown */}
+              <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
+                <h3 className="text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-6">Crisis Urgency</h3>
+                <div className="space-y-4">
+                  {[
+                    { label: "Critical", val: criticalCount, color: "text-red-500" },
+                    { label: "High", val: problems.filter(p => p.urgency?.toLowerCase() === "high").length, color: "text-orange-500" },
+                    { label: "Medium", val: problems.filter(p => p.urgency?.toLowerCase() === "medium").length, color: "text-yellow-500" },
+                  ].map(r => (
+                    <div key={r.label} className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-[var(--muted)]">{r.label}</span>
+                      <span className={`text-sm font-bold ${r.color}`}>{r.val}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-
-              <div className="bg-white rounded-2xl shadow-md p-5 border border-gray-100">
-                <h3 className="font-bold text-gray-700 mb-4">👥 Resources</h3>
-                {[
-                  { label: "Volunteers", val: helpers.filter(h => h.role?.toLowerCase() === "volunteer").length },
-                  { label: "Workers",    val: helpers.filter(h => h.role?.toLowerCase() === "worker").length },
-                  { label: "NGOs",       val: ngos.length },
-                ].map(r => (
-                  <div key={r.label} className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-600">{r.label}</span>
-                    <span className="font-bold text-gray-800">{r.val}</span>
-                  </div>
-                ))}
+              {/* Resource Breakdown */}
+              <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6">
+                <h3 className="text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-6">Available Resources</h3>
+                <div className="space-y-4">
+                  {[
+                    { label: "Volunteers", val: helpers.filter(h => h.role?.toLowerCase() === "volunteer").length },
+                    { label: "Workers", val: helpers.filter(h => h.role?.toLowerCase() === "worker").length },
+                    { label: "NGOs", val: ngos.length },
+                  ].map(r => (
+                    <div key={r.label} className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-[var(--muted)]">{r.label}</span>
+                      <span className="text-sm font-bold">{r.val}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
-          {/* ── TAB: Problems ── */}
           {activeTab === "problems" && (
             <div className="space-y-3">
-              {loading ? (
-                [...Array(3)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-2xl h-20 animate-pulse border border-gray-100" />
-                ))
-              ) : problems.length === 0 ? (
-                <div className="text-center py-16 text-gray-400">No problems yet</div>
-              ) : (
-                problems.map((p) => (
-                  <div key={p._id} className="bg-white rounded-2xl shadow-sm p-4 border border-gray-100 flex items-center gap-4 hover:shadow-md transition">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded ${urgencyBadge(p.urgency)}`}>{p.urgency}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded border font-medium ${
-                          p.status === "Open" ? "bg-blue-50 text-blue-600 border-blue-100" :
-                          p.status === "In Progress" ? "bg-yellow-50 text-yellow-600 border-yellow-100" :
-                          "bg-green-50 text-green-600 border-green-100"
-                        }`}>{p.status}</span>
-                      </div>
-                      <div className="font-semibold text-gray-800 text-sm truncate">{p.title}</div>
-                      <div className="text-xs text-gray-400 truncate">{p.description}</div>
+              {problems.map((p) => (
+                <div key={p._id} className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-4 hover:shadow-md transition">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-[8px] font-bold px-2 py-0.5 rounded border uppercase ${urgencyBadge(p.urgency)}`}>{p.urgency}</span>
+                      <span className="text-[8px] font-bold px-2 py-0.5 rounded border uppercase text-blue-500 bg-blue-500/5 border-blue-500/10">{p.status}</span>
                     </div>
-                    <button
-                      onClick={() => { setAssignModal(p); setSelectedHelper(""); }}
-                      className="shrink-0 px-3 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition hover:scale-105 active:scale-95"
-                    >
-                      🎯 Assign
-                    </button>
+                    <div className="font-bold text-sm truncate">{p.title}</div>
+                    <div className="text-[10px] text-[var(--muted)] truncate">{p.description}</div>
+                  </div>
+                  <button onClick={() => { setAssignModal(p); setSelectedHelper(""); }} className="w-full sm:w-auto px-4 py-2 bg-[var(--primary)] text-white text-[10px] font-bold rounded-xl hover:opacity-90 active:scale-95 transition">
+                    Assign Helper
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === "helpers" && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {helpers.map(h => (
+                <div key={h._id} className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center text-xl shrink-0">
+                      {h.role?.toLowerCase() === "volunteer" ? "🤝" : "🔧"}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-bold text-sm truncate">{h.name}</div>
+                      <div className="text-[10px] text-[var(--primary)] font-bold uppercase tracking-widest">{h.role}</div>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="text-[10px] text-[var(--muted)] truncate">📧 {h.email}</div>
+                    <div className="text-[10px] text-[var(--muted)]">🛠 {(h.skills?.length > 0 ? h.skills.join(", ") : h.skill) || "General"}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === "sos" && (
+            <div className="space-y-4">
+              {sosList.length === 0 ? (
+                <div className="text-center py-20 bg-[var(--card)] rounded-3xl border border-dashed border-[var(--border)]">
+                  <p className="text-[var(--text)] font-bold">No active SOS alerts</p>
+                  <p className="text-[var(--muted)] text-sm mt-1">All clear across the platform.</p>
+                </div>
+              ) : (
+                sosList.map((s, i) => (
+                  <div key={i} className="bg-red-500/5 border border-red-500/20 rounded-2xl p-5 flex items-start gap-4">
+                    <span className="text-2xl animate-pulse">🚨</span>
+                    <div className="min-w-0">
+                      <div className="font-bold text-red-500 text-sm">{s.message}</div>
+                      <div className="text-[10px] text-red-500/70 mt-1 uppercase font-bold tracking-widest">
+                        By {s.senderName} · {new Date(s.time).toLocaleTimeString()}
+                      </div>
+                    </div>
                   </div>
                 ))
               )}
             </div>
           )}
 
-          {/* ── TAB: Helpers ── */}
-          {activeTab === "helpers" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {helpers.map(h => (
-                <div key={h._id} className="bg-white rounded-2xl shadow-sm p-4 border border-gray-100">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-xl">
-                      {h.role?.toLowerCase() === "volunteer" ? "🤝" : "🔧"}
-                    </div>
-                    <div>
-                      <div className="font-bold text-gray-800 text-sm">{h.name}</div>
-                      <div className="text-xs text-blue-600 font-semibold uppercase">{h.role}</div>
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-500 space-y-1">
-                    {h.email && <div>📧 {h.email}</div>}
-                    {h.phone && <div>📞 {h.phone}</div>}
-                    <div>🛠 {(h.skills?.length > 0 ? h.skills.join(", ") : h.skill) || "General"}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* ── TAB: SOS ── */}
-          {activeTab === "sos" && (
-            <div className="space-y-3">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="font-bold text-gray-700">Active SOS Broadcasts</h2>
-                <button
-                  onClick={() => broadcastSOS()}
-                  disabled={sendingSOS}
-                  className="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-xl hover:bg-red-700 transition disabled:opacity-60"
-                >
-                  + New SOS Broadcast
-                </button>
-              </div>
-              {sosList.length === 0 ? (
-                <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
-                  <div className="text-4xl mb-3">✅</div>
-                  <p className="text-gray-400">No active SOS alerts — all clear!</p>
-                </div>
-              ) : sosList.map((s, i) => (
-                <div key={i} className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
-                  <span className="text-2xl animate-pulse">🚨</span>
-                  <div>
-                    <div className="font-bold text-red-700">{s.message}</div>
-                    <div className="text-xs text-red-500 mt-1">
-                      From: {s.senderName || "Anonymous"} · {new Date(s.time).toLocaleTimeString()}
-                    </div>
-                    <div className="text-xs text-red-400">
-                      📍 {s.latitude?.toFixed(4)}, {s.longitude?.toFixed(4)}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* ── TAB: Live Map ── */}
           {activeTab === "map" && (
-            <div className="h-[600px] rounded-2xl overflow-hidden border border-gray-200 shadow-md">
-              <MapView
-                problems={problems}
-                ngos={ngos}
-                helpers={helpers}
-                sosMarkers={sosList}
-                type="all"
-                height="100%"
-                zoom={5}
-                zoomToUser={false}
-              />
+            <div className="h-[400px] sm:h-[600px] rounded-3xl overflow-hidden border border-[var(--border)] bg-[var(--card)]">
+              <MapView problems={problems} ngos={ngos} helpers={helpers} sosMarkers={sosList} type="all" height="100%" zoom={5} zoomToUser={false} />
             </div>
           )}
+        </div>
+      </main>
 
-        </main>
-      </PageWrapper>
-
-      {/* ── Force-Assign Modal ── */}
+      {/* Assign Modal */}
       <AnimatePresence>
         {assignModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center p-4"
-            onClick={(e) => { if (e.target === e.currentTarget) { setAssignModal(null); } }}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md"
-            >
-              <h2 className="text-lg font-bold text-gray-800 mb-1">🎯 Force Assign Helper</h2>
-              <p className="text-sm text-gray-500 mb-4 line-clamp-1">
-                Problem: <span className="font-semibold text-gray-700">{assignModal.title}</span>
-              </p>
-
-              <label className="block text-sm font-medium text-gray-600 mb-2">
-                Select Helper
-              </label>
-              <select
-                value={selectedHelper}
-                onChange={e => setSelectedHelper(e.target.value)}
-                className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 text-sm"
-              >
+          <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-[var(--card)] border border-[var(--border)] rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl">
+              <h2 className="text-xl font-bold tracking-tight mb-2">🎯 Force Assign Helper</h2>
+              <p className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-widest mb-6 truncate">Problem: {assignModal.title}</p>
+              
+              <label className="block text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest mb-2">Select Helper</label>
+              <select value={selectedHelper} onChange={e => setSelectedHelper(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none mb-8">
                 <option value="">— Choose a helper —</option>
                 {helpers.map(h => (
-                  <option key={h._id} value={h._id}>
-                    {h.name} ({h.role}) {h.skills?.length > 0 ? `· ${h.skills.slice(0,2).join(", ")}` : ""}
-                  </option>
+                  <option key={h._id} value={h._id}>{h.name} ({h.role})</option>
                 ))}
               </select>
 
               <div className="flex gap-3">
-                <button
-                  onClick={forceAssign}
-                  disabled={!selectedHelper || assigning}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-2.5 rounded-xl font-semibold text-sm transition"
-                >
-                  {assigning ? "Assigning..." : "✅ Confirm Assign"}
+                <button onClick={forceAssign} disabled={!selectedHelper || assigning} className="flex-1 bg-[var(--primary)] text-white py-3 rounded-xl font-bold text-xs hover:opacity-90 active:scale-95 transition disabled:opacity-50">
+                  {assigning ? "Assigning..." : "Confirm Assignment"}
                 </button>
-                <button
-                  onClick={() => setAssignModal(null)}
-                  className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 text-sm"
-                >
-                  Cancel
-                </button>
+                <button onClick={() => setAssignModal(null)} className="px-6 py-3 rounded-xl border border-[var(--border)] text-xs font-bold hover:bg-[var(--bg)] transition">Cancel</button>
               </div>
             </motion.div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

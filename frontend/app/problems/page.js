@@ -121,106 +121,98 @@ export default function ProblemsPage() {
     });
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] transition duration-300">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition duration-300">
       <Navbar />
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <main className="max-w-7xl mx-auto px-6 md:px-10 pt-24 pb-20">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pt-24">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-[var(--text)] mb-1">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
               All Problems
             </h1>
-            <p className="text-[var(--muted)]">
+            <p className="text-[var(--muted)] text-sm">
               {loading ? "…" : `${filtered.length} of ${problems.length} reports`}
             </p>
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
             <button
               onClick={handleLocateAndSort}
-              className={`ripple bg-[var(--card)] border border-[var(--border)] hover:bg-[var(--bg)] px-4 py-2 rounded-lg text-sm text-[var(--text)] transition duration-200 flex items-center gap-1 hover:scale-105 active:scale-95 ${sortNearest ? 'grayscale' : ''}`}
+              className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm font-medium hover:bg-[var(--bg)] transition shadow-sm flex items-center justify-center gap-1.5"
             >
               📍 {sortNearest ? "Reset Sort" : "Sort by Nearest"}
             </button>
-            <a
+            <Link
               href="/submit"
-              className="ripple bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200 shadow-sm text-sm hover:scale-105 active:scale-95 inline-block"
+              className="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition shadow-sm text-center"
             >
-              + Report New Problem
-            </a>
+              + Report New
+            </Link>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-[var(--card)] rounded-2xl shadow-md p-5 mb-8 flex flex-wrap gap-4 items-center border border-[var(--border)] transition duration-200">
-          <input
-            id="search-problems"
-            type="text"
-            placeholder="🔍 Search problems…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
-          />
-          <select
-            id="filter-urgency"
-            value={filterUrgency}
-            onChange={(e) => setFilterUrgency(e.target.value)}
-            className="w-auto p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition duration-200 appearance-none"
-          >
-            <option value="All">All Urgencies</option>
-            <option value="Critical">🔴 Critical</option>
-            <option value="High">🟠 High</option>
-            <option value="Medium">🟡 Medium</option>
-            <option value="Low">🟢 Low</option>
-          </select>
-          <select
-            id="filter-status"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-auto p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition duration-200 appearance-none"
-          >
-            <option value="All">All Statuses</option>
-            <option value="Open">Open</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Resolved">Resolved</option>
-          </select>
-          <select
-            id="sort-problems"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="w-auto p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition duration-200 appearance-none"
-          >
-            <option value="newest">Newest First</option>
-            <option value="urgency">By Urgency</option>
-            <option value="score">By Priority Score</option>
-          </select>
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-4 sm:p-5 mb-8 space-y-4">
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 opacity-50">🔍</span>
+            <input
+              type="text"
+              placeholder="Search problems…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-sm focus:ring-2 focus:ring-[var(--primary)] transition outline-none"
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            <select
+              value={filterUrgency}
+              onChange={(e) => setFilterUrgency(e.target.value)}
+              className="px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-[var(--primary)]"
+            >
+              <option value="All">All Urgencies</option>
+              <option value="Critical">Critical</option>
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+            
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-[var(--primary)]"
+            >
+              <option value="All">All Statuses</option>
+              <option value="Open">Open</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+            </select>
+            
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="col-span-2 lg:col-span-1 px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-[var(--primary)]"
+            >
+              <option value="newest">Newest First</option>
+              <option value="urgency">By Urgency</option>
+              <option value="score">By Priority Score</option>
+            </select>
+          </div>
         </div>
 
         {/* Grid */}
         {loading && problems.length === 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : (
-          <motion.div
-             initial={{ opacity: 0, y: 10 }}
-             animate={{ opacity: 1, y: 0 }}
-             transition={{ duration: 0.4 }}
-          >
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
             {filtered.length === 0 ? (
-              <div className="text-center py-24 bg-[var(--bg)] rounded-3xl border border-dashed border-[var(--border)] flex flex-col items-center">
-                <div className="text-5xl mb-4 opacity-50">🚫</div>
-                <p className="text-[var(--text)] font-bold text-lg">No problems found</p>
-                <p className="text-[var(--muted)] text-sm mt-1">Try adjusting your filters or search terms.</p>
+              <div className="text-center py-20 bg-[var(--card)] rounded-2xl border border-dashed border-[var(--border)] flex flex-col items-center">
+                <p className="text-[var(--text)] font-bold text-lg">No results found</p>
+                <p className="text-[var(--muted)] text-sm mt-1">Try adjusting your filters.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filtered.map((p) => (
                   <ProblemCard
                     key={p._id}
@@ -231,20 +223,17 @@ export default function ProblemsPage() {
                 ))}
               </div>
             )}
-          </motion.div>
+          </div>
         )}
       </main>
-      </motion.div>
 
-      {/* Mobile-first Floating Action Button */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <a 
-          href="/submit" 
-          className="ripple bg-blue-600 text-white w-14 h-14 flex items-center justify-center rounded-full shadow-lg hover:scale-110 active:scale-95 transition duration-200 text-2xl"
-        >
-          ➕
-        </a>
-      </div>
+      {/* Floating Action Button */}
+      <Link 
+        href="/submit" 
+        className="fixed bottom-6 right-6 z-50 bg-[var(--primary)] text-white w-14 h-14 flex items-center justify-center rounded-full shadow-lg hover:scale-110 active:scale-95 transition text-2xl"
+      >
+        ➕
+      </Link>
     </div>
   );
 }
