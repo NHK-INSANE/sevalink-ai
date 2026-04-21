@@ -1,59 +1,32 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-require("dotenv").config();
-
-const http = require("http");
-const { Server } = require("socket.io");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const mongoSanitize = require("express-mongo-sanitize");
+const xss = require("xss-clean");
 
 const app = express();
+
+// Security Middlewares
+app.use(helmet());
+app.use(mongoSanitize());
+app.use(xss());
+
+// Rate Limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: "Too many requests from this IP, please try again after 15 minutes"
+});
+app.use("/api/", limiter);
+
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "*" }
-});
-
-// Attach io to app for use in routes
-app.set("io", io);
-
-// Real-time Socket Mapping
-const userSockets = new Map(); // userId -> socketId
-
-io.on("connection", (socket) => {
-  console.log("🟢 User connected via Socket.IO:", socket.id);
-
-  socket.on("register-user", (userId) => {
-    if (userId) {
-      userSockets.set(userId, socket.id);
-      console.log(`👤 User ${userId} registered to socket ${socket.id}`);
-    }
-  });
-
-  // 📝 Problem Coordination Rooms
-  socket.on("join-discussion", (problemId) => {
-    socket.join(problemId);
-    console.log(`📡 Socket ${socket.id} joined discussion: ${problemId}`);
-  });
-
-  socket.on("send-discussion-message", async (data) => {
-    // Broadcast to all in the problem room
-    io.to(data.problemId).emit("new-discussion-message", data);
-  });
-
-  socket.on("disconnect", () => {
-    // Remove from map on disconnect
-    for (const [uid, sid] of userSockets.entries()) {
-      if (sid === socket.id) {
-        userSockets.delete(uid);
-        break;
-      }
-    }
-    console.log("🔴 User disconnected");
-  });
+  cors: { origin: process.env.CLIENT_URL || "*" }
 });
 
 // Middleware
 app.use(cors({
-  origin: "*",
+  origin: process.env.CLIENT_URL || "*",
+  credentials: true
 }));
 app.use(express.json());
 
