@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
+import PageWrapper from "../components/PageWrapper";
 import { getProblems, getUsers } from "../utils/api";
 
 export default function AIMatchPage() {
@@ -53,6 +54,7 @@ export default function AIMatchPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 transition duration-200">
       <Navbar />
+      <PageWrapper>
 
       <main className="max-w-5xl mx-auto px-4 md:px-10 py-10">
         <div className="mb-8">
@@ -69,17 +71,17 @@ export default function AIMatchPage() {
         {/* Summary Stats */}
         {!loading && matches.length > 0 && (
           <div className="grid grid-cols-3 gap-4 mb-8">
-            <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100 text-center transition duration-200">
+            <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100 text-center card-hover">
               <div className="text-2xl font-bold text-blue-600">{matches.length}</div>
               <div className="text-xs text-gray-500 mt-1">Problems Needing Help</div>
             </div>
-            <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100 text-center transition duration-200">
+            <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100 text-center card-hover">
               <div className="text-2xl font-bold text-emerald-600">
                 {matches.filter((m) => m.volunteers.length > 0).length}
               </div>
               <div className="text-xs text-gray-500 mt-1">Successfully Matched</div>
             </div>
-            <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100 text-center transition duration-200">
+            <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100 text-center card-hover">
               <div className="text-2xl font-bold text-red-500">
                 {matches.filter((m) => m.volunteers.length === 0).length}
               </div>
@@ -161,6 +163,7 @@ export default function AIMatchPage() {
           </div>
         )}
       </main>
+      </PageWrapper>
     </div>
   );
 }

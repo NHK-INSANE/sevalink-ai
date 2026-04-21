@@ -85,7 +85,7 @@ export default function Navbar() {
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition duration-200
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition duration-200 ripple hover:scale-105 active:scale-95
                   ${
                     isActive
                       ? "bg-blue-50 text-blue-600"
@@ -114,7 +114,7 @@ export default function Navbar() {
               <div className="relative">
                 <button 
                   onClick={toggleNotifs}
-                  className="p-2 rounded-full hover:bg-slate-100 transition-colors relative text-lg"
+                  className="p-2 rounded-full hover:bg-slate-100 transition-all ripple hover:scale-110 active:scale-90 relative text-lg"
                 >
                   🔔
                   {unreadCount > 0 && (
@@ -151,7 +151,7 @@ export default function Navbar() {
                 <button
                   id="user-menu-btn"
                   onClick={() => { setMenuOpen((v) => !v); setShowNotifs(false); }}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500/30 transition duration-200 text-sm"
+                  className="ripple flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500/30 hover:scale-105 active:scale-95 transition duration-200 text-sm"
                 >
                 <span className="text-base">{user.role === "NGO" ? "🏢" : user.role === "Volunteer" ? "🤝" : user.role === "Worker" ? "🔧" : "👤"}</span>
                 <span className="text-slate-700 font-medium max-w-[100px] truncate">
@@ -200,13 +200,13 @@ export default function Navbar() {
             <div className="flex items-center gap-2">
               <Link
                 href="/login"
-                className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:text-blue-600 transition duration-200 font-medium"
+                className="ripple px-4 py-2 rounded-lg text-sm text-gray-600 hover:text-blue-600 transition duration-200 font-medium hover:scale-105 active:scale-95"
               >
                 Login
               </Link>
               <Link
                 href="/register"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200 shadow-sm text-sm font-medium"
+                className="ripple bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200 shadow-sm text-sm font-medium hover:scale-105 active:scale-95"
               >
                 Register
               </Link>

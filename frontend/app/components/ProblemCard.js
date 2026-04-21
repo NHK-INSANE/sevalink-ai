@@ -75,7 +75,7 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
 
   return (
     <div
-      className="bg-white rounded-2xl shadow-md p-5 border border-gray-100 hover:shadow-lg transition duration-200 flex flex-col"
+      className="bg-white rounded-2xl shadow-md p-5 border border-gray-100 card-hover flex flex-col"
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
@@ -184,7 +184,7 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
                       <button
                         disabled={isAssigning}
                         onClick={() => handleAssign(v.id, v.name)}
-                        className="text-[10px] px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/30 transition-colors font-medium disabled:opacity-50"
+                        className="ripple text-[10px] px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/30 hover:scale-105 active:scale-95 transition-all font-medium disabled:opacity-50"
                       >
                         {isAssigning ? "..." : "Assign"}
                       </button>
@@ -251,7 +251,7 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
                   onDelete && onDelete(problem._id, user.id || user._id);
                 }
               }}
-              className="bg-red-500 px-3 py-1 rounded text-white mt-2 text-xs font-bold transition-all shadow-lg shadow-red-500/10"
+              className="ripple bg-red-500 px-3 py-1 rounded text-white mt-2 text-xs font-bold transition-all shadow-lg shadow-red-500/10 hover:scale-105 active:scale-95"
             >
               Delete
             </button>

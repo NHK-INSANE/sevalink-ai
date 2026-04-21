@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import ProblemCard from "../components/ProblemCard";
 import { getProblems, updateProblemStatus, deleteProblem } from "../utils/api";
 import { getUserLocation } from "../utils/location";
+import PageWrapper from "../components/PageWrapper";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
@@ -120,6 +121,7 @@ export default function ProblemsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 transition duration-200">
       <Navbar />
+      <PageWrapper>
 
       <main className="max-w-7xl mx-auto px-4 md:px-10 py-12">
         {/* Header */}
@@ -135,13 +137,13 @@ export default function ProblemsPage() {
           <div className="flex gap-4">
             <button
               onClick={handleLocateAndSort}
-              className={`bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-sm text-gray-700 transition duration-200 flex items-center gap-1 ${sortNearest ? 'grayscale' : ''}`}
+              className={`ripple bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-sm text-gray-700 transition duration-200 flex items-center gap-1 hover:scale-105 active:scale-95 ${sortNearest ? 'grayscale' : ''}`}
             >
               📍 {sortNearest ? "Reset Sort" : "Sort by Nearest"}
             </button>
             <a
               href="/submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200 shadow-sm text-sm"
+              className="ripple bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200 shadow-sm text-sm hover:scale-105 active:scale-95 inline-block"
             >
               + Report New Problem
             </a>
@@ -225,12 +227,13 @@ export default function ProblemsPage() {
           </>
         )}
       </main>
+      </PageWrapper>
 
       {/* Mobile-first Floating Action Button */}
       <div className="fixed bottom-6 right-6 z-50">
         <a 
           href="/submit" 
-          className="bg-blue-600 text-white w-14 h-14 flex items-center justify-center rounded-full shadow-lg hover:scale-105 transition duration-200 text-2xl"
+          className="ripple bg-blue-600 text-white w-14 h-14 flex items-center justify-center rounded-full shadow-lg hover:scale-110 active:scale-95 transition duration-200 text-2xl"
         >
           ➕
         </a>

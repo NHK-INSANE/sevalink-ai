@@ -2,10 +2,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
+import PageWrapper from "../components/PageWrapper";
 import { createProblem, getUrgency, getAISuggestion } from "../utils/api";
 import { getUser } from "../utils/auth";
 import toast from "react-hot-toast";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 import { getUserLocation } from "../utils/location";
 
@@ -195,6 +196,7 @@ export default function SubmitPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 transition duration-200">
         <Navbar />
+        <PageWrapper>
         <div className="max-w-lg mx-auto px-6 py-24 text-center">
           <div className="text-7xl mb-6">✅</div>
           <h1 className="text-3xl font-bold text-slate-800 mb-3">Problem Submitted!</h1>
@@ -220,6 +222,7 @@ export default function SubmitPage() {
             </a>
           </div>
         </div>
+        </PageWrapper>
       </div>
     );
   }
@@ -227,13 +230,8 @@ export default function SubmitPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 transition duration-200">
       <Navbar />
-      <motion.main
-        className="max-w-2xl mx-auto px-4 md:px-10 py-12 bg-white rounded-2xl shadow-md p-5 border border-gray-100 transition duration-200 mt-6 mb-12"
-
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: "easeOut" }}
-      >
+      <PageWrapper>
+        <main className="max-w-2xl mx-auto px-4 md:px-10 py-12 bg-white rounded-2xl shadow-md p-5 border border-gray-100 transition duration-200 mt-6 mb-12">
         {/* Header */}
         <div className="mb-10">
           <h1 className="text-3xl font-bold text-slate-800 mb-2">
@@ -414,7 +412,7 @@ export default function SubmitPage() {
             <button
               type="button"
               onClick={handleUseMyLocation}
-              className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-sm text-gray-700 transition duration-200 inline-block"
+              className="ripple bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-sm text-gray-700 transition duration-200 inline-block hover:scale-105 active:scale-95"
             >
               📍 Use My Location
             </button>
@@ -449,7 +447,7 @@ export default function SubmitPage() {
             id="submit-problem-btn"
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg transition duration-200 shadow-sm text-base font-medium disabled:opacity-60 flex items-center justify-center gap-2"
+            className="ripple w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg transition duration-200 shadow-sm text-base font-medium disabled:opacity-60 flex items-center justify-center gap-2 hover:scale-105 active:scale-95"
           >
             {loading ? (
               <>
@@ -461,7 +459,8 @@ export default function SubmitPage() {
             )}
           </button>
         </form>
-      </motion.main>
+        </main>
+      </PageWrapper>
     </div>
   );
 }

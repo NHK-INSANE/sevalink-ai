@@ -4,6 +4,7 @@ import { getUser, logout, getRoleLabel } from "../utils/auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "../components/Navbar";
+import PageWrapper from "../components/PageWrapper";
 
 const ROLE_COLORS = {
   NGO:       "text-blue-600 bg-blue-50 border-blue-200",
@@ -58,6 +59,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 transition duration-200">
       <Navbar />
+      <PageWrapper>
       <div className="flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           {/* Header */}
@@ -122,21 +124,21 @@ export default function ProfilePage() {
             <div className="px-6 py-4 border-t border-gray-50 flex gap-3">
               <Link
                 href="/"
-                className="flex-1 text-center py-2.5 rounded-xl text-sm font-medium bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 transition duration-200"
+                className="ripple flex-1 text-center py-2.5 rounded-xl text-sm font-medium bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 transition duration-200 hover:scale-105 active:scale-95"
               >
                 ← Dashboard
               </Link>
               <button
                 id="profile-logout-btn"
                 onClick={handleLogout}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-red-50 border border-red-200 text-red-500 hover:bg-red-100 transition duration-200"
+                className="ripple flex-1 py-2.5 rounded-xl text-sm font-semibold bg-red-50 border border-red-200 text-red-500 hover:bg-red-100 transition duration-200 hover:scale-105 active:scale-95"
               >
                 🚪 Logout
               </button>
             </div>
           </div>
-        </div>
       </div>
+      </PageWrapper>
     </div>
   );
 }

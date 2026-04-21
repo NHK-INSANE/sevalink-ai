@@ -5,6 +5,7 @@ import { registerUser } from "../utils/api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import PageWrapper from "../components/PageWrapper";
 
 const MapPicker = dynamic(() => import("../components/MapPicker"), { ssr: false });
 
@@ -146,6 +147,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-4 py-12 transition duration-200">
+      <PageWrapper>
       <div className="w-full max-w-lg">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -517,6 +519,7 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
+      </PageWrapper>
     </div>
   );
 }

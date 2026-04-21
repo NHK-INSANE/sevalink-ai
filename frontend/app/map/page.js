@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Navbar from "../components/Navbar";
+import PageWrapper from "../components/PageWrapper";
 import { getProblems, getUsers } from "../utils/api";
 import { motion } from "framer-motion";
 import { io } from "socket.io-client";
@@ -72,6 +73,7 @@ export default function MapPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 transition duration-200">
       <Navbar />
+      <PageWrapper>
 
       <main className="max-w-7xl mx-auto px-4 md:px-10 py-10">
         {/* Header Section */}
@@ -113,17 +115,17 @@ export default function MapPage() {
         >
           {/* Statistics Overlay */}
           <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
-            <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold shadow-lg flex items-center gap-2">
+            <div className="bg-white/95 backdrop-blur-md px-4 py-2 rounded-xl border border-gray-200 text-xs font-bold shadow-lg flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-slate-700">{problems.length} Problems</span>
+              <span className="text-gray-700">{problems.length} Problems</span>
             </div>
-            <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold shadow-lg flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-indigo-500" />
-              <span className="text-slate-700">{ngos.length} NGOs</span>
+            <div className="bg-white/95 backdrop-blur-md px-4 py-2 rounded-xl border border-gray-200 text-xs font-bold shadow-lg flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-blue-500" />
+              <span className="text-gray-700">{ngos.length} NGOs</span>
             </div>
-            <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold shadow-lg flex items-center gap-2">
+            <div className="bg-white/95 backdrop-blur-md px-4 py-2 rounded-xl border border-gray-200 text-xs font-bold shadow-lg flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span className="text-slate-700">{helpers.length} Helpers</span>
+              <span className="text-gray-700">{helpers.length} Helpers</span>
             </div>
           </div>
 
@@ -134,8 +136,10 @@ export default function MapPage() {
             type={type}
             height="100%"
             zoom={6}
+            zoomToUser={true}
           />
         </motion.div>
+      </PageWrapper>
       </main>
     </div>
   );

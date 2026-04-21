@@ -4,6 +4,7 @@ import { login } from "../utils/auth";
 import { loginUser } from "../utils/api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import PageWrapper from "../components/PageWrapper";
 
 export default function LoginPage() {
   const [form, setForm] = useState({ identifier: "", password: "" });
@@ -37,6 +38,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-4 transition duration-200">
+      <PageWrapper>
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -120,7 +122,7 @@ export default function LoginPage() {
               id="login-submit"
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition duration-200 shadow-sm font-semibold text-sm mt-2 disabled:opacity-60 flex items-center justify-center gap-2"
+              className="ripple w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition duration-200 shadow-sm font-semibold text-sm mt-2 disabled:opacity-60 flex items-center justify-center gap-2 hover:scale-105 active:scale-95"
             >
               {loading ? (
                 <>
@@ -141,6 +143,7 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+      </PageWrapper>
     </div>
   );
 }

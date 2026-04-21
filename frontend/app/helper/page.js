@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
+import PageWrapper from "../components/PageWrapper";
 import { getUsers } from "../utils/api";
 
 export default function Helper() {
@@ -25,6 +26,7 @@ export default function Helper() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 transition duration-200">
       <Navbar />
+      <PageWrapper>
 
       <main className="max-w-7xl mx-auto px-4 md:px-10 py-10">
         <div className="mb-8">
@@ -52,7 +54,7 @@ export default function Helper() {
                 {helpers.map((h) => (
                   <div
                     key={h._id || h.id}
-                    className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition duration-200"
+                    className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 card-hover"
                   >
                     <div className="flex items-center gap-4 mb-4">
                       <div className="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-2xl">
@@ -91,7 +93,7 @@ export default function Helper() {
                           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block" />
                           Available
                         </span>
-                        <button className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition duration-200">
+                        <button className="ripple px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 hover:scale-105 active:scale-95 transition duration-200">
                           Contact
                         </button>
                       </div>
@@ -103,6 +105,7 @@ export default function Helper() {
           </>
         )}
       </main>
+      </PageWrapper>
     </div>
   );
 }

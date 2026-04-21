@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
+import PageWrapper from "../components/PageWrapper";
 import { getUsers } from "../utils/api";
 
 export default function NGOPage() {
@@ -23,6 +24,7 @@ export default function NGOPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 transition duration-200">
       <Navbar />
+      <PageWrapper>
 
       <main className="max-w-5xl mx-auto px-4 md:px-10 py-10">
         {/* Header */}
@@ -51,7 +53,7 @@ export default function NGOPage() {
                 {ngos.map((ngo, i) => (
                   <div
                     key={ngo._id || i}
-                    className="bg-white rounded-2xl shadow-md p-5 border border-gray-100 hover:shadow-lg transition duration-200"
+                    className="bg-white rounded-2xl shadow-md p-5 border border-gray-100 card-hover"
                   >
                     {/* Header row */}
                     <div className="flex items-center gap-3 mb-4">
@@ -107,6 +109,7 @@ export default function NGOPage() {
           </>
         )}
       </main>
+      </PageWrapper>
     </div>
   );
 }

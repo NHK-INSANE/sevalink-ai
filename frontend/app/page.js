@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Navbar from "./components/Navbar";
 import ProblemCard from "./components/ProblemCard";
+import Counter from "./components/Counter";
+import PageWrapper from "./components/PageWrapper";
 import { getProblems, updateProblemStatus, getUsers } from "./utils/api";
 import { getUser } from "./utils/auth";
 import { getUserLocation } from "./utils/location";
@@ -249,12 +251,8 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 transition duration-200">
       <Navbar />
-
-      <motion.main
-        className="max-w-7xl mx-auto px-6 py-10"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
+      <PageWrapper>
+        <main className="max-w-7xl mx-auto px-6 py-10">
         {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-6">
           <div>
@@ -269,27 +267,28 @@ export default function Dashboard() {
           <div className="flex gap-4">
             <button
               onClick={handleLocateAndSort}
-              className={`bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-sm text-gray-700 transition duration-200 ${sortNearest ? 'grayscale' : ''}`}
+              className={`ripple bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-sm text-gray-700 transition duration-200 hover:scale-105 active:scale-95 ${sortNearest ? 'grayscale' : ''}`}
             >
               📍 {sortNearest ? "Reset Sort" : "Sort by Nearest"}
             </button>
-            <a href="/submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200 shadow-sm text-sm">
+            <a href="/submit" className="ripple bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200 shadow-sm text-sm hover:scale-105 active:scale-95 inline-block">
               + Report New
             </a>
           </div>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {STAT_CONFIG.map((s) => {
-            const val = counts[s.key];
+            const val = s.key === "total" ? problems.length : 
+                       s.key === "volunteers" ? volunteersCount :
+                       s.key === "workers" ? workersCount : ngosCount;
             return (
-              <div key={s.key} className="bg-white p-4 rounded-xl shadow border border-gray-100 flex flex-col transition duration-200 hover:shadow-md">
+              <div key={s.key} className="bg-white p-4 rounded-xl shadow border border-gray-100 flex flex-col card-hover">
                 <span className="text-sm text-gray-500 flex items-center gap-2">
                   <span className="text-lg">{s.icon}</span> {s.label}
                 </span>
                 <span className="text-2xl font-bold text-blue-600 mt-2">
-                  {val}
+                  <Counter value={val} />
                 </span>
               </div>
             );
@@ -381,13 +380,14 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-      </motion.main>
+      </main>
+      </PageWrapper>
 
       {/* Mobile-first Floating Action Button */}
       <div className="fixed bottom-6 right-6 z-50">
         <a 
           href="/submit" 
-          className="bg-blue-600 text-white w-14 h-14 flex items-center justify-center rounded-full shadow-lg hover:scale-105 transition duration-200 text-2xl"
+          className="ripple bg-blue-600 text-white w-14 h-14 flex items-center justify-center rounded-full shadow-lg hover:scale-110 active:scale-95 transition duration-200 text-2xl"
         >
           ➕
         </a>
