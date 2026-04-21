@@ -133,6 +133,42 @@ export default function Dashboard() {
     return () => socket.disconnect();
   }, []);
 
+  const openCount = problems.filter(p => p.status?.toLowerCase() === "open").length;
+  const resolvedCount = problems.filter(p => p.status?.toLowerCase() === "resolved").length;
+  const progressCount = problems.filter(p => p.status?.toLowerCase() === "in progress" || p.status?.toLowerCase() === "in-progress").length;
+
+  const volunteersCount = usersList.filter(u => u.role?.toLowerCase() === "volunteer").length;
+  const workersCount = usersList.filter(u => u.role?.toLowerCase() === "worker").length;
+  const ngosCount = usersList.filter(u => u.role?.toLowerCase() === "ngo").length;
+
+  const criticalCount = problems.filter(p => p.urgency?.toLowerCase() === "critical").length;
+  const highCount = problems.filter(p => p.urgency?.toLowerCase() === "high").length;
+  const mediumCount = problems.filter(p => p.urgency?.toLowerCase() === "medium").length;
+  const lowCount = problems.filter(p => p.urgency?.toLowerCase() === "low").length;
+
+  // Category with Percentage logic
+  const categoryCount = {};
+  problems.forEach(p => {
+    const cat = p.category || "Other";
+    categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+  });
+  const totalProblems = problems.length || 1;
+  const categoryData = Object.keys(categoryCount).map(cat => ({
+    name: cat,
+    value: categoryCount[cat],
+    percent: ((categoryCount[cat] / totalProblems) * 100).toFixed(1)
+  })).sort((a, b) => b.value - a.value);
+
+  const pieData = categoryData.filter(d => d.value > 0);
+  
+  const urgencyData = [
+    { name: "Critical", value: criticalCount, fill: "#ef4444" },
+    { name: "High", value: highCount, fill: "#f97316" },
+    { name: "Medium", value: mediumCount, fill: "#eab308" },
+    { name: "Low", value: lowCount, fill: "#22c55e" },
+  ];
+  const COLORS = ["#6366f1", "#ec4899", "#8b5cf6", "#14b8a6"];
+
   // 🔢 Live Counter Animation Logic
   useEffect(() => {
     const target = {
@@ -195,42 +231,6 @@ export default function Dashboard() {
         return d1 - d2;
       })
     : problems;
-
-  const openCount = problems.filter(p => p.status?.toLowerCase() === "open").length;
-  const resolvedCount = problems.filter(p => p.status?.toLowerCase() === "resolved").length;
-  const progressCount = problems.filter(p => p.status?.toLowerCase() === "in progress" || p.status?.toLowerCase() === "in-progress").length;
-
-  const volunteersCount = usersList.filter(u => u.role?.toLowerCase() === "volunteer").length;
-  const workersCount = usersList.filter(u => u.role?.toLowerCase() === "worker").length;
-  const ngosCount = usersList.filter(u => u.role?.toLowerCase() === "ngo").length;
-
-  const criticalCount = problems.filter(p => p.urgency?.toLowerCase() === "critical").length;
-  const highCount = problems.filter(p => p.urgency?.toLowerCase() === "high").length;
-  const mediumCount = problems.filter(p => p.urgency?.toLowerCase() === "medium").length;
-  const lowCount = problems.filter(p => p.urgency?.toLowerCase() === "low").length;
-
-  // Category with Percentage logic
-  const categoryCount = {};
-  problems.forEach(p => {
-    const cat = p.category || "Other";
-    categoryCount[cat] = (categoryCount[cat] || 0) + 1;
-  });
-  const totalProblems = problems.length || 1;
-  const categoryData = Object.keys(categoryCount).map(cat => ({
-    name: cat,
-    value: categoryCount[cat],
-    percent: ((categoryCount[cat] / totalProblems) * 100).toFixed(1)
-  })).sort((a, b) => b.value - a.value);
-
-  const pieData = categoryData.filter(d => d.value > 0);
-  
-  const urgencyData = [
-    { name: "Critical", value: criticalCount, fill: "#ef4444" },
-    { name: "High", value: highCount, fill: "#f97316" },
-    { name: "Medium", value: mediumCount, fill: "#eab308" },
-    { name: "Low", value: lowCount, fill: "#22c55e" },
-  ];
-  const COLORS = ["#6366f1", "#ec4899", "#8b5cf6", "#14b8a6"];
 
   if (loading) {
     return (
