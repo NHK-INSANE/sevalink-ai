@@ -18,7 +18,10 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
   useEffect(() => {
     // 1. Fetch History
     setLoading(true);
-    fetch(`${API_BASE}/api/problems/${problemId}/history`)
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    fetch(`${API_BASE}/api/problems/${problemId}/history`, {
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+    })
       .then(res => res.json())
       .then(data => {
         setMessages(data);
@@ -60,9 +63,13 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
     };
 
     try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
       await fetch(`${API_BASE}/api/problems/${problemId}/messages`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
         body: JSON.stringify(msgData)
       });
       

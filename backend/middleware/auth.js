@@ -1,36 +1,41 @@
-// Mock Auth Middleware for SevaLink AI (Hackathon Grade)
-// Parses the user object from the Authorization header: "Bearer {JSON_USER_OBJECT}"
+const jwt = require("jsonwebtoken");
 
+/**
+ * Authentication Middleware
+ * Verifies the JWT token from the Authorization header.
+ */
 const auth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "No authentication token provided" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "No authentication token provided" });
-    }
-
-    const token = authHeader.split(" ")[1];
-    if (!token) {
-      return res.status(401).json({ error: "Invalid token format" });
-    }
-
-    // In this mock implementation, the token is the stringified user object
-    const user = JSON.parse(token);
-
-    if (!user || (!user._id && !user.id)) {
-      return res.status(401).json({ error: "Invalid user data in token" });
-    }
-
-    // Populate req.user for use in routes
-    req.user = {
-      id: user._id || user.id,
-      role: user.role.toLowerCase(), // Ensure consistent casing
-    };
-
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // { id, role, ... }
     next();
   } catch (err) {
-    console.error("Auth Middleware Error:", err);
-    res.status(401).json({ error: "Authentication failed" });
+    console.error("JWT Verification Error:", err.message);
+    return res.status(401).json({ error: "Invalid or expired token" });
   }
 };
 
-module.exports = auth;
+/**
+ * Authorization Middleware (Role-Based Access Control)
+ * Checks if the authenticated user has one of the allowed roles.
+ */
+const authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role.toLowerCase())) {
+      return res.status(403).json({ 
+        error: `Access Denied: Your role (${req.user?.role || "unknown"}) is not authorized to perform this action.` 
+      });
+    }
+    next();
+  };
+};
+
+module.exports = { auth, authorize };

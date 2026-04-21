@@ -2,7 +2,8 @@ const express = require("express");
 const router = express.Router();
 const Problem = require("../models/Problem");
 const User = require("../models/User");
-const auth = require("../middleware/auth");
+const { auth, authorize } = require("../middleware/auth");
+const { validate, problemSchema } = require("../middleware/validation");
 
 // ── Haversine Distance (km) ───────────────────────────────────────────────────
 function getDistance(lat1, lon1, lat2, lon2) {
@@ -17,39 +18,29 @@ function getDistance(lat1, lon1, lat2, lon2) {
 }
 
 // ── Smart AI Volunteer Matching ───────────────────────────────────────────────
-// Returns top N volunteers scored on: proximity + skill match + urgency boost
 async function matchVolunteers(problem, topN = 5) {
   try {
     const users = await User.find({
       role: { $in: ["Volunteer", "volunteer", "Worker", "worker"] }
-    });
+    }).select("-password");
     if (users.length === 0) return [];
 
-    const urgencyBoost = {
-      critical: 30,
-      high: 20,
-      medium: 10,
-      low: 0,
-    };
+    const urgencyBoost = { critical: 30, high: 20, medium: 10, low: 0 };
 
     const scored = users.map(u => {
       let score = 0;
-
-      // 1. Distance score — closer = more points (max ~100 for 0 km)
       const dist = getDistance(
-        problem.location?.lat, problem.location?.lng,
-        u.location?.lat,       u.location?.lng
+        problem.latitude, problem.longitude,
+        u.latitude,       u.longitude
       );
-      const distScore = Math.max(0, 100 - dist); // 0 km → 100pts, 100 km+ → 0
+      const distScore = Math.max(0, 100 - dist);
       score += distScore;
 
-      // 2. Skill match
       const uSkills = (u.skills || []).map(s => s.toLowerCase());
       if (u.skill) uSkills.push(u.skill.toLowerCase());
-      const pSkill = (problem.requiredSkill || problem.category || "").toLowerCase();
+      const pSkill = (problem.category || "").toLowerCase();
       if (pSkill && uSkills.includes(pSkill)) score += 50;
 
-      // 3. Urgency boost
       score += (urgencyBoost[problem.urgency?.toLowerCase()] || 0);
 
       return { user: u, score, distKm: Math.round(dist) };
@@ -75,9 +66,8 @@ async function matchVolunteers(problem, topN = 5) {
   }
 }
 
-
 // POST /api/problems — Create a new problem
-router.post("/", auth, async (req, res) => {
+router.post("/", auth, validate(problemSchema), async (req, res) => {
   try {
     const problem = new Problem({
       ...req.body,
@@ -85,7 +75,6 @@ router.post("/", auth, async (req, res) => {
       timeline: [{ text: "Problem reported" }]
     });
 
-    // 🤖 AI SMART MATCHING — top 5 volunteers by score
     const topMatches = await matchVolunteers(problem, 5);
     const bestMatch = topMatches[0];
 
@@ -94,7 +83,6 @@ router.post("/", auth, async (req, res) => {
       problem.status = "In Progress";
       problem.timeline.push({ text: `AI auto-assigned to ${bestMatch.name || "volunteer"}` });
 
-      // Notify ALL matched helpers
       const notifText = `🚨 You matched a nearby ${problem.urgency || ""} crisis: "${problem.title}"`;
       await Promise.all(
         topMatches.map(m =>
@@ -107,23 +95,15 @@ router.post("/", auth, async (req, res) => {
 
     await problem.save();
 
-    // ⚡ REAL-TIME BROADCAST
     const io = req.app.get("io");
     if (io) {
       io.emit("new-problem", problem);
-
       if (problem.urgency?.toLowerCase() === "critical") {
         io.emit("emergency-alert", problem);
       }
-
-      // 🎯 Broadcast matched volunteers so all clients can show toast
       if (topMatches.length > 0) {
         io.emit("matched-volunteers", {
-          problem: {
-            _id:     problem._id,
-            title:   problem.title,
-            urgency: problem.urgency,
-          },
+          problem: { _id: problem._id, title: problem.title, urgency: problem.urgency },
           matched: topMatches
         });
       }
@@ -131,27 +111,21 @@ router.post("/", auth, async (req, res) => {
 
     res.status(201).json({ problem, matched: topMatches });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Failed to create problem." });
   }
 });
 
-
-// GET /api/problems — Get all problems (dynamic priority calculation)
+// GET /api/problems — Get all problems
 router.get("/", async (req, res) => {
   try {
     let problems = await Problem.find().lean();
     
-    // Calculate dynamic smart priority based on time elapsed
     problems = problems.map(p => {
       const hoursElapsed = (Date.now() - new Date(p.createdAt).getTime()) / (1000 * 60 * 60);
-      const dynamicBoost = Math.floor(hoursElapsed) * 5; // +5 points per hour waiting
-      return {
-        ...p,
-        score: (p.score || 0) + dynamicBoost
-      };
+      const dynamicBoost = Math.floor(hoursElapsed) * 5;
+      return { ...p, score: (p.score || 0) + dynamicBoost };
     });
     
-    // Sort by dynamic score, then by date
     problems.sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
       return new Date(b.createdAt) - new Date(a.createdAt);
@@ -159,63 +133,57 @@ router.get("/", async (req, res) => {
     
     res.json(problems);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Failed to fetch problems." });
   }
 });
 
 // PATCH /api/problems/:id/status — Update problem status
-router.patch("/:id/status", async (req, res) => {
+router.patch("/:id/status", auth, async (req, res) => {
   try {
     const { status } = req.body;
     let timelineUpdate = `Status updated to ${status}`;
     if (status === "In Progress") timelineUpdate = "Work started";
     if (status === "Resolved") timelineUpdate = "Problem resolved";
 
-    const problem = await Problem.findByIdAndUpdate(
-      req.params.id,
-      { 
-        status,
-        $push: { timeline: { text: timelineUpdate } }
-      },
-      { new: true }
-    );
+    const problem = await Problem.findById(req.params.id);
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
+
+    // Only creator or admin can update status
+    if (problem.createdBy !== req.user.id.toString() && req.user.role !== "admin") {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    problem.status = status;
+    problem.timeline.push({ text: timelineUpdate });
+    await problem.save();
+
     res.json(problem);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Failed to update status." });
   }
 });
 
-// PATCH /api/problems/:id/assign — Assign a volunteer (With Role Validation)
-router.patch("/:id/assign", async (req, res) => {
+// PATCH /api/problems/:id/assign — Assign a volunteer
+router.patch("/:id/assign", auth, authorize("ngo", "worker", "admin"), async (req, res) => {
   try {
-    const { volunteerId, volunteerName, assignedBy } = req.body;
+    const { volunteerId, volunteerName } = req.body;
+    const assignedBy = req.user.id;
     
-    if (!volunteerId || !assignedBy) {
-      return res.status(400).json({ error: "volunteerId and assignedBy are required" });
-    }
+    if (!volunteerId) return res.status(400).json({ error: "volunteerId is required" });
 
     const helper = await User.findById(volunteerId);
     const assigner = await User.findById(assignedBy);
 
-    if (!helper || !assigner) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    if (!helper || !assigner) return res.status(404).json({ error: "User not found" });
 
-    // ── NGO Validation ──
-    if (assigner.role?.toLowerCase() === "ngo") {
-      if (helper.role?.toLowerCase() === "worker") {
-        // Ensure worker belongs to this NGO
-        if (helper.ngoId?.toString() !== assigner._id.toString()) {
-          return res.status(403).json({ error: "Unauthorized: This worker belongs to another NGO." });
-        }
+    if (assigner.role?.toLowerCase() === "ngo" && helper.role?.toLowerCase() === "worker") {
+      if (helper.ngoId?.toString() !== assigner._id.toString()) {
+        return res.status(403).json({ error: "Unauthorized: This worker belongs to another NGO." });
       }
     }
 
-    // ── Worker Validation ──
-    if (assigner.role?.toLowerCase() === "worker") {
-      if (helper.role?.toLowerCase() !== "volunteer") {
-        return res.status(403).json({ error: "Unauthorized: Workers can only assign volunteers." });
-      }
+    if (assigner.role?.toLowerCase() === "worker" && helper.role?.toLowerCase() !== "volunteer") {
+      return res.status(403).json({ error: "Unauthorized: Workers can only assign volunteers." });
     }
 
     const problem = await Problem.findByIdAndUpdate(
@@ -228,50 +196,42 @@ router.patch("/:id/assign", async (req, res) => {
       { new: true }
     );
 
-    // Notify the assigned user
     if (problem) {
       await User.findByIdAndUpdate(volunteerId, {
         $push: { notifications: { text: `You were assigned to problem: ${problem.title}`, type: "task", date: new Date() } }
       });
-      
       const io = req.app.get("io");
       if (io) io.emit("problem-updated", problem);
     }
 
     res.json(problem);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Failed to assign volunteer." });
   }
 });
 
-// DELETE /api/problems/:id — Delete a problem (Owner Only Check)
+// DELETE /api/problems/:id — Delete a problem
 router.delete("/:id", auth, async (req, res) => {
   try {
     const problem = await Problem.findById(req.params.id);
+    if (!problem) return res.status(404).json({ message: "Problem not found" });
 
-    if (!problem) {
-      return res.status(404).json({ message: "Problem not found" });
-    }
-
-    // 🔒 SECURE OWNER CHECK (Using JWT user id)
-    if (problem.createdBy !== req.user.id.toString()) {
-      return res.status(403).json({ message: "Unauthorized: Only the creator can delete this report." });
+    if (problem.createdBy !== req.user.id.toString() && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Unauthorized: Only the creator or admin can delete this." });
     }
 
     await problem.deleteOne();
     res.json({ message: "Deleted successfully ✅" });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Failed to delete problem." });
   }
 });
 
 // POST /api/problems/force-assign — Admin manual override
-router.post("/force-assign", async (req, res) => {
+router.post("/force-assign", auth, authorize("admin"), async (req, res) => {
   try {
     const { problemId, helperId, helperName } = req.body;
-    if (!problemId || !helperId) {
-      return res.status(400).json({ error: "problemId and helperId are required" });
-    }
+    if (!problemId || !helperId) return res.status(400).json({ error: "problemId and helperId required" });
 
     const problem = await Problem.findByIdAndUpdate(
       problemId,
@@ -285,18 +245,10 @@ router.post("/force-assign", async (req, res) => {
 
     if (!problem) return res.status(404).json({ error: "Problem not found" });
 
-    // Notify the helper
     await User.findByIdAndUpdate(helperId, {
-      $push: {
-        notifications: {
-          text: `🚨 Admin assigned you to: "${problem.title}"`,
-          type: "alert",
-          date: new Date()
-        }
-      }
+      $push: { notifications: { text: `🚨 Admin assigned you to: "${problem.title}"`, type: "alert", date: new Date() } }
     });
 
-    // Real-time: tell the helper's connected client
     const io = req.app.get("io");
     if (io) {
       io.emit("assigned", { problemId, helperId, problemTitle: problem.title });
@@ -305,23 +257,23 @@ router.post("/force-assign", async (req, res) => {
 
     res.json({ success: true, problem });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Force assign failed." });
   }
 });
 
 // GET /api/problems/:id/history — Get chat history
-router.get("/:id/history", async (req, res) => {
+router.get("/:id/history", auth, async (req, res) => {
   try {
     const Message = require("../models/Message");
     const messages = await Message.find({ problemId: req.params.id }).sort({ createdAt: 1 });
     res.json(messages);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Failed to fetch history" });
   }
 });
 
 // POST /api/problems/:id/messages — Save chat message
-router.post("/:id/messages", async (req, res) => {
+router.post("/:id/messages", auth, async (req, res) => {
   try {
     const Message = require("../models/Message");
     const msg = new Message({
@@ -331,7 +283,7 @@ router.post("/:id/messages", async (req, res) => {
     await msg.save();
     res.status(201).json(msg);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Failed to save message" });
   }
 });
 

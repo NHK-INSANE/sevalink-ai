@@ -1,7 +1,13 @@
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const http = require("http");
+const { Server } = require("socket.io");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const mongoSanitize = require("express-mongo-sanitize");
 const xss = require("xss-clean");
+require("dotenv").config();
 
 const app = express();
 
@@ -23,6 +29,9 @@ const io = new Server(server, {
   cors: { origin: process.env.CLIENT_URL || "*" }
 });
 
+// Attach io to app for use in routes
+app.set("io", io);
+
 // Middleware
 app.use(cors({
   origin: process.env.CLIENT_URL || "*",
@@ -30,11 +39,46 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Real-time Socket Mapping
+const userSockets = new Map(); // userId -> socketId
+
+io.on("connection", (socket) => {
+  console.log("🟢 User connected via Socket.IO:", socket.id);
+
+  socket.on("register-user", (userId) => {
+    if (userId) {
+      userSockets.set(userId, socket.id);
+      console.log(`👤 User ${userId} registered to socket ${socket.id}`);
+    }
+  });
+
+  socket.on("join-discussion", (problemId) => {
+    socket.join(problemId);
+    console.log(`📡 Socket ${socket.id} joined discussion: ${problemId}`);
+  });
+
+  socket.on("send-discussion-message", async (data) => {
+    io.to(data.problemId).emit("new-discussion-message", data);
+  });
+
+  socket.on("disconnect", () => {
+    for (const [uid, sid] of userSockets.entries()) {
+      if (sid === socket.id) {
+        userSockets.delete(uid);
+        break;
+      }
+    }
+    console.log("🔴 User disconnected");
+  });
+});
+
 const User = require("./models/User");
 const SOS = require("./models/SOS");
 
-// API Check
-app.get("/api/users", async (req, res) => {
+const { auth, authorize } = require("./middleware/auth");
+
+// API Check - Admin Only
+app.get("/api/users", auth, authorize("admin"), async (req, res) => {
   try {
     const users = await User.find().select("-password");
     res.json(users);
@@ -52,24 +96,27 @@ app.use("/api/problems", problemRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/users", userRoutes);
 
-// 🚨 SOS Emergency Broadcast
-app.post("/api/sos", async (req, res) => {
+// Rate limiter for SOS
+const sosLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 3, // limit each IP to 3 SOS requests per minute
+  message: "Too many SOS requests. Please wait a moment."
+});
+
+// SOS Emergency Broadcast
+app.post("/api/sos", sosLimiter, async (req, res) => {
   try {
     const { latitude, longitude, message, senderName } = req.body;
-    
     const sos = new SOS({
       latitude,
       longitude,
       message: message || "Emergency! Immediate help needed!",
       senderName: senderName || "Anonymous",
     });
-
     await sos.save();
-
-    io.emit("sos-alert", sos); // 🔥 broadcast to ALL connected clients
+    io.emit("sos-alert", sos);
     console.log("🚨 SOS broadcast saved & emitted:", sos);
 
-    // Auto-remove after 5 minutes for live clients
     setTimeout(async () => {
       try {
         await SOS.deleteOne({ _id: sos._id });
@@ -86,13 +133,12 @@ app.post("/api/sos", async (req, res) => {
   }
 });
 
-// 🤝 Social Connect Request
-app.post("/api/connect", (req, res) => {
+// Social Connect Request
+app.post("/api/connect", auth, (req, res) => {
   const { fromUser, toUser, fromName } = req.body;
   if (!fromUser || !toUser) {
     return res.status(400).json({ error: "Missing fromUser or toUser" });
   }
-
   const recipientSocketId = userSockets.get(toUser);
   if (recipientSocketId) {
     io.to(recipientSocketId).emit("connect-request", {
@@ -102,7 +148,6 @@ app.post("/api/connect", (req, res) => {
     });
     return res.json({ success: true, message: "Request sent!" });
   }
-
   res.json({ success: false, message: "User is currently offline, but they will see this later." });
 });
 
@@ -126,7 +171,6 @@ const startServer = async () => {
       serverSelectionTimeoutMS: 5000,
     });
     console.log("✅ MongoDB connected successfully");
-    
     const PORT = process.env.PORT || 5000;
     server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
   } catch (err) {
