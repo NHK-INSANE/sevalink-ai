@@ -22,9 +22,9 @@ const urgencyConfig = {
 };
 
 const statusColors = {
-  Open: "text-blue-400 bg-blue-400/10 border-blue-400/30",
-  "In Progress": "text-yellow-400 bg-yellow-400/10 border-yellow-400/30",
-  Resolved: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30",
+  Open: "text-blue-600 bg-blue-50 border-blue-100",
+  "In Progress": "text-yellow-600 bg-yellow-50 border-yellow-100",
+  Resolved: "text-emerald-600 bg-emerald-50 border-emerald-100",
 };
 
 function timeAgo(date) {
@@ -64,11 +64,11 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
 
   return (
     <div
-      className="bg-white/10 backdrop-blur-lg p-5 rounded-2xl shadow-xl border border-white/10 transition-all duration-300 hover:border-indigo-500/30 hover:-translate-y-1 hover:shadow-2xl"
+      className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 transition-all duration-300 hover:border-indigo-500/30 hover:-translate-y-1 hover:shadow-md"
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
-        <h3 className="font-semibold text-white text-base leading-snug flex-1">
+        <h3 className="font-semibold text-slate-800 text-base leading-snug flex-1">
           {problem.title}
         </h3>
         <span
@@ -78,7 +78,7 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
         </span>
       </div>
 
-      <p className="text-slate-400 text-sm leading-relaxed mb-4 line-clamp-2">
+      <p className="text-slate-600 text-sm leading-relaxed mb-4 line-clamp-2">
         {problem.description}
       </p>
 
@@ -99,7 +99,7 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
               {problem.score} / 100
             </span>
           </div>
-          <div className="w-full bg-white/5 rounded-full h-1.5">
+          <div className="w-full bg-slate-100 rounded-full h-1.5">
             <div
               className={`h-1.5 rounded-full transition-all ${getScoreBarColor(problem.score)}`}
               style={{ width: `${problem.score}%` }}
@@ -111,12 +111,12 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
       {/* Tags */}
       <div className="flex flex-wrap gap-2 mb-4">
         {problem.category && (
-          <span className="text-xs px-2 py-0.5 rounded-md bg-white/5 text-slate-400 border border-white/5">
+          <span className="text-xs px-2 py-0.5 rounded-md bg-slate-50 text-slate-500 border border-slate-100">
             📂 {problem.category}
           </span>
         )}
         {problem.requiredSkill && (
-          <span className="text-xs px-2 py-0.5 rounded-md bg-white/5 text-slate-400 border border-white/5">
+          <span className="text-xs px-2 py-0.5 rounded-md bg-slate-50 text-slate-500 border border-slate-100">
             🛠 {problem.requiredSkill}
           </span>
         )}
@@ -129,10 +129,10 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
 
       {/* Volunteer Matching */}
       {problem.requiredSkill && (
-        <div className="mb-4 rounded-lg border border-white/8 bg-white/3 p-3">
+        <div className="mb-4 rounded-lg border border-slate-100 bg-slate-50/50 p-3">
           <button
             onClick={() => setShowVolunteers((v) => !v)}
-            className="w-full flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-white transition-colors"
+            className="w-full flex items-center justify-between text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
           >
             <span>
               🤝 Matched Volunteers
@@ -208,12 +208,11 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
 
         {/* 🔒 Delete button logic */}
         {user &&
-          (user.role === "user" || user.role === "volunteer") &&
           (user.id === problem.createdBy || user._id === problem.createdBy) && (
             <button
               onClick={() => {
                 if (window.confirm("Are you sure you want to delete this problem?")) {
-                  onDelete && onDelete(problem._id);
+                  onDelete && onDelete(problem._id, user.id || user._id);
                 }
               }}
               className="bg-red-500 px-3 py-1 rounded text-white mt-2 text-xs font-bold transition-all shadow-lg shadow-red-500/10"

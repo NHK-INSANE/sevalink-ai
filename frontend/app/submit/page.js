@@ -157,7 +157,7 @@ export default function SubmitPage() {
       const finalCategory = form.category === "Other" && customCategory.trim() ? customCategory : form.category;
       const finalSkill = form.requiredSkill === "Other" && customSkill.trim() ? customSkill : form.requiredSkill;
 
-      await createProblem({ 
+      const response = await createProblem({ 
         ...form, 
         category: finalCategory, 
         requiredSkill: finalSkill, 
@@ -169,6 +169,9 @@ export default function SubmitPage() {
           address: address || ""
         } 
       });
+      
+      console.log("📥 SUBMIT RESPONSE:", response);
+      
       toast.success("Problem submitted successfully!");
       setSuccess(true);
       setForm({ title: "", description: "", category: "", requiredSkill: "" });
@@ -176,7 +179,12 @@ export default function SubmitPage() {
       setCustomSkill("");
       setAiUrgency(null);
       setAiScore(null);
-    } catch {
+    } catch (err) {
+      console.error("🚨 SUBMISSION FAILED:", err);
+      // Log the error message if it exists
+      if (err.message) {
+        console.log("❌ ERROR DETAILS:", err.message);
+      }
       toast.error("Failed to submit. Make sure the backend is running.");
     } finally {
       setLoading(false);
@@ -185,14 +193,14 @@ export default function SubmitPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f]">
+      <div className="min-h-screen bg-slate-50">
         <Navbar />
         <div className="max-w-lg mx-auto px-6 py-24 text-center">
           <div className="text-7xl mb-6">✅</div>
-          <h1 className="text-3xl font-bold text-white mb-3">Problem Submitted!</h1>
-          <p className="text-slate-400 mb-8">
+          <h1 className="text-3xl font-bold text-slate-800 mb-3">Problem Submitted!</h1>
+          <p className="text-slate-500 mb-8">
             AI classified it as{" "}
-            <span className={URGENCY_INFO[aiUrgency]?.color || "text-white"}>
+            <span className={URGENCY_INFO[aiUrgency]?.color || "text-slate-900"}>
               {aiUrgency}
             </span>{" "}
             urgency. The community will respond.
@@ -217,7 +225,7 @@ export default function SubmitPage() {
   }
 
   return (
-    <div className="min-h-screen premium-bg text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <Navbar />
       <motion.main
         className="max-w-2xl mx-auto px-6 py-12"
@@ -227,7 +235,7 @@ export default function SubmitPage() {
       >
         {/* Header */}
         <div className="mb-10">
-          <h1 className="text-3xl font-bold text-white mb-2">
+          <h1 className="text-3xl font-bold text-slate-800 mb-2">
             Report a Problem
           </h1>
           <p className="text-slate-400">

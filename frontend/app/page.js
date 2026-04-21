@@ -9,6 +9,9 @@ import { getUserLocation } from "./utils/location";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
+import { io } from "socket.io-client";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
 const MapView = dynamic(() => import("./components/MapView"), { 
   ssr: false,
@@ -22,31 +25,31 @@ const STAT_CONFIG = [
     icon: "📊",
     color: "from-indigo-600/20 to-purple-600/20",
     border: "border-indigo-500/20",
-    text: "text-indigo-300",
+    text: "text-indigo-600",
   },
   {
-    key: "critical",
-    label: "Critical",
-    icon: "🔴",
-    color: "from-red-600/20 to-red-800/10",
-    border: "border-red-500/20",
-    text: "text-red-300",
+    key: "volunteers",
+    label: "Total Volunteers",
+    icon: "🤝",
+    color: "from-blue-600/20 to-blue-800/10",
+    border: "border-blue-500/20",
+    text: "text-blue-600",
   },
   {
-    key: "high",
-    label: "High Priority",
-    icon: "🟠",
+    key: "workers",
+    label: "Total Workers",
+    icon: "🔧",
     color: "from-orange-600/20 to-orange-800/10",
     border: "border-orange-500/20",
-    text: "text-orange-300",
+    text: "text-orange-600",
   },
   {
-    key: "resolved",
-    label: "Resolved",
-    icon: "✅",
+    key: "ngos",
+    label: "Total NGOs",
+    icon: "🏢",
     color: "from-emerald-600/20 to-emerald-800/10",
     border: "border-emerald-500/20",
-    text: "text-emerald-300",
+    text: "text-emerald-600",
   },
 ];
 
@@ -59,6 +62,7 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [counts, setCounts] = useState({ total: 0, volunteers: 0, workers: 0, ngos: 0 });
   const prevCriticalRef = useRef(0);
 
   useEffect(() => {
@@ -99,12 +103,64 @@ export default function Dashboard() {
   useEffect(() => {
     fetchProblems();
     fetchUsers();
-    const interval = setInterval(() => {
-      fetchProblems();
-      fetchUsers();
-    }, 10000);
-    return () => clearInterval(interval);
+    
+    // 🌐 Socket.IO Real-time Logic
+    const socket = io(API_BASE);
+    
+    socket.on("connect", () => console.log("Connected to SevaLink Real-time Engine ⚡"));
+    
+    socket.on("new-problem", (newProb) => {
+      setProblems(prev => {
+        if (prev.find(p => p._id === newProb._id)) return prev;
+        return [newProb, ...prev];
+      });
+      setLastUpdate(new Date().toLocaleTimeString());
+    });
+
+    socket.on("emergency-alert", (prob) => {
+      toast.error(`🚨 EMERGENCY: ${prob.title}`, {
+        duration: 8000,
+        position: "top-center",
+        style: {
+          background: "#ef4444",
+          color: "#fff",
+          fontWeight: "bold",
+          border: "2px solid #fff"
+        }
+      });
+    });
+
+    return () => socket.disconnect();
   }, []);
+
+  // 🔢 Live Counter Animation Logic
+  useEffect(() => {
+    const target = {
+      total: problems.length,
+      volunteers: volunteersCount,
+      workers: workersCount,
+      ngos: ngosCount
+    };
+    
+    const interval = setInterval(() => {
+      setCounts(prev => {
+        const next = { ...prev };
+        let changed = false;
+        Object.keys(target).forEach(k => {
+          if (prev[k] < target[k]) {
+            next[k] = Math.min(prev[k] + Math.ceil(target[k] / 20), target[k]);
+            changed = true;
+          } else if (prev[k] > target[k]) {
+            next[k] = target[k];
+            changed = true;
+          }
+        });
+        if (!changed) clearInterval(interval);
+        return next;
+      });
+    }, 50);
+    return () => clearInterval(interval);
+  }, [problems.length, volunteersCount, workersCount, ngosCount]);
 
   const handleLocateAndSort = async () => {
     if (sortNearest) {
@@ -140,26 +196,33 @@ export default function Dashboard() {
       })
     : problems;
 
-  const openCount = problems.filter(p => p.status === "Open").length;
-  const resolvedCount = problems.filter(p => p.status === "Resolved").length;
-  const progressCount = problems.filter(p => p.status === "In Progress").length;
+  const openCount = problems.filter(p => p.status?.toLowerCase() === "open").length;
+  const resolvedCount = problems.filter(p => p.status?.toLowerCase() === "resolved").length;
+  const progressCount = problems.filter(p => p.status?.toLowerCase() === "in progress" || p.status?.toLowerCase() === "in-progress").length;
 
-  const foodCount = problems.filter(p => p.category === "Food Supply").length;
-  const medicalCount = problems.filter(p => p.category === "Medical Aid").length;
-  const eduCount = problems.filter(p => p.category === "Education").length;
-  const otherCount = problems.length - (foodCount + medicalCount + eduCount);
+  const volunteersCount = usersList.filter(u => u.role?.toLowerCase() === "volunteer").length;
+  const workersCount = usersList.filter(u => u.role?.toLowerCase() === "worker").length;
+  const ngosCount = usersList.filter(u => u.role?.toLowerCase() === "ngo").length;
 
-  const criticalCount = problems.filter(p => p.urgency === "Critical").length;
-  const highCount = problems.filter(p => p.urgency === "High").length;
-  const mediumCount = problems.filter(p => p.urgency === "Medium").length;
-  const lowCount = problems.filter(p => p.urgency === "Low").length;
+  const criticalCount = problems.filter(p => p.urgency?.toLowerCase() === "critical").length;
+  const highCount = problems.filter(p => p.urgency?.toLowerCase() === "high").length;
+  const mediumCount = problems.filter(p => p.urgency?.toLowerCase() === "medium").length;
+  const lowCount = problems.filter(p => p.urgency?.toLowerCase() === "low").length;
 
-  const pieData = [
-    { name: "Food", value: foodCount },
-    { name: "Medical", value: medicalCount },
-    { name: "Education", value: eduCount },
-    { name: "Other", value: Math.max(0, otherCount) },
-  ].filter(d => d.value > 0);
+  // Category with Percentage logic
+  const categoryCount = {};
+  problems.forEach(p => {
+    const cat = p.category || "Other";
+    categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+  });
+  const totalProblems = problems.length || 1;
+  const categoryData = Object.keys(categoryCount).map(cat => ({
+    name: cat,
+    value: categoryCount[cat],
+    percent: ((categoryCount[cat] / totalProblems) * 100).toFixed(1)
+  })).sort((a, b) => b.value - a.value);
+
+  const pieData = categoryData.filter(d => d.value > 0);
   
   const urgencyData = [
     { name: "Critical", value: criticalCount, fill: "#ef4444" },
@@ -171,12 +234,12 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen premium-bg text-white">
+      <div className="min-h-screen bg-slate-50 text-slate-900">
         <Navbar />
         <div className="flex items-center justify-center h-[calc(100vh-80px)]">
           <div className="animate-pulse flex items-center gap-3">
-            <span className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            Initializing System...
+            <span className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+            Loading live operational data...
           </div>
         </div>
       </div>
@@ -184,7 +247,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen premium-bg text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <Navbar />
 
       <motion.main
@@ -219,16 +282,14 @@ export default function Dashboard() {
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           {STAT_CONFIG.map((s) => {
-            const val = s.key === "total" ? problems.length : 
-                        s.key === "critical" ? criticalCount :
-                        s.key === "high" ? highCount : resolvedCount;
+            const val = counts[s.key];
             return (
-              <div key={s.key} className="premium-card p-5 rounded-2xl">
+              <div key={s.key} className="premium-card p-5 rounded-2xl border-l-4 border-indigo-500">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xl">{s.icon}</span>
                   <span className={`text-xs font-bold uppercase tracking-wider ${s.text}`}>{s.label}</span>
                 </div>
-                <h2 className="text-2xl font-bold">{val}</h2>
+                <h2 className="text-2xl font-bold text-slate-800">{val}</h2>
               </div>
             );
           })}
@@ -254,33 +315,33 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="premium-card p-6 rounded-2xl flex flex-col items-center">
-            <h3 className="font-bold mb-2 self-start text-sm uppercase tracking-widest text-slate-500">Categories</h3>
-            <div className="h-[200px] w-full">
-              <ResponsiveContainer>
-                <PieChart>
-                  <Pie data={pieData.length > 0 ? pieData : [{name: "None", value: 1}]} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5}>
-                    {(pieData.length > 0 ? pieData : [1]).map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip />
-                </PieChart>
-              </ResponsiveContainer>
+          <div className="premium-card p-6 rounded-2xl">
+            <h3 className="font-bold mb-4 text-slate-800">Categories</h3>
+            <div className="grid grid-cols-1 gap-2 overflow-y-auto max-h-[200px] pr-2">
+              {categoryData.map(c => (
+                <div key={c.name} className="flex justify-between items-center py-1.5 border-b border-slate-50 last:border-0">
+                  <span className="text-sm text-slate-600 truncate mr-2">{c.name}</span>
+                  <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{c.percent}%</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="premium-card p-6 rounded-2xl flex flex-col justify-center">
-            <h3 className="font-bold mb-2 text-sm uppercase tracking-widest text-slate-500">Urgency Distribution</h3>
-            <div className="h-[200px] w-full">
-              <ResponsiveContainer>
-                <BarChart data={urgencyData}>
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} />
-                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                    {urgencyData.map((e, index) => <Cell key={index} fill={e.fill} />)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+          <div className="premium-card p-6 rounded-2xl">
+            <h3 className="font-bold mb-4 text-slate-800">Urgency Distribution</h3>
+            <div className="space-y-3">
+              {[
+                { name: "Critical", count: criticalCount, color: "bg-red-500", text: "text-red-600" },
+                { name: "High", count: highCount, color: "bg-orange-500", text: "text-orange-600" },
+                { name: "Medium", count: mediumCount, color: "bg-yellow-500", text: "text-yellow-600" },
+                { name: "Low", count: lowCount, color: "bg-emerald-500", text: "text-emerald-600" },
+              ].map(u => (
+                <div key={u.name} className="flex items-center gap-3">
+                  <div className={`w-2 h-2 rounded-full ${u.color}`} />
+                  <span className="text-sm text-slate-600 flex-1">{u.name}</span>
+                  <span className={`text-sm font-bold ${u.text}`}>{u.count}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -309,8 +370,8 @@ export default function Dashboard() {
           </div>
 
           {problems.length === 0 ? (
-            <div className="text-center py-20 bg-white/5 rounded-3xl border border-dashed border-white/10">
-              <p className="text-slate-400">No reports to display active areas 🚫</p>
+            <div className="text-center py-20 bg-white/5 rounded-3xl border border-dashed border-slate-200">
+              <p className="text-slate-500 font-medium">No problems yet. Be the first to report 🚀</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

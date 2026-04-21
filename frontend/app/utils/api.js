@@ -7,10 +7,23 @@ console.log("🌐 API DEBUG: Initialized BASE_URL =", BASE_URL);
 // Helper for verbose fetching
 const verboseFetch = async (endpoint, options = {}) => {
   const url = `${BASE_URL}${endpoint}`;
+  
+  // 🔑 Get token from localStorage (hackathon grade auth)
+  let token = null;
+  if (typeof window !== "undefined") {
+    token = localStorage.getItem("token");
+  }
+
+  const headers = {
+    "Content-Type": "application/json",
+    ...options.headers,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
   console.log(`🚀 API CALL: ${options.method || 'GET'} ${url}`);
   
   try {
-    const res = await fetch(url, options);
+    const res = await fetch(url, { ...options, headers });
     const text = await res.text();
     
     // Log the first 100 chars of response for debugging
@@ -111,13 +124,12 @@ export const getUsers = async () => {
   }
 };
 
-// Delete problem
-export const deleteProblem = async (id) => {
+// Delete problem (Owner only)
+export const deleteProblem = async (id, userId) => {
   return await verboseFetch(`/api/problems/${id}`, {
     method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId }),
   });
 };
 

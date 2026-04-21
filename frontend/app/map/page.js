@@ -5,6 +5,9 @@ import dynamic from "next/dynamic";
 import Navbar from "../components/Navbar";
 import { getProblems, getUsers } from "../utils/api";
 import { motion } from "framer-motion";
+import { io } from "socket.io-client";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
 // Import MapView dynamically to avoid SSR issues with Leaflet
 const MapView = dynamic(() => import("../components/MapView"), {
@@ -42,10 +45,9 @@ export default function MapPage() {
         setProblems(problemData);
 
         // Fetch Users (NGOs & Helpers)
-        getUsers().then((users) => {
-          setNgos(users.filter((u) => u.role === "ngo" || u.role === "NGO"));
-          setHelpers(users.filter((u) => u.role === "volunteer" || u.role === "worker"));
-        });
+        const users = await getUsers();
+        setNgos(users.filter((u) => u.role === "ngo" || u.role === "NGO"));
+        setHelpers(users.filter((u) => u.role === "volunteer" || u.role === "worker"));
       } catch (err) {
         console.error("Map Fetch Error:", err);
       } finally {
@@ -54,6 +56,17 @@ export default function MapPage() {
     };
 
     fetchData();
+
+    // 🌐 Real-time Map Updates
+    const socket = io(API_BASE);
+    socket.on("new-problem", (newProb) => {
+      setProblems(prev => {
+        if (prev.find(p => p._id === newProb._id)) return prev;
+        return [newProb, ...prev];
+      });
+    });
+
+    return () => socket.disconnect();
   }, []);
 
   return (

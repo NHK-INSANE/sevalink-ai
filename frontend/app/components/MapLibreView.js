@@ -20,7 +20,7 @@ export default function MapLibreView({
   zoom = 10,
   onMapClick = null,
   height = "400px",
-  mapStyle = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
+  mapStyle = "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
 }) {
   const [selectedMarkerId, setSelectedMarkerId] = useState(null);
 
@@ -48,7 +48,7 @@ export default function MapLibreView({
   );
 
   return (
-    <div style={{ height, width: "100%", position: "relative" }} className="rounded-xl overflow-hidden border border-slate-800 shadow-2xl">
+    <div style={{ height, width: "100%", position: "relative" }} className="rounded-xl overflow-hidden border border-slate-200 shadow-lg bg-white">
       <Map
         initialViewState={initialViewState}
         mapStyle={mapStyle}

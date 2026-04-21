@@ -20,8 +20,8 @@ const problemSchema = new mongoose.Schema({
     address: { type: String, default: "" },
   },
   createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    type: String,
+    required: true,
   },
   urgency: {
     type: String,
@@ -40,6 +40,10 @@ const problemSchema = new mongoose.Schema({
     type: String,
     enum: ["Open", "In Progress", "Resolved"],
     default: "Open",
+  },
+  assignedTo: {
+    type: String,
+    default: null,
   },
   createdAt: {
     type: Date,

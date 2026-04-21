@@ -5,6 +5,9 @@ import ProblemCard from "../components/ProblemCard";
 import { getProblems, updateProblemStatus, deleteProblem } from "../utils/api";
 import { getUserLocation } from "../utils/location";
 import toast from "react-hot-toast";
+import { io } from "socket.io-client";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
 const URGENCY_ORDER = { Critical: 0, High: 1, Medium: 2, Low: 3 };
 
@@ -27,10 +30,17 @@ export default function ProblemsPage() {
 
   useEffect(() => {
     fetchProblems();
-    const interval = setInterval(() => {
-      getProblems().then(setProblems);
-    }, 10000); // 10s auto-refresh
-    return () => clearInterval(interval);
+    
+    // 🌐 Live List Updates
+    const socket = io(API_BASE);
+    socket.on("new-problem", (newProb) => {
+      setProblems(prev => {
+        if (prev.find(p => p._id === newProb._id)) return prev;
+        return [newProb, ...prev];
+      });
+    });
+
+    return () => socket.disconnect();
   }, []);
 
   const handleStatusChange = async (id, status) => {
@@ -108,17 +118,17 @@ export default function ProblemsPage() {
     });
 
   return (
-    <div className="min-h-screen premium-bg text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-6 py-12">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-1">
+            <h1 className="text-3xl font-bold text-slate-800 mb-1">
               All Problems
             </h1>
-            <p className="text-slate-400">
+            <p className="text-slate-500">
               {loading ? "…" : `${filtered.length} of ${problems.length} reports`}
             </p>
           </div>
@@ -139,7 +149,7 @@ export default function ProblemsPage() {
         </div>
 
         {/* Filters */}
-        <div className="glass rounded-xl p-4 mb-8 flex flex-wrap gap-4 items-center">
+        <div className="premium-card rounded-xl p-4 mb-8 flex flex-wrap gap-4 items-center">
           <input
             id="search-problems"
             type="text"
@@ -189,7 +199,7 @@ export default function ProblemsPage() {
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className="glass rounded-xl h-48 animate-pulse bg-white/3"
+                className="premium-card rounded-xl h-48 animate-pulse bg-slate-100"
               />
             ))}
           </div>
