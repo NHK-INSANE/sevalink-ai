@@ -139,8 +139,8 @@ export default function MapPage() {
             zoomToUser={true}
           />
         </motion.div>
-      </PageWrapper>
       </main>
+      </PageWrapper>
     </div>
   );
 }
