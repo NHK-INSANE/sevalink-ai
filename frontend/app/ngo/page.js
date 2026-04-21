@@ -22,16 +22,14 @@ export default function NGOPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 transition duration-200">
+    <div className="min-h-screen bg-white">
       <Navbar />
-      <PageWrapper>
-
-      <main className="max-w-5xl mx-auto px-4 md:px-10 py-10">
+      <main className="max-w-5xl mx-auto px-6 md:px-10 pt-24 pb-20">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-1">🏢 Registered NGOs</h1>
-          <p className="text-gray-500 text-sm">
-            Organisations actively coordinating crisis response on SevaLink
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">🏢 Registered NGOs</h1>
+          <p className="text-gray-500 text-sm mt-1 font-medium">
+            Active organizations coordinating response operations on SevaLink.
           </p>
         </div>
 
@@ -105,7 +103,6 @@ export default function NGOPage() {
           </>
         )}
       </main>
-      </PageWrapper>
     </div>
   );
 }
