@@ -3,12 +3,13 @@ import { useEffect, useState } from "react";
 import { getUser, logout, getRoleLabel } from "../utils/auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Navbar from "../components/Navbar";
 
 const ROLE_COLORS = {
-  NGO: "text-indigo-300 bg-indigo-500/15 border-indigo-500/30",
-  Volunteer: "text-emerald-300 bg-emerald-500/15 border-emerald-500/30",
-  Worker: "text-orange-300 bg-orange-500/15 border-orange-500/30",
-  User: "text-slate-300 bg-slate-500/15 border-slate-500/30",
+  NGO:       "text-blue-600 bg-blue-50 border-blue-200",
+  Volunteer: "text-emerald-600 bg-emerald-50 border-emerald-200",
+  Worker:    "text-orange-600 bg-orange-50 border-orange-200",
+  User:      "text-gray-600 bg-gray-50 border-gray-200",
 };
 
 const ROLE_ICONS = {
@@ -21,11 +22,11 @@ const ROLE_ICONS = {
 function InfoRow({ label, value, icon }) {
   if (!value) return null;
   return (
-    <div className="flex items-start gap-3 py-3 border-b border-white/5 last:border-0">
+    <div className="flex items-start gap-3 py-3 border-b border-gray-50 last:border-0">
       <span className="text-base mt-0.5">{icon}</span>
       <div>
-        <div className="text-xs text-slate-500 mb-0.5">{label}</div>
-        <div className="text-sm text-slate-200 font-medium">{value}</div>
+        <div className="text-xs text-gray-400 mb-0.5">{label}</div>
+        <div className="text-sm text-gray-700 font-medium">{value}</div>
       </div>
     </div>
   );
@@ -55,81 +56,84 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          {/* Avatar */}
-          <div className="w-20 h-20 rounded-2xl btn-primary flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-indigo-500/20">
-            {roleIcon}
-          </div>
-          <h1 className="text-2xl font-bold text-white">
-            {user.name || "SevaLink User"}
-          </h1>
-          {user.username && (
-            <p className="text-slate-500 text-sm mt-0.5">@{user.username}</p>
-          )}
-          {/* Role badge */}
-          <span
-            className={`inline-flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full border text-xs font-semibold ${roleColor}`}
-          >
-            {roleIcon} {getRoleLabel ? getRoleLabel(user.role) : user.role}
-          </span>
-        </div>
-
-        {/* Card */}
-        <div className="glass rounded-2xl border border-white/8 overflow-hidden">
-          {/* Info rows */}
-          <div className="px-6 py-2">
-            <InfoRow label="Email" value={user.email} icon="📧" />
-            <InfoRow label="Phone" value={user.phone} icon="📱" />
-            <InfoRow label="Location" value={user.address} icon="📍" />
-            {user.ngoName && (
-              <InfoRow label="Organisation" value={user.ngoName} icon="🏢" />
-            )}
-            {user.ngoContact && (
-              <InfoRow label="NGO Contact" value={user.ngoContact} icon="🌐" />
-            )}
-            {user.ngoLink && (
-              <InfoRow label="Works under" value={user.ngoLink} icon="🔗" />
-            )}
-            {user.bio && (
-              <InfoRow label="Bio" value={user.bio} icon="✏️" />
-            )}
-          </div>
-
-          {/* Skills */}
-          {user.skills && user.skills.length > 0 && (
-            <div className="px-6 py-4 border-t border-white/5">
-              <div className="text-xs text-slate-500 mb-2">🛠 Skills</div>
-              <div className="flex flex-wrap gap-2">
-                {user.skills.map((skill) => (
-                  <span
-                    key={skill}
-                    className="px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-medium"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 transition duration-200">
+      <Navbar />
+      <div className="flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          {/* Header */}
+          <div className="text-center mb-8">
+            {/* Avatar */}
+            <div className="w-20 h-20 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-3xl mx-auto mb-4 shadow-sm">
+              {roleIcon}
             </div>
-          )}
+            <h1 className="text-2xl font-bold text-gray-800">
+              {user.name || "SevaLink User"}
+            </h1>
+            {user.username && (
+              <p className="text-gray-400 text-sm mt-0.5">@{user.username}</p>
+            )}
+            {/* Role badge */}
+            <span
+              className={`inline-flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full border text-xs font-semibold ${roleColor}`}
+            >
+              {roleIcon} {getRoleLabel ? getRoleLabel(user.role) : user.role}
+            </span>
+          </div>
 
-          {/* Actions */}
-          <div className="px-6 py-4 border-t border-white/5 flex gap-3">
-            <Link
-              href="/"
-              className="flex-1 text-center py-2.5 rounded-xl text-sm font-medium glass border border-white/10 text-slate-300 hover:text-white hover:border-white/20 transition-all"
-            >
-              ← Dashboard
-            </Link>
-            <button
-              id="profile-logout-btn"
-              onClick={handleLogout}
-              className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-400/50 transition-all"
-            >
-              🚪 Logout
-            </button>
+          {/* Card */}
+          <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden transition duration-200">
+            {/* Info rows */}
+            <div className="px-6 py-2">
+              <InfoRow label="Email" value={user.email} icon="📧" />
+              <InfoRow label="Phone" value={user.phone} icon="📱" />
+              <InfoRow label="Location" value={user.address} icon="📍" />
+              {user.ngoName && (
+                <InfoRow label="Organisation" value={user.ngoName} icon="🏢" />
+              )}
+              {user.ngoContact && (
+                <InfoRow label="NGO Contact" value={user.ngoContact} icon="🌐" />
+              )}
+              {user.ngoLink && (
+                <InfoRow label="Works under" value={user.ngoLink} icon="🔗" />
+              )}
+              {user.bio && (
+                <InfoRow label="Bio" value={user.bio} icon="✏️" />
+              )}
+            </div>
+
+            {/* Skills */}
+            {user.skills && user.skills.length > 0 && (
+              <div className="px-6 py-4 border-t border-gray-50">
+                <div className="text-xs text-gray-400 mb-2">🛠 Skills</div>
+                <div className="flex flex-wrap gap-2">
+                  {user.skills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-100 text-blue-600 text-xs font-medium"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="px-6 py-4 border-t border-gray-50 flex gap-3">
+              <Link
+                href="/"
+                className="flex-1 text-center py-2.5 rounded-xl text-sm font-medium bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 transition duration-200"
+              >
+                ← Dashboard
+              </Link>
+              <button
+                id="profile-logout-btn"
+                onClick={handleLogout}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-red-50 border border-red-200 text-red-500 hover:bg-red-100 transition duration-200"
+              >
+                🚪 Logout
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -21,14 +21,14 @@ export default function NGOPage() {
   }, []);
 
   return (
-    <div className="min-h-screen premium-bg text-white">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 transition duration-200">
       <Navbar />
 
-      <main className="max-w-5xl mx-auto px-6 py-10">
+      <main className="max-w-5xl mx-auto px-4 md:px-10 py-10">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-1">🏢 Registered NGOs</h1>
-          <p className="text-slate-400 text-sm">
+          <h1 className="text-3xl font-bold text-gray-800 mb-1">🏢 Registered NGOs</h1>
+          <p className="text-gray-500 text-sm">
             Organisations actively coordinating crisis response on SevaLink
           </p>
         </div>
@@ -36,59 +36,67 @@ export default function NGOPage() {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="glass rounded-xl h-36 animate-pulse bg-white/3 border border-white/5" />
+              <div key={i} className="bg-white border border-gray-100 rounded-2xl h-36 animate-pulse shadow-sm" />
             ))}
           </div>
         ) : (
           <>
             {ngos.length === 0 ? (
-              <div className="text-center py-20 bg-white/5 rounded-3xl border border-dashed border-white/10">
-                <p className="text-slate-400 mt-5">No NGOs reported yet 🚫</p>
+              <div className="text-center py-20 bg-white rounded-2xl shadow-md border border-dashed border-gray-200">
+                <div className="text-5xl mb-4">🏢</div>
+                <p className="text-gray-400 font-medium">No NGOs registered yet.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {ngos.map((ngo, i) => (
                   <div
                     key={ngo._id || i}
-                    className="glass rounded-xl p-5 border border-white/8 hover:border-indigo-500/30 transition-all"
+                    className="bg-white rounded-2xl shadow-md p-5 border border-gray-100 hover:shadow-lg transition duration-200"
                   >
                     {/* Header row */}
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-xl shadow-lg">
+                      <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-xl">
                         🏢
                       </div>
                       <div>
-                        <h2 className="text-white font-bold text-base leading-tight">
+                        <h2 className="text-gray-800 font-bold text-base leading-tight">
                           {ngo.ngoName || ngo.name || "Unnamed NGO"}
                         </h2>
-                        <span className="text-xs text-indigo-400 font-medium">NGO</span>
+                        <span className="text-xs text-blue-600 font-semibold">NGO</span>
                       </div>
                     </div>
 
                     {/* Details */}
                     <div className="space-y-2 text-sm">
                       {ngo.email && (
-                        <div className="flex items-center gap-2 text-slate-300">
-                          <span className="text-slate-500">📧</span>
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <span className="text-gray-400">📧</span>
                           <span className="truncate">{ngo.email}</span>
                         </div>
                       )}
                       {ngo.phone && (
-                        <div className="flex items-center gap-2 text-slate-300">
-                          <span className="text-slate-500">📞</span>
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <span className="text-gray-400">📞</span>
                           <span>{ngo.phone}</span>
                         </div>
                       )}
                       {ngo.address && (
-                        <div className="flex items-center gap-2 text-slate-300">
-                          <span className="text-slate-500">📍</span>
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <span className="text-gray-400">📍</span>
                           <span>{ngo.address}</span>
                         </div>
                       )}
                       {ngo.ngoContact && (
-                        <div className="flex items-center gap-2 text-slate-300">
-                          <span className="text-slate-500">🌐</span>
-                          <span className="truncate">{ngo.ngoContact}</span>
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <span className="text-gray-400">🌐</span>
+                          <a
+                            href={ngo.ngoContact.startsWith("http") ? ngo.ngoContact : `https://${ngo.ngoContact}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="truncate text-blue-600 hover:underline"
+                          >
+                            {ngo.ngoContact}
+                          </a>
                         </div>
                       )}
                     </div>

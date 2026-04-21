@@ -13,10 +13,10 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bm
 const MapView = dynamic(() => import("../components/MapView"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-[600px] flex items-center justify-center bg-slate-900/50 rounded-2xl animate-pulse">
-      <div className="flex flex-col items-center gap-3 text-indigo-400">
-        <span className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-        <span className="font-medium">Initializing Map System...</span>
+    <div className="w-full h-[600px] flex items-center justify-center bg-gray-50 rounded-2xl animate-pulse border border-gray-100">
+      <div className="flex flex-col items-center gap-3 text-blue-600">
+        <span className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        <span className="font-medium text-sm">Initializing Map System...</span>
       </div>
     </div>
   ),
@@ -70,31 +70,31 @@ export default function MapPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 transition duration-200">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-6 py-10">
+      <main className="max-w-7xl mx-auto px-4 md:px-10 py-10">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-6">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Global Crisis Map
+            <h1 className="text-3xl font-bold text-gray-800">
+              🗺️ Global Crisis Map
             </h1>
-            <p className="text-slate-500 text-sm mt-1 font-medium">
+            <p className="text-gray-500 text-sm mt-1 font-medium">
               Live visualization of reports, relief organizations, and field volunteers.
             </p>
           </div>
 
-          {/* Filter System */}
-          <div className="flex flex-wrap gap-2 p-1 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+          {/* Filter pills */}
+          <div className="flex flex-wrap gap-2 p-1 bg-white border border-gray-200 rounded-2xl shadow-sm">
             {MODES.map((mode) => (
               <button
                 key={mode.id}
                 onClick={() => setType(mode.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all text-xs font-semibold ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition duration-200 text-xs font-semibold ${
                   type === mode.id
-                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20"
-                    : "text-slate-500 hover:text-indigo-600 hover:bg-slate-50"
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "text-gray-500 hover:text-blue-600 hover:bg-gray-50"
                 }`}
               >
                 <span>{mode.icon}</span>
@@ -109,7 +109,7 @@ export default function MapPage() {
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="relative h-[650px] rounded-3xl overflow-hidden border border-slate-200 shadow-xl bg-white"
+          className="relative h-[650px] rounded-2xl overflow-hidden border border-gray-200 shadow-md bg-white"
         >
           {/* Statistics Overlay */}
           <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
