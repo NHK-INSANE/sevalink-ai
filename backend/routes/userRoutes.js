@@ -52,4 +52,34 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// GET /api/users/:id/notifications
+router.get("/:id/notifications", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    
+    // Return sorted notifications (newest first)
+    const notifs = user.notifications.sort((a, b) => b.date - a.date);
+    res.json(notifs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/users/:id/notifications/read
+router.patch("/:id/notifications/read", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    
+    // Mark all as read
+    user.notifications.forEach(n => n.read = true);
+    await user.save();
+    
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

@@ -19,6 +19,14 @@ const userSchema = new mongoose.Schema({
   ngoContact: { type: String, default: "" },
   ngoLink: { type: String, default: "" },
   bio: { type: String, default: "" },
+  notifications: [
+    {
+      text: { type: String, required: true },
+      type: { type: String, default: "info" },
+      read: { type: Boolean, default: false },
+      date: { type: Date, default: Date.now },
+    }
+  ],
   createdAt: { type: Date, default: Date.now },
 });
 

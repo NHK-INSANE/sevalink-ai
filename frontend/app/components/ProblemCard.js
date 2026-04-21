@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { getUser } from "../utils/auth";
+import { apiRequest } from "../utils/api";
 import { matchVolunteers } from "../data/volunteers";
+import toast from "react-hot-toast";
 
 const urgencyConfig = {
   Critical: {
@@ -53,14 +55,35 @@ const getScoreBarColor = (score) => {
 
 export default function ProblemCard({ problem, onStatusChange, onDelete }) {
   const config = urgencyConfig[problem.urgency] || urgencyConfig.Medium;
-  const [assigned, setAssigned] = useState(null);
+  const [assigned, setAssigned] = useState(problem.assignedTo);
   const [showVolunteers, setShowVolunteers] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
   const [user, setUser] = useState(null);
   const matched = matchVolunteers(problem.requiredSkill);
 
   useEffect(() => {
     setUser(getUser());
   }, []);
+
+  const handleAssign = async (volunteerId, volunteerName) => {
+    if (!window.confirm(`Assign ${volunteerName} to this problem?`)) return;
+    setIsAssigning(true);
+    try {
+      await apiRequest(`/api/problems/${problem._id}/assign`, {
+        method: "PATCH",
+        body: JSON.stringify({ volunteerId, volunteerName }),
+      });
+      setAssigned(volunteerId);
+      toast.success(`${volunteerName} assigned!`);
+      // Update local status artificially to reflect UI change instantly
+      if (onStatusChange) onStatusChange(problem._id, "In Progress");
+    } catch (err) {
+      toast.error("Failed to assign volunteer");
+    } finally {
+      setIsAssigning(false);
+    }
+  };
 
   return (
     <div
@@ -171,10 +194,11 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
                       </span>
                     ) : (
                       <button
-                        onClick={() => setAssigned(v.id)}
-                        className="text-[10px] px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition-colors font-medium"
+                        disabled={isAssigning}
+                        onClick={() => handleAssign(v.id, v.name)}
+                        className="text-[10px] px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/30 transition-colors font-medium disabled:opacity-50"
                       >
-                        Assign
+                        {isAssigning ? "..." : "Assign"}
                       </button>
                     )}
                   </div>
@@ -184,6 +208,30 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
                   No volunteers matched for this skill
                 </p>
               )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Timeline Section */}
+      {(problem.timeline && problem.timeline.length > 0) && (
+        <div className="mb-4">
+          <button
+            onClick={() => setShowTimeline(!showTimeline)}
+            className="text-xs font-semibold text-slate-500 hover:text-slate-700 flex items-center transition-colors"
+          >
+            🕒 Activity Timeline {showTimeline ? "▲" : "▼"}
+          </button>
+          
+          {showTimeline && (
+            <div className="mt-3 pl-2 border-l-2 border-indigo-100 space-y-3">
+              {[...problem.timeline].reverse().map((event, idx) => (
+                <div key={idx} className="relative pl-3">
+                  <span className="absolute -left-[19px] top-1 w-2 h-2 rounded-full bg-indigo-400 outline outline-2 outline-white"></span>
+                  <p className="text-xs text-slate-700 font-medium">{event.text}</p>
+                  <p className="text-[9px] text-slate-400 font-medium">{new Date(event.time).toLocaleTimeString()} · {new Date(event.time).toLocaleDateString()}</p>
+                </div>
+              ))}
             </div>
           )}
         </div>

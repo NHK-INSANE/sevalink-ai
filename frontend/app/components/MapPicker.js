@@ -3,8 +3,8 @@
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import { useState } from "react";
 
-function ClickHandler({ setLocation, setAddress }) {
-  const [pos, setPos] = useState(null);
+function ClickHandler({ setLocation, setAddress, initialLocation }) {
+  const [pos, setPos] = useState(initialLocation ? [initialLocation.lat, initialLocation.lng] : null);
 
   useMapEvents({
     click: async (e) => {
@@ -30,11 +30,11 @@ function ClickHandler({ setLocation, setAddress }) {
   return pos ? <Marker position={pos} /> : null;
 }
 
-export default function MapPicker({ setLocation, setAddress }) {
+export default function MapPicker({ setLocation, setAddress, initialLocation }) {
   return (
     <MapContainer
-      center={[22.57, 88.36]}
-      zoom={12}
+      center={initialLocation ? [initialLocation.lat, initialLocation.lng] : [22.57, 88.36]}
+      zoom={initialLocation ? 15 : 12}
       style={{ height: "250px", width: "100%" }}
     >
       <TileLayer
@@ -42,7 +42,7 @@ export default function MapPicker({ setLocation, setAddress }) {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      <ClickHandler setLocation={setLocation} setAddress={setAddress} />
+      <ClickHandler setLocation={setLocation} setAddress={setAddress} initialLocation={initialLocation} />
     </MapContainer>
   );
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getUser, logout, getRoleLabel } from "../utils/auth";
+import { apiRequest } from "../utils/api";
 
 const navLinks = [
   { href: "/", label: "Dashboard", icon: "⚡" },
@@ -18,16 +19,54 @@ export default function Navbar() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifs, setShowNotifs] = useState(false);
 
   useEffect(() => {
-    setUser(getUser());
+    const loggedUser = getUser();
+    setUser(loggedUser);
+    
+    if (loggedUser) {
+      const fetchNotifs = async () => {
+        try {
+          const res = await apiRequest(`/api/users/${loggedUser.id || loggedUser._id}/notifications`);
+          setNotifications(res || []);
+        } catch (err) {
+          console.error("Failed to fetch notifications");
+        }
+      };
+      fetchNotifs();
+      
+      // Auto-refresh notifications every 30s
+      const int = setInterval(fetchNotifs, 30000);
+      return () => clearInterval(int);
+    }
   }, [pathname]); // re-check on route change
 
   const handleLogout = () => {
     logout();
     setUser(null);
     setMenuOpen(false);
+    setShowNotifs(false);
     router.push("/login");
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const markNotifsRead = async () => {
+    if (!user || unreadCount === 0) return;
+    try {
+      await apiRequest(`/api/users/${user.id || user._id}/notifications/read`, { method: "PATCH" });
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch (err) {
+      // Ignored
+    }
+  };
+
+  const toggleNotifs = () => {
+    setShowNotifs(!showNotifs);
+    if (!showNotifs) markNotifsRead();
+    setMenuOpen(false);
   };
 
   return (
@@ -69,20 +108,57 @@ export default function Navbar() {
         {/* Right side */}
         <div className="flex items-center gap-3">
           {/* Live indicator */}
-          <div className="flex items-center gap-1.5 text-xs text-slate-500">
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 mr-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block" />
             Live
           </div>
 
-
           {/* Auth */}
           {user ? (
-            <div className="relative">
-              <button
-                id="user-menu-btn"
-                onClick={() => setMenuOpen((v) => !v)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg glass border border-slate-200 hover:border-indigo-500/30 transition-all text-sm"
-              >
+            <div className="flex items-center gap-3 relative">
+              {/* Notification Bell */}
+              <div className="relative">
+                <button 
+                  onClick={toggleNotifs}
+                  className="p-2 rounded-full hover:bg-slate-100 transition-colors relative text-lg"
+                >
+                  🔔
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 border-2 border-white bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {showNotifs && (
+                  <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl border border-slate-200 shadow-xl z-[100] max-h-96 overflow-y-auto">
+                    <div className="px-4 py-3 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-xl">
+                      <span className="font-bold text-slate-800 text-sm">Notifications</span>
+                    </div>
+                    <div className="divide-y divide-slate-100">
+                      {notifications.length === 0 ? (
+                        <div className="px-4 py-6 text-center text-sm text-slate-500">No new notifications</div>
+                      ) : (
+                        notifications.map((n, i) => (
+                          <div key={i} className={`px-4 py-3 ${n.read ? 'opacity-70' : 'bg-indigo-50/30'}`}>
+                            <p className="text-sm text-slate-700">{n.text}</p>
+                            <p className="text-[10px] text-slate-400 mt-1">{new Date(n.date).toLocaleString()}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* User Menu */}
+              {/* User Menu Trigger */}
+              <div>
+                <button
+                  id="user-menu-btn"
+                  onClick={() => { setMenuOpen((v) => !v); setShowNotifs(false); }}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg glass border border-slate-200 hover:border-indigo-500/30 transition-all text-sm"
+                >
                 <span className="text-base">{user.role === "NGO" ? "🏢" : user.role === "Volunteer" ? "🤝" : user.role === "Worker" ? "🔧" : "👤"}</span>
                 <span className="text-slate-700 font-medium max-w-[100px] truncate">
                   {user.name || user.email?.split("@")[0]}
@@ -124,6 +200,7 @@ export default function Navbar() {
                   </button>
                 </div>
               )}
+              </div>
             </div>
           ) : (
             <div className="flex items-center gap-2">

@@ -45,6 +45,12 @@ const problemSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  timeline: [
+    {
+      text: { type: String, required: true },
+      time: { type: Date, default: Date.now },
+    }
+  ],
   createdAt: {
     type: Date,
     default: Date.now,

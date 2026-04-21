@@ -1,6 +1,7 @@
 "use client";
 
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -82,6 +83,7 @@ export default function MapView({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
+        <MarkerClusterGroup chunkedLoading>
         {/* 🔴 Problems */}
         {(type === "all" || type === "problems") &&
           problems.filter(p => p.location?.lat && p.location?.lng).map((p, i) => (
@@ -129,18 +131,20 @@ export default function MapView({
           helpers.filter(h => h.location?.lat && h.location?.lng).map((h, i) => (
             <Marker key={`h-${h._id || i}`} position={[h.location.lat, h.location.lng]} icon={helperIcon}>
               <Popup>
-                <div className="p-1 font-inter">
-                  <div className="font-bold text-slate-900 flex items-center gap-1">
+                <div className="p-2 font-inter min-w-[160px]">
+                  <div className="font-bold text-slate-900 text-sm mb-1 border-b border-slate-100 pb-1">
                     🤝 {h.name}
                   </div>
-                  <div className="text-xs text-slate-600 font-medium border-t border-slate-50 mt-1 pt-1">
-                    🛠 {h.skill || "General Support"}
+                  <div className="text-xs text-slate-600 space-y-1">
+                    <div><span className="font-semibold text-slate-800">Skills:</span> {h.skill || (h.skills?.length > 0 ? h.skills.join(', ') : "General Support")}</div>
+                    <div><span className="font-semibold text-slate-800">Status:</span> <span className="text-emerald-600 font-semibold">Available 🟢</span></div>
+                    {h.bio && <div className="italic text-[10px] text-slate-400 mt-1">"{h.bio}"</div>}
                   </div>
-                  <div className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded-full mt-2 inline-block">FIELD VOLUNTEER</div>
                 </div>
               </Popup>
             </Marker>
           ))}
+        </MarkerClusterGroup>
       </MapContainer>
     </div>
   );

@@ -382,6 +382,14 @@ export default function Dashboard() {
           )}
         </div>
       </motion.main>
+
+      {/* Mobile-first Floating Action Button */}
+      <a 
+        href="/submit" 
+        className="fixed bottom-6 right-6 z-50 premium-btn flex items-center justify-center shadow-[0_10px_40px_rgba(99,102,241,0.5)] bg-indigo-600 text-white rounded-full px-5 py-4 font-bold transition-transform hover:scale-105 active:scale-95 border-2 border-indigo-400/50"
+      >
+        ➕ Report Problem
+      </a>
     </div>
   );
 }

@@ -47,13 +47,20 @@ router.post("/", auth, async (req, res) => {
     const problem = new Problem({
       ...req.body,
       createdBy: req.user.id.toString(),
+      timeline: [{ text: "Problem reported" }]
     });
 
     // 🤖 AI AUTO-ASSIGNMENT
     const bestMatch = await matchVolunteer(problem);
     if (bestMatch) {
       problem.assignedTo = bestMatch;
-      problem.status = "In Progress"; // Auto-start if matched
+      problem.status = "In Progress";
+      problem.timeline.push({ text: "AI auto-assigned a volunteer" });
+      
+      // Send notification to the matched volunteer
+      await User.findByIdAndUpdate(bestMatch, {
+        $push: { notifications: { text: `You were auto-assigned to an urgently matched problem: ${problem.title}`, type: "alert" } }
+      });
     }
 
     await problem.save();
@@ -73,10 +80,27 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
-// GET /api/problems — Get all problems (highest priority first)
+// GET /api/problems — Get all problems (dynamic priority calculation)
 router.get("/", async (req, res) => {
   try {
-    const problems = await Problem.find().sort({ score: -1, createdAt: -1 });
+    let problems = await Problem.find().lean();
+    
+    // Calculate dynamic smart priority based on time elapsed
+    problems = problems.map(p => {
+      const hoursElapsed = (Date.now() - new Date(p.createdAt).getTime()) / (1000 * 60 * 60);
+      const dynamicBoost = Math.floor(hoursElapsed) * 5; // +5 points per hour waiting
+      return {
+        ...p,
+        score: (p.score || 0) + dynamicBoost
+      };
+    });
+    
+    // Sort by dynamic score, then by date
+    problems.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+    
     res.json(problems);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -87,11 +111,49 @@ router.get("/", async (req, res) => {
 router.patch("/:id/status", async (req, res) => {
   try {
     const { status } = req.body;
+    let timelineUpdate = `Status updated to ${status}`;
+    if (status === "In Progress") timelineUpdate = "Work started";
+    if (status === "Resolved") timelineUpdate = "Problem resolved";
+
     const problem = await Problem.findByIdAndUpdate(
       req.params.id,
-      { status },
+      { 
+        status,
+        $push: { timeline: { text: timelineUpdate } }
+      },
       { new: true }
     );
+    res.json(problem);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/problems/:id/assign — Assign a volunteer
+router.patch("/:id/assign", async (req, res) => {
+  try {
+    const { volunteerId, volunteerName } = req.body;
+    
+    const problem = await Problem.findByIdAndUpdate(
+      req.params.id,
+      {
+        assignedTo: volunteerId,
+        status: "In Progress",
+        $push: { timeline: { text: `Volunteer assigned (${volunteerName})` } }
+      },
+      { new: true }
+    );
+
+    // Notify the assigned user
+    if (problem) {
+      await User.findByIdAndUpdate(volunteerId, {
+        $push: { notifications: { text: `You were assigned to problem: ${problem.title}`, type: "task" } }
+      });
+      
+      const io = req.app.get("io");
+      if (io) io.emit("problem-updated", problem);
+    }
+
     res.json(problem);
   } catch (err) {
     res.status(500).json({ error: err.message });
