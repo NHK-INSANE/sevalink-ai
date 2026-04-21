@@ -257,14 +257,14 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-gray-800 transition duration-200">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-800 transition duration-200">
       <Navbar />
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <main className="max-w-7xl mx-auto px-6 py-10 mt-16">
+        <main className="max-w-7xl mx-auto px-6 pt-24 pb-10">
         {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-6">
           <div>

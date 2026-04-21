@@ -142,7 +142,7 @@ export default function MapPage() {
   // Loading Skeleton for Map
   if (loading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <Navbar />
         <main className="max-w-7xl mx-auto px-6 md:px-10 pt-24 pb-20">
           <div className="h-10 bg-gray-100 rounded-xl w-64 mb-8 animate-pulse"></div>
@@ -155,7 +155,7 @@ export default function MapPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <Navbar />
       <motion.div 
         initial={{ opacity: 0 }}

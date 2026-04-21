@@ -207,7 +207,7 @@ export default function MapView({
 
       {/* ── Floating Legend with live counts ── */}
       <div style={{
-        position: "absolute", bottom: 16, left: 16, zIndex: 1000,
+        position: "absolute", top: 80, left: 16, zIndex: 1000,
         background: "rgba(255,255,255,0.97)",
         backdropFilter: "blur(8px)",
         padding: "14px 16px",

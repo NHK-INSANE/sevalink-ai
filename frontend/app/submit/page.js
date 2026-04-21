@@ -204,7 +204,7 @@ export default function SubmitPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 transition duration-200">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition duration-200">
         <Navbar />
         <PageWrapper>
         <div className="max-w-lg mx-auto px-6 py-24 text-center">
@@ -238,10 +238,10 @@ export default function SubmitPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 transition duration-200">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-800 transition duration-200">
       <Navbar />
       <PageWrapper>
-        <main className="max-w-2xl mx-auto px-4 md:px-10 py-12 bg-white rounded-2xl shadow-md p-5 border border-gray-100 transition duration-200 mt-6 mb-12">
+        <main className="max-w-2xl mx-auto px-4 md:px-10 pt-24 pb-12 bg-white dark:bg-gray-900 rounded-2xl shadow-md border border-gray-100 dark:border-gray-800 transition duration-200 mt-6 mb-12">
         {/* Header */}
         <div className="mb-10">
           <h1 className="text-3xl font-bold text-slate-800 mb-2">

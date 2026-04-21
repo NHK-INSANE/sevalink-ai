@@ -38,7 +38,7 @@ export default function Helper() {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <Navbar />
       <main className="max-w-7xl mx-auto px-6 md:px-10 pt-24 pb-20">
         <div className="mb-8">

@@ -24,7 +24,7 @@ export default function NGOPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <Navbar />
       <main className="max-w-5xl mx-auto px-6 md:px-10 pt-24 pb-20">
         {/* Header */}

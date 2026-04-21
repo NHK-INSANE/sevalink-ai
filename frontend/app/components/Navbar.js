@@ -13,20 +13,19 @@ export default function Navbar() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [notifications, setNotifications] = useState([]);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   useEffect(() => {
     const currentUser = getUser();
     setUser(currentUser);
     
-    // Check initial dark mode
+    // Check initial dark mode (minimal support, no toggle)
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("theme") || "light";
       document.documentElement.className = saved;
-      setIsDarkMode(saved === "dark");
     }
 
-    // 🚨 Critical SOS & Social Listeners
     const socket = io(API_BASE);
 
     if (currentUser) {
@@ -47,7 +46,8 @@ export default function Navbar() {
     });
 
     socket.on("connect-request", (data) => {
-      setNotifications(prev => [...prev, data]);
+      const newNotif = { message: `${data.fromName} wants to connect!`, time: new Date() };
+      setNotifications(prev => [newNotif, ...prev]);
       toast(`🤝 ${data.fromName} wants to connect!`, {
         icon: "💬",
         style: { borderRadius: "12px", background: "#333", color: "#fff" },
@@ -57,22 +57,13 @@ export default function Navbar() {
     return () => socket.disconnect();
   }, []);
 
-  const toggleTheme = () => {
-    const current = document.documentElement.className;
-    const newTheme = current.includes("dark") ? "light" : "dark";
-    
-    document.documentElement.className = newTheme;
-    setIsDarkMode(newTheme === "dark");
-    localStorage.setItem("theme", newTheme);
-  };
-
   const handleLogout = () => {
     logout();
     router.push("/login");
   };
 
   return (
-    <nav className="fixed top-0 left-0 w-full bg-white border-b border-gray-100 z-[100] px-6 py-3 flex justify-between items-center shadow-sm">
+    <nav className="fixed top-0 left-0 w-full h-16 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 z-50 px-6 flex justify-between items-center shadow-sm">
       {/* Brand */}
       <Link href="/" className="flex items-center gap-2 group">
         <h1 className="text-xl font-bold text-blue-600 tracking-tight transition group-hover:scale-105">
@@ -81,7 +72,7 @@ export default function Navbar() {
       </Link>
 
       {/* Main Nav (Minimalist Startup Style) */}
-      <div className="hidden md:flex gap-8 text-sm font-semibold text-gray-500">
+      <div className="hidden lg:flex gap-8 text-sm font-semibold text-gray-500">
         {[
           { href: "/dashboard", label: "Dashboard" },
           { href: "/problems",  label: "Problems" },
@@ -94,7 +85,7 @@ export default function Navbar() {
             key={link.href}
             href={link.href}
             className={`hover:text-blue-600 transition flex items-center gap-1 ${
-              pathname.includes(link.href) ? "text-blue-600 font-bold" : ""
+              pathname.includes(link.href) ? "text-blue-600 font-bold border-b-2 border-blue-600 pb-1" : ""
             }`}
           >
             {link.label}
@@ -103,47 +94,77 @@ export default function Navbar() {
       </div>
 
       {/* User Actions */}
-      <div className="flex items-center gap-6">
-        {/* Dark Mode Toggle */}
-        <button 
-          onClick={toggleTheme}
-          className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition duration-200"
-          title="Toggle Dark Mode"
-        >
-          {isDarkMode ? "☀️" : "🌙"}
-        </button>
-
-        {user && (
-          <div className="relative cursor-pointer" title="Notifications">
-             <span className="text-xl">🔔</span>
-             {notifications.length > 0 && (
-               <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold animate-bounce">
-                 {notifications.length}
-               </span>
-             )}
-          </div>
-        )}
-
+      <div className="flex items-center gap-4">
         {user ? (
-          <div className="flex items-center gap-4">
-            <Link 
-              href="/profile"
-              className="hidden sm:flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200 font-semibold hover:text-blue-600 transition px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800"
-            >
-              <span>👤</span>
-              {user.name || user.email?.split("@")[0]}
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 text-xs font-bold rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition uppercase tracking-wider"
-            >
-              Sign Out
-            </button>
-          </div>
+          <>
+            {/* Notification Dropdown */}
+            <div className="relative">
+              <button 
+                onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); }}
+                className="p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition relative"
+              >
+                <span className="text-xl">🔔</span>
+                {notifications.length > 0 && (
+                  <span className="absolute top-1 right-1 bg-red-600 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">
+                    {notifications.length}
+                  </span>
+                )}
+              </button>
+
+              {notifOpen && (
+                <div className="absolute right-0 mt-3 w-72 bg-white dark:bg-gray-800 shadow-xl rounded-xl p-4 border border-gray-100 dark:border-gray-700 animate-in fade-in slide-in-from-top-2">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Notifications</p>
+                  {notifications.length === 0 ? (
+                    <p className="text-gray-500 text-sm py-4 text-center">No new notifications</p>
+                  ) : (
+                    <div className="space-y-3 max-h-60 overflow-y-auto">
+                      {notifications.map((n, i) => (
+                        <div key={i} className="text-sm border-b border-gray-50 dark:border-gray-700 pb-2 last:border-0">
+                          {n.message}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Profile Dropdown */}
+            <div className="relative">
+              <button 
+                onClick={() => { setProfileOpen(!profileOpen); setNotifOpen(false); }}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+              >
+                <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
+                  {user.name ? user.name[0].toUpperCase() : "U"}
+                </div>
+                <span className="text-sm font-medium hidden sm:inline">{user.name || "User"}</span>
+                <span className="text-[10px] opacity-40">▼</span>
+              </button>
+
+              {profileOpen && (
+                <div className="absolute right-0 mt-3 w-48 bg-white dark:bg-gray-800 shadow-xl rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                  <Link 
+                    href="/profile" 
+                    className="block px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-50 dark:border-gray-700"
+                    onClick={() => setProfileOpen(false)}
+                  >
+                    My Profile
+                  </Link>
+                  <button 
+                    onClick={handleLogout}
+                    className="block w-full text-left px-4 py-3 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 font-semibold"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
         ) : (
-          <div className="flex gap-4">
-            <Link href="/login" className="text-sm font-semibold text-gray-600">Login</Link>
-            <Link href="/register" className="text-sm font-semibold text-blue-600">Register</Link>
+          <div className="flex gap-3">
+            <Link href="/login" className="px-4 py-2 text-sm font-semibold text-gray-600">Login</Link>
+            <Link href="/register" className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold shadow-lg shadow-blue-600/20">Register</Link>
           </div>
         )}
       </div>

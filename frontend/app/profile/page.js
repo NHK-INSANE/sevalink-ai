@@ -57,10 +57,10 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 transition duration-200">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition duration-200">
       <Navbar />
       <PageWrapper>
-      <div className="flex items-center justify-center px-4 py-12">
+      <div className="flex items-center justify-center px-4 pt-24 pb-12">
         <div className="w-full max-w-md">
           {/* Header */}
           <div className="text-center mb-8">
