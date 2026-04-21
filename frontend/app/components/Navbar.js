@@ -1,17 +1,21 @@
-"use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getUser, logout, getRoleLabel } from "../utils/auth";
 import { apiRequest } from "../utils/api";
+import { io } from "socket.io-client";
+import toast from "react-hot-toast";
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
 const navLinks = [
-  { href: "/", label: "Dashboard", icon: "⚡" },
-  { href: "/problems", label: "All Problems", icon: "📋" },
-  { href: "/helper", label: "Helper", icon: "🤝" },
-  { href: "/ngo", label: "NGO", icon: "🏢" },
-  { href: "/map", label: "Map", icon: "🗺️" },
-  { href: "/ai-match", label: "AI Match", icon: "🤖" },
+  { href: "/",        label: "Dashboard",    icon: "⚡" },
+  { href: "/problems",label: "All Problems",  icon: "📋" },
+  { href: "/helper",  label: "Helper",        icon: "🤝" },
+  { href: "/ngo",     label: "NGO",           icon: "🏢" },
+  { href: "/map",     label: "Map",           icon: "🗺️" },
+  { href: "/ai-match",label: "AI Match",      icon: "🤖" },
 ];
 
 export default function Navbar() {
@@ -32,6 +36,31 @@ export default function Navbar() {
 
     const loggedUser = getUser();
     setUser(loggedUser);
+
+    // Global SOS listener — alert on every page
+    const socket = io(API_BASE);
+    socket.on("sos-alert", (data) => {
+      // 🔊 Play Emergency Sound
+      try {
+        const audio = new Audio("https://www.soundjay.com/buttons/beep-07a.mp3");
+        audio.play().catch(e => console.log("Audio play blocked by browser:", e));
+      } catch (err) {
+        console.error("Audio error:", err);
+      }
+
+      toast.error(`🚨 SOS ALERT: ${data.message}`, {
+        duration: 10000,
+        position: "top-center",
+        style: {
+          background: "#dc2626",
+          color: "#fff",
+          fontWeight: "bold",
+          fontSize: "14px",
+          border: "2px solid #fca5a5",
+        },
+      });
+    });
+    return () => socket.disconnect();
     
     if (loggedUser) {
       const fetchNotifs = async () => {
@@ -104,6 +133,19 @@ export default function Navbar() {
               </Link>
             );
           })}
+          {/* Admin link — only for admin role */}
+          {user?.role?.toLowerCase() === "admin" && (
+            <Link
+              href="/admin"
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition duration-200 ripple hover:scale-105 active:scale-95 ${
+                pathname === "/admin"
+                  ? "bg-red-50 text-red-600"
+                  : "text-red-500 hover:text-red-600 hover:bg-red-50"
+              }`}
+            >
+              <span>🛡️</span> Admin
+            </Link>
+          )}
         </div>
 
         {/* Right side */}

@@ -238,4 +238,49 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+// POST /api/problems/force-assign — Admin manual override
+router.post("/force-assign", async (req, res) => {
+  try {
+    const { problemId, helperId, helperName } = req.body;
+    if (!problemId || !helperId) {
+      return res.status(400).json({ error: "problemId and helperId are required" });
+    }
+
+    const problem = await Problem.findByIdAndUpdate(
+      problemId,
+      {
+        assignedTo: helperId,
+        status: "In Progress",
+        $push: { timeline: { text: `🛡️ Admin force-assigned ${helperName || "a helper"}` } }
+      },
+      { new: true }
+    );
+
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
+
+    // Notify the helper
+    await User.findByIdAndUpdate(helperId, {
+      $push: {
+        notifications: {
+          text: `🚨 Admin assigned you to: "${problem.title}"`,
+          type: "alert",
+          date: new Date()
+        }
+      }
+    });
+
+    // Real-time: tell the helper's connected client
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("assigned", { problemId, helperId, problemTitle: problem.title });
+      io.emit("problem-updated", problem);
+    }
+
+    res.json({ success: true, problem });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
+

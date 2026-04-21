@@ -47,6 +47,22 @@ app.use("/api/problems", problemRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/users", userRoutes);
 
+// 🚨 SOS Emergency Broadcast
+app.post("/api/sos", (req, res) => {
+  const { latitude, longitude, message, senderName } = req.body;
+  const sos = {
+    latitude,
+    longitude,
+    message: message || "Emergency! Immediate help needed!",
+    senderName: senderName || "Anonymous",
+    type: "SOS",
+    time: new Date().toISOString(),
+  };
+  io.emit("sos-alert", sos); // 🔥 broadcast to ALL connected clients
+  console.log("🚨 SOS broadcast:", sos);
+  res.json({ success: true, sos });
+});
+
 // Global Error Handler (Prevents HTML leaks on crash)
 app.use((err, req, res, next) => {
   console.error("🔥 Global Error:", err);
