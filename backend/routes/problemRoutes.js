@@ -4,7 +4,7 @@ const Problem = require("../models/Problem");
 const User = require("../models/User");
 const auth = require("../middleware/auth");
 
-// --- Helpers ---
+// ── Haversine Distance (km) ───────────────────────────────────────────────────
 function getDistance(lat1, lon1, lat2, lon2) {
   if (!lat1 || !lon1 || !lat2 || !lon2) return 999999;
   const R = 6371;
@@ -16,30 +16,65 @@ function getDistance(lat1, lon1, lat2, lon2) {
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
-async function matchVolunteer(problem) {
+// ── Smart AI Volunteer Matching ───────────────────────────────────────────────
+// Returns top N volunteers scored on: proximity + skill match + urgency boost
+async function matchVolunteers(problem, topN = 5) {
   try {
-    const users = await User.find({ role: { $in: ["Volunteer", "Worker"] } });
-    if (users.length === 0) return null;
+    const users = await User.find({
+      role: { $in: ["Volunteer", "volunteer", "Worker", "worker"] }
+    });
+    if (users.length === 0) return [];
+
+    const urgencyBoost = {
+      critical: 30,
+      high: 20,
+      medium: 10,
+      low: 0,
+    };
 
     const scored = users.map(u => {
-      const skills = u.skills || [];
-      const skillMatch = skills.includes(problem.category) || (u.skill === problem.category) ? 1 : 0;
+      let score = 0;
+
+      // 1. Distance score — closer = more points (max ~100 for 0 km)
       const dist = getDistance(
-        problem.location?.lat,
-        problem.location?.lng,
-        u.location?.lat,
-        u.location?.lng
+        problem.location?.lat, problem.location?.lng,
+        u.location?.lat,       u.location?.lng
       );
-      // AI Logic: Skill match is 10 points, distance penalized by km
-      return { id: u._id.toString(), score: (skillMatch * 10) - (dist / 10) };
+      const distScore = Math.max(0, 100 - dist); // 0 km → 100pts, 100 km+ → 0
+      score += distScore;
+
+      // 2. Skill match
+      const uSkills = (u.skills || []).map(s => s.toLowerCase());
+      if (u.skill) uSkills.push(u.skill.toLowerCase());
+      const pSkill = (problem.requiredSkill || problem.category || "").toLowerCase();
+      if (pSkill && uSkills.includes(pSkill)) score += 50;
+
+      // 3. Urgency boost
+      score += (urgencyBoost[problem.urgency?.toLowerCase()] || 0);
+
+      return { user: u, score, distKm: Math.round(dist) };
     });
 
-    return scored.sort((a, b) => b.score - a.score)[0]?.id || null;
+    return scored
+      .sort((a, b) => b.score - a.score)
+      .slice(0, topN)
+      .map(({ user, score, distKm }) => ({
+        _id:     user._id,
+        name:    user.name,
+        email:   user.email,
+        phone:   user.phone,
+        skills:  user.skills || [],
+        skill:   user.skill,
+        role:    user.role,
+        score:   Math.round(score),
+        distKm
+      }));
   } catch (err) {
     console.error("Match Error:", err);
-    return null;
+    return [];
   }
 }
+
 
 // POST /api/problems — Create a new problem
 router.post("/", auth, async (req, res) => {
@@ -50,35 +85,56 @@ router.post("/", auth, async (req, res) => {
       timeline: [{ text: "Problem reported" }]
     });
 
-    // 🤖 AI AUTO-ASSIGNMENT
-    const bestMatch = await matchVolunteer(problem);
+    // 🤖 AI SMART MATCHING — top 5 volunteers by score
+    const topMatches = await matchVolunteers(problem, 5);
+    const bestMatch = topMatches[0];
+
     if (bestMatch) {
-      problem.assignedTo = bestMatch;
+      problem.assignedTo = bestMatch._id.toString();
       problem.status = "In Progress";
-      problem.timeline.push({ text: "AI auto-assigned a volunteer" });
-      
-      // Send notification to the matched volunteer
-      await User.findByIdAndUpdate(bestMatch, {
-        $push: { notifications: { text: `You were auto-assigned to an urgently matched problem: ${problem.title}`, type: "alert" } }
-      });
+      problem.timeline.push({ text: `AI auto-assigned to ${bestMatch.name || "volunteer"}` });
+
+      // Notify ALL matched helpers
+      const notifText = `🚨 You matched a nearby ${problem.urgency || ""} crisis: "${problem.title}"`;
+      await Promise.all(
+        topMatches.map(m =>
+          User.findByIdAndUpdate(m._id, {
+            $push: { notifications: { text: notifText, type: "alert", date: new Date() } }
+          })
+        )
+      );
     }
 
     await problem.save();
 
-    // ⚡ REAL-TIME EMIT
+    // ⚡ REAL-TIME BROADCAST
     const io = req.app.get("io");
     if (io) {
       io.emit("new-problem", problem);
+
       if (problem.urgency?.toLowerCase() === "critical") {
         io.emit("emergency-alert", problem);
       }
+
+      // 🎯 Broadcast matched volunteers so all clients can show toast
+      if (topMatches.length > 0) {
+        io.emit("matched-volunteers", {
+          problem: {
+            _id:     problem._id,
+            title:   problem.title,
+            urgency: problem.urgency,
+          },
+          matched: topMatches
+        });
+      }
     }
 
-    res.status(201).json(problem);
+    res.status(201).json({ problem, matched: topMatches });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // GET /api/problems — Get all problems (dynamic priority calculation)
 router.get("/", async (req, res) => {

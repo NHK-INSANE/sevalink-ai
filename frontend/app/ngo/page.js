@@ -57,40 +57,30 @@ export default function NGOPage() {
                   >
                     {/* Header row */}
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-xl">
+                      <div className="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-xl">
                         🏢
                       </div>
                       <div>
                         <h2 className="text-gray-800 font-bold text-base leading-tight">
                           {ngo.ngoName || ngo.name || "Unnamed NGO"}
                         </h2>
-                        <span className="text-xs text-blue-600 font-semibold">NGO</span>
+                        <span className="text-xs text-emerald-600 font-semibold uppercase tracking-wider">NGO Partner</span>
                       </div>
                     </div>
 
-                    {/* Details */}
+                    {/* Details — always show all available fields */}
                     <div className="space-y-2 text-sm">
-                      {ngo.email && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <span className="text-gray-400">📧</span>
-                          <span className="truncate">{ngo.email}</span>
-                        </div>
-                      )}
-                      {ngo.phone && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <span className="text-gray-400">📞</span>
-                          <span>{ngo.phone}</span>
-                        </div>
-                      )}
-                      {ngo.address && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <span className="text-gray-400">📍</span>
-                          <span>{ngo.address}</span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <span className="text-gray-400 shrink-0">📧</span>
+                        <span className="truncate">{ngo.email || <span className="text-gray-300 italic">Not provided</span>}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <span className="text-gray-400 shrink-0">📞</span>
+                        <span>{ngo.phone || <span className="text-gray-300 italic">Not provided</span>}</span>
+                      </div>
                       {ngo.ngoContact && (
                         <div className="flex items-center gap-2 text-gray-600">
-                          <span className="text-gray-400">🌐</span>
+                          <span className="text-gray-400 shrink-0">🌐</span>
                           <a
                             href={ngo.ngoContact.startsWith("http") ? ngo.ngoContact : `https://${ngo.ngoContact}`}
                             target="_blank"
@@ -99,6 +89,12 @@ export default function NGOPage() {
                           >
                             {ngo.ngoContact}
                           </a>
+                        </div>
+                      )}
+                      {ngo.address && (
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <span className="text-gray-400 shrink-0">📍</span>
+                          <span className="line-clamp-2">{ngo.address}</span>
                         </div>
                       )}
                     </div>

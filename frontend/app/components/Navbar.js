@@ -21,8 +21,15 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [showNotifs, setShowNotifs] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
+    // Restore dark mode preference
+    const savedDark = localStorage.getItem("darkMode") === "true";
+    setDarkMode(savedDark);
+    if (savedDark) document.documentElement.classList.add("dark");
+    else document.documentElement.classList.remove("dark");
+
     const loggedUser = getUser();
     setUser(loggedUser);
     
@@ -101,6 +108,21 @@ export default function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
+          {/* Dark Mode Toggle */}
+          <button
+            id="dark-mode-toggle"
+            onClick={() => {
+              const next = !darkMode;
+              setDarkMode(next);
+              localStorage.setItem("darkMode", String(next));
+              document.documentElement.classList.toggle("dark", next);
+            }}
+            className="ripple p-2 rounded-lg hover:bg-gray-100 transition duration-200 text-lg hover:scale-110 active:scale-90"
+            title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          >
+            {darkMode ? "☀️" : "🌙"}
+          </button>
+
           {/* Live indicator */}
           <div className="flex items-center gap-1.5 text-xs text-slate-500 mr-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block" />

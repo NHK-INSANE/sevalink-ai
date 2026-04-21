@@ -174,6 +174,16 @@ export default function SubmitPage() {
       console.log("📥 SUBMIT RESPONSE:", response);
       
       toast.success("Problem submitted successfully!");
+      
+      // Show matched volunteer info if available
+      if (response?.matched?.length > 0) {
+        const top = response.matched[0];
+        toast(`🎯 AI matched ${response.matched.length} volunteer${response.matched.length > 1 ? 's' : ''}! Top: ${top.name || top.email}`, {
+          icon: "🤖",
+          duration: 6000,
+          style: { background: "#1e3a8a", color: "#bfdbfe", fontWeight: "600" }
+        });
+      }
       setSuccess(true);
       setForm({ title: "", description: "", category: "", requiredSkill: "" });
       setCustomCategory("");

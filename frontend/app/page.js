@@ -260,7 +260,10 @@ export default function Dashboard() {
               Command Dashboard
             </h1>
             <p className="text-gray-500 text-sm">
-              Monitoring {problems.length} active crisis reports
+              Welcome <span className="font-semibold text-gray-700">{user?.name}</span>
+              {user?.role && (
+                <> — Signed in as <span className="font-semibold text-blue-600 capitalize">{user.role}</span></>
+              )}
             </p>
           </div>
 
