@@ -238,15 +238,15 @@ export default function Dashboard() {
   // Loading State with Skeletons
   if (loading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-[var(--bg)]">
         <Navbar />
         <main className="max-w-7xl mx-auto px-6 py-10 mt-16">
-          <div className="h-10 bg-gray-100 rounded-xl w-64 mb-8 animate-pulse"></div>
+          <div className="h-10 bg-[var(--card)] rounded-xl w-64 mb-8 animate-pulse"></div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
             <SkeletonStats /> <SkeletonStats /> <SkeletonStats /> <SkeletonStats />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-             {[...Array(3)].map((_, i) => <div key={i} className="h-48 bg-gray-50 rounded-2xl animate-pulse border border-gray-100" />)}
+             {[...Array(3)].map((_, i) => <div key={i} className="h-48 bg-[var(--card)] rounded-2xl animate-pulse border border-[var(--border)]" />)}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
@@ -257,108 +257,102 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-800 transition duration-200">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition duration-300">
       <Navbar />
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <main className="max-w-7xl mx-auto px-6 pt-24 pb-10">
+      
+      <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-6">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-1">
+            <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight">
               Command Dashboard
             </h1>
-            <p className="text-gray-500 text-sm">
-              Welcome <span className="font-semibold text-gray-700">{user?.name}</span>
-              {user?.role && (
-                <> — Signed in as <span className="font-semibold text-blue-600 capitalize">{user.role}</span></>
-              )}
+            <p className="text-[var(--muted)] text-sm">
+              Logged in as <span className="font-medium text-[var(--text)]">{user?.name}</span>
+              {user?.role && <span className="capitalize"> ({user.role})</span>}
             </p>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-3">
             <button
               onClick={handleLocateAndSort}
-              className={`ripple bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-sm text-gray-700 transition duration-200 hover:scale-105 active:scale-95 ${sortNearest ? 'grayscale' : ''}`}
+              className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm font-medium text-[var(--text)] hover:bg-[var(--bg)] transition shadow-sm"
             >
               📍 {sortNearest ? "Reset Sort" : "Sort by Nearest"}
             </button>
-            <a href="/submit" className="ripple bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200 shadow-sm text-sm hover:scale-105 active:scale-95 inline-block">
+            <Link href="/submit" className="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition shadow-sm">
               + Report New
-            </a>
+            </Link>
           </div>
         </div>
 
-        {/* Stats Cards (Startup Style) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 mb-10">
-          <div className="bg-white p-5 rounded-xl shadow border border-gray-100 flex flex-col">
-            <p className="text-gray-500 text-sm">Total Problems</p>
-            <h2 className="text-2xl font-bold text-blue-600">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+            <p className="text-sm text-[var(--muted)] mb-1">Total Problems</p>
+            <p className="text-2xl font-bold text-[var(--primary)]">
               <Counter value={problems.length} />
-            </h2>
+            </p>
           </div>
 
-          <div className="bg-white p-5 rounded-xl shadow border border-gray-100 flex flex-col">
-            <p className="text-gray-500 text-sm">Volunteers</p>
-            <h2 className="text-2xl font-bold text-blue-600">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+            <p className="text-sm text-[var(--muted)] mb-1">Volunteers</p>
+            <p className="text-2xl font-bold text-[var(--primary)]">
               <Counter value={volunteersCount} />
-            </h2>
+            </p>
           </div>
 
-          <div className="bg-white p-5 rounded-xl shadow border border-gray-100 flex flex-col">
-            <p className="text-gray-500 text-sm">Workers</p>
-            <h2 className="text-2xl font-bold text-blue-600">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+            <p className="text-sm text-[var(--muted)] mb-1">Workers</p>
+            <p className="text-2xl font-bold text-[var(--primary)]">
               <Counter value={workersCount} />
-            </h2>
+            </p>
           </div>
 
-          <div className="bg-white p-5 rounded-xl shadow border border-gray-100 flex flex-col">
-            <p className="text-gray-500 text-sm">NGOs</p>
-            <h2 className="text-2xl font-bold text-blue-600">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+            <p className="text-sm text-[var(--muted)] mb-1">NGOs</p>
+            <p className="text-2xl font-bold text-[var(--primary)]">
               <Counter value={ngosCount} />
-            </h2>
+            </p>
           </div>
         </div>
 
-        {/* Analytics Section (Clean Startup Style) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 flex flex-col">
-            <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">📈 Problem Flow</h3>
+        {/* Analytics Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
+            <h3 className="font-semibold text-sm text-[var(--text)] mb-4">📈 Problem Flow</h3>
             <div className="space-y-4">
-              <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                <span className="text-gray-500 text-sm">Open Issues</span>
+              <div className="flex justify-between items-center py-2 border-b border-[var(--border)]">
+                <span className="text-[var(--muted)] text-sm">Open Issues</span>
                 <span className="font-bold text-blue-500">{openCount}</span>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                <span className="text-gray-500 text-sm">In Progress</span>
+              <div className="flex justify-between items-center py-2 border-b border-[var(--border)]">
+                <span className="text-[var(--muted)] text-sm">In Progress</span>
                 <span className="font-bold text-yellow-500">{progressCount}</span>
               </div>
               <div className="flex justify-between items-center py-2">
-                <span className="text-gray-500 text-sm">Resolved Cases</span>
+                <span className="text-[var(--muted)] text-sm">Resolved Cases</span>
                 <span className="font-bold text-emerald-500">{resolvedCount}</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 flex flex-col">
-            <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">📊 Categories</h3>
-            <div className="flex-1 overflow-y-auto max-h-[180px] space-y-3 pr-1">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
+            <h3 className="font-semibold text-sm text-[var(--text)] mb-4">📊 Categories</h3>
+            <div className="space-y-3 max-h-[160px] overflow-y-auto pr-1">
               {categoryData.length === 0 ? (
-                <p className="text-xs text-gray-400 text-center py-10">No data</p>
+                <p className="text-xs text-[var(--muted)] text-center py-8">No data</p>
               ) : categoryData.map(c => (
-                <div key={c.name} className="flex justify-between items-center pb-2 border-b border-gray-50 last:border-0 grow">
-                  <span className="text-xs text-gray-600 font-medium truncate grow">{c.name}</span>
-                  <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full ml-2">{c.percent}%</span>
+                <div key={c.name} className="flex justify-between items-center pb-2 border-b border-[var(--border)] last:border-0">
+                  <span className="text-xs text-[var(--text)] font-medium truncate">{c.name}</span>
+                  <span className="text-[10px] font-bold text-[var(--primary)] bg-[var(--primary)]/10 px-2 py-0.5 rounded-full">{c.percent}%</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 flex flex-col">
-            <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">⚡ Urgency</h3>
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
+            <h3 className="font-semibold text-sm text-[var(--text)] mb-4">⚡ Urgency</h3>
             <div className="space-y-3">
               {[
                 { name: "Critical", count: criticalCount, dot: "bg-red-500", text: "text-red-500" },
@@ -367,8 +361,8 @@ export default function Dashboard() {
                 { name: "Low", count: lowCount, dot: "bg-green-500", text: "text-green-500" },
               ].map(u => (
                 <div key={u.name} className="flex items-center gap-3">
-                  <div className={`w-2.5 h-2.5 rounded-full ${u.dot}`} />
-                  <span className="text-sm text-gray-600 grow">{u.name}</span>
+                  <div className={`w-2 h-2 rounded-full ${u.dot}`} />
+                  <span className="text-sm text-[var(--text)] grow">{u.name}</span>
                   <span className={`text-sm font-bold ${u.text}`}>{u.count}</span>
                 </div>
               ))}
@@ -376,10 +370,12 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Map */}
-        <div className="bg-white rounded-2xl shadow-md p-3 mt-4 mb-10 border border-gray-100 transition duration-200">
-          <h3 className="font-bold mb-3 pl-2 flex items-center gap-2 text-gray-800">📍 Live Operation Map</h3>
-          <div className="h-[400px] rounded-xl overflow-hidden border border-gray-100">
+        {/* Map Section */}
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-3 shadow-sm">
+          <h2 className="text-sm font-semibold text-[var(--text)] mb-3 pl-2">
+            Live Operation Map
+          </h2>
+          <div className="h-[400px] rounded-xl overflow-hidden border border-[var(--border)]">
             <MapView 
               problems={problems} 
               type="problems" 
@@ -390,22 +386,22 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="mt-10">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">
+        {/* Recent Reports */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-[var(--text)] tracking-tight">
               {sortNearest ? "📍 Nearest Solutions" : "🕒 Recent Reports"}
             </h2>
-            <a href="/problems" className="text-blue-600 text-sm hover:underline font-medium">View All →</a>
+            <Link href="/problems" className="text-[var(--primary)] text-sm font-medium hover:underline">View All →</Link>
           </div>
 
           {problems.length === 0 ? (
-            <div className="text-center py-20 bg-gray-50 rounded-3xl border border-dashed border-gray-200 flex flex-col items-center">
-              <span className="text-4xl mb-4 opacity-50">🚀</span>
-              <p className="text-gray-900 font-bold text-lg">No problems reported yet</p>
-              <p className="text-gray-500 text-sm mt-1">Be the first to report and help your community stay safe.</p>
-              <a href="/submit" className="mt-6 bg-blue-600 text-white px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-blue-600/20 hover:scale-105 active:scale-95 transition">
+            <div className="text-center py-20 bg-[var(--card)] rounded-2xl border border-dashed border-[var(--border)] flex flex-col items-center">
+              <p className="text-[var(--text)] font-bold text-lg">No problems reported yet</p>
+              <p className="text-[var(--muted)] text-sm mt-1">Be the first to report and help your community stay safe.</p>
+              <Link href="/submit" className="mt-6 bg-[var(--primary)] text-white px-6 py-2 rounded-lg text-sm font-medium shadow-sm hover:opacity-90 transition">
                 + Report Your First Crisis
-              </a>
+              </Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -416,17 +412,14 @@ export default function Dashboard() {
           )}
         </div>
       </main>
-      </motion.div>
 
-      {/* Mobile-first Floating Action Button */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <a 
-          href="/submit" 
-          className="ripple bg-blue-600 text-white w-14 h-14 flex items-center justify-center rounded-full shadow-lg hover:scale-110 active:scale-95 transition duration-200 text-2xl"
-        >
-          ➕
-        </a>
-      </div>
+      {/* Floating Action Button */}
+      <Link 
+        href="/submit" 
+        className="fixed bottom-6 right-6 z-50 bg-[var(--primary)] text-white w-12 h-12 flex items-center justify-center rounded-full shadow-lg hover:scale-105 active:scale-95 transition text-xl"
+      >
+        ➕
+      </Link>
     </div>
   );
 }

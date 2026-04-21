@@ -15,7 +15,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-800 transition duration-200`}>
+      <body className={`${inter.variable} font-sans antialiased min-h-screen bg-[var(--bg)] text-[var(--text)] transition duration-300`}>
         {children}
         <Toaster
           position="top-right"

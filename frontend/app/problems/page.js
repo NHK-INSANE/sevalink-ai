@@ -121,7 +121,7 @@ export default function ProblemsPage() {
     });
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-[var(--bg)] transition duration-300">
       <Navbar />
       <motion.div
         initial={{ opacity: 0 }}
@@ -132,17 +132,17 @@ export default function ProblemsPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-1">
+            <h1 className="text-3xl font-bold text-[var(--text)] mb-1">
               All Problems
             </h1>
-            <p className="text-gray-500">
+            <p className="text-[var(--muted)]">
               {loading ? "…" : `${filtered.length} of ${problems.length} reports`}
             </p>
           </div>
           <div className="flex gap-4">
             <button
               onClick={handleLocateAndSort}
-              className={`ripple bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-sm text-gray-700 transition duration-200 flex items-center gap-1 hover:scale-105 active:scale-95 ${sortNearest ? 'grayscale' : ''}`}
+              className={`ripple bg-[var(--card)] border border-[var(--border)] hover:bg-[var(--bg)] px-4 py-2 rounded-lg text-sm text-[var(--text)] transition duration-200 flex items-center gap-1 hover:scale-105 active:scale-95 ${sortNearest ? 'grayscale' : ''}`}
             >
               📍 {sortNearest ? "Reset Sort" : "Sort by Nearest"}
             </button>
@@ -156,20 +156,20 @@ export default function ProblemsPage() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-2xl shadow-md p-5 mb-8 flex flex-wrap gap-4 items-center border border-gray-100 transition duration-200">
+        <div className="bg-[var(--card)] rounded-2xl shadow-md p-5 mb-8 flex flex-wrap gap-4 items-center border border-[var(--border)] transition duration-200">
           <input
             id="search-problems"
             type="text"
             placeholder="🔍 Search problems…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+            className="flex-1 p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
           />
           <select
             id="filter-urgency"
             value={filterUrgency}
             onChange={(e) => setFilterUrgency(e.target.value)}
-            className="w-auto p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition duration-200 appearance-none bg-white"
+            className="w-auto p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition duration-200 appearance-none"
           >
             <option value="All">All Urgencies</option>
             <option value="Critical">🔴 Critical</option>
@@ -181,7 +181,7 @@ export default function ProblemsPage() {
             id="filter-status"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-auto p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition duration-200 appearance-none bg-white"
+            className="w-auto p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition duration-200 appearance-none"
           >
             <option value="All">All Statuses</option>
             <option value="Open">Open</option>
@@ -192,7 +192,7 @@ export default function ProblemsPage() {
             id="sort-problems"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="w-auto p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition duration-200 appearance-none bg-white"
+            className="w-auto p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition duration-200 appearance-none"
           >
             <option value="newest">Newest First</option>
             <option value="urgency">By Urgency</option>
@@ -214,10 +214,10 @@ export default function ProblemsPage() {
              transition={{ duration: 0.4 }}
           >
             {filtered.length === 0 ? (
-              <div className="text-center py-24 bg-gray-50 rounded-3xl border border-dashed border-gray-200 flex flex-col items-center">
+              <div className="text-center py-24 bg-[var(--bg)] rounded-3xl border border-dashed border-[var(--border)] flex flex-col items-center">
                 <div className="text-5xl mb-4 opacity-50">🚫</div>
-                <p className="text-gray-900 font-bold text-lg">No problems found</p>
-                <p className="text-gray-500 text-sm mt-1">Try adjusting your filters or search terms.</p>
+                <p className="text-[var(--text)] font-bold text-lg">No problems found</p>
+                <p className="text-[var(--muted)] text-sm mt-1">Try adjusting your filters or search terms.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

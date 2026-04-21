@@ -5,7 +5,7 @@ import PageWrapper from "./components/PageWrapper";
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col items-center justify-center text-center px-6 transition duration-300 pt-20">
+    <div className="min-h-screen bg-[var(--bg)] flex flex-col items-center justify-center text-center px-6 transition duration-300 pt-20">
       <Navbar />
 
       <motion_div 
@@ -17,7 +17,7 @@ export default function Landing() {
           SevaLink AI
         </h1>
 
-        <p className="text-gray-600 dark:text-gray-400 md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
+        <p className="text-[var(--muted)] md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
           AI-powered disaster response platform connecting people, volunteers, and NGOs in real-time. Smart matching, live monitoring, and emergency broadcasting.
         </p>
 
@@ -31,7 +31,7 @@ export default function Landing() {
 
           <a 
             href="/map" 
-            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200 shadow-sm"
+            className="bg-[var(--card)] border border-[var(--border)] text-[var(--text)] px-8 py-4 rounded-xl font-bold text-lg hover:bg-[var(--bg)] transition duration-200 shadow-sm"
           >
             View Live Map
           </a>
@@ -40,20 +40,20 @@ export default function Landing() {
 
       {/* Feature grid */}
       <div className="grid md:grid-cols-3 gap-8 mt-24 max-w-5xl w-full pb-20">
-        <div className="p-8 bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 text-left">
+        <div className="p-8 bg-[var(--card)] rounded-3xl shadow-sm border border-[var(--border)] text-left">
           <div className="text-3xl mb-4">🤖</div>
-          <h3 className="font-bold text-gray-800 dark:text-gray-100 mb-2 text-lg">AI Matching</h3>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Instantly match crises with the best available volunteers based on proximity and skills.</p>
+          <h3 className="font-bold text-[var(--text)] mb-2 text-lg">AI Matching</h3>
+          <p className="text-[var(--muted)] text-sm">Instantly match crises with the best available volunteers based on proximity and skills.</p>
         </div>
-        <div className="p-8 bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 text-left">
+        <div className="p-8 bg-[var(--card)] rounded-3xl shadow-sm border border-[var(--border)] text-left">
           <div className="text-3xl mb-4">🗺️</div>
-          <h3 className="font-bold text-gray-800 dark:text-gray-100 mb-2 text-lg">Live Map</h3>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Real-time visualization of all active reports, nearby NGOs, and field assets.</p>
+          <h3 className="font-bold text-[var(--text)] mb-2 text-lg">Live Map</h3>
+          <p className="text-[var(--muted)] text-sm">Real-time visualization of all active reports, nearby NGOs, and field assets.</p>
         </div>
-        <div className="p-8 bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 text-left">
+        <div className="p-8 bg-[var(--card)] rounded-3xl shadow-sm border border-[var(--border)] text-left">
           <div className="text-3xl mb-4">🚨</div>
-          <h3 className="font-bold text-gray-800 dark:text-gray-100 mb-2 text-lg">SOS Broadcast</h3>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Broadcast emergency signals to every connected user instantly during critical events.</p>
+          <h3 className="font-bold text-[var(--text)] mb-2 text-lg">SOS Broadcast</h3>
+          <p className="text-[var(--muted)] text-sm">Broadcast emergency signals to every connected user instantly during critical events.</p>
         </div>
       </div>
 

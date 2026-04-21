@@ -20,11 +20,9 @@ export default function Navbar() {
     const currentUser = getUser();
     setUser(currentUser);
     
-    // Check initial dark mode (minimal support, no toggle)
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("theme") || "light";
-      document.documentElement.className = saved;
-    }
+    // Theme Management
+    const saved = localStorage.getItem("theme") || "light";
+    document.documentElement.classList.toggle("dark", saved === "dark");
 
     const socket = io(API_BASE);
 
@@ -62,112 +60,128 @@ export default function Navbar() {
     router.push("/login");
   };
 
+  const toggleTheme = () => {
+    const isDark = document.documentElement.classList.toggle("dark");
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+  };
+
   return (
-    <nav className="fixed top-0 left-0 w-full h-16 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 z-50 px-6 flex justify-between items-center shadow-sm">
-      {/* Brand */}
-      <Link href="/" className="flex items-center gap-2 group">
-        <h1 className="text-xl font-bold text-blue-600 tracking-tight transition group-hover:scale-105">
-          SevaLink AI
-        </h1>
-      </Link>
+    <header className="sticky top-0 z-50 bg-[var(--bg)]/80 backdrop-blur border-b border-[var(--border)]">
+      <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+        
+        {/* Left: Brand */}
+        <Link href="/" className="flex items-center gap-2 group">
+          <h1 className="text-lg font-bold text-[var(--text)] tracking-tight">
+            SevaLink AI
+          </h1>
+        </Link>
 
-      {/* Main Nav (Minimalist Startup Style) */}
-      <div className="hidden lg:flex gap-8 text-sm font-semibold text-gray-500">
-        {[
-          { href: "/dashboard", label: "Dashboard" },
-          { href: "/problems",  label: "Problems" },
-          { href: "/helper",    label: "Helpers" },
-          { href: "/ngo",       label: "NGO" },
-          { href: "/map",       label: "Map" },
-          { href: "/ai-match",  label: "AI Match" },
-        ].map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className={`hover:text-blue-600 transition flex items-center gap-1 ${
-              pathname.includes(link.href) ? "text-blue-600 font-bold border-b-2 border-blue-600 pb-1" : ""
-            }`}
-          >
-            {link.label}
-          </Link>
-        ))}
-      </div>
+        {/* Center: Navigation Links */}
+        <nav className="hidden lg:flex gap-8 text-sm font-medium text-[var(--muted)]">
+          {[
+            { href: "/dashboard", label: "Dashboard" },
+            { href: "/problems",  label: "Problems" },
+            { href: "/helper",    label: "Helpers" },
+            { href: "/ngo",       label: "NGO" },
+            { href: "/map",       label: "Map" },
+            { href: "/ai-match",  label: "AI Match" },
+          ].map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`hover:text-[var(--text)] transition-colors ${
+                pathname.includes(link.href) ? "text-[var(--text)] font-semibold" : ""
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
 
-      {/* User Actions */}
-      <div className="flex items-center gap-4">
-        {user ? (
-          <>
-            {/* Notification Dropdown */}
-            <div className="relative">
+        {/* Right: Actions */}
+        <div className="flex items-center gap-4">
+          {user ? (
+            <>
+              {/* Theme Toggle */}
               <button 
-                onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); }}
-                className="p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition relative"
+                onClick={toggleTheme}
+                className="p-2 rounded-lg text-[var(--muted)] hover:text-[var(--text)] transition-colors"
+                title="Toggle Theme"
               >
-                <span className="text-xl">🔔</span>
-                {notifications.length > 0 && (
-                  <span className="absolute top-1 right-1 bg-red-600 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">
-                    {notifications.length}
-                  </span>
-                )}
+                <span className="dark:hidden">🌙</span>
+                <span className="hidden dark:inline">☀️</span>
               </button>
 
-              {notifOpen && (
-                <div className="absolute right-0 mt-3 w-72 bg-white dark:bg-gray-800 shadow-xl rounded-xl p-4 border border-gray-100 dark:border-gray-700 animate-in fade-in slide-in-from-top-2">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Notifications</p>
-                  {notifications.length === 0 ? (
-                    <p className="text-gray-500 text-sm py-4 text-center">No new notifications</p>
-                  ) : (
-                    <div className="space-y-3 max-h-60 overflow-y-auto">
-                      {notifications.map((n, i) => (
-                        <div key={i} className="text-sm border-b border-gray-50 dark:border-gray-700 pb-2 last:border-0">
-                          {n.message}
-                        </div>
-                      ))}
-                    </div>
+              {/* Notification Button */}
+              <div className="relative">
+                <button 
+                  onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); }}
+                  className="p-2 rounded-lg text-[var(--muted)] hover:text-[var(--text)] transition-colors relative"
+                >
+                  <span className="text-lg">🔔</span>
+                  {notifications.length > 0 && (
+                    <span className="absolute top-1.5 right-1.5 bg-red-600 w-1.5 h-1.5 rounded-full" />
                   )}
-                </div>
-              )}
-            </div>
+                </button>
 
-            {/* Profile Dropdown */}
-            <div className="relative">
-              <button 
-                onClick={() => { setProfileOpen(!profileOpen); setNotifOpen(false); }}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-              >
-                <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
-                  {user.name ? user.name[0].toUpperCase() : "U"}
-                </div>
-                <span className="text-sm font-medium hidden sm:inline">{user.name || "User"}</span>
-                <span className="text-[10px] opacity-40">▼</span>
-              </button>
+                {notifOpen && (
+                  <div className="absolute right-0 mt-3 w-72 bg-[var(--card)] shadow-xl rounded-xl p-4 border border-[var(--border)] animate-in fade-in slide-in-from-top-2">
+                    <p className="text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-3">Notifications</p>
+                    {notifications.length === 0 ? (
+                      <p className="text-[var(--muted)] text-sm py-4 text-center">No new notifications</p>
+                    ) : (
+                      <div className="space-y-3 max-h-60 overflow-y-auto">
+                        {notifications.map((n, i) => (
+                          <div key={i} className="text-sm border-b border-[var(--border)] pb-2 last:border-0 text-[var(--text)]">
+                            {n.message}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
 
-              {profileOpen && (
-                <div className="absolute right-0 mt-3 w-48 bg-white dark:bg-gray-800 shadow-xl rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                  <Link 
-                    href="/profile" 
-                    className="block px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-50 dark:border-gray-700"
-                    onClick={() => setProfileOpen(false)}
-                  >
-                    My Profile
-                  </Link>
-                  <button 
-                    onClick={handleLogout}
-                    className="block w-full text-left px-4 py-3 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 font-semibold"
-                  >
-                    Sign Out
-                  </button>
-                </div>
-              )}
+              {/* Profile Dropdown */}
+              <div className="relative">
+                <button 
+                  onClick={() => { setProfileOpen(!profileOpen); setNotifOpen(false); }}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--border)] hover:bg-[var(--card)] transition-colors"
+                >
+                  <div className="w-6 h-6 rounded-full bg-[var(--primary)] text-white flex items-center justify-center font-bold text-[10px]">
+                    {user.name ? user.name[0].toUpperCase() : "U"}
+                  </div>
+                  <span className="text-sm font-medium text-[var(--text)] hidden sm:inline">{user.name || "User"}</span>
+                </button>
+
+                {profileOpen && (
+                  <div className="absolute right-0 mt-3 w-48 bg-[var(--card)] shadow-xl rounded-xl border border-[var(--border)] overflow-hidden animate-in fade-in slide-in-from-top-2">
+                    <Link 
+                      href="/profile" 
+                      className="block px-4 py-3 text-sm text-[var(--text)] hover:bg-[var(--bg)] border-b border-[var(--border)]"
+                      onClick={() => setProfileOpen(false)}
+                    >
+                      My Profile
+                    </Link>
+                    <button 
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-3 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 font-semibold"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="flex gap-4 items-center">
+              <Link href="/login" className="text-sm font-medium text-[var(--muted)] hover:text-[var(--text)] transition-colors">Login</Link>
+              <Link href="/register" className="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity shadow-sm shadow-indigo-500/10">Register</Link>
             </div>
-          </>
-        ) : (
-          <div className="flex gap-3">
-            <Link href="/login" className="px-4 py-2 text-sm font-semibold text-gray-600">Login</Link>
-            <Link href="/register" className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold shadow-lg shadow-blue-600/20">Register</Link>
-          </div>
-        )}
+          )}
+        </div>
+
       </div>
-    </nav>
+    </header>
   );
 }
