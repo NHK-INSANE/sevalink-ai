@@ -53,9 +53,11 @@ export default function Navbar() {
                 key={href}
                 href={href}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                      isActive
-                        ? "bg-indigo-600/10 text-indigo-600 border border-indigo-500/20"
-                        : "text-slate-600 hover:text-indigo-600 hover:bg-slate-50"
+                  ${
+                    isActive
+                      ? "bg-indigo-600/10 text-indigo-600 border border-indigo-500/20"
+                      : "text-slate-600 hover:text-indigo-600 hover:bg-slate-50"
+                  }`}
               >
                 <span>{icon}</span>
                 {label}
@@ -89,6 +91,7 @@ export default function Navbar() {
               </button>
 
               {menuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-52 glass rounded-xl border border-slate-200 shadow-xl py-1 z-50">
                   <div className="px-4 py-2.5 border-b border-slate-100 space-y-1">
                     <div className="text-sm font-bold text-slate-800 truncate uppercase">{user.name || "User"}</div>
                     <div className="text-xs text-slate-500 truncate">{user.email}</div>

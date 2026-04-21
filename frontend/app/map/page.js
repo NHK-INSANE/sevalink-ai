@@ -70,31 +70,31 @@ export default function MapPage() {
   }, []);
 
   return (
-    <div className="min-h-screen premium-bg text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-6 py-10">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-6">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               Global Crisis Map
             </h1>
-            <p className="text-slate-400 text-sm mt-1">
+            <p className="text-slate-500 text-sm mt-1 font-medium">
               Live visualization of reports, relief organizations, and field volunteers.
             </p>
           </div>
 
           {/* Filter System */}
-          <div className="flex flex-wrap gap-2 p-1 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden">
+          <div className="flex flex-wrap gap-2 p-1 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
             {MODES.map((mode) => (
               <button
                 key={mode.id}
                 onClick={() => setType(mode.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all text-xs font-semibold ${
                   type === mode.id
-                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
-                    : "text-slate-400 hover:text-white hover:bg-white/5"
+                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20"
+                    : "text-slate-500 hover:text-indigo-600 hover:bg-slate-50"
                 }`}
               >
                 <span>{mode.icon}</span>
@@ -109,18 +109,21 @@ export default function MapPage() {
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="relative h-[650px] rounded-3xl overflow-hidden border border-white/10 shadow-3xl"
+          className="relative h-[650px] rounded-3xl overflow-hidden border border-slate-200 shadow-xl bg-white"
         >
           {/* Statistics Overlay */}
           <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
-            <div className="glass px-4 py-2 rounded-xl border border-white/10 text-xs font-mono shadow-2xl">
-              <span className="text-red-400 mr-2">●</span> {problems.length} Problems
+            <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold shadow-lg flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-slate-700">{problems.length} Problems</span>
             </div>
-            <div className="glass px-4 py-2 rounded-xl border border-white/10 text-xs font-mono shadow-2xl">
-              <span className="text-indigo-400 mr-2">●</span> {ngos.length} NGOs
+            <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold shadow-lg flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-indigo-500" />
+              <span className="text-slate-700">{ngos.length} NGOs</span>
             </div>
-            <div className="glass px-4 py-2 rounded-xl border border-white/10 text-xs font-mono shadow-2xl">
-              <span className="text-emerald-400 mr-2">●</span> {helpers.length} Helpers
+            <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold shadow-lg flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-slate-700">{helpers.length} Helpers</span>
             </div>
           </div>
 
