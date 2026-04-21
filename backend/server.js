@@ -47,6 +47,14 @@ app.use("/api/problems", problemRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/users", userRoutes);
 
+// Global Error Handler (Prevents HTML leaks on crash)
+app.use((err, req, res, next) => {
+  console.error("🔥 Global Error:", err);
+  res.status(500).json({
+    message: err.message || "Internal Server Error"
+  });
+});
+
 // Health check
 app.get("/", (req, res) => {
   res.json({ message: "SevaLink AI Backend Running ✅", status: "ok" });

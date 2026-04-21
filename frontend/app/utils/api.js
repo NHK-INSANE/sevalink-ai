@@ -1,65 +1,49 @@
 // constants
-const RENDER_BACKEND = "https://sevalink-backend-bmre.onrender.com";
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || RENDER_BACKEND;
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
 console.log("🌐 API DEBUG: Initialized BASE_URL =", BASE_URL);
 
-// Helper for verbose fetching
-const verboseFetch = async (endpoint, options = {}) => {
-  const url = `${BASE_URL}${endpoint}`;
-  
-  // 🔑 Get token from localStorage (hackathon grade auth)
-  let token = null;
-  if (typeof window !== "undefined") {
-    token = localStorage.getItem("token");
-  }
-
-  const headers = {
-    "Content-Type": "application/json",
-    ...options.headers,
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-
-  console.log(`🚀 API CALL: ${options.method || 'GET'} ${url}`);
-  
+// 🔒 Safe fetch wrapper
+export async function apiRequest(endpoint, options = {}) {
   try {
-    const res = await fetch(url, { ...options, headers });
+    let token = null;
+    if (typeof window !== "undefined") {
+      token = localStorage.getItem("token");
+    }
+
+    const res = await fetch(`${BASE_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    });
+
     const text = await res.text();
-    
-    // Log the first 100 chars of response for debugging
-    console.log(`📥 API RESPONSE [${res.status}]:`, text.substring(0, 100) + (text.length > 100 ? "..." : ""));
+
+    // ❌ If HTML comes → backend error
+    if (text.startsWith("<!DOCTYPE") || text.startsWith("<html")) {
+      throw new Error("Server error (HTML returned). Backend might be down.");
+    }
+
+    const data = JSON.parse(text);
 
     if (!res.ok) {
-      console.error(`❌ API ERROR: ${res.status} URL: ${url}`, text);
-      // Attempt to parse as JSON if it failed, but keep the raw text available
-      let errorData;
-      try {
-        errorData = JSON.parse(text);
-      } catch (e) {
-        errorData = { error: text };
-      }
-      throw new Error(errorData.error || errorData.message || `Server returned ${res.status}`);
+      throw new Error(data.message || data.error || "API Error");
     }
 
-    // Try parsing as JSON for successful responses
-    try {
-      return JSON.parse(text);
-    } catch (e) {
-      console.error("❌ JSON PARSE ERROR:", text);
-      throw new Error("Invalid JSON response from server");
-    }
+    return data;
   } catch (err) {
-    console.error("🔥 FETCH EXCEPTION:", err.message);
+    console.error("API ERROR:", err.message);
     throw err;
   }
-};
+}
 
 // Get all problems
 export const getProblems = async () => {
   try {
-    return await verboseFetch("/api/problems", {
-      signal: AbortSignal.timeout(5000),
-    });
+    return await apiRequest("/api/problems");
   } catch (err) {
     return []; // Return empty array to keep UI functional
   }
@@ -67,9 +51,8 @@ export const getProblems = async () => {
 
 // Create problem
 export const createProblem = async (data) => {
-  return await verboseFetch("/api/problems", {
+  return await apiRequest("/api/problems", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
 };
@@ -77,9 +60,8 @@ export const createProblem = async (data) => {
 // Get AI urgency
 export const getUrgency = async (description) => {
   try {
-    return await verboseFetch("/api/ai/urgency", {
+    return await apiRequest("/api/ai/urgency", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ description }),
     });
   } catch (err) {
@@ -89,28 +71,24 @@ export const getUrgency = async (description) => {
 
 // Update problem status
 export const updateProblemStatus = async (id, status) => {
-  return await verboseFetch(`/api/problems/${id}/status`, {
+  return await apiRequest(`/api/problems/${id}/status`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status }),
   });
 };
 
 // Register new user
 export const registerUser = async (data) => {
-  console.log("📝 DATA BEING SENT TO REGISTER:", JSON.stringify(data, null, 2));
-  return await verboseFetch("/api/users/register", {
+  return await apiRequest("/api/users/register", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
 };
 
 // Login user
 export const loginUser = async (data) => {
-  return await verboseFetch("/api/users/login", {
+  return await apiRequest("/api/users/login", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
 };
@@ -118,7 +96,7 @@ export const loginUser = async (data) => {
 // Get all users (filtered by role in components)
 export const getUsers = async () => {
   try {
-    return await verboseFetch("/api/users");
+    return await apiRequest("/api/users");
   } catch (err) {
     return [];
   }
@@ -126,18 +104,16 @@ export const getUsers = async () => {
 
 // Delete problem (Owner only)
 export const deleteProblem = async (id, userId) => {
-  return await verboseFetch(`/api/problems/${id}`, {
+  return await apiRequest(`/api/problems/${id}`, {
     method: "DELETE",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId }),
   });
 };
 
 // AI Suggest description
 export const getAISuggestion = async (text) => {
-  return await verboseFetch("/api/ai/suggest", {
+  return await apiRequest("/api/ai/suggest", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text }),
   });
 };
