@@ -118,30 +118,30 @@ export default function ProblemsPage() {
     });
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 transition duration-200">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-6 py-12">
+      <main className="max-w-7xl mx-auto px-4 md:px-10 py-12">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800 mb-1">
+            <h1 className="text-3xl font-bold text-gray-800 mb-1">
               All Problems
             </h1>
-            <p className="text-slate-500">
+            <p className="text-gray-500">
               {loading ? "…" : `${filtered.length} of ${problems.length} reports`}
             </p>
           </div>
           <div className="flex gap-4">
             <button
               onClick={handleLocateAndSort}
-              className={`premium-btn text-xs ${sortNearest ? 'grayscale flex items-center gap-1' : ''}`}
+              className={`bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-sm text-gray-700 transition duration-200 flex items-center gap-1 ${sortNearest ? 'grayscale' : ''}`}
             >
               📍 {sortNearest ? "Reset Sort" : "Sort by Nearest"}
             </button>
             <a
               href="/submit"
-              className="premium-btn text-xs bg-none border border-white/20"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200 shadow-sm text-sm"
             >
               + Report New Problem
             </a>
@@ -149,20 +149,20 @@ export default function ProblemsPage() {
         </div>
 
         {/* Filters */}
-        <div className="premium-card rounded-xl p-4 mb-8 flex flex-wrap gap-4 items-center">
+        <div className="bg-white rounded-2xl shadow-md p-5 mb-8 flex flex-wrap gap-4 items-center border border-gray-100 transition duration-200">
           <input
             id="search-problems"
             type="text"
             placeholder="🔍 Search problems…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="premium-input flex-1"
+            className="flex-1 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
           />
           <select
             id="filter-urgency"
             value={filterUrgency}
             onChange={(e) => setFilterUrgency(e.target.value)}
-            className="premium-input w-auto cursor-pointer"
+            className="w-auto p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition duration-200 appearance-none bg-white"
           >
             <option value="All">All Urgencies</option>
             <option value="Critical">🔴 Critical</option>
@@ -174,7 +174,7 @@ export default function ProblemsPage() {
             id="filter-status"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="premium-input w-auto cursor-pointer"
+            className="w-auto p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition duration-200 appearance-none bg-white"
           >
             <option value="All">All Statuses</option>
             <option value="Open">Open</option>
@@ -185,7 +185,7 @@ export default function ProblemsPage() {
             id="sort-problems"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="premium-input w-auto cursor-pointer"
+            className="w-auto p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition duration-200 appearance-none bg-white"
           >
             <option value="newest">Newest First</option>
             <option value="urgency">By Urgency</option>
@@ -199,14 +199,14 @@ export default function ProblemsPage() {
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className="premium-card rounded-xl h-48 animate-pulse bg-slate-100"
+                className="bg-white border border-gray-100 rounded-2xl h-48 animate-pulse shadow-sm"
               />
             ))}
           </div>
         ) : (
           <>
             {filtered.length === 0 ? (
-              <div className="text-center py-24 text-slate-400">
+              <div className="text-center py-24 text-gray-400">
                 <div className="text-5xl mb-4">🚫</div>
                 <p className="text-lg">No problems reported yet 🚫</p>
               </div>
@@ -227,12 +227,14 @@ export default function ProblemsPage() {
       </main>
 
       {/* Mobile-first Floating Action Button */}
-      <a 
-        href="/submit" 
-        className="fixed bottom-6 right-6 z-50 premium-btn flex items-center justify-center shadow-[0_10px_40px_rgba(99,102,241,0.5)] bg-indigo-600 text-white rounded-full px-5 py-4 font-bold transition-transform hover:scale-105 active:scale-95 border-2 border-indigo-400/50"
-      >
-        ➕ Report Problem
-      </a>
+      <div className="fixed bottom-6 right-6 z-50">
+        <a 
+          href="/submit" 
+          className="bg-blue-600 text-white w-14 h-14 flex items-center justify-center rounded-full shadow-lg hover:scale-105 transition duration-200 text-2xl"
+        >
+          ➕
+        </a>
+      </div>
     </div>
   );
 }

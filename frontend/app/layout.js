@@ -15,19 +15,18 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased min-h-screen bg-slate-50 text-slate-900`}>
+      <body className={`${inter.variable} font-sans antialiased min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 transition duration-200`}>
         {children}
         <Toaster
           position="top-right"
           toastOptions={{
             duration: 4000,
             style: {
-              background: "#1e1e2e",
-              color: "#e2e8f0",
-              border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: "12px",
+              background: "#333",
+              color: "#fff",
+              borderRadius: "10px",
               fontSize: "13px",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
             },
             success: {
               iconTheme: { primary: "#22c55e", secondary: "#1e1e2e" },

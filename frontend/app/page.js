@@ -247,7 +247,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 transition duration-200">
       <Navbar />
 
       <motion.main
@@ -258,10 +258,10 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-6">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent mb-1">
+            <h1 className="text-3xl font-bold text-gray-800 mb-1">
               Command Dashboard
             </h1>
-            <p className="text-slate-400 text-sm">
+            <p className="text-gray-500 text-sm">
               Monitoring {problems.length} active crisis reports
             </p>
           </div>
@@ -269,27 +269,28 @@ export default function Dashboard() {
           <div className="flex gap-4">
             <button
               onClick={handleLocateAndSort}
-              className={`premium-btn text-xs ${sortNearest ? 'grayscale' : ''}`}
+              className={`bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-sm text-gray-700 transition duration-200 ${sortNearest ? 'grayscale' : ''}`}
             >
               📍 {sortNearest ? "Reset Sort" : "Sort by Nearest"}
             </button>
-            <a href="/submit" className="premium-btn text-xs bg-indigo-600/20 border border-indigo-500/30">
+            <a href="/submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200 shadow-sm text-sm">
               + Report New
             </a>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {STAT_CONFIG.map((s) => {
             const val = counts[s.key];
             return (
-              <div key={s.key} className="premium-card p-5 rounded-2xl border-l-4 border-indigo-500">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xl">{s.icon}</span>
-                  <span className={`text-xs font-bold uppercase tracking-wider ${s.text}`}>{s.label}</span>
-                </div>
-                <h2 className="text-2xl font-bold text-slate-800">{val}</h2>
+              <div key={s.key} className="bg-white p-4 rounded-xl shadow border border-gray-100 flex flex-col transition duration-200 hover:shadow-md">
+                <span className="text-sm text-gray-500 flex items-center gap-2">
+                  <span className="text-lg">{s.icon}</span> {s.label}
+                </span>
+                <span className="text-2xl font-bold text-blue-600 mt-2">
+                  {val}
+                </span>
               </div>
             );
           })}
@@ -297,8 +298,8 @@ export default function Dashboard() {
 
         {/* Analytics Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <div className="premium-card p-6 rounded-2xl">
-            <h3 className="font-bold mb-4">Problem Flow</h3>
+          <div className="bg-white rounded-2xl shadow-md p-5 border border-gray-100 transition duration-200">
+            <h3 className="font-bold mb-4 text-gray-800">Problem Flow</h3>
             <div className="space-y-4">
               <div className="flex justify-between items-center py-2 border-b border-white/5">
                 <span className="text-slate-400 text-sm">Open Issues</span>
@@ -315,8 +316,8 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="premium-card p-6 rounded-2xl">
-            <h3 className="font-bold mb-4 text-slate-800">Categories</h3>
+          <div className="bg-white rounded-2xl shadow-md p-5 border border-gray-100 transition duration-200">
+            <h3 className="font-bold mb-4 text-gray-800">Categories</h3>
             <div className="grid grid-cols-1 gap-2 overflow-y-auto max-h-[200px] pr-2">
               {categoryData.map(c => (
                 <div key={c.name} className="flex justify-between items-center py-1.5 border-b border-slate-50 last:border-0">
@@ -327,8 +328,8 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="premium-card p-6 rounded-2xl">
-            <h3 className="font-bold mb-4 text-slate-800">Urgency Distribution</h3>
+          <div className="bg-white rounded-2xl shadow-md p-5 border border-gray-100 transition duration-200">
+            <h3 className="font-bold mb-4 text-gray-800">Urgency Distribution</h3>
             <div className="space-y-3">
               {[
                 { name: "Critical", count: criticalCount, color: "bg-red-500", text: "text-red-600" },
@@ -347,9 +348,9 @@ export default function Dashboard() {
         </div>
 
         {/* Map */}
-        <div className="premium-card p-4 rounded-2xl mb-10">
-          <h3 className="font-bold mb-4 flex items-center gap-2">📍 Live Operation Map</h3>
-          <div className="h-[400px] rounded-xl overflow-hidden border border-white/10 shadow-inner">
+        <div className="bg-white rounded-2xl shadow-md p-3 mt-4 mb-10 border border-gray-100 transition duration-200">
+          <h3 className="font-bold mb-3 pl-2 flex items-center gap-2 text-gray-800">📍 Live Operation Map</h3>
+          <div className="h-[400px] rounded-xl overflow-hidden border border-gray-100">
             <MapView 
               problems={problems} 
               type="problems" 
@@ -360,13 +361,12 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Recent Problems Section (Now optionally sorted by nearest) */}
         <div className="mt-10">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold italic">
+            <h2 className="text-2xl font-bold text-gray-800">
               {sortNearest ? "📍 Nearest Solutions" : "🕒 Recent Reports"}
             </h2>
-            <a href="/problems" className="text-indigo-400 text-sm hover:underline">View All →</a>
+            <a href="/problems" className="text-blue-600 text-sm hover:underline font-medium">View All →</a>
           </div>
 
           {problems.length === 0 ? (
@@ -384,12 +384,14 @@ export default function Dashboard() {
       </motion.main>
 
       {/* Mobile-first Floating Action Button */}
-      <a 
-        href="/submit" 
-        className="fixed bottom-6 right-6 z-50 premium-btn flex items-center justify-center shadow-[0_10px_40px_rgba(99,102,241,0.5)] bg-indigo-600 text-white rounded-full px-5 py-4 font-bold transition-transform hover:scale-105 active:scale-95 border-2 border-indigo-400/50"
-      >
-        ➕ Report Problem
-      </a>
+      <div className="fixed bottom-6 right-6 z-50">
+        <a 
+          href="/submit" 
+          className="bg-blue-600 text-white w-14 h-14 flex items-center justify-center rounded-full shadow-lg hover:scale-105 transition duration-200 text-2xl"
+        >
+          ➕
+        </a>
+      </div>
     </div>
   );
 }

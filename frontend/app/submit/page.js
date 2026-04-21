@@ -193,7 +193,7 @@ export default function SubmitPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 transition duration-200">
         <Navbar />
         <div className="max-w-lg mx-auto px-6 py-24 text-center">
           <div className="text-7xl mb-6">✅</div>
@@ -208,7 +208,7 @@ export default function SubmitPage() {
           <div className="flex gap-3 justify-center">
             <button
               onClick={() => setSuccess(false)}
-              className="btn-primary px-6 py-3 rounded-xl text-white font-medium"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition duration-200 shadow-sm font-medium"
             >
               Submit Another
             </button>
@@ -225,10 +225,11 @@ export default function SubmitPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 transition duration-200">
       <Navbar />
       <motion.main
-        className="max-w-2xl mx-auto px-6 py-12"
+        className="max-w-2xl mx-auto px-4 md:px-10 py-12 bg-white rounded-2xl shadow-md p-5 border border-gray-100 transition duration-200 mt-6 mb-12"
+
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: "easeOut" }}
@@ -251,7 +252,7 @@ export default function SubmitPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-gray-600 mb-2">
               Problem Title *
             </label>
             <input
@@ -260,13 +261,13 @@ export default function SubmitPage() {
               placeholder="e.g. No clean water in Block C"
               value={form.title}
               onChange={updateForm("title")}
-              className="premium-input"
+              className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-gray-600 mb-2">
               Description *
             </label>
             <textarea
@@ -275,7 +276,7 @@ export default function SubmitPage() {
               value={form.description}
               onChange={updateForm("description")}
               rows={5}
-              className="premium-input resize-none"
+              className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 resize-none"
             />
             <div className="flex gap-4 mt-2">
               <button
@@ -303,7 +304,7 @@ export default function SubmitPage() {
                 <button
                   type="button"
                   onClick={applySuggestion}
-                  className="premium-btn text-xs py-1"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200 shadow-sm text-xs mt-3"
                 >
                   Apply Suggestion
                 </button>
@@ -340,16 +341,16 @@ export default function SubmitPage() {
           )}
 
           {/* Category & Skill */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-gray-600 mb-2">
                 Category
               </label>
               <select
                 id="problem-category"
                 value={form.category}
                 onChange={updateForm("category")}
-                className="premium-input cursor-pointer appearance-none"
+                className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 cursor-pointer appearance-none bg-white"
               >
                 <option value="">Select…</option>
                 {CATEGORIES.map((c) => (
@@ -364,19 +365,19 @@ export default function SubmitPage() {
                   placeholder="Enter custom category"
                   value={customCategory}
                   onChange={(e) => setCustomCategory(e.target.value)}
-                  className="w-full glass border border-white/10 rounded-xl px-4 py-3 mt-3 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 transition-all bg-[#12121a]"
+                  className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 mt-3"
                 />
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-gray-600 mb-2">
                 Required Skill
               </label>
               <select
                 id="problem-skill"
                 value={form.requiredSkill}
                 onChange={updateForm("requiredSkill")}
-                className="premium-input cursor-pointer appearance-none"
+                className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 cursor-pointer appearance-none bg-white"
               >
                 <option value="">Select…</option>
                 {SKILLS.map((s) => (
@@ -391,7 +392,7 @@ export default function SubmitPage() {
                   placeholder="Enter custom skill"
                   value={customSkill}
                   onChange={(e) => setCustomSkill(e.target.value)}
-                  className="w-full glass border border-white/10 rounded-xl px-4 py-3 mt-3 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 transition-all bg-[#12121a]"
+                  className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 mt-3"
                 />
               )}
             </div>
@@ -399,21 +400,21 @@ export default function SubmitPage() {
           {/* Location */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-gray-600 mb-2">
                 Address / Neighborhood
               </label>
               <input
                 placeholder="Enter address manually"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                className="premium-input"
+                className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
               />
             </div>
 
             <button
               type="button"
               onClick={handleUseMyLocation}
-              className="premium-btn text-xs"
+              className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-sm text-gray-700 transition duration-200 inline-block"
             >
               📍 Use My Location
             </button>
@@ -448,7 +449,7 @@ export default function SubmitPage() {
             id="submit-problem-btn"
             type="submit"
             disabled={loading}
-            className="w-full premium-btn py-4 text-base disabled:opacity-60 flex items-center justify-center gap-2"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg transition duration-200 shadow-sm text-base font-medium disabled:opacity-60 flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

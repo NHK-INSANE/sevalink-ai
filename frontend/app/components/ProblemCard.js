@@ -5,22 +5,10 @@ import { matchVolunteers } from "../data/volunteers";
 import toast from "react-hot-toast";
 
 const urgencyConfig = {
-  Critical: {
-    bg: "bg-red-500",
-    icon: "🔴",
-  },
-  High: {
-    bg: "bg-orange-500",
-    icon: "🟠",
-  },
-  Medium: {
-    bg: "bg-yellow-500",
-    icon: "🟡",
-  },
-  Low: {
-    bg: "bg-green-500",
-    icon: "🟢",
-  },
+  Critical: { bg: "bg-red-100 text-red-600", icon: "🔴" },
+  High:     { bg: "bg-orange-100 text-orange-600", icon: "🟠" },
+  Medium:   { bg: "bg-yellow-100 text-yellow-600", icon: "🟡" },
+  Low:      { bg: "bg-green-100 text-green-600", icon: "🟢" },
 };
 
 const statusColors = {
@@ -87,26 +75,26 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
 
   return (
     <div
-      className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 transition-all duration-300 hover:border-indigo-500/30 hover:-translate-y-1 hover:shadow-md"
+      className="bg-white rounded-2xl shadow-md p-5 border border-gray-100 hover:shadow-lg transition duration-200 flex flex-col"
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
-        <h3 className="font-semibold text-slate-800 text-base leading-snug flex-1">
+        <h3 className="font-semibold text-gray-800 text-lg leading-snug flex-1">
           {problem.title}
         </h3>
         <span
-          className={`text-xs font-semibold px-2 py-1 rounded text-white whitespace-nowrap ${config.bg}`}
+          className={`text-xs font-medium px-2 py-1 rounded whitespace-nowrap ${config.bg}`}
         >
           {config.icon} {problem.urgency}
         </span>
       </div>
 
-      <p className="text-slate-600 text-sm leading-relaxed mb-4 line-clamp-2">
+      <p className="text-gray-500 text-sm leading-relaxed mb-4 line-clamp-2">
         {problem.description}
       </p>
 
       {/* Submitter info */}
-      <p className="text-xs text-slate-500 mb-4 italic">
+      <p className="text-xs text-gray-400 mb-4 italic">
         Submitted by: {problem.createdBy?.name || "Anonymous"}
       </p>
 
@@ -134,12 +122,12 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
       {/* Tags */}
       <div className="flex flex-wrap gap-2 mb-4">
         {problem.category && (
-          <span className="text-xs px-2 py-0.5 rounded-md bg-slate-50 text-slate-500 border border-slate-100">
+          <span className="text-xs px-2 py-0.5 rounded-md bg-gray-50 text-gray-400 border border-gray-100">
             📂 {problem.category}
           </span>
         )}
         {problem.requiredSkill && (
-          <span className="text-xs px-2 py-0.5 rounded-md bg-slate-50 text-slate-500 border border-slate-100">
+          <span className="text-xs px-2 py-0.5 rounded-md bg-gray-50 text-gray-400 border border-gray-100">
             🛠 {problem.requiredSkill}
           </span>
         )}
@@ -238,15 +226,15 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-600">
+      <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-50">
+        <span className="text-xs text-gray-400">
           {timeAgo(problem.createdAt)}
         </span>
         {onStatusChange && (
           <select
             value={problem.status}
             onChange={(e) => onStatusChange(problem._id, e.target.value)}
-            className="text-xs bg-white/5 border border-white/10 text-slate-300 rounded-md px-2 py-1 cursor-pointer hover:border-indigo-500/40 transition-colors"
+            className="text-xs bg-white border border-gray-200 text-gray-600 rounded-md px-2 py-1 cursor-pointer transition duration-200"
           >
             <option value="Open">Open</option>
             <option value="In Progress">In Progress</option>

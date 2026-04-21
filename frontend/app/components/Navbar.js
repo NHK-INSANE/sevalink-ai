@@ -70,17 +70,11 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 navbar-solid">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <nav className="sticky top-0 z-50 bg-white shadow-sm transition duration-200">
+      <div className="max-w-7xl mx-auto px-4 md:px-10 py-3 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-lg btn-primary flex items-center justify-center text-sm font-bold text-white">
-            S
-          </div>
-          <span className="font-bold text-lg tracking-tight">
-            Seva<span className="text-indigo-400">Link</span>{" "}
-            <span className="text-purple-400 text-sm font-medium">AI</span>
-          </span>
+          <h1 className="font-bold text-xl text-blue-600 transition duration-200 group-hover:scale-105">SevaLink AI</h1>
         </Link>
 
         {/* Nav links */}
@@ -91,11 +85,11 @@ export default function Navbar() {
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition duration-200
                   ${
                     isActive
-                      ? "bg-indigo-600/10 text-indigo-600 border border-indigo-500/20"
-                      : "text-slate-600 hover:text-indigo-600 hover:bg-slate-50"
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
                   }`}
               >
                 <span>{icon}</span>
@@ -157,7 +151,7 @@ export default function Navbar() {
                 <button
                   id="user-menu-btn"
                   onClick={() => { setMenuOpen((v) => !v); setShowNotifs(false); }}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg glass border border-slate-200 hover:border-indigo-500/30 transition-all text-sm"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-gray-200 hover:border-blue-500/30 transition duration-200 text-sm"
                 >
                 <span className="text-base">{user.role === "NGO" ? "🏢" : user.role === "Volunteer" ? "🤝" : user.role === "Worker" ? "🔧" : "👤"}</span>
                 <span className="text-slate-700 font-medium max-w-[100px] truncate">
@@ -206,13 +200,13 @@ export default function Navbar() {
             <div className="flex items-center gap-2">
               <Link
                 href="/login"
-                className="px-3 py-1.5 text-sm text-slate-600 hover:text-indigo-600 transition-colors font-medium"
+                className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:text-blue-600 transition duration-200 font-medium"
               >
                 Login
               </Link>
               <Link
                 href="/register"
-                className="btn-primary px-3 py-1.5 rounded-lg text-white text-sm font-medium"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200 shadow-sm text-sm font-medium"
               >
                 Register
               </Link>

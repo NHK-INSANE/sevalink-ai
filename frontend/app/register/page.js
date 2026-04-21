@@ -33,7 +33,7 @@ const SKILLS_LIST = [
 ];
 
 const INPUT_CLS =
-  "w-full glass border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all text-sm";
+  "w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 text-gray-800 placeholder-gray-400";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ role: "User" });
@@ -145,42 +145,27 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className={darkMode ? "dark" : ""}>
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0a0a0f] flex items-center justify-center px-4 py-12 transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-4 py-12 transition duration-200">
       <div className="w-full max-w-lg">
-        {/* Dark Mode Toggle */}
-        <div className="mb-4 flex justify-end">
-          <button 
-            type="button"
-            onClick={() => setDarkMode(!darkMode)}
-            className="px-4 py-2 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-white/10 text-gray-800 dark:text-white text-sm font-medium shadow-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
-          >
-            {darkMode ? "☀️ Light" : "🌙 Dark"}
-          </button>
-        </div>
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 rounded-xl btn-primary flex items-center justify-center text-lg font-bold text-white">
-              S
-            </div>
-            <span className="font-bold text-2xl text-white tracking-tight">
-              Seva<span className="text-indigo-400">Link</span>{" "}
-              <span className="text-purple-400 text-base font-medium">AI</span>
+            <span className="font-bold text-3xl text-blue-600 tracking-tight">
+              SevaLink AI
             </span>
           </div>
-          <h1 className="text-2xl font-bold text-white">Create your account</h1>
-          <p className="text-slate-400 mt-1 text-sm">
+          <h1 className="text-2xl font-bold text-gray-800">Create your account</h1>
+          <p className="text-gray-500 mt-1 text-sm">
             Join the community — pick your role below
           </p>
         </div>
 
-        <div className="glass rounded-2xl p-8 border border-white/8">
+        <div className="bg-white rounded-2xl shadow-md p-8 border border-gray-100 transition duration-200">
           <form onSubmit={handleRegister} className="space-y-4">
 
             {/* Role selector */}
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-2">
+              <label className="block text-xs font-medium text-gray-500 mb-2">
                 I am a…
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -191,16 +176,16 @@ export default function RegisterPage() {
                     onClick={() =>
                       setForm((prev) => ({ ...prev, role }))
                     }
-                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all text-left ${
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition duration-200 text-left ${
                       form.role === role
-                        ? "border-indigo-500/60 bg-indigo-600/15 text-indigo-300"
-                        : "border-white/8 text-slate-400 hover:border-white/20 hover:text-slate-300"
+                        ? "border-blue-500 bg-blue-50 text-blue-600 shadow-sm"
+                        : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
                     }`}
                   >
                     <span>{ROLE_INFO[role].icon}</span>
                     <div>
-                      <div className="leading-tight">{role}</div>
-                      <div className="text-[10px] text-slate-500 font-normal leading-tight">
+                      <div className="leading-tight text-gray-800">{role}</div>
+                      <div className="text-[10px] text-gray-500 font-normal leading-tight">
                         {ROLE_INFO[role].desc}
                       </div>
                     </div>
@@ -365,7 +350,7 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-blue-600 hover:text-blue-500 transition-colors"
                     >
                       {showPassword ? "Hide" : "Show"}
                     </button>
@@ -388,7 +373,7 @@ export default function RegisterPage() {
                   type="button"
                   id="detect-location-btn"
                   onClick={detectLocation}
-                  className="flex items-center gap-1.5 text-indigo-400 hover:text-indigo-300 font-semibold text-xs"
+                  className="flex items-center gap-1.5 text-blue-600 hover:text-blue-500 font-semibold text-xs transition duration-200"
                 >
                   📍 Auto Detect GPS
                 </button>
@@ -396,23 +381,22 @@ export default function RegisterPage() {
               
               {/* Show Selected Location */}
               {location && (
-                <p className="text-sm text-indigo-400 mt-2 text-center font-medium">
+                <p className="text-sm text-blue-600 mt-2 text-center font-medium">
                   📍 GPS Location: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
                 </p>
               )}
 
               {/* Pin-to-map restoration */}
               <div className="mt-4">
-                <p className="text-sm font-medium text-slate-300 mb-1">Pin your location on map <span className="text-gray-500">(click on map)</span></p>
-                <div style={{ height: "250px" }} className="rounded-xl overflow-hidden border border-white/10 shadow-lg bg-slate-100 dark:bg-slate-900 transition-colors">
+                <p className="text-sm font-medium text-gray-600 mb-1">Pin your location on map <span className="text-gray-400">(click on map)</span></p>
+                <div style={{ height: "250px" }} className="rounded-xl overflow-hidden border border-gray-100 shadow-md transition-colors">
                   <MapPicker 
                     setLocation={setLocation} 
                     setAddress={setAddress} 
-                    darkMode={darkMode}
                   />
                 </div>
                 {location && (
-                  <p className="text-xs text-emerald-400 mt-2.5 font-medium flex items-center gap-1">
+                  <p className="text-xs text-emerald-600 mt-2.5 font-medium flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                     Verified Pin: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
                   </p>
@@ -509,7 +493,7 @@ export default function RegisterPage() {
               id="register-submit"
               type="submit"
               disabled={loading}
-              className="w-full btn-primary py-3 rounded-xl text-white font-semibold text-sm mt-2 disabled:opacity-60 flex items-center justify-center gap-2"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg transition duration-200 shadow-sm text-sm font-semibold mt-2 disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -522,18 +506,17 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-slate-500">
+          <div className="mt-6 text-center text-sm text-gray-500">
             Already have an account?{" "}
             <Link
               href="/login"
-              className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+              className="text-blue-600 hover:text-blue-500 font-medium transition duration-200"
             >
               Login
             </Link>
           </div>
         </div>
       </div>
-    </div>
     </div>
   );
 }
