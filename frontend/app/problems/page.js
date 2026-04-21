@@ -5,7 +5,9 @@ import ProblemCard from "../components/ProblemCard";
 import { getProblems, updateProblemStatus, deleteProblem } from "../utils/api";
 import { getUserLocation } from "../utils/location";
 import PageWrapper from "../components/PageWrapper";
+import { SkeletonCard } from "../components/Skeleton";
 import toast from "react-hot-toast";
+import { motion, AnimatePresence } from "framer-motion";
 import { io } from "socket.io-client";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
@@ -119,11 +121,14 @@ export default function ProblemsPage() {
     });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 transition duration-200">
+    <div className="min-h-screen bg-white">
       <Navbar />
-      <PageWrapper>
-
-      <main className="max-w-7xl mx-auto px-4 md:px-10 py-12">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <main className="max-w-7xl mx-auto px-6 md:px-10 pt-24 pb-20">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
@@ -197,23 +202,25 @@ export default function ProblemsPage() {
 
         {/* Grid */}
         {loading && problems.length === 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
-              <div
-                key={i}
-                className="bg-white border border-gray-100 rounded-2xl h-48 animate-pulse shadow-sm"
-              />
+              <SkeletonCard key={i} />
             ))}
           </div>
         ) : (
-          <>
+          <motion.div
+             initial={{ opacity: 0, y: 10 }}
+             animate={{ opacity: 1, y: 0 }}
+             transition={{ duration: 0.4 }}
+          >
             {filtered.length === 0 ? (
-              <div className="text-center py-24 text-gray-400">
-                <div className="text-5xl mb-4">🚫</div>
-                <p className="text-lg">No problems reported yet 🚫</p>
+              <div className="text-center py-24 bg-gray-50 rounded-3xl border border-dashed border-gray-200 flex flex-col items-center">
+                <div className="text-5xl mb-4 opacity-50">🚫</div>
+                <p className="text-gray-900 font-bold text-lg">No problems found</p>
+                <p className="text-gray-500 text-sm mt-1">Try adjusting your filters or search terms.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filtered.map((p) => (
                   <ProblemCard
                     key={p._id}
@@ -224,10 +231,10 @@ export default function ProblemsPage() {
                 ))}
               </div>
             )}
-          </>
+          </motion.div>
         )}
       </main>
-      </PageWrapper>
+      </motion.div>
 
       {/* Mobile-first Floating Action Button */}
       <div className="fixed bottom-6 right-6 z-50">

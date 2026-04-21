@@ -8,8 +8,9 @@ import PageWrapper from "../components/PageWrapper";
 import { getProblems, updateProblemStatus, getUsers } from "../utils/api";
 import { getUser } from "../utils/auth";
 import { getUserLocation } from "../utils/location";
+import { SkeletonCard, SkeletonStats } from "../components/Skeleton";
 import toast from "react-hot-toast";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 import { io } from "socket.io-client";
 
@@ -234,25 +235,36 @@ export default function Dashboard() {
       })
     : problems;
 
+  // Loading State with Skeletons
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900">
+      <div className="min-h-screen bg-white">
         <Navbar />
-        <div className="flex items-center justify-center h-[calc(100vh-80px)]">
-          <div className="animate-pulse flex items-center gap-3">
-            <span className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-            Loading live operational data...
+        <main className="max-w-7xl mx-auto px-6 py-10 mt-16">
+          <div className="h-10 bg-gray-100 rounded-xl w-64 mb-8 animate-pulse"></div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            <SkeletonStats /> <SkeletonStats /> <SkeletonStats /> <SkeletonStats />
           </div>
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+             {[...Array(3)].map((_, i) => <div key={i} className="h-48 bg-gray-50 rounded-2xl animate-pulse border border-gray-100" />)}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 transition duration-200">
+    <div className="min-h-screen bg-white text-gray-800 transition duration-200">
       <Navbar />
-      <PageWrapper>
-        <main className="max-w-7xl mx-auto px-6 py-10">
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <main className="max-w-7xl mx-auto px-6 py-10 mt-16">
         {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-6">
           <div>
@@ -387,8 +399,13 @@ export default function Dashboard() {
           </div>
 
           {problems.length === 0 ? (
-            <div className="text-center py-20 bg-white/5 rounded-3xl border border-dashed border-slate-200">
-              <p className="text-slate-500 font-medium">No problems yet. Be the first to report 🚀</p>
+            <div className="text-center py-20 bg-gray-50 rounded-3xl border border-dashed border-gray-200 flex flex-col items-center">
+              <span className="text-4xl mb-4 opacity-50">🚀</span>
+              <p className="text-gray-900 font-bold text-lg">No problems reported yet</p>
+              <p className="text-gray-500 text-sm mt-1">Be the first to report and help your community stay safe.</p>
+              <a href="/submit" className="mt-6 bg-blue-600 text-white px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-blue-600/20 hover:scale-105 active:scale-95 transition">
+                + Report Your First Crisis
+              </a>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -399,7 +416,7 @@ export default function Dashboard() {
           )}
         </div>
       </main>
-      </PageWrapper>
+      </motion.div>
 
       {/* Mobile-first Floating Action Button */}
       <div className="fixed bottom-6 right-6 z-50">

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { getUser } from "../utils/auth";
 import { apiRequest } from "../utils/api";
 import toast from "react-hot-toast";
+import { motion } from "framer-motion";
 
 export default function ProblemCard({ problem, onStatusChange, onDelete }) {
   const [user, setUser] = useState(null);
@@ -24,7 +25,12 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition duration-200 group">
+    <motion.div 
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2 }}
+      className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow duration-200 group flex flex-col h-full"
+    >
       {/* Urgency Badge */}
       <div className="flex justify-between items-center mb-3">
         <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${urgencyColors[problem.urgency] || urgencyColors.Medium}`}>
@@ -74,6 +80,6 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -107,10 +107,10 @@ function ZoomToUser() {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        map.setView(
+        map.flyTo(
           [pos.coords.latitude, pos.coords.longitude],
           13,
-          { animate: true, duration: 1.2 }
+          { duration: 1.5, easeLinearity: 0.25 }
         );
       },
       () => {}
@@ -126,7 +126,7 @@ function LocateMeButton() {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition((pos) => {
       const { latitude, longitude } = pos.coords;
-      map.setView([latitude, longitude], 14, { animate: true, duration: 1 });
+      map.flyTo([latitude, longitude], 14, { duration: 1.5 });
       L.marker([latitude, longitude])
         .addTo(map)
         .bindPopup("📍 You are here")

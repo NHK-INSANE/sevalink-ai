@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import PageWrapper from "../components/PageWrapper";
 import { getUsers } from "../utils/api";
+import { SkeletonCard } from "../components/Skeleton";
+import { motion } from "framer-motion";
 
 export default function Helper() {
   const [helpers, setHelpers] = useState([]);
@@ -46,7 +48,7 @@ export default function Helper() {
           </p>
         </div>
 
-        {/* Filter Pills */}
+        {/* Filter Pills (Restored) */}
         <div className="flex gap-2 mb-8 p-1 bg-gray-50 border border-gray-100 rounded-2xl w-fit">
           {FILTERS.map((f) => (
             <button
@@ -66,25 +68,29 @@ export default function Helper() {
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="bg-white border border-gray-100 rounded-2xl h-56 animate-pulse shadow-sm" />
+            {[...Array(6)].map((_, i) => (
+              <SkeletonCard key={i} />
             ))}
           </div>
         ) : (
-          <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
             {filteredHelpers.length === 0 ? (
-              <div className="text-center py-20 bg-white rounded-2xl shadow-md border border-dashed border-gray-200">
-                <div className="text-5xl mb-4">🤝</div>
-                <p className="text-gray-400 font-medium">
-                  {filter === "all" ? "No helpers registered yet." : `No ${filter}s registered yet.`}
-                </p>
+              <div className="text-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-200 flex flex-col items-center">
+                <div className="text-5xl mb-4 opacity-50">🤝</div>
+                <p className="text-gray-900 font-bold text-lg">No helpers registered yet</p>
+                <p className="text-gray-500 text-sm mt-1">Invite volunteers and workers to join the SevaLink network.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredHelpers.map((h) => (
-                  <div
+                  <motion.div 
                     key={h._id || h.id}
-                    className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 card-hover"
+                    whileHover={{ scale: 1.01 }}
+                    className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 transition duration-200"
                   >
                     {/* Avatar + Name + Role */}
                     <div className="flex items-center gap-4 mb-4">
@@ -158,11 +164,11 @@ export default function Helper() {
                         Contact
                       </button>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             )}
-          </>
+          </motion.div>
         )}
       </main>
     </div>

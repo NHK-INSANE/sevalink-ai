@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Navbar from "../components/Navbar";
 import PageWrapper from "../components/PageWrapper";
 import { getProblems, getUsers, apiRequest } from "../utils/api";
+import { SkeletonMap } from "../components/Skeleton";
 import { getUser } from "../utils/auth";
 import { motion, AnimatePresence } from "framer-motion";
 import { io } from "socket.io-client";
@@ -138,10 +139,30 @@ export default function MapPage() {
     }
   };
 
+  // Loading Skeleton for Map
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-6 md:px-10 pt-24 pb-20">
+          <div className="h-10 bg-gray-100 rounded-xl w-64 mb-8 animate-pulse"></div>
+          <div className="h-[70vh] bg-gray-50 rounded-3xl border border-gray-100 p-4">
+             <SkeletonMap />
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
-      <div className="pt-24 px-6 md:px-10 max-w-7xl mx-auto pb-20">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="pt-24 px-6 md:px-10 max-w-7xl mx-auto pb-20">
         
         {/* Title + Subtitle (Startup Style) */}
         <div className="mb-8">
@@ -260,6 +281,7 @@ export default function MapPage() {
           ))}
         </div>
       </div>
+      </motion.div>
     </div>
   );
 }
