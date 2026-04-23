@@ -101,18 +101,18 @@ export default function Dashboard() {
     return () => socket.disconnect();
   }, []);
 
-  const openCount = problems.filter(p => p.status?.toLowerCase() === "open").length;
-  const resolvedCount = problems.filter(p => p.status?.toLowerCase() === "resolved").length;
-  const progressCount = problems.filter(p => p.status?.toLowerCase() === "in progress" || p.status?.toLowerCase() === "in-progress").length;
+  const openCount = (problems || []).filter(p => p.status?.toLowerCase() === "open").length;
+  const resolvedCount = (problems || []).filter(p => p.status?.toLowerCase() === "resolved").length;
+  const progressCount = (problems || []).filter(p => p.status?.toLowerCase() === "in progress" || p.status?.toLowerCase() === "in-progress").length;
 
-  const volunteersCount = usersList.filter(u => u.role?.toLowerCase() === "volunteer").length;
-  const workersCount = usersList.filter(u => u.role?.toLowerCase() === "worker").length;
-  const ngosCount = usersList.filter(u => u.role?.toLowerCase() === "ngo").length;
+  const volunteersCount = (usersList || []).filter(u => u.role?.toLowerCase() === "volunteer").length;
+  const workersCount = (usersList || []).filter(u => u.role?.toLowerCase() === "worker").length;
+  const ngosCount = (usersList || []).filter(u => u.role?.toLowerCase() === "ngo").length;
 
-  const criticalCount = problems.filter(p => p.urgency?.toLowerCase() === "critical").length;
-  const highCount = problems.filter(p => p.urgency?.toLowerCase() === "high").length;
-  const mediumCount = problems.filter(p => p.urgency?.toLowerCase() === "medium").length;
-  const lowCount = problems.filter(p => p.urgency?.toLowerCase() === "low").length;
+  const criticalCount = (problems || []).filter(p => p.urgency?.toLowerCase() === "critical").length;
+  const highCount = (problems || []).filter(p => p.urgency?.toLowerCase() === "high").length;
+  const mediumCount = (problems || []).filter(p => p.urgency?.toLowerCase() === "medium").length;
+  const lowCount = (problems || []).filter(p => p.urgency?.toLowerCase() === "low").length;
 
   const categoryCount = {};
   problems.forEach(p => {

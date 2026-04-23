@@ -267,8 +267,7 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
               <div className="flex flex-col items-center justify-center py-20 opacity-20 text-center">
                  <p className="text-sm text-gray-400">Secure link established.<br/>Send intelligence below.</p>
               </div>
-            ) : (
-              messages.map((m, i) => {
+            ) : (Array.isArray(messages) ? messages : []).map((m, i) => {
                 const isMe = m.senderId === currentUserId;
                 return (
                   <div key={m._id || i} className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
