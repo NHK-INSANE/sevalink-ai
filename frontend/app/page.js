@@ -4,6 +4,9 @@ import Navbar from "./components/Navbar";
 import { motion } from "framer-motion";
 import axios from "axios";
 import Link from "next/link";
+import PageWrapper from "./components/PageWrapper";
+import { SkeletonCard } from "./components/Skeleton";
+import TiltCard from "./components/TiltCard";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
@@ -187,15 +190,14 @@ export default function Landing() {
             { icon: "🗺️", title: "Live Network", desc: "Real-time visualization of all active reports, nearby NGOs, and field assets in a single, unified command interface.", bg: "bg-emerald-500/10", border: "border-emerald-500/10" },
             { icon: "🚨", title: "SOS Protocol", desc: "Broadcast emergency signals to every connected user instantly during critical events, ensuring no one is left behind.", bg: "bg-red-500/10", border: "border-red-500/10" }
           ].map((feature, i) => (
-            <motion.div 
+            <TiltCard 
               key={feature.title}
-              whileHover={{ y: -10 }}
-              className="card p-10 !rounded-[2rem] hover:shadow-[0_0_50px_rgba(99,102,241,0.05)]"
+              className="!p-10 !rounded-[2rem] hover:shadow-[0_0_50px_rgba(99,102,241,0.05)]"
             >
               <div className={`w-14 h-14 ${feature.bg} rounded-2xl flex items-center justify-center text-2xl mb-8 shadow-inner border ${feature.border}`}>{feature.icon}</div>
               <h3 className="font-bold text-white mb-4 text-xl tracking-tight">{feature.title}</h3>
               <p className="text-[var(--text-secondary)] text-sm leading-relaxed font-medium">{feature.desc}</p>
-            </motion.div>
+            </TiltCard>
           ))}
         </div>
       </main>

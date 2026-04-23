@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import DiscussionPanel from "./DiscussionPanel";
 import { getUser } from "../utils/auth";
+import TiltCard from "./TiltCard";
 
 export default function ProblemCard({ problem, onStatusChange, onDelete }) {
   const [user, setUser] = useState(null);
@@ -28,15 +29,8 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
 
   return (
     <>
-    <motion.div 
-      whileHover={{ y: -6, rotateX: 2, rotateY: -1 }}
-      transition={{ type: "spring", stiffness: 200, damping: 20 }}
-      onMouseMove={(e) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        e.currentTarget.style.setProperty("--x", `${e.clientX - rect.left}px`);
-        e.currentTarget.style.setProperty("--y", `${e.clientY - rect.top}px`);
-      }}
-      className="card problem-card group card-hover-effect"
+    <TiltCard 
+      className="p-8 space-y-6 !rounded-[2rem]"
     >
       {/* Delete button (Owner only) */}
       {user && user._id === problem.createdBy && (
@@ -140,7 +134,7 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
           </div>
         </div>
       </div>
-    </motion.div>
+    </TiltCard>
 
     <AnimatePresence>
       {showChat && (

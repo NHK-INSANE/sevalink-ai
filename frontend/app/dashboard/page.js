@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Navbar from "../components/Navbar";
 import ProblemCard from "../components/ProblemCard";
+import TiltCard from "../components/TiltCard";
 import Counter from "../components/Counter";
 import PageWrapper from "../components/PageWrapper";
 import { getProblems, updateProblemStatus, getUsers } from "../utils/api";
@@ -285,14 +286,65 @@ export default function Dashboard() {
               📍 {sortNearest ? "Reset Sort" : "Sort by Nearest"}
             </motion.button>
             <Link href="/submit">
-              <motion.button 
-                whileTap={{ scale: 0.95 }}
-                className="btn-primary !text-xs !px-6 shadow-[0_0_20px_var(--primary-glow)]"
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="btn-glow !text-xs !px-8 shadow-[0_10px_30px_var(--primary-glow)]"
               >
-                + Report New
+                + Initialize Report
               </motion.button>
             </Link>
           </div>
+        </div>
+
+        {/* AI Intelligence Layer */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <TiltCard className="!p-8 flex justify-between items-center border-gradient">
+            <div>
+              <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-1">Neural Core Status</p>
+              <h2 className="text-2xl font-extrabold text-emerald-400 tracking-tight">
+                Active & Learning
+              </h2>
+            </div>
+            <div className="relative">
+              <div className="w-3 h-3 bg-emerald-500 rounded-full animate-ping absolute" />
+              <div className="w-3 h-3 bg-emerald-500 rounded-full relative" />
+            </div>
+          </TiltCard>
+
+          <TiltCard className="!p-8 border-white/5">
+            <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-widest">System Insights</h3>
+            <ul className="space-y-3">
+              {[
+                { icon: "🚨", text: `${problems.filter(p => p.urgency === 'Critical').length} Critical events detected` },
+                { icon: "🧑‍🤝‍🧑", text: `${problems.filter(p => p.status === 'In Progress').length} Active deployments` },
+                { icon: "📍", text: "Zone 4 high-risk identified" }
+              ].map((insight, i) => (
+                <li key={i} className="flex items-center gap-3 text-xs text-[var(--text-secondary)] font-medium">
+                  <span className="opacity-100">{insight.icon}</span>
+                  {insight.text}
+                </li>
+              ))}
+            </ul>
+          </TiltCard>
+
+          <TiltCard className="!p-8 border-white/5">
+            <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-4">Regional Pressure Index</p>
+            <div className="space-y-3">
+              <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: "78%" }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                  className="h-full bg-gradient-to-r from-indigo-500 to-purple-500"
+                />
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-bold text-indigo-400 uppercase">High Intensity</span>
+                <span className="text-[10px] font-bold text-white">78%</span>
+              </div>
+            </div>
+          </TiltCard>
         </div>
 
         {/* Stats Grid */}
