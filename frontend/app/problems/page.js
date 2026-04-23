@@ -178,7 +178,7 @@ export default function ProblemsPage() {
               <select
                 value={filterUrgency}
                 onChange={(e) => setFilterUrgency(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-[10px] border border-white/10 bg-black/20 text-[13px] font-semibold text-white outline-none focus:border-purple-500 cursor-pointer appearance-none"
+                className="w-full px-4 py-2.5 rounded-[10px] border border-white/10 bg-black/20 text-[13px] font-semibold text-white outline-none focus:border-purple-500 cursor-pointer"
               >
                 <option value="All">All Levels</option>
                 <option value="Critical">Critical Only</option>
@@ -193,7 +193,7 @@ export default function ProblemsPage() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-[10px] border border-white/10 bg-black/20 text-[13px] font-semibold text-white outline-none focus:border-purple-500 cursor-pointer appearance-none"
+                className="w-full px-4 py-2.5 rounded-[10px] border border-white/10 bg-black/20 text-[13px] font-semibold text-white outline-none focus:border-purple-500 cursor-pointer"
               >
                 <option value="All">All Statuses</option>
                 <option value="Open">Open Reports</option>
@@ -207,7 +207,7 @@ export default function ProblemsPage() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-[10px] border border-white/10 bg-black/20 text-[13px] font-semibold text-white outline-none focus:border-purple-500 cursor-pointer appearance-none"
+                className="w-full px-4 py-2.5 rounded-[10px] border border-white/10 bg-black/20 text-[13px] font-semibold text-white outline-none focus:border-purple-500 cursor-pointer"
               >
                 <option value="newest">Chronological</option>
                 <option value="urgency">Urgency Weight</option>

@@ -219,15 +219,15 @@ export default function Dashboard() {
           {/* ── PAGE HEADER ── */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-              <h1 className="text-2xl font-semibold text-white tracking-tight">Command Center</h1>
-              <p className="text-gray-500 text-sm mt-1">
-                Logged in as <span className="text-gray-300">{user?.name}</span>
+              <h1 className="text-3xl font-extrabold tracking-tight text-white">Dashboard</h1>
+              <p className="text-[#9CA3AF] text-[13px] mt-1 font-medium tracking-wide flex items-center gap-2">
+                <span>Logged in as <span className="text-white">{user?.name || "User"}</span></span>
                 {user?.role && (
-                  <span className="ml-2 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-white/8 text-gray-400">
+                  <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-gray-300 font-bold">
                     {user.role}
                   </span>
                 )}
-                {lastUpdate && <span className="ml-2 text-[10px] text-gray-600">· {lastUpdate}</span>}
+                {lastUpdate && <span className="text-gray-600">· {lastUpdate}</span>}
               </p>
             </motion.div>
 
