@@ -21,7 +21,7 @@ export default function ProblemsPage() {
   const [search, setSearch] = useState("");
   const [filterUrgency, setFilterUrgency] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
-  const [sortBy, setSortBy] = useState("newest");
+  const [sortBy, setSortBy] = useState("nearest");
   const [userLoc, setUserLoc] = useState(null);
   const [sortNearest, setSortNearest] = useState(false);
 
@@ -109,10 +109,13 @@ export default function ProblemsPage() {
       return true;
     })
     .sort((a, b) => {
-      if (sortNearest && userLoc) {
+      if ((sortNearest || sortBy === "nearest") && userLoc) {
         const d1 = getDistance(userLoc.lat, userLoc.lng, a.location?.lat, a.location?.lng);
         const d2 = getDistance(userLoc.lat, userLoc.lng, b.location?.lat, b.location?.lng);
         return d1 - d2;
+      }
+      if (sortBy === "nearest" && !userLoc) {
+        return new Date(b.createdAt) - new Date(a.createdAt); // Fallback to newest if no location
       }
       if (sortBy === "newest")
         return new Date(b.createdAt) - new Date(a.createdAt);
@@ -175,44 +178,58 @@ export default function ProblemsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Urgency Level</label>
-              <select
-                value={filterUrgency}
-                onChange={(e) => setFilterUrgency(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-[10px] border border-white/10 bg-black/20 text-[13px] font-semibold text-white outline-none focus:border-purple-500 cursor-pointer"
-              >
-                <option value="All">All Levels</option>
-                <option value="Critical">Critical Only</option>
-                <option value="High">High Priority</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low Priority</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={filterUrgency}
+                  onChange={(e) => setFilterUrgency(e.target.value)}
+                  className="w-full pl-4 pr-10 py-2.5 rounded-[10px] border border-white/10 bg-black/20 text-[13px] font-semibold text-white outline-none focus:border-purple-500 cursor-pointer appearance-none"
+                >
+                  <option value="All">&nbsp;&nbsp;All Levels</option>
+                  <option value="Critical">&nbsp;&nbsp;Critical Only</option>
+                  <option value="High">&nbsp;&nbsp;High Priority</option>
+                  <option value="Medium">&nbsp;&nbsp;Medium</option>
+                  <option value="Low">&nbsp;&nbsp;Low Priority</option>
+                </select>
+                <svg className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              </div>
             </div>
             
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Current Status</label>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-[10px] border border-white/10 bg-black/20 text-[13px] font-semibold text-white outline-none focus:border-purple-500 cursor-pointer"
-              >
-                <option value="All">All Statuses</option>
-                <option value="Open">Open Reports</option>
-                <option value="In Progress">Active Responding</option>
-                <option value="Resolved">Resolved Cases</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="w-full pl-4 pr-10 py-2.5 rounded-[10px] border border-white/10 bg-black/20 text-[13px] font-semibold text-white outline-none focus:border-purple-500 cursor-pointer appearance-none"
+                >
+                  <option value="All">&nbsp;&nbsp;All Statuses</option>
+                  <option value="Open">&nbsp;&nbsp;Open Reports</option>
+                  <option value="In Progress">&nbsp;&nbsp;Active Responding</option>
+                  <option value="Resolved">&nbsp;&nbsp;Resolved Cases</option>
+                </select>
+                <svg className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              </div>
             </div>
             
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Sort Logic</label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-[10px] border border-white/10 bg-black/20 text-[13px] font-semibold text-white outline-none focus:border-purple-500 cursor-pointer"
-              >
-                <option value="newest">Chronological</option>
-                <option value="urgency">Urgency Weight</option>
-                <option value="score">Priority Index</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={sortBy}
+                  onChange={(e) => {
+                    setSortBy(e.target.value);
+                    if (e.target.value === "nearest" && !userLoc) {
+                      handleLocateAndSort();
+                    }
+                  }}
+                  className="w-full pl-4 pr-10 py-2.5 rounded-[10px] border border-white/10 bg-black/20 text-[13px] font-semibold text-white outline-none focus:border-purple-500 cursor-pointer appearance-none"
+                >
+                  <option value="nearest">&nbsp;&nbsp;Sorted at nearest</option>
+                  <option value="urgency">&nbsp;&nbsp;Sorted at urgency level</option>
+                  <option value="score">&nbsp;&nbsp;Priority indexing</option>
+                </select>
+                <svg className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              </div>
             </div>
           </div>
         </div>
