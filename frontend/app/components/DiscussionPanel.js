@@ -267,44 +267,48 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
               <div className="flex flex-col items-center justify-center py-20 opacity-20 text-center">
                  <p className="text-sm text-gray-400">Secure link established.<br/>Send intelligence below.</p>
               </div>
-            ) : (Array.isArray(messages) ? messages : []).map((m, i) => {
-                const isMe = m.senderId === currentUserId;
-                return (
-                  <div key={m._id || i} className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
-                    <div className="flex items-center gap-2 mb-1 px-1">
-                      <span className="text-[10px] font-bold text-gray-500">{m.senderName}</span>
-                      <span className="text-[9px] text-gray-700">{m.createdAt ? new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Sending..."}</span>
-                    </div>
-                    <div className={`message-bubble ${
-                      isMe ? "message-sent" : "message-received"
-                    } ${m.sending ? "opacity-70" : ""}`}>
-                      {m.type === "text" && m.content}
-                      {m.type === "image" && <img src={m.mediaUrl} className="rounded-xl mt-2" alt="Shared intelligence" />}
-                      {m.type === "audio" && (
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" /></svg>
+            ) : (
+              <>
+                {(Array.isArray(messages) ? messages : []).map((m, i) => {
+                  const isMe = m.senderId === currentUserId;
+                  return (
+                    <div key={m._id || i} className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                      <div className="flex items-center gap-2 mb-1 px-1">
+                        <span className="text-[10px] font-bold text-gray-500">{m.senderName}</span>
+                        <span className="text-[9px] text-gray-700">{m.createdAt ? new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Sending..."}</span>
+                      </div>
+                      <div className={`message-bubble ${
+                        isMe ? "message-sent" : "message-received"
+                      } ${m.sending ? "opacity-70" : ""}`}>
+                        {m.type === "text" && m.content}
+                        {m.type === "image" && <img src={m.mediaUrl} className="rounded-xl mt-2" alt="Shared intelligence" />}
+                        {m.type === "audio" && (
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" /></svg>
+                            </div>
+                            <audio src={m.mediaUrl} controls className="h-8 w-40 opacity-50" />
                           </div>
-                          <audio src={m.mediaUrl} controls className="h-8 w-40 opacity-50" />
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
 
-            {/* Typing Indicator */}
-            {typingArray.length > 0 && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 px-1">
-                <div className="flex gap-1">
-                  <span className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce" />
-                  <span className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.2s]" />
-                  <span className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.4s]" />
-                </div>
-                <span className="text-[10px] text-gray-500 italic">
-                  {typingArray.length === 1 ? `${typingArray[0]} is typing...` : "Multiple agents typing..."}
-                </span>
-              </motion.div>
+                {/* Typing Indicator */}
+                {typingArray.length > 0 && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 px-1">
+                    <div className="flex gap-1">
+                      <span className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce" />
+                      <span className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.2s]" />
+                      <span className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.4s]" />
+                    </div>
+                    <span className="text-[10px] text-gray-500 italic">
+                      {typingArray.length === 1 ? `${typingArray[0]} is typing...` : "Multiple agents typing..."}
+                    </span>
+                  </motion.div>
+                )}
+              </>
             )}
           </div>
         ) : (

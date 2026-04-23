@@ -391,8 +391,9 @@ export default function MapView({
                     <span style={{ fontSize: "10px", fontWeight: "700", color: "#15803d", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "2px 8px", borderRadius: "20px" }}>NGO PARTNER</span>
                   </div>
                 </Popup>
-              </Marker>
-            ))}
+                </Marker>
+              );
+            })}
 
         </MarkerClusterGroup>
       </MapContainer>
