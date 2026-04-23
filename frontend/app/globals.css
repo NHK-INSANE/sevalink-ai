@@ -324,7 +324,7 @@ a {
   font-size: 14px;
   font-weight: 600;
   color: var(--text-secondary);
-  padding: 6px 4px;
+  padding: 8px 10px;
   position: relative;
   transition: all 0.2s ease;
   opacity: 0.7;
@@ -677,7 +677,8 @@ option {
 .nav-center { 
   justify-self: center;
   display: flex;
-  gap: 36px;
+  gap: 48px;
+  justify-content: center;
 }
 .nav-right { 
   justify-self: end;
@@ -693,14 +694,20 @@ option {
   right: 0;
   width: 420px;
   height: 100vh;
-  background:  rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
   border-left: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: -20px 0 50px rgba(0, 0, 0, 0.5);
   z-index: var(--z-modal);
   display: flex;
   flex-direction: column;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
 }
 
 .problem-meta {
@@ -750,6 +757,7 @@ option {
   max-width: 80%;
   font-size: 13px;
   line-height: 1.5;
+  margin-bottom: 10px;
 }
 
 .message-sent {
@@ -768,6 +776,13 @@ option {
 }
 
 /* Map & Stats Grid */
+.problems-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
