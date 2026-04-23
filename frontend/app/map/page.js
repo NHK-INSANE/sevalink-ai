@@ -176,7 +176,7 @@ export default function MapPage() {
     <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] transition duration-300">
       <Navbar />
       <PageWrapper>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-20">
+      <main className="page-container">
 
         {/* ── PAGE HEADER ── */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -228,18 +228,18 @@ export default function MapPage() {
         </AnimatePresence>
 
         {/* ── STATS ROW (above map) ── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-5">
           {[
             { label: "Active Reports",    val: problems.length,                                                               color: "text-red-400",     dot: "bg-red-500"     },
             { label: "Partner NGOs",      val: ngos.length,                                                                   color: "text-blue-400",    dot: "bg-blue-500"    },
             { label: "Available Assets",  val: helpers.length,                                                                color: "text-emerald-400", dot: "bg-emerald-500" },
             { label: "Critical Priority", val: problems.filter(p => p.urgency?.toLowerCase() === "critical").length,         color: "text-orange-400",  dot: "bg-orange-500"  },
           ].map((s) => (
-            <div key={s.label} className="card flex items-center gap-4">
-              <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${s.dot}`} />
+            <div key={s.label} className="card !p-5 flex items-center gap-4">
+              <span className={`w-3 h-3 rounded-full shrink-0 ${s.dot}`} />
               <div>
                 <div className={`text-2xl font-bold tracking-tight leading-none ${s.color}`}>{s.val}</div>
-                <div className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider mt-1">{s.label}</div>
+                <div className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider mt-1.5">{s.label}</div>
               </div>
             </div>
           ))}
