@@ -157,6 +157,9 @@ a {
 }
 
 /* Section spacing */
+.section {
+  padding: 80px 0;
+}
 .section-gap {
   margin-top: 48px;
 }
