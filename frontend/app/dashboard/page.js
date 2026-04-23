@@ -350,23 +350,24 @@ export default function Dashboard() {
           {/* ── RECENT REPORTS ── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.3 }}
+            className="mt-2"
           >
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-base font-semibold text-white">
+            <div className="flex items-center justify-between mb-5 pb-3 border-b border-white/5">
+              <h2 className="text-sm font-semibold text-white tracking-tight">
                 {sortNearest ? "Nearest Problems" : "Recent Reports"}
               </h2>
-              <Link href="/problems" className="text-purple-400 text-sm font-medium hover:text-purple-300 transition-colors">
+              <Link href="/problems" className="text-purple-400 text-xs font-medium hover:text-purple-300 transition-colors">
                 View All →
               </Link>
             </div>
 
             {problems.length === 0 ? (
-              <div className="card text-center py-16">
-                <p className="text-white font-medium">No active reports</p>
-                <p className="text-gray-500 text-sm mt-1">The platform is currently clear.</p>
+              <div className="card text-center py-12">
+                <p className="text-white font-medium text-sm">No active reports</p>
+                <p className="text-gray-500 text-xs mt-1">The platform is currently clear.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
                 {sortedProblems.slice(0, 6).map(p => (
                   <ProblemCard key={p._id} problem={p} />
                 ))}
