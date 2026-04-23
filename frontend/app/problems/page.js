@@ -129,14 +129,14 @@ export default function ProblemsPage() {
     <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] transition duration-300">
       <Navbar />
       <PageWrapper>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pt-32 pb-20">
+      <main className="page-container">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
           <div>
-            <h1 className="text-4xl font-extrabold tracking-tight gradient-text">
+            <h1 className="text-3xl font-extrabold tracking-tight text-white">
               Crisis Archive
             </h1>
-            <p className="text-[var(--text-secondary)] text-sm mt-2 font-medium">
+            <p className="text-[#9CA3AF] text-[13px] mt-1 font-medium tracking-wide">
               {loading ? "Synchronizing logs..." : `Accessing ${filtered.length} active event records`}
             </p>
           </div>
@@ -151,7 +151,7 @@ export default function ProblemsPage() {
             <Link href="/submit">
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                className="btn-primary !text-xs !px-6 shadow-[0_0_20px_var(--primary-glow)]"
+                className="btn-primary !text-xs !px-6"
               >
                 + Report New
               </motion.button>
@@ -160,25 +160,25 @@ export default function ProblemsPage() {
         </div>
 
         {/* Filters */}
-        <div className="card !p-6 mb-12 space-y-6 border-white/5 shadow-2xl">
-          <div className="relative group">
-            <span className="absolute left-5 top-1/2 -translate-y-1/2 opacity-30 group-focus-within:opacity-100 transition-opacity">🔍</span>
+        <div className="card !p-5 mb-8 flex flex-col gap-5">
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 opacity-50 text-[14px]">🔍</span>
             <input
               type="text"
               placeholder="Filter by title, description, or location..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-12 pr-6 py-4 rounded-[1.25rem] border border-white/5 bg-white/5 text-sm focus:border-[var(--primary)] transition-all outline-none placeholder-white/10"
+              className="w-full pl-10 pr-5 py-3 rounded-[10px] border border-white/10 bg-black/20 text-[13px] focus:border-purple-500 transition-all outline-none text-white placeholder-gray-500"
             />
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest ml-1">Urgency Level</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Urgency Level</label>
               <select
                 value={filterUrgency}
                 onChange={(e) => setFilterUrgency(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-white/5 bg-white/5 text-xs font-bold uppercase tracking-wider outline-none focus:border-[var(--primary)] cursor-pointer"
+                className="w-full px-4 py-2.5 rounded-[10px] border border-white/10 bg-black/20 text-[13px] font-semibold text-white outline-none focus:border-purple-500 cursor-pointer appearance-none"
               >
                 <option value="All">All Levels</option>
                 <option value="Critical">Critical Only</option>
@@ -188,12 +188,12 @@ export default function ProblemsPage() {
               </select>
             </div>
             
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest ml-1">Current Status</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Current Status</label>
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-white/5 bg-white/5 text-xs font-bold uppercase tracking-wider outline-none focus:border-[var(--primary)] cursor-pointer"
+                className="w-full px-4 py-2.5 rounded-[10px] border border-white/10 bg-black/20 text-[13px] font-semibold text-white outline-none focus:border-purple-500 cursor-pointer appearance-none"
               >
                 <option value="All">All Statuses</option>
                 <option value="Open">Open Reports</option>
@@ -202,12 +202,12 @@ export default function ProblemsPage() {
               </select>
             </div>
             
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest ml-1">Sort Logic</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Sort Logic</label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-white/5 bg-white/5 text-xs font-bold uppercase tracking-wider outline-none focus:border-[var(--primary)] cursor-pointer"
+                className="w-full px-4 py-2.5 rounded-[10px] border border-white/10 bg-black/20 text-[13px] font-semibold text-white outline-none focus:border-purple-500 cursor-pointer appearance-none"
               >
                 <option value="newest">Chronological</option>
                 <option value="urgency">Urgency Weight</option>
@@ -219,25 +219,25 @@ export default function ProblemsPage() {
 
         {/* Grid */}
         {loading && problems.length === 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : (
           <div>
             {filtered.length === 0 ? (
-              <div className="card !p-20 text-center flex flex-col items-center">
-                <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center text-3xl mb-6">🔍</div>
-                <p className="text-white font-bold text-xl">No matching reports</p>
-                <p className="text-[var(--text-secondary)] text-sm mt-2 max-w-sm">No crises match your current filters. Try broadening your search parameters.</p>
+              <div className="card py-16 text-center flex flex-col items-center">
+                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center text-2xl mb-4">🔍</div>
+                <p className="text-white font-semibold text-lg">No matching reports</p>
+                <p className="text-gray-500 text-[13px] mt-1 max-w-sm">No crises match your current filters. Try broadening your search parameters.</p>
                 <button 
                   onClick={() => { setSearch(""); setFilterUrgency("All"); setFilterStatus("All"); }}
-                  className="btn-secondary mt-8 !px-8"
+                  className="btn-secondary mt-6 text-sm"
                 >
                   Clear Filters
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filtered.map((p) => (
                   <ProblemCard
                     key={p._id}
