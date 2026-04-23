@@ -4,6 +4,9 @@ import { getUser, logout, getRoleLabel } from "../utils/auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "../components/Navbar";
+import PageWrapper from "../components/PageWrapper";
+import { Loader } from "../components/Skeleton";
+import { motion } from "framer-motion";
 import axios from "axios";
 import toast from "react-hot-toast";
 
@@ -92,7 +95,7 @@ export default function ProfilePage() {
       });
       
       const updatedUser = res.data;
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      localStorage.setItem("seva_user", JSON.stringify(updatedUser));
       setUser(updatedUser);
       setIsEditing(false);
       toast.success("Profile updated successfully! ✨");

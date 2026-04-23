@@ -26,6 +26,7 @@ export default function NGOPage() {
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition duration-300">
       <Navbar />
+      <PageWrapper>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
         {/* Header */}
         <div className="mb-8">
@@ -104,6 +105,7 @@ export default function NGOPage() {
           </div>
         )}
       </main>
+      </PageWrapper>
     </div>
   );
 }

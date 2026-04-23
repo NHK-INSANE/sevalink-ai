@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
+import PageWrapper from "../components/PageWrapper";
 import { getUsers } from "../utils/api";
 
 export default function VolunteersPage() {
@@ -30,7 +31,7 @@ export default function VolunteersPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
       <Navbar />
-
+      <PageWrapper>
       <main className="max-w-5xl mx-auto px-6 py-10">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
@@ -152,6 +153,7 @@ export default function VolunteersPage() {
           </div>
         )}
       </main>
+      </PageWrapper>
     </div>
   );
 }
