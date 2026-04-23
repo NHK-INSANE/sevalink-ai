@@ -111,7 +111,11 @@ router.post("/", auth, validate(problemSchema), async (req, res) => {
 
     res.status(201).json({ problem, matched: topMatches });
   } catch (err) {
-    res.status(500).json({ error: "Failed to create problem." });
+    console.error("🔥 CREATE PROBLEM ERROR:", err);
+    res.status(500).json({ 
+      error: "Failed to create problem.",
+      details: err.message 
+    });
   }
 });
 

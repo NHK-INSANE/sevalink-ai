@@ -11,8 +11,8 @@ const problemSchema = new mongoose.Schema({
     required: true,
   },
   category: {
-    type: String,
-    default: "General",
+    type: [String], // ✅ Support multiple categories
+    default: ["General"],
   },
   location: {
     lat: { type: Number, default: 22.3 },
@@ -32,7 +32,11 @@ const problemSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  requiredSkill: {
+  requiredSkills: {
+    type: [String], // ✅ Support multiple skills
+    default: [],
+  },
+  requiredSkill: { // Keep for backward compatibility
     type: String,
     default: "",
   },

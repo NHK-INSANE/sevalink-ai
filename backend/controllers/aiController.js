@@ -132,7 +132,18 @@ Professional Version:
 
     res.json({ result: suggestion });
   } catch (err) {
-    console.error("AI Suggestion failed:", err.message);
-    res.status(500).json({ error: "AI Suggestion failed" });
+    console.error("AI Suggestion failed, using fallback:", err.message);
+    
+    // Simple fallback: capitalize first letter and ensure it ends with a period
+    let suggestion = text.trim();
+    if (suggestion) {
+      suggestion = suggestion.charAt(0).toUpperCase() + suggestion.slice(1);
+      if (!suggestion.endsWith(".")) suggestion += ".";
+    }
+    
+    res.json({ 
+      result: suggestion,
+      note: "Local fallback suggestion" 
+    });
   }
 };
