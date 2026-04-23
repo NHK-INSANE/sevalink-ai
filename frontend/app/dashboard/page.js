@@ -222,11 +222,9 @@ export default function Dashboard() {
               <h1 className="text-3xl font-extrabold tracking-tight text-white">Dashboard</h1>
               <p className="text-[#9CA3AF] text-[13px] mt-1 font-medium tracking-wide flex items-center gap-2">
                 <span>Logged in as <span className="text-white">{user?.name || "User"}</span></span>
-                {user?.role && (
-                  <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-gray-300 font-bold">
-                    {user.role}
-                  </span>
-                )}
+                <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-gray-300 font-bold">
+                  {user?.role ? (user.role.toLowerCase() === 'citizen' ? 'User' : user.role) : 'User'}
+                </span>
                 {lastUpdate && <span className="text-gray-600">· {lastUpdate}</span>}
               </p>
             </motion.div>
