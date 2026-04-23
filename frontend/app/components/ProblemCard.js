@@ -75,13 +75,23 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
 
       {/* ── Meta: Category + Skills ── */}
       <div className="problem-meta">
-        {problem.category?.map(cat => (
-          <span key={cat} className="category-badge">{cat}</span>
-        ))}
-        {problem.requiredSkills?.map(skill => (
-          <span key={skill} className="skill-badge">{skill}</span>
-        ))}
-        {problem.requiredSkills?.length === 0 && problem.requiredSkill && (
+        {Array.isArray(problem.category) ? (
+          problem.category.map(cat => (
+            <span key={cat} className="category-badge">{cat}</span>
+          ))
+        ) : (
+          problem.category && <span className="category-badge">{problem.category}</span>
+        )}
+        
+        {Array.isArray(problem.requiredSkills) ? (
+          problem.requiredSkills.map(skill => (
+            <span key={skill} className="skill-badge">{skill}</span>
+          ))
+        ) : (
+          problem.requiredSkills && <span className="skill-badge">{problem.requiredSkills}</span>
+        )}
+
+        {(!Array.isArray(problem.requiredSkills) || problem.requiredSkills.length === 0) && problem.requiredSkill && (
           <span className="skill-badge">{problem.requiredSkill}</span>
         )}
       </div>

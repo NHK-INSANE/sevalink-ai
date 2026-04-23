@@ -116,8 +116,15 @@ export default function Dashboard() {
 
   const categoryCount = {};
   problems.forEach(p => {
-    const cat = p.category || "Other";
-    categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+    if (Array.isArray(p.category)) {
+      p.category.forEach(cat => {
+        const c = cat || "Other";
+        categoryCount[c] = (categoryCount[c] || 0) + 1;
+      });
+    } else {
+      const cat = p.category || "Other";
+      categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+    }
   });
   const totalProblems = problems.length || 1;
   const categoryData = Object.keys(categoryCount).map(cat => ({

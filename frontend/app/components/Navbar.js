@@ -195,7 +195,7 @@ export default function Navbar() {
                     className="flex items-center gap-2.5 p-1.5 pr-3 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all"
                   >
                     <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-indigo-500/20">
-                      {user.name?.[0].toUpperCase() || "U"}
+                      {user.name?.[0]?.toUpperCase() || "U"}
                     </div>
                     <span className="text-xs font-bold text-gray-200 hidden sm:block">{user.name?.split(" ")[0] || "User"}</span>
                     <ChevronDown size={14} className={`text-gray-500 transition-transform ${profileOpen ? "rotate-180" : ""}`} />

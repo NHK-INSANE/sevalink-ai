@@ -28,10 +28,21 @@ export async function apiRequest(endpoint, options = {}) {
       throw new Error("Server error (HTML returned). Backend might be down.");
     }
 
-    const data = JSON.parse(text);
+    if (!text) {
+      if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
+      return {};
+    }
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error("JSON Parse Error. Raw text:", text);
+      throw new Error("Invalid response from server.");
+    }
 
     if (!res.ok) {
-      throw new Error(data.message || data.error || "API Error");
+      throw new Error(data.message || data.error || `API Error ${res.status}`);
     }
 
     return data;
