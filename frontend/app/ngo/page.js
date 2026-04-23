@@ -31,12 +31,15 @@ export default function NGOPage() {
 
   function getDistance(lat1, lon1, lat2, lon2) {
     if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
-    const R = 6371; // km
+    const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) *
+        Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
   }
 
@@ -76,28 +79,33 @@ export default function NGOPage() {
           }}
         >
           {/* ── Header ── */}
-          <div style={{ marginBottom: 36, display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-end", gap: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "space-between",
+              alignItems: "flex-end",
+              gap: 16,
+              marginBottom: 40,
+            }}
+          >
+            <div>
+              <h1
                 style={{
-                  width: 44, height: 44, borderRadius: 14,
-                  background: "linear-gradient(135deg,#10b981,#059669)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  boxShadow: "0 4px 16px rgba(16,185,129,0.35)",
-                  flexShrink: 0,
-                  fontSize: 20, fontWeight: 800, color: "#fff",
+                  fontSize: 30,
+                  fontWeight: 800,
+                  color: "var(--text-primary)",
+                  marginBottom: 6,
+                  letterSpacing: "-0.02em",
                 }}
               >
-                N
-              </div>
-              <div>
-                <h1 style={{ fontSize: 30, marginBottom: 4 }}>Registered NGOs</h1>
-                <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-                  Active organizations coordinating response on SevaLink.
-                </p>
-              </div>
+                Registered NGOs
+              </h1>
+              <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                Active organizations coordinating response on SevaLink.
+              </p>
             </div>
-            
+
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={handleLocateAndSort}
@@ -114,7 +122,7 @@ export default function NGOPage() {
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-                gap: 20,
+                gap: 28,
               }}
             >
               {[...Array(4)].map((_, i) => (
@@ -134,7 +142,9 @@ export default function NGOPage() {
                 border: "1px dashed rgba(255,255,255,0.08)",
               }}
             >
-              <div style={{ fontSize: 32, fontWeight: 800, color: "var(--text-muted)" }}>NGO</div>
+              <div style={{ fontSize: 32, fontWeight: 800, color: "var(--text-muted)" }}>
+                NGO
+              </div>
               <p style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>
                 No NGOs registered yet
               </p>
@@ -147,143 +157,171 @@ export default function NGOPage() {
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-                gap: 20,
+                gap: 28,
               }}
             >
               {filteredNgos.map((ngo, i) => (
-                <div key={ngo._id || i} className="card card-hover-effect" style={{ padding: 22 }}>
-                  {/* Header */}
+                <div
+                  key={ngo._id || i}
+                  className="card card-hover-effect"
+                  style={{ padding: "22px 24px", display: "flex", flexDirection: "column", gap: 0 }}
+                >
+                  {/* ── Card Header: Name + Verified Badge ── */}
                   <div
                     style={{
                       display: "flex",
                       alignItems: "flex-start",
-                      gap: 14,
-                      marginBottom: 18,
+                      justifyContent: "space-between",
+                      gap: 12,
+                      marginBottom: 20,
+                      paddingBottom: 16,
+                      borderBottom: "1px solid rgba(255,255,255,0.06)",
                     }}
                   >
-                    <div
+                    <h3
                       style={{
-                        width: 48, height: 48, borderRadius: 14, flexShrink: 0,
-                        background: "linear-gradient(135deg,rgba(16,185,129,0.15),rgba(5,150,105,0.1))",
-                        border: "1px solid rgba(16,185,129,0.2)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 18, fontWeight: 800, color: "#4ade80",
+                        fontSize: 15,
+                        fontWeight: 700,
+                        color: "var(--text-primary)",
+                        lineHeight: 1.3,
+                        margin: 0,
                       }}
                     >
-                      {(ngo.ngoName || ngo.name || "N").charAt(0).toUpperCase()}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontSize: 15,
-                          fontWeight: 700,
-                          color: "var(--text-primary)",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          marginBottom: 4,
-                        }}
-                      >
-                        {ngo.ngoName || ngo.name || "Unnamed NGO"}
-                      </div>
-                      <div
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 4,
-                          fontSize: 9,
-                          fontWeight: 700,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.08em",
-                          color: "#4ade80",
-                          background: "rgba(34,197,94,0.08)",
-                          border: "1px solid rgba(34,197,94,0.2)",
-                          padding: "2px 8px",
-                          borderRadius: 6,
-                        }}
-                      >
-                        Verified NGO
-                      </div>
-                    </div>
+                      {ngo.ngoName || ngo.name || "Unnamed NGO"}
+                    </h3>
+                    <span
+                      style={{
+                        flexShrink: 0,
+                        fontSize: 9,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.1em",
+                        color: "#4ade80",
+                        border: "1px solid rgba(74,222,128,0.35)",
+                        padding: "3px 8px",
+                        borderRadius: 6,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Verified NGO
+                    </span>
                   </div>
 
-                  {/* Details */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 18 }}>
+                  {/* ── Fields: key-value aligned rows ── */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+                    {/* Email */}
                     {ngo.email && (
-                      <div
-                        style={{
-                          display: "flex", alignItems: "center", gap: 10,
-                          padding: "7px 12px", borderRadius: 10,
-                          background: "rgba(255,255,255,0.03)",
-                          border: "1px solid rgba(255,255,255,0.04)",
-                          fontSize: 12, color: "var(--text-secondary)",
-                        }}
-                      >
-                        <span style={{ opacity: 0.5, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", minWidth: 32, flexShrink: 0 }}>Email</span>
-                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.08em",
+                            color: "var(--text-muted)",
+                            flexShrink: 0,
+                          }}
+                        >
+                          Email
+                        </span>
+                        <span
+                          style={{
+                            fontSize: 12,
+                            color: "var(--text-secondary)",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            textAlign: "right",
+                          }}
+                        >
                           {ngo.email}
                         </span>
                       </div>
                     )}
+
+                    {/* Phone */}
                     {ngo.phone && (
-                      <div
-                        style={{
-                          display: "flex", alignItems: "center", gap: 10,
-                          padding: "7px 12px", borderRadius: 10,
-                          background: "rgba(255,255,255,0.03)",
-                          border: "1px solid rgba(255,255,255,0.04)",
-                          fontSize: 12, color: "var(--text-secondary)",
-                        }}
-                      >
-                        <span style={{ opacity: 0.5, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", minWidth: 32, flexShrink: 0 }}>Tel</span>
-                        <span>{ngo.phone}</span>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.08em",
+                            color: "var(--text-muted)",
+                            flexShrink: 0,
+                          }}
+                        >
+                          Phone
+                        </span>
+                        <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>
+                          {ngo.phone}
+                        </span>
                       </div>
                     )}
-                    {ngo.ngoContact && (
-                      <div
+
+                    {/* Website — smart logic */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                      <span
                         style={{
-                          display: "flex", alignItems: "center", gap: 10,
-                          padding: "7px 12px", borderRadius: 10,
-                          background: "rgba(255,255,255,0.03)",
-                          border: "1px solid rgba(255,255,255,0.04)",
-                          fontSize: 12,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.08em",
+                          color: "var(--text-muted)",
+                          flexShrink: 0,
                         }}
                       >
-                        <span style={{ opacity: 0.5, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", minWidth: 32, flexShrink: 0, color: "#818cf8" }}>Web</span>
+                        Website
+                      </span>
+                      {ngo.website || ngo.ngoContact ? (
                         <a
-                          href={ngo.ngoContact.startsWith("http") ? ngo.ngoContact : `https://${ngo.ngoContact}`}
+                          href={
+                            (ngo.website || ngo.ngoContact).startsWith("http")
+                              ? (ngo.website || ngo.ngoContact)
+                              : `https://${ngo.website || ngo.ngoContact}`
+                          }
                           target="_blank"
                           rel="noreferrer"
                           style={{
+                            fontSize: 12,
                             color: "#818cf8",
+                            textDecoration: "none",
+                            transition: "color 0.2s ease",
+                          }}
+                          onMouseOver={(e) => (e.target.style.textDecoration = "underline")}
+                          onMouseOut={(e) => (e.target.style.textDecoration = "none")}
+                        >
+                          Visit Website
+                        </a>
+                      ) : (
+                        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Not available</span>
+                      )}
+                    </div>
+
+                    {/* Location */}
+                    {ngo.address && (
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.08em",
+                            color: "var(--text-muted)",
+                            flexShrink: 0,
+                          }}
+                        >
+                          Location
+                        </span>
+                        <span
+                          style={{
+                            fontSize: 12,
+                            color: "var(--text-secondary)",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
-                            transition: "color 0.2s ease",
-                          }}
-                          className="hover:text-white"
-                        >
-                          {ngo.ngoContact}
-                        </a>
-                      </div>
-                    )}
-                    {ngo.address && (
-                      <div
-                        style={{
-                          display: "flex", alignItems: "center", gap: 10,
-                          padding: "7px 12px", borderRadius: 10,
-                          background: "rgba(255,255,255,0.03)",
-                          border: "1px solid rgba(255,255,255,0.04)",
-                          fontSize: 12, color: "var(--text-secondary)",
-                        }}
-                      >
-                        <span style={{ opacity: 0.5, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", minWidth: 32, flexShrink: 0 }}>Loc</span>
-                        <span
-                          style={{
-                            overflow: "hidden",
-                            display: "-webkit-box",
-                            WebkitLineClamp: 1,
-                            WebkitBoxOrient: "vertical",
+                            textAlign: "right",
                           }}
                         >
                           {ngo.address}
@@ -292,10 +330,17 @@ export default function NGOPage() {
                     )}
                   </div>
 
-                  {/* CTA */}
+                  {/* ── CTA Button ── */}
                   <button
                     className="btn-primary"
-                    style={{ width: "100%", padding: "10px 16px", fontSize: 13 }}
+                    style={{
+                      width: "100%",
+                      padding: "10px 16px",
+                      fontSize: 13,
+                      marginTop: "auto",
+                      background: "linear-gradient(135deg, #7c3aed, #4f46e5)",
+                      boxShadow: "0 4px 14px rgba(99,102,241,0.3)",
+                    }}
                   >
                     Connect with NGO
                   </button>
