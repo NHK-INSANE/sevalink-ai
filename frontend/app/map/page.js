@@ -33,10 +33,9 @@ const MapView = dynamic(() => import("../components/MapView"), {
 });
 
 const MODES = [
-  { id: "all",      label: "All Assets",      icon: "🌐" },
-  { id: "problems", label: "Crisis Reports",   icon: "🔴" },
-  { id: "ngo",      label: "Registered NGOs",  icon: "🏢" },
-  { id: "helpers",  label: "Volunteers",       icon: "🤝" },
+  { id: "all",      label: "All Assets"     },
+  { id: "problems", label: "Crisis Reports"  },
+  { id: "ngo",      label: "NGOs"            },
 ];
 
 export default function MapPage() {
@@ -78,8 +77,7 @@ export default function MapPage() {
         if (prev.find(p => p._id === newProb._id)) return prev;
         return [newProb, ...prev];
       });
-      toast("📍 New crisis report on map!", {
-        icon: "🔴",
+      toast("New crisis report on map", {
         duration: 3000,
         style: { fontSize: "13px" },
       });
@@ -179,7 +177,7 @@ export default function MapPage() {
       <main className="page-container">
 
         {/* ── PAGE HEADER ── */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-white">Global Crisis Map</h1>
             <p className="text-[#9CA3AF] text-[13px] mt-1 font-medium">
@@ -201,7 +199,7 @@ export default function MapPage() {
               className="btn-primary !bg-red-600 !text-xs !px-5 !py-2"
               style={{ boxShadow: "0 0 16px rgba(220,38,38,0.35)" }}
             >
-              {sendingSOS ? <div className="loader-small" /> : <><span>🚨</span> Broadcast SOS</>}
+              {sendingSOS ? <div className="loader-small" /> : "Broadcast SOS"}
             </motion.button>
           </div>
         </div>
@@ -228,7 +226,7 @@ export default function MapPage() {
         </AnimatePresence>
 
         {/* ── STATS ROW (above map) ── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-5">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-7">
           {[
             { label: "Active Reports",    val: problems.length,                                                               color: "text-red-400",     dot: "bg-red-500"     },
             { label: "Partner NGOs",      val: ngos.length,                                                                   color: "text-blue-400",    dot: "bg-blue-500"    },
@@ -256,14 +254,13 @@ export default function MapPage() {
                 <button
                   key={mode.id}
                   onClick={() => setType(mode.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+                  className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
                     type === mode.id
                       ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/30"
                       : "text-gray-500 hover:text-gray-300 hover:bg-white/5 border border-transparent"
                   }`}
                 >
-                  <span className="text-[13px]">{mode.icon}</span>
-                  <span className="hidden sm:block">{mode.label}</span>
+                  {mode.label}
                 </button>
               ))}
             </div>
@@ -272,7 +269,7 @@ export default function MapPage() {
             <div className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-[11px] font-semibold text-emerald-400">Live</span>
-              <span className="text-[11px] text-gray-600 ml-2">{problems.length} incidents · {helpers.length} assets</span>
+              <span className="text-[11px] text-gray-600 ml-2">{problems.length} incidents · {ngos.length} NGOs</span>
             </div>
           </div>
 
