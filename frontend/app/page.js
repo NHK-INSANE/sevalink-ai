@@ -79,15 +79,15 @@ export default function Landing() {
       <Navbar />
 
       {/* ── HERO ── */}
-      <section className="section-large text-center" style={{ paddingTop: "120px" }}>
-        {/* Ambient glow — purely decorative, non-overlapping */}
-        <div aria-hidden className="pointer-events-none absolute left-1/2 top-24 -translate-x-1/2 w-[560px] h-[340px] rounded-full bg-purple-700/10 blur-3xl" />
+      <section className="section-large">
+        {/* Ambient glow */}
+        <div aria-hidden className="pointer-events-none fixed left-1/2 top-0 -translate-x-1/2 w-[600px] h-[360px] rounded-full bg-purple-700/10 blur-3xl z-0" />
 
         <motion.div
-          initial={{ opacity: 0, y: 44 }}
+          initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
-          className="container max-w-3xl mx-auto relative"
+          className="container max-w-3xl mx-auto relative z-10"
         >
           {/* Badge */}
           <motion.div
@@ -100,17 +100,17 @@ export default function Landing() {
             AI-Powered Crisis Response
           </motion.div>
 
-          <h1 className="text-4xl md:text-6xl font-bold leading-tight text-white">
+          <h1 className="text-4xl md:text-6xl font-bold leading-tight text-white mb-5">
             Connecting <TypingText /><br />
             <span className="text-gray-300 font-semibold">Where It Matters Most</span>
           </h1>
 
-          <p className="mt-5 text-gray-400 text-lg max-w-2xl mx-auto">
+          <p className="text-gray-400 text-lg max-w-2xl mx-auto text-center mb-9">
             Real-time crisis coordination powered by AI — from reporting to response,
             all in one unified platform.
           </p>
 
-          <div className="mt-9 flex justify-center gap-4 flex-wrap">
+          <div className="flex justify-center gap-4 flex-wrap">
             <Link href="/register">
               <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} className="btn-primary px-7 py-3 text-sm font-semibold shadow-lg shadow-purple-500/20">
                 Get Started →
