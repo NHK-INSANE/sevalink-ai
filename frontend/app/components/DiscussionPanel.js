@@ -174,8 +174,7 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
     <motion.div
       initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 30, stiffness: 300 }}
-      className="fixed right-0 w-full md:w-[420px] glass-strong shadow-2xl z-[10000] flex flex-col border-l border-white/10"
-      style={{ top: "var(--navbar-height)", height: "calc(100vh - var(--navbar-height))" }}
+      className="chat-drawer"
     >
       {/* Header */}
       <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
@@ -211,11 +210,11 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
                   <span className="text-[10px] font-bold text-gray-500">{m.senderName}</span>
                   <span className="text-[9px] text-gray-700">{m.createdAt ? new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Sending..."}</span>
                 </div>
-                <div className={`max-w-[85%] p-3.5 rounded-2xl text-sm shadow-sm relative ${
-                  isMe ? "bg-indigo-600 text-white rounded-tr-none" : "bg-white/5 text-gray-200 rounded-tl-none border border-white/5"
+                <div className={`message-bubble ${
+                  isMe ? "message-sent" : "message-received"
                 } ${m.sending ? "opacity-70" : ""}`}>
                   {m.type === "text" && m.content}
-                  {m.type === "image" && <img src={m.mediaUrl} className="rounded-xl" alt="Shared" />}
+                  {m.type === "image" && <img src={m.mediaUrl} className="rounded-xl mt-2" alt="Shared" />}
                   {m.type === "audio" && (
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">

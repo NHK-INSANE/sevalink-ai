@@ -174,7 +174,8 @@ export default function MapPage() {
     <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] transition duration-300">
       <Navbar />
       <PageWrapper>
-      <main className="page-container">
+        <div className="page-wrapper pt-28 pb-20">
+          <main className="flex flex-col gap-[32px]">
 
         {/* ── PAGE HEADER ── */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
@@ -226,14 +227,14 @@ export default function MapPage() {
         </AnimatePresence>
 
         {/* ── STATS ROW (above map) ── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-7">
+        <div className="stats-grid">
           {[
             { label: "Active Reports",    val: problems.length,                                                               color: "text-red-400",     dot: "bg-red-500"     },
             { label: "Partner NGOs",      val: ngos.length,                                                                   color: "text-blue-400",    dot: "bg-blue-500"    },
             { label: "Available Assets",  val: helpers.length,                                                                color: "text-emerald-400", dot: "bg-emerald-500" },
             { label: "Critical Priority", val: problems.filter(p => p.urgency?.toLowerCase() === "critical").length,         color: "text-orange-400",  dot: "bg-orange-500"  },
           ].map((s) => (
-            <div key={s.label} className="card !p-5 flex items-center gap-4">
+            <div key={s.label} className="stat-card flex items-center gap-4">
               <span className={`w-3 h-3 rounded-full shrink-0 ${s.dot}`} />
               <div>
                 <div className={`text-2xl font-bold tracking-tight leading-none ${s.color}`}>{s.val}</div>
@@ -246,16 +247,12 @@ export default function MapPage() {
         {/* ── FILTER ROW: Filters (left) + Live count (right) ── */}
         <div className="flex items-center justify-between gap-4 mb-5">
           {/* Mode filter pills */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {MODES.map((mode) => (
               <button
                 key={mode.id}
                 onClick={() => setType(mode.id)}
-                className={`px-4 py-1.5 rounded-[8px] text-[11px] font-semibold transition-all border ${
-                  type === mode.id
-                    ? "bg-indigo-600/20 text-indigo-400 border-indigo-500/30"
-                    : "text-gray-500 hover:text-gray-300 bg-white/3 hover:bg-white/5 border-white/8"
-                }`}
+                className={`map-filter-card ${type === mode.id ? "active" : ""}`}
               >
                 {mode.label}
               </button>
@@ -288,10 +285,9 @@ export default function MapPage() {
             />
           </div>
         </div>
-
       </main>
+      </div>
       </PageWrapper>
     </div>
   );
 }
-

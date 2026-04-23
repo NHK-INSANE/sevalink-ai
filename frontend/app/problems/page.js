@@ -96,6 +96,11 @@ export default function ProblemsPage() {
         return d1 - d2;
       }
       if (sortBy === "urgency") return (URGENCY_ORDER[a.urgency] ?? 9) - (URGENCY_ORDER[b.urgency] ?? 9);
+      if (sortBy === "category") {
+        const catA = (a.category && a.category[0]) || "General";
+        const catB = (b.category && b.category[0]) || "General";
+        return catA.localeCompare(catB);
+      }
       return new Date(b.createdAt) - new Date(a.createdAt); // newest
     });
 
@@ -103,8 +108,8 @@ export default function ProblemsPage() {
     <div className="min-h-screen bg-[var(--bg-main)]">
       <Navbar />
       <PageWrapper>
-        {/* 🔥 PAGE CONTAINER — Added pt-28 to clear fixed Navbar */}
-        <main className="max-w-[var(--content-max)] mx-auto px-6 lg:px-12 pt-28 pb-20 flex flex-col gap-[28px]">
+        <div className="page-wrapper pt-28 pb-20">
+          <main className="flex flex-col gap-[32px]">
           
           {/* ── HEADER SECTION ── */}
           <div className="flex flex-col gap-1.5">
@@ -134,14 +139,14 @@ export default function ProblemsPage() {
               >
                 <option value="newest" className="bg-[#0f172a]">Sort by Newest</option>
                 <option value="urgency" className="bg-[#0f172a]">Sort by Urgency</option>
+                <option value="category" className="bg-[#0f172a]">Sort by Category</option>
                 <option value="nearest" className="bg-[#0f172a]">Sort by Nearest</option>
               </select>
 
               <Link href="/submit" className="flex-1 md:flex-none">
                 <motion.button
                   whileTap={{ scale: 0.95 }}
-                  className="btn-primary !text-xs !px-6 w-full h-10"
-                  style={{ background: "linear-gradient(to right, #7c3aed, #6366f1)" }}
+                  className="btn-apple !text-xs !px-6 w-full h-10 rounded-xl"
                 >
                   + Report New
                 </motion.button>
@@ -201,7 +206,8 @@ export default function ProblemsPage() {
               )}
             </>
           )}
-        </main>
+          </main>
+        </div>
       </PageWrapper>
     </div>
   );

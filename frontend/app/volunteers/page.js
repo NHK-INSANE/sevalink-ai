@@ -117,8 +117,8 @@ export default function VolunteersPage() {
     <div className="min-h-screen bg-[var(--bg-main)]">
       <Navbar />
       <PageWrapper>
-        {/* 🔥 Updated to use page-container for consistent spacing & Navbar clearance */}
-        <main className="page-container flex flex-col gap-[28px]">
+        <div className="page-wrapper pt-28 pb-20">
+          <main className="flex flex-col gap-[32px]">
           
           {/* ── Header ── */}
           <div className="flex flex-col md:flex-row justify-between items-end gap-6">
@@ -218,7 +218,8 @@ export default function VolunteersPage() {
               })}
             </div>
           )}
-        </main>
+          </main>
+        </div>
       </PageWrapper>
 
       {/* ── Connect Modal ── */}
