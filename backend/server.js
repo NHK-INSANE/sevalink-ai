@@ -6,7 +6,6 @@ const { Server } = require("socket.io");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const mongoSanitize = require("express-mongo-sanitize");
-const xss = require("xss-clean");
 require("dotenv").config();
 
 const app = express();
@@ -45,7 +44,6 @@ app.use(helmet({
   contentSecurityPolicy: false, // Disable CSP for now to avoid blocking
 }));
 app.use(mongoSanitize());
-app.use(xss());
 
 // 3. Rate Limiting
 const limiter = rateLimit({
