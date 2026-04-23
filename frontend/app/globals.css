@@ -266,6 +266,30 @@ input:focus, textarea:focus, select:focus {
   z-index: 40;
 }
 
+/* ─── Elite Interaction ─── */
+.card-hover-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-hover-effect::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--x) var(--y), rgba(99, 102, 241, 0.15), transparent 40%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.card-hover-effect:hover::before {
+  opacity: 1;
+}
+
+.blur-3xl {
+  filter: blur(64px);
+}
+
 /* ─── Scrollbar ─── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-main); }

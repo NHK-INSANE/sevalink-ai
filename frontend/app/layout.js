@@ -13,11 +13,13 @@ export const metadata = {
 };
 
 import { Providers } from "./providers";
+import CursorGlow from "./components/CursorGlow";
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased min-h-screen bg-[var(--bg)] text-[var(--text)] transition duration-300`}>
+      <body className={`${inter.variable} font-sans antialiased min-h-screen transition duration-300`}>
+        <CursorGlow />
         <Providers>
           {children}
           <Toaster

@@ -11,6 +11,13 @@ export default function Landing() {
   const [stats, setStats] = useState({ users: 0, problems: 0, volunteers: 0 });
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [offset, setOffset] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => setOffset(window.scrollY);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     // Fetch stats
@@ -35,9 +42,21 @@ export default function Landing() {
       <Navbar />
 
       <PageWrapper>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 relative">
+        {/* Floating Background Elements */}
+        <motion.div
+          animate={{ y: [0, -20, 0], opacity: [0.1, 0.2, 0.1] }}
+          transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
+          className="absolute top-20 left-0 w-64 h-64 bg-indigo-500 rounded-full blur-3xl pointer-events-none"
+        />
+        <motion.div
+          animate={{ y: [0, 20, 0], opacity: [0.1, 0.15, 0.1] }}
+          transition={{ repeat: Infinity, duration: 7, ease: "easeInOut" }}
+          className="absolute top-80 right-0 w-80 h-80 bg-purple-500 rounded-full blur-3xl pointer-events-none"
+        />
+
         {/* Hero Section */}
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 text-[10px] font-bold uppercase tracking-widest mb-8">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
@@ -46,7 +65,10 @@ export default function Landing() {
             Live Disaster Response Network
           </div>
 
-          <h1 className="text-6xl sm:text-8xl font-extrabold mb-8 tracking-tighter gradient-text leading-[1.1]">
+          <h1 
+            className="text-6xl sm:text-8xl font-extrabold mb-8 tracking-tighter gradient-text leading-[1.1] transition-transform duration-75"
+            style={{ transform: `translateY(${offset * 0.15}px)` }}
+          >
             Connecting Humanity <br /> 
             <span className="text-[var(--primary)]">Through Intelligence.</span>
           </h1>
@@ -56,12 +78,21 @@ export default function Landing() {
             Real-time matching, live data streams, and instant emergency response.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-20">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-20 relative z-10">
             <Link href="/register">
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="btn-primary !px-10 !py-5 !text-xl shadow-[0_0_40px_var(--primary-glow)]"
+                onMouseMove={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = (e.clientX - rect.left - rect.width / 2) * 0.15;
+                  const y = (e.clientY - rect.top - rect.height / 2) * 0.15;
+                  e.currentTarget.style.transform = `translate(${x}px, ${y}px)`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = `translate(0,0)`;
+                }}
+                className="btn-glow !px-10 !py-5 !text-xl shadow-[0_0_40px_var(--primary-glow)] transition-transform duration-200"
               >
                 Get Started Free
               </motion.button>
@@ -71,7 +102,16 @@ export default function Landing() {
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="btn-secondary !px-10 !py-5 !text-xl"
+                onMouseMove={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = (e.clientX - rect.left - rect.width / 2) * 0.15;
+                  const y = (e.clientY - rect.top - rect.height / 2) * 0.15;
+                  e.currentTarget.style.transform = `translate(${x}px, ${y}px)`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = `translate(0,0)`;
+                }}
+                className="btn-secondary !px-10 !py-5 !text-xl transition-transform duration-200"
               >
                 View Live Map
               </motion.button>

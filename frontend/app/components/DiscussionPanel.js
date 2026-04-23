@@ -129,17 +129,24 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 30, stiffness: 300 }}
-      className="fixed top-0 right-0 h-full w-full md:w-[400px] bg-[var(--card)] shadow-2xl z-[150] flex flex-col border-l border-[var(--border)]"
+      className="fixed top-0 right-0 h-full w-full md:w-[420px] glass-strong shadow-2xl z-[150] flex flex-col border-l border-white/10"
     >
       {/* Header */}
-      <div className="p-5 border-b border-[var(--border)] flex justify-between items-center bg-[var(--bg)] backdrop-blur-sm">
+      <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-[var(--text)] truncate">{problemTitle || "Team Coordination"}</h3>
-          <p className="text-[10px] text-blue-600 uppercase tracking-widest font-bold">Live Discussion</p>
+          <h3 className="font-bold text-white truncate text-lg tracking-tight">{problemTitle || "Team Coordination"}</h3>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+            <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-[0.2em] font-bold">Secure Channel</span>
+          </div>
         </div>
-        <button onClick={onClose} className="ml-4 text-[var(--muted)] hover:text-[var(--text)] transition">
+        <motion.button 
+          whileTap={{ scale: 0.9 }}
+          onClick={onClose} 
+          className="ml-4 p-2 text-[var(--text-secondary)] hover:text-white hover:bg-white/5 rounded-xl transition"
+        >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-        </button>
+        </motion.button>
       </div>
 
       {/* Messages */}
@@ -176,38 +183,40 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
       </div>
 
       {/* Input */}
-      <div className="p-5 border-t border-[var(--border)] bg-[var(--card)]">
-        <div className="flex gap-2 items-center bg-[var(--bg)] p-2 rounded-2xl border border-[var(--border)]">
-          <label className="cursor-pointer p-2.5 hover:bg-[var(--card)] rounded-xl transition text-[var(--muted)]" title="Upload Image">
+      <div className="p-6 border-t border-white/10 bg-white/[0.02]">
+        <div className="flex gap-2 items-center bg-black/20 p-2 rounded-[1.25rem] border border-white/5 focus-within:border-[var(--primary)] transition-all">
+          <label className="cursor-pointer p-3 hover:bg-white/5 rounded-xl transition text-[var(--text-secondary)] hover:text-white" title="Upload Image">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
             <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
           </label>
           
-          <button 
+          <motion.button 
+            whileTap={{ scale: 0.9 }}
             onMouseDown={startRecording}
             onMouseUp={stopRecording}
             onMouseLeave={stopRecording}
-            className={`p-2.5 rounded-xl transition ${isRecording ? "bg-red-500 text-white animate-pulse scale-105" : "text-[var(--muted)] hover:bg-[var(--card)]"}`}
+            className={`p-3 rounded-xl transition ${isRecording ? "bg-red-500 text-white animate-pulse scale-105" : "text-[var(--text-secondary)] hover:bg-white/5 hover:text-white"}`}
             title="Hold to Record Voice"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
-          </button>
+          </motion.button>
 
           <input 
             type="text"
-            placeholder="Coordination message..."
+            placeholder="Secure transmission..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-            className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-[var(--text)] px-2"
+            className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-white px-2 placeholder-white/20"
           />
-          <button 
+          <motion.button 
+            whileTap={{ scale: 0.9 }}
             onClick={() => sendMessage()}
             disabled={!input.trim()}
-            className="bg-blue-600 disabled:opacity-30 text-white p-2.5 rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-600/20"
+            className="btn-glow !p-3 !rounded-xl disabled:opacity-30 shadow-lg shadow-indigo-500/20"
           >
             <svg className="w-5 h-5 rotate-90" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
-          </button>
+          </motion.button>
         </div>
       </div>
     </motion.div>
