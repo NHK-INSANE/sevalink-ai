@@ -93,15 +93,12 @@ export default function Landing() {
           className="container"
         >
           <div className="grid grid-cols-2 md:grid-cols-5 gap-6 text-center">
-            <Stat end={stats.problems || 125} suffix="+" label="Active Crisis Reports" />
-            <Stat end={stats.users || 200} suffix="" label="Registered Users" />
-            <Stat end={stats.citizens || 70} suffix="" label="Citizens Reporting Issues" />
-            <Stat end={stats.responders || 110} suffix="" label="Responders (Volunteers + Workers)" />
-            <Stat end={stats.ngos || 20} suffix="" label="Partner NGOs" />
+            <Stat end={stats.problems || 0} suffix="+" label="Active Crisis Reports" />
+            <Stat end={stats.users || 0} suffix="" label="Registered Users" />
+            <Stat end={stats.citizens || 0} suffix="" label="Citizens Reporting Issues" />
+            <Stat end={stats.responders || 0} suffix="" label="Responders (Volunteers + Workers)" />
+            <Stat end={stats.ngos || 0} suffix="" label="Partner NGOs" />
           </div>
-          <p className="text-xs text-gray-500 mt-8 text-center">
-            Based on current demo dataset
-          </p>
         </motion.div>
       </section>
 
@@ -191,29 +188,6 @@ export default function Landing() {
                 <p className="text-gray-400 text-sm leading-relaxed">{s.desc}</p>
               </div>
             ))}
-          </div>
-        </motion.div>
-      </section>
-
-      {/* ── FINAL CTA ── */}
-      <section className="section border-t border-white/10">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="container max-w-xl text-center"
-        >
-          <h2 className="text-3xl font-semibold text-white mb-4">
-            Ready to Respond Faster?
-          </h2>
-          <p className="text-gray-400 mb-6">
-            Join SevaLink and make real impact during crises.
-          </p>
-          <div className="flex justify-center mt-8">
-            <Link href="/register">
-              <button className="btn-primary">Get Started</button>
-            </Link>
           </div>
         </motion.div>
       </section>
