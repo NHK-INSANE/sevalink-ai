@@ -7,26 +7,28 @@ import CountUp from "react-countup";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
+import { MapPin, Brain, Zap, Map, Radio, Users, Clock, EyeOff, UserX, AlertCircle, CheckCircle2 } from "lucide-react";
+
 const FEATURES = [
-  { icon: "📍", title: "Report & Locate",       desc: "Submit crisis reports with precise GPS coordinates and photo evidence in seconds.",     color: "#6366f1" },
-  { icon: "🤖", title: "AI Classification",     desc: "Neural engine instantly classifies urgency level and predicts required resources.",       color: "#a855f7" },
-  { icon: "🚀", title: "Smart Matching",        desc: "Proprietary algorithm matches nearest volunteers with the right skills to each crisis.", color: "#3b82f6" },
-  { icon: "🗺️", title: "Live Operations Map",  desc: "Real-time geospatial view of all active incidents, volunteers, and NGO assets.",         color: "#22c55e" },
-  { icon: "📡", title: "SOS Broadcast",        desc: "One-tap emergency broadcast alerts all nearby responders simultaneously.",               color: "#ef4444" },
-  { icon: "🤝", title: "NGO Coordination",     desc: "Seamless multi-organization collaboration with shared dashboards and assignments.",       color: "#f59e0b" },
+  { icon: <MapPin className="w-5 h-5" />, title: "Report & Locate",       desc: "Submit crisis reports with precise GPS coordinates and photo evidence in seconds.",     color: "#6366f1" },
+  { icon: <Brain className="w-5 h-5" />, title: "AI Classification",     desc: "Neural engine instantly classifies urgency level and predicts required resources.",       color: "#a855f7" },
+  { icon: <Zap className="w-5 h-5" />, title: "Smart Matching",        desc: "Proprietary algorithm matches nearest volunteers with the right skills to each crisis.", color: "#3b82f6" },
+  { icon: <Map className="w-5 h-5" />, title: "Live Operations Map",  desc: "Real-time geospatial view of all active incidents, volunteers, and NGO assets.",         color: "#22c55e" },
+  { icon: <Radio className="w-5 h-5" />, title: "SOS Broadcast",        desc: "One-tap emergency broadcast alerts all nearby responders simultaneously.",               color: "#ef4444" },
+  { icon: <Users className="w-5 h-5" />, title: "NGO Coordination",     desc: "Seamless multi-organization collaboration with shared dashboards and assignments.",       color: "#f59e0b" },
 ];
 
 const PROBLEMS = [
-  { icon: "⏱", title: "Coordination Lag",  text: "Traditional disaster response loses critical hours to phone calls and paperwork.", accent: "#ef4444" },
-  { icon: "🕳", title: "No Visibility",     text: "Field teams operate blind — no real-time view of who needs what, and where.",     accent: "#f97316" },
-  { icon: "❌", title: "Skill Mismatch",   text: "Aid reaches the wrong people. Medical teams at flood zones, engineers at medical camps.", accent: "#eab308" },
+  { icon: <Clock className="w-5 h-5" />, title: "Coordination Lag",  text: "Traditional disaster response loses critical hours to phone calls and paperwork.", accent: "#ef4444" },
+  { icon: <EyeOff className="w-5 h-5" />, title: "No Visibility",     text: "Field teams operate blind — no real-time view of who needs what, and where.",     accent: "#f97316" },
+  { icon: <UserX className="w-5 h-5" />, title: "Skill Mismatch",   text: "Aid reaches the wrong people. Medical teams at flood zones, engineers at medical camps.", accent: "#eab308" },
 ];
 
 const STEPS = [
-  { num: "01", icon: "🚨", title: "Report the Crisis", desc: "Any citizen submits a problem with location, photo, and description. Takes 30 seconds." },
-  { num: "02", icon: "🤖", title: "AI Analyzes",       desc: "Our model classifies urgency, category, and required resources automatically." },
-  { num: "03", icon: "⚡", title: "Match & Deploy",   desc: "Nearest qualified volunteers and NGOs are notified and dispatched instantly." },
-  { num: "04", icon: "✅", title: "Track & Resolve",  desc: "All parties coordinate on a live map until the crisis is marked resolved." },
+  { num: "01", icon: <AlertCircle className="w-8 h-8" />, title: "Report the Crisis", desc: "Any citizen submits a problem with location, photo, and description. Takes 30 seconds." },
+  { num: "02", icon: <Brain className="w-8 h-8" />, title: "AI Analyzes",       desc: "Our model classifies urgency, category, and required resources automatically." },
+  { num: "03", icon: <Zap className="w-8 h-8" />, title: "Match & Deploy",   desc: "Nearest qualified volunteers and NGOs are notified and dispatched instantly." },
+  { num: "04", icon: <CheckCircle2 className="w-8 h-8" />, title: "Track & Resolve",  desc: "All parties coordinate on a live map until the crisis is marked resolved." },
 ];
 
 const WORDS = ["NGOs", "Volunteers", "Workers", "Responders"];
