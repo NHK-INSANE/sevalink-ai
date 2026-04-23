@@ -244,7 +244,7 @@ export default function Dashboard() {
           {/* ── KPI CARDS ── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-7"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-6"
           >
             {[
               { label: "Total Problems",  value: counts.total      },
@@ -262,7 +262,7 @@ export default function Dashboard() {
           {/* ── ANALYTICS ROW: left 2-stack | right wide ── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.18 }}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-7"
+            className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6"
           >
             {/* LEFT COL: Problem Flow + Urgency Matrix stacked */}
             <div className="flex flex-col gap-6">
