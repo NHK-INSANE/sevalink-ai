@@ -29,24 +29,7 @@ const STEPS = [
   { num: "04", title: "Track & Resolve", desc: "All parties coordinate on a live map until the crisis is marked resolved." },
 ];
 
-const words = ["Responders", "Volunteers", "NGOs", "Communities"];
-
-function TypingText() {
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIndex((prev) => (prev + 1) % words.length);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <span className="text-purple-400 transition-all duration-500">
-      {words[index]}
-    </span>
-  );
-}
+// Typing text removed for cleaner aesthetic
 
 function Stat({ end, suffix, label }) {
   return (
@@ -83,9 +66,7 @@ export default function Landing() {
           className="container max-w-3xl mx-auto"
         >
           <h1 className="text-4xl md:text-5xl font-semibold leading-tight text-white">
-            Connecting <TypingText />
-            <br />
-            Where It Matters Most
+            Connecting People to Crisis Response
           </h1>
           <p className="mt-4 text-gray-400 text-lg max-w-2xl mx-auto">
             Real-time crisis coordination powered by AI — from reporting to response,
@@ -137,12 +118,12 @@ export default function Landing() {
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Emergency Response Needs Speed & Coordination
             </h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">
+            <p className="text-gray-400">
               Every year, delayed coordination costs lives. Traditional systems are too slow, too blind, and too fragmented.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {PROBLEMS.map((p, i) => (
               <div key={i} className="card">
                 <div className="text-3xl mb-4">{p.icon}</div>
@@ -167,12 +148,12 @@ export default function Landing() {
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Everything You Need to Respond
             </h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">
+            <p className="text-gray-400">
               A complete AI-powered coordination platform — from crisis report to field deployment.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURES.map((f, i) => (
               <div key={i} className="card">
                 <div className="w-12 h-12 rounded-md bg-white/5 border border-white/10 flex items-center justify-center text-xl mb-6">
@@ -199,10 +180,10 @@ export default function Landing() {
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               How SevaLink Works
             </h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">Four steps from crisis to resolution.</p>
+            <p className="text-gray-400">Four steps from crisis to resolution.</p>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-6 text-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
             {STEPS.map((s, i) => (
               <div key={i} className="card">
                 <div className="text-4xl font-bold text-white/10 mb-4">{s.num}</div>
@@ -214,83 +195,24 @@ export default function Landing() {
         </motion.div>
       </section>
 
-      {/* ── ROLES SECTION ── */}
-      <section className="section bg-white/[0.01] border-y border-white/10">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="container"
-        >
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Built for Every Responder</h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">Whether individual or institutional — SevaLink scales with you.</p>
-          </div>
-          
-          <div className="grid md:grid-cols-4 gap-6">
-            {[
-              { icon:"👤", role:"Citizens", desc:"Report local problems. Track resolution. Be the first to act." },
-              { icon:"🤝", role:"Volunteers", desc:"Get matched by AI to crises that need your exact skills." },
-              { icon:"🔧", role:"Field Workers", desc:"Receive deployment orders and coordinate with teams in real-time." },
-              { icon:"🏢", role:"NGOs", desc:"Command your resources, track impact, coordinate multi-agency ops." },
-            ].map((r, i) => (
-              <div key={i} className="card text-center">
-                <div className="text-3xl mb-4">{r.icon}</div>
-                <h3 className="text-lg font-bold text-white mb-3">{r.role}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{r.desc}</p>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      </section>
-
-      {/* ── MAP PREVIEW ── */}
-      <section className="section">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="container"
-        >
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Operational Visibility
-            </h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">
-              Real-time command interface — every incident, every responder, live.
-            </p>
-          </div>
-
-          <div className="relative border border-white/10 rounded-md overflow-hidden bg-[#0f172a]">
-            <img src="/map-preview.png" alt="Map Preview" className="w-full opacity-80" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#020617]/80 to-transparent" />
-          </div>
-        </motion.div>
-      </section>
-
       {/* ── FINAL CTA ── */}
-      <section className="section-large text-center bg-white/[0.01] border-t border-white/10">
+      <section className="section border-t border-white/10">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="container max-w-xl"
+          className="container max-w-xl text-center"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Be the Difference When It Matters Most
+          <h2 className="text-3xl font-semibold text-white mb-4">
+            Ready to Respond Faster?
           </h2>
-          <p className="text-gray-400 mt-3 mb-8">
-            Join SevaLink and respond to crises with speed and intelligence.
+          <p className="text-gray-400 mb-6">
+            Join SevaLink and make real impact during crises.
           </p>
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center mt-8">
             <Link href="/register">
               <button className="btn-primary">Get Started</button>
-            </Link>
-            <Link href="/login">
-              <button className="btn-secondary">Sign In</button>
             </Link>
           </div>
         </motion.div>
