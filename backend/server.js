@@ -124,11 +124,13 @@ const aiRoutes = require("./routes/aiRoutes");
 const userRoutes = require("./routes/userRoutes");
 const statsRoutes = require("./routes/statsRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const teamRoutes = require("./routes/teamRoutes");
 
 app.use("/api/problems", problemRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/teams", teamRoutes);
 app.use("/api", statsRoutes);
 
 // Rate limiter for SOS

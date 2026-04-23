@@ -225,7 +225,6 @@ export default function MapView({
     high:     problems.filter(p => p.urgency?.toLowerCase() === "high").length,
     medium:   problems.filter(p => p.urgency?.toLowerCase() === "medium").length,
     low:      problems.filter(p => p.urgency?.toLowerCase() === "low").length,
-    volunteers: helpers.length,
     ngos:     ngos.length,
     sos:      sosMarkers.length,
   };
@@ -279,8 +278,7 @@ export default function MapView({
 
         <div style={{ borderTop: "1px solid #f3f4f6", margin: "6px 0" }} />
 
-        <LegendRow color="#2563eb" label="Volunteers" count={counts.volunteers} />
-        <LegendRow color="#16a34a" label="NGOs"       count={counts.ngos} />
+        <LegendRow color="#3b82f6" label="Partner NGOs" count={counts.ngos} />
       </div>
 
       <MapContainer
@@ -386,24 +384,6 @@ export default function MapView({
                     </div>
                     <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: 6 }}>{n.ngoContact || n.email}</div>
                     <span style={{ fontSize: "10px", fontWeight: "700", color: "#15803d", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "2px 8px", borderRadius: "20px" }}>NGO PARTNER</span>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-
-          {/* 🔵 Helpers */}
-          {(type === "all" || type === "helpers") &&
-            helpers.filter(h => h.location?.lat && h.location?.lng).slice(0, 100).map((h, i) => (
-              <Marker key={`h-${h._id || i}`} position={[h.location.lat, h.location.lng]} icon={helperIcon}>
-                <Popup>
-                  <div style={{ minWidth: 170, fontFamily: "system-ui, sans-serif" }}>
-                    <div style={{ fontWeight: "700", fontSize: "13px", color: "#111827", marginBottom: 6, paddingBottom: 4, borderBottom: "1px solid #f3f4f6" }}>
-                      🤝 {h.name}
-                    </div>
-                    <div style={{ fontSize: "11px", color: "#4b5563" }}>
-                      <div style={{ marginBottom: 2 }}><strong>Skills:</strong> {h.skill || (h.skills?.length > 0 ? h.skills.join(", ") : "General Support")}</div>
-                      <div><strong>Status:</strong> <span style={{ color: "#16a34a", fontWeight: 600 }}>Available 🟢</span></div>
-                    </div>
                   </div>
                 </Popup>
               </Marker>

@@ -73,12 +73,25 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
         {problem.description}
       </p>
 
+      {/* ── Meta: Category + Skills ── */}
+      <div className="problem-meta">
+        {problem.category?.map(cat => (
+          <span key={cat} className="category-badge">{cat}</span>
+        ))}
+        {problem.requiredSkills?.map(skill => (
+          <span key={skill} className="skill-badge">{skill}</span>
+        ))}
+        {problem.requiredSkills?.length === 0 && problem.requiredSkill && (
+          <span className="skill-badge">{problem.requiredSkill}</span>
+        )}
+      </div>
+
       {/* ── Location ── */}
-      <div className="flex items-center gap-1.5 text-[10px] text-[#6B7280] mb-5">
-        <svg className="w-3 h-3 opacity-50 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+      <div className="flex items-center gap-1.5 text-[11px] text-[#6B7280] mb-5">
+        <svg className="w-3.5 h-3.5 opacity-50 shrink-0" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
         </svg>
-        <span className="truncate">{problem.locationName || problem.address || "Location unavailable"}</span>
+        <span className="truncate font-medium">{problem.location?.address || problem.locationName || "Location undisclosed"}</span>
       </div>
 
       {/* ── Footer: Chat (left) + Assign (right) ── */}

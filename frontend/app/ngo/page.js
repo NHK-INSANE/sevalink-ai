@@ -194,10 +194,15 @@ export default function NGOPage() {
         {showConnectModal && (
           <div className="fixed inset-0 z-[20000] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowConnectModal(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
-            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative w-full max-w-md bg-[#0f172a] border border-white/10 rounded-2xl p-8 shadow-2xl">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }} 
+              animate={{ scale: 1, opacity: 1, y: 0 }} 
+              exit={{ scale: 0.9, opacity: 0, y: 20 }} 
+              className="connect-modal-box"
+            >
               <h2 className="text-xl font-extrabold text-white mb-2">Connect with {selectedNgo?.ngoName || selectedNgo?.name}</h2>
               <p className="text-gray-400 text-sm mb-6">Briefly explain why you want to coordinate with this organization.</p>
-              <textarea placeholder="Reason for connection..." value={connectReason} onChange={(e) => setConnectReason(e.target.value)} className="w-full h-32 bg-black/20 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 outline-none focus:border-purple-500 transition-all mb-6 resize-none" />
+              <textarea placeholder="Reason for connection..." value={connectReason} onChange={(e) => setConnectReason(e.target.value)} className="w-full h-32 bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 outline-none focus:border-purple-500 transition-all mb-6 resize-none" />
               <div className="flex gap-3">
                 <button onClick={() => setShowConnectModal(false)} className="flex-1 py-3 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-colors">Cancel</button>
                 <button 
