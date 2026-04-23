@@ -1,9 +1,15 @@
 // Frontend-only auth using localStorage (hackathon safe — no backend changes)
 
-export const login = (user) => {
+export const login = (data) => {
   if (typeof window !== "undefined") {
-    localStorage.setItem("seva_user", JSON.stringify(user));
-    localStorage.setItem("token", JSON.stringify(user)); // Mock token
+    // data should be { user, token }
+    const userData = data.user || data; 
+    const token = data.token || "";
+
+    localStorage.setItem("seva_user", JSON.stringify(userData));
+    if (token) {
+      localStorage.setItem("token", token);
+    }
   }
 };
 
@@ -32,6 +38,12 @@ export const isLoggedIn = () => !!getUser();
 
 export const getRoleLabel = (role) => {
   const map = {
+    user: "👤 User",
+    volunteer: "🤝 Volunteer",
+    ngo: "🏢 NGO",
+    worker: "🔧 NGO Worker",
+    admin: "⚡ Admin",
+    // Keep uppercase for backward compatibility if needed during migration
     User: "👤 User",
     Volunteer: "🤝 Volunteer",
     NGO: "🏢 NGO",
