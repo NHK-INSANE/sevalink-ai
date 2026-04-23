@@ -59,11 +59,11 @@
   --z-toast:   70;
 
   /* ── Radius ── */
-  --radius-sm:  8px;
-  --radius-md:  12px;
-  --radius-lg:  16px;
-  --radius-xl:  24px;
-  --radius-2xl: 32px;
+  --radius-sm:  4px;
+  --radius-md:  6px;
+  --radius-lg:  8px;
+  --radius-xl:  12px;
+  --radius-2xl: 16px;
 
   /* ── Shadow ── */
   --shadow-card:    0 4px 24px rgba(0, 0, 0, 0.35);
@@ -110,7 +110,7 @@ h1 {
   font-size: clamp(28px, 4vw, 42px);
   font-weight: 800;
   letter-spacing: -0.03em;
-  line-height: 1.15;
+  line-height: 1.2;
   color: var(--text-primary);
 }
 
@@ -118,7 +118,7 @@ h2 {
   font-size: clamp(20px, 2.5vw, 28px);
   font-weight: 700;
   letter-spacing: -0.02em;
-  line-height: 1.25;
+  line-height: 1.2;
   color: var(--text-primary);
 }
 
@@ -126,6 +126,7 @@ h3 {
   font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.01em;
+  line-height: 1.2;
   color: var(--text-primary);
 }
 
@@ -149,6 +150,12 @@ a {
   padding-bottom: 80px;
 }
 
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
 /* Section spacing */
 .section-gap {
   margin-top: 48px;
@@ -158,24 +165,17 @@ a {
    CARD COMPONENT (Unified)
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .card {
-  background: var(--glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
+  background: #0f172a;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 24px;
   position: relative;
   overflow: hidden;
-  box-shadow: var(--shadow-card);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              border-color 0.3s ease,
-              box-shadow 0.3s ease;
+  transition: border-color 0.2s ease;
 }
 
 .card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(99, 102, 241, 0.3);
-  box-shadow: var(--shadow-elevated), var(--shadow-glow);
+  border-color: rgba(168, 85, 247, 0.4);
 }
 
 /* Glass alias */
@@ -184,14 +184,7 @@ a {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-}
-
-.glass-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.1);
-  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+  border-radius: var(--radius-md);
 }
 
 .glass-strong {
@@ -206,11 +199,11 @@ a {
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .btn-primary,
 .btn-glow {
-  background: var(--primary-gradient);
+  background: var(--primary);
   border-radius: var(--radius-md);
-  padding: 10px 20px;
-  font-size: 13px;
-  font-weight: 600;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 500;
   color: white;
   border: none;
   cursor: pointer;
@@ -218,18 +211,12 @@ a {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  position: relative;
-  overflow: hidden;
-  white-space: nowrap;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.25);
+  transition: background 0.2s ease;
 }
 
 .btn-primary:hover,
 .btn-glow:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4),
-              0 0 16px rgba(99, 102, 241, 0.3);
+  background: var(--primary-light);
 }
 
 .btn-primary:active,
@@ -238,27 +225,24 @@ a {
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(8px);
+  background: transparent;
+  border: 1px solid var(--border);
   color: var(--text-primary);
   border-radius: var(--radius-md);
-  padding: 10px 20px;
-  font-size: 13px;
+  padding: 8px 20px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  white-space: nowrap;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.14);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

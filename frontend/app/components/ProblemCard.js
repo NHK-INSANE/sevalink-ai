@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import DiscussionPanel from "./DiscussionPanel";
 import { getUser } from "../utils/auth";
-import TiltCard from "./TiltCard";
 
 export default function ProblemCard({ problem, onStatusChange, onDelete }) {
   const [user, setUser] = useState(null);
@@ -29,31 +28,23 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
 
   return (
     <>
-    <TiltCard 
-      className="p-8 space-y-6 !rounded-[2rem]"
-    >
+    <div className="bg-[#0f172a] border border-white/10 rounded-md p-6 space-y-6 relative group hover:border-purple-500/40 transition">
       {/* Delete button (Owner only) */}
       {user && user._id === problem.createdBy && (
-        <motion.button 
-          whileTap={{ scale: 0.9 }}
+        <button 
           onClick={() => onDelete(problem._id)}
-          className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 p-2 hover:bg-red-500/10 rounded-xl shadow-sm z-10"
+          className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 p-2 hover:bg-red-500/10 rounded-md"
           title="Delete Report"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-        </motion.button>
+        </button>
       )}
 
       {/* Header: Urgency & Date */}
       <div className="flex justify-between items-start">
-        <motion.div
-          animate={{ y: [0, -2, 0] }}
-          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-        >
-          <span className={`badge ${urgencyBadges[problem.urgency] || "badge-medium"}`}>
-            {problem.urgency}
-          </span>
-        </motion.div>
+        <span className={`badge ${urgencyBadges[problem.urgency] || "badge-medium"}`}>
+          {problem.urgency}
+        </span>
         <span className="text-[10px] text-[var(--text-secondary)] font-medium">
           {new Date(problem.createdAt).toLocaleDateString()}
         </span>
@@ -61,7 +52,7 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
 
       {/* Content */}
       <div className="space-y-2">
-        <h3 className="font-bold text-[var(--text-primary)] text-lg tracking-tight group-hover:text-[var(--primary)] transition-colors">
+        <h3 className="font-bold text-[var(--text-primary)] text-lg tracking-tight group-hover:text-purple-400 transition-colors">
           {problem.title}
         </h3>
         <p className="text-sm text-[var(--text-secondary)] line-clamp-2 leading-relaxed">
@@ -75,15 +66,14 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
           </div>
           
           {problem.location && problem.location.lat && (
-            <motion.button
-              whileTap={{ scale: 0.95 }}
+            <button
               onClick={() => {
                 router.push(`/map?lat=${problem.location.lat}&lng=${problem.location.lng}&title=${encodeURIComponent(problem.title)}`);
               }}
-              className="ml-auto btn-secondary !py-1 !px-3 !text-[10px] !rounded-lg"
+              className="ml-auto text-xs px-3 py-1 bg-white/10 hover:bg-white/20 border border-white/10 rounded-md transition"
             >
               Locate
-            </motion.button>
+            </button>
           )}
         </div>
       </div>
@@ -93,7 +83,7 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">Resolution Priority</span>
-            <span className="text-[10px] font-bold text-[var(--primary)]">{problem.score}%</span>
+            <span className="text-[10px] font-bold text-purple-400">{problem.score}%</span>
           </div>
           <div className="progress-container">
              <div className="progress-fill" style={{ width: `${problem.score}%` }} />
@@ -104,7 +94,7 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
           <select
             value={problem.status}
             onChange={(e) => handleStatusChange(e.target.value)}
-            className="flex-1 bg-[var(--bg-hover)] text-[var(--text-primary)] px-3 py-2 rounded-xl border border-[var(--border)] text-xs font-medium cursor-pointer transition-colors hover:border-[var(--primary)]"
+            className="flex-1 bg-[var(--bg-hover)] text-[var(--text-primary)] px-3 py-2 rounded-md border border-[var(--border)] text-xs font-medium cursor-pointer transition hover:border-purple-500"
           >
             <option value="Open">Open</option>
             <option value="In Progress">In Progress</option>
@@ -112,29 +102,27 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
           </select>
 
           <div className="flex gap-2">
-            <motion.button
-              whileTap={{ scale: 0.9 }}
+            <button
               onClick={() => setShowChat(true)}
-              className="btn-secondary !p-2"
+              className="px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-md transition"
               title="Open Discussion"
             >
               <svg className="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-            </motion.button>
+            </button>
             
-            <motion.button
-              whileTap={{ scale: 0.95 }}
+            <button
               onClick={() => {
                 onStatusChange(problem._id, "In Progress");
               }}
               disabled={problem.status !== "Open"}
-              className="btn-primary !py-2 !px-4 !text-xs whitespace-nowrap disabled:opacity-50"
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs rounded-md transition disabled:opacity-50"
             >
               Assign Me
-            </motion.button>
+            </button>
           </div>
         </div>
       </div>
-    </TiltCard>
+    </div>
 
     <AnimatePresence>
       {showChat && (
