@@ -30,7 +30,7 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
     })
       .then(res => res.json())
       .then(data => {
-        setMessages(data);
+        setMessages(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch(err => {
@@ -46,8 +46,8 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
 
     socketRef.current.on("new-discussion-message", (msg) => {
       setMessages(prev => {
-        // Remove optimistic version if it exists
-        const filtered = prev.filter(m => m.tempId !== msg.tempId);
+        const safePrev = Array.isArray(prev) ? prev : [];
+        const filtered = safePrev.filter(m => m.tempId !== msg.tempId);
         return [...filtered, msg];
       });
     });
@@ -69,8 +69,11 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
       headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
     })
       .then(res => res.json())
-      .then(setTeams)
-      .catch(err => console.error("Teams load error", err));
+      .then(data => setTeams(Array.isArray(data) ? data : []))
+      .catch(err => {
+        console.error("Teams load error", err);
+        setTeams([]);
+      });
 
     return () => {
       if (socketRef.current) socketRef.current.disconnect();
@@ -90,11 +93,15 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
         body: JSON.stringify({ ...newTeam, problemId })
       });
       const data = await res.json();
-      setTeams(prev => [...prev, data]);
-      setShowTeamForm(false);
-      setNewTeam({ name: "", objective: "" });
-      toast.success("Team formed successfully!");
-    } catch (err) { toast.error("Failed to form team"); }
+      if (data && data._id) {
+        setTeams(prev => [...(Array.isArray(prev) ? prev : []), data]);
+        setShowTeamForm(false);
+        setNewTeam({ name: "", objective: "" });
+        toast.success("Team formed successfully!");
+      } else {
+        throw new Error(data.error || "Failed to form team");
+      }
+    } catch (err) { toast.error(err.message || "Failed to form team"); }
   };
 
   const handleJoinTeam = async (teamId) => {
@@ -106,7 +113,7 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      setTeams(prev => prev.map(t => t._id === teamId ? data : t));
+      setTeams(prev => (Array.isArray(prev) ? prev : []).map(t => t._id === teamId ? data : t));
       toast.success("Joined the team!");
     } catch (err) { toast.error(err.message || "Failed to join"); }
   };

@@ -36,7 +36,8 @@ function matchVolunteers(problem, helpers, topN = 5) {
       );
       const distKm = dist ?? 999;
       score += Math.max(0, 100 - distKm);
-      const hSkills = (h.skills || []).map((s) => String(s).toLowerCase());
+      const rawSkills = Array.isArray(h.skills) ? h.skills : (h.skills ? [h.skills] : []);
+      const hSkills = rawSkills.map((s) => String(s).toLowerCase());
       if (h.skill) hSkills.push(String(h.skill).toLowerCase());
       const pCat = Array.isArray(problem.category)
         ? problem.category[0]
@@ -400,7 +401,7 @@ export default function AIMatchPage() {
                           Recommended Volunteers — {vols.length} matched
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                          {vols.map((v, vi) => {
+                          {(Array.isArray(vols) ? vols : []).map((v, vi) => {
                             const isMe = v._id?.toString() === (currentUser?._id || currentUser?.id)?.toString();
                             const isTop = vi === 0;
                             return (

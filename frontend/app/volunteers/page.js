@@ -171,8 +171,8 @@ export default function VolunteersPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {sorted.map((u) => {
-                const isVol = u.role?.toLowerCase() === "volunteer";
-                const skills = Array.from(new Set([...(u.skills || []), u.skill].filter(Boolean)));
+                const rawSkills = Array.isArray(u.skills) ? u.skills : (u.skills ? [u.skills] : []);
+                const skills = Array.from(new Set([...rawSkills, u.skill].filter(Boolean)));
 
                 return (
                   <div key={u._id} className="card card-hover-effect !p-6 flex flex-col gap-0">

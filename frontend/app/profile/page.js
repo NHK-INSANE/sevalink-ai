@@ -235,11 +235,11 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Skills */}
-                {user.skills && user.skills.length > 0 && (
+                {(Array.isArray(user.skills) ? user.skills : (user.skills ? [user.skills] : [])).length > 0 && (
                   <div className="px-10 py-10 border-t border-white/5 bg-white/[0.01]">
                     <div className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] mb-6">Expertise Stack</div>
                     <div className="flex flex-wrap gap-3">
-                      {user.skills.map((skill) => (
+                      {(Array.isArray(user.skills) ? user.skills : [user.skills]).map((skill) => (
                         <span key={skill} className="px-5 py-2 rounded-xl bg-indigo-500/10 text-indigo-400 text-[10px] font-bold border border-indigo-500/20 shadow-lg shadow-indigo-500/5 uppercase tracking-wider">
                           {skill}
                         </span>
