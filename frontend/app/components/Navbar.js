@@ -123,6 +123,9 @@ export default function Navbar() {
     <header
       className="navbar"
       style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 9999,
         background: scrolled
           ? "rgba(8, 12, 26, 0.92)"
           : "rgba(8, 12, 26, 0.75)",

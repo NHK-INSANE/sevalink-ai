@@ -241,140 +241,141 @@ export default function Dashboard() {
             </motion.div>
           </div>
 
-          {/* ── TOP STATS ── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4"
-          >
-            {[
-              { label: "Total Problems",  value: counts.total      },
-              { label: "Volunteers",      value: counts.volunteers  },
-              { label: "Field Workers",   value: counts.workers     },
-              { label: "Partner NGOs",    value: counts.ngos        },
-            ].map((s, i) => (
-              <div key={i} className="card">
-                <p className="text-[11px] tracking-[0.08em] text-[#9CA3AF] mb-2">{s.label}</p>
-                <p className="text-[20px] font-semibold text-white leading-none"><Counter value={s.value} /></p>
-              </div>
-            ))}
-          </motion.div>
-
-          {/* ── MAIN SECTION ── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.18 }}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4"
-          >
-            {/* LEFT COLUMN */}
-            <div className="flex flex-col gap-4">
-              {/* Problem Flow */}
-              <div className="card">
-                <p className="text-[11px] tracking-[0.08em] text-[#9CA3AF] mb-4">Problem Flow</p>
-                <div className="space-y-2">
-                  {[
-                    { label: "Open Issues", val: openCount,     dot: "bg-red-400"    },
-                    { label: "In Progress", val: progressCount, dot: "bg-yellow-400" },
-                    { label: "Resolved",    val: resolvedCount, dot: "bg-green-400"  },
-                  ].map(r => (
-                    <div key={r.label} className="flex items-center justify-between py-1.5 border-b border-white/5 last:border-0">
-                      <div className="flex items-center gap-2">
-                        <span className={`w-1.5 h-1.5 rounded-full ${r.dot}`} />
-                        <span className="text-[13px] text-gray-300">{r.label}</span>
-                      </div>
-                      <span className="text-[13px] font-medium text-white">{r.val}</span>
-                    </div>
-                  ))}
+          <div className="flex flex-col gap-4">
+            {/* ── TOP STATS ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}
+              className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+            >
+              {[
+                { label: "Total Problems",  value: counts.total      },
+                { label: "Volunteers",      value: counts.volunteers  },
+                { label: "Field Workers",   value: counts.workers     },
+                { label: "Partner NGOs",    value: counts.ngos        },
+              ].map((s, i) => (
+                <div key={i} className="card">
+                  <p className="text-[11px] tracking-[0.08em] text-[#9CA3AF] mb-2">{s.label}</p>
+                  <p className="text-[20px] font-semibold text-white leading-none"><Counter value={s.value} /></p>
                 </div>
-              </div>
+              ))}
+            </motion.div>
 
-              {/* Urgency Matrix */}
-              <div className="card">
-                <p className="text-[11px] tracking-[0.08em] text-[#9CA3AF] mb-4">Urgency Matrix</p>
-                <div className="space-y-3">
-                  {[
-                    { label: "Critical", count: criticalCount, bar: "bg-red-500",    text: "text-red-400"    },
-                    { label: "High",     count: highCount,     bar: "bg-orange-500", text: "text-orange-400" },
-                    { label: "Medium",   count: mediumCount,   bar: "bg-yellow-500", text: "text-yellow-400" },
-                    { label: "Low",      count: lowCount,      bar: "bg-green-500",  text: "text-green-400"  },
-                  ].map(u => (
-                    <div key={u.label} className="flex items-center gap-3">
-                      <span className={`text-[10px] font-bold uppercase tracking-wider w-12 shrink-0 ${u.text}`}>{u.label}</span>
-                      <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full ${u.bar} opacity-70`}
-                          style={{ width: `${Math.min((u.count / (problems.length || 1)) * 100, 100)}%` }} />
+            {/* ── MAIN SECTION ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.18 }}
+              className="grid grid-cols-1 lg:grid-cols-3 gap-4"
+            >
+              {/* LEFT COLUMN */}
+              <div className="flex flex-col gap-4">
+                {/* Problem Flow */}
+                <div className="card">
+                  <p className="text-[11px] tracking-[0.08em] text-[#9CA3AF] mb-4">Problem Flow</p>
+                  <div className="space-y-2">
+                    {[
+                      { label: "Open Issues", val: openCount,     dot: "bg-red-400"    },
+                      { label: "In Progress", val: progressCount, dot: "bg-yellow-400" },
+                      { label: "Resolved",    val: resolvedCount, dot: "bg-green-400"  },
+                    ].map(r => (
+                      <div key={r.label} className="flex items-center justify-between py-1.5 border-b border-white/5 last:border-0">
+                        <div className="flex items-center gap-2">
+                          <span className={`w-1.5 h-1.5 rounded-full ${r.dot}`} />
+                          <span className="text-[13px] text-gray-300">{r.label}</span>
+                        </div>
+                        <span className="text-[13px] font-medium text-white">{r.val}</span>
                       </div>
-                      <span className="text-[13px] font-medium text-white w-5 text-right">{u.count}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* RIGHT SIDE (WIDE) */}
-            <div className="card lg:col-span-2">
-              <p className="text-[11px] tracking-[0.08em] text-[#9CA3AF] mb-4">Category Distribution</p>
-              <div className="space-y-2">
-                {categoryData.length === 0 ? (
-                  <p className="text-[13px] text-gray-600 py-4">No data yet</p>
-                ) : categoryData.map(c => (
-                  <div key={c.name} className="grid grid-cols-[120px_1fr_50px] items-center gap-2.5 py-1.5 border-b border-white/5 last:border-0">
-                    <span className="text-[13px] text-gray-300 truncate">{c.name}</span>
-                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden w-full">
-                      <div className="h-full bg-purple-500/60 rounded-full" style={{ width: `${c.percent}%` }} />
-                    </div>
-                    <span className="text-[11px] text-gray-500 text-right">{c.percent}%</span>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
+                </div>
 
-          {/* ── LIVE MAP ── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.24 }}
-            className="card p-0 overflow-hidden mb-4"
-          >
-            <div className="flex items-center justify-between px-5 py-3 border-b border-white/8 bg-[#0f172a]/50">
-              <div>
-                <p className="text-[13px] font-semibold text-white">Live Operations Map</p>
-                <p className="text-[11px] text-[#9CA3AF] mt-0.5">{problems.length} active incidents</p>
+                {/* Urgency Matrix */}
+                <div className="card">
+                  <p className="text-[11px] tracking-[0.08em] text-[#9CA3AF] mb-4">Urgency Matrix</p>
+                  <div className="space-y-3">
+                    {[
+                      { label: "Critical", count: criticalCount, bar: "bg-red-500",    text: "text-red-400"    },
+                      { label: "High",     count: highCount,     bar: "bg-orange-500", text: "text-orange-400" },
+                      { label: "Medium",   count: mediumCount,   bar: "bg-yellow-500", text: "text-yellow-400" },
+                      { label: "Low",      count: lowCount,      bar: "bg-green-500",  text: "text-green-400"  },
+                    ].map(u => (
+                      <div key={u.label} className="flex items-center gap-3">
+                        <span className={`text-[10px] font-bold uppercase tracking-wider w-12 shrink-0 ${u.text}`}>{u.label}</span>
+                        <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full ${u.bar} opacity-70`}
+                            style={{ width: `${Math.min((u.count / (problems.length || 1)) * 100, 100)}%` }} />
+                        </div>
+                        <span className="text-[13px] font-medium text-white w-5 text-right">{u.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <span className="flex items-center gap-1.5 text-[11px] text-green-400 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                Live
-              </span>
-            </div>
-            <div className="h-[320px] w-full rounded-b-[10px] overflow-hidden">
-              <MapView problems={problems} type="problems" height="100%" zoom={6} center={[22.3, 87.3]} />
-            </div>
-          </motion.div>
 
-          {/* ── RECENT REPORTS ── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.3 }}
-            className="mt-2"
-          >
-            <div className="flex items-center justify-between mb-5 pb-3 border-b border-white/5">
-              <h2 className="text-sm font-semibold text-white tracking-tight">
-                {sortNearest ? "Nearest Problems" : "Recent Reports"}
-              </h2>
-              <Link href="/problems" className="text-purple-400 text-xs font-medium hover:text-purple-300 transition-colors">
-                View All →
-              </Link>
-            </div>
+              {/* RIGHT SIDE (WIDE) */}
+              <div className="card lg:col-span-2">
+                <p className="text-[11px] tracking-[0.08em] text-[#9CA3AF] mb-4">Category Distribution</p>
+                <div className="space-y-2">
+                  {categoryData.length === 0 ? (
+                    <p className="text-[13px] text-gray-600 py-4">No data yet</p>
+                  ) : categoryData.map(c => (
+                    <div key={c.name} className="grid grid-cols-[120px_1fr_50px] items-center gap-2.5 py-1.5 border-b border-white/5 last:border-0">
+                      <span className="text-[13px] text-gray-300 truncate">{c.name}</span>
+                      <div className="h-1.5 bg-white/5 rounded-full overflow-hidden w-full">
+                        <div className="h-full bg-purple-500/60 rounded-full" style={{ width: `${c.percent}%` }} />
+                      </div>
+                      <span className="text-[11px] text-gray-500 text-right">{c.percent}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
 
-            {problems.length === 0 ? (
-              <div className="card text-center py-12">
-                <p className="text-white font-medium text-sm">No active reports</p>
-                <p className="text-gray-500 text-xs mt-1">The platform is currently clear.</p>
+            {/* ── LIVE MAP ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.24 }}
+              className="card p-0 overflow-hidden"
+            >
+              <div className="flex items-center justify-between px-5 py-3 border-b border-white/8 bg-[#0f172a]/50">
+                <div>
+                  <p className="text-[13px] font-semibold text-white">Live Operations Map</p>
+                  <p className="text-[11px] text-[#9CA3AF] mt-0.5">{problems.length} active incidents</p>
+                </div>
+                <span className="flex items-center gap-1.5 text-[11px] text-green-400 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                  Live
+                </span>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sortedProblems.slice(0, 6).map(p => (
-                  <ProblemCard key={p._id} problem={p} />
-                ))}
+              <div className="h-[320px] w-full rounded-b-[10px] overflow-hidden relative z-0">
+                <MapView problems={problems} type="problems" height="100%" zoom={6} center={[22.3, 87.3]} />
               </div>
-            )}
-          </motion.div>
+            </motion.div>
+
+            {/* ── RECENT REPORTS ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.3 }}
+            >
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
+                <h2 className="text-sm font-semibold text-white tracking-tight">
+                  {sortNearest ? "Nearest Problems" : "Recent Reports"}
+                </h2>
+                <Link href="/problems" className="text-purple-400 text-xs font-medium hover:text-purple-300 transition-colors">
+                  View All →
+                </Link>
+              </div>
+
+              {problems.length === 0 ? (
+                <div className="card text-center py-12">
+                  <p className="text-white font-medium text-sm">No active reports</p>
+                  <p className="text-gray-500 text-xs mt-1">The platform is currently clear.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {sortedProblems.slice(0, 6).map(p => (
+                    <ProblemCard key={p._id} problem={p} />
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          </div>
 
         </main>
       </PageWrapper>
