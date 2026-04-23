@@ -166,7 +166,7 @@ export default function ProblemsPage() {
         <div className="card !p-0 mb-10 overflow-hidden">
 
           {/* ── Search Row ── */}
-          <div className="px-5 pt-6 pb-5">
+          <div className="px-6 pt-6 pb-5">
             <input
               type="text"
               placeholder="Search by title, area, description, or date…"
@@ -177,14 +177,14 @@ export default function ProblemsPage() {
           </div>
 
           {/* ── Divider ── */}
-          <div className="border-t border-white/6 mx-5" />
+          <div className="border-t border-white/6 mx-6 my-1" />
 
           {/* ── Dropdowns Row ── */}
-          <div className="px-5 pt-5 pb-6">
-            <div className="flex flex-col md:flex-row gap-4">
+          <div className="px-6 pt-5 pb-7">
+            <div className="flex flex-col md:flex-row gap-8">
               {/* Urgency */}
               <div className="flex flex-col gap-2 md:w-[48%]">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.12em] pl-1.5">Urgency Level</label>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.12em] pl-3">Urgency Level</label>
                 <select
                   value={filterUrgency}
                   onChange={(e) => setFilterUrgency(e.target.value)}
@@ -200,7 +200,7 @@ export default function ProblemsPage() {
 
               {/* Status — pushed right */}
               <div className="flex flex-col gap-2 md:w-[48%] md:ml-auto">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.12em] pl-1.5">Current Status</label>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.12em] pl-3">Current Status</label>
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}

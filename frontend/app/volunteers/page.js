@@ -119,7 +119,7 @@ export default function VolunteersPage() {
                 className="btn-secondary"
                 style={{ fontSize: 12, padding: "8px 24px" }}
               >
-                📍 {sortNearest ? "Reset Sort" : "Sort by Nearest"}
+                {sortNearest ? "Reset Sort" : "Sort by Nearest"}
               </motion.button>
             </div>
 
@@ -160,7 +160,7 @@ export default function VolunteersPage() {
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-                gap: 20,
+                gap: 28,
               }}
             >
               {[...Array(6)].map((_, i) => (
@@ -184,7 +184,7 @@ export default function VolunteersPage() {
                 border: "1px dashed rgba(255,255,255,0.08)",
               }}
             >
-              <div style={{ fontSize: 48 }}>🤝</div>
+              <div style={{ fontSize: 36, fontWeight: 800, color: "var(--text-muted)" }}>No Helpers</div>
               <p style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>
                 No helpers registered yet
               </p>
@@ -204,7 +204,7 @@ export default function VolunteersPage() {
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-                gap: 20,
+                gap: 28,
               }}
             >
               {filtered.map((u, i) => {
@@ -238,14 +238,17 @@ export default function VolunteersPage() {
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          fontSize: 20,
+                          fontSize: 16,
+                          fontWeight: 800,
+                          color: "#fff",
+                          letterSpacing: "0.02em",
                           boxShadow: isVol
                             ? "0 4px 12px rgba(16,185,129,0.3)"
                             : "0 4px 12px rgba(99,102,241,0.3)",
                           flexShrink: 0,
                         }}
                       >
-                        {isVol ? "🤝" : "🔧"}
+                        {(u.name || "U").charAt(0).toUpperCase()}
                       </div>
                       <div style={{ minWidth: 0 }}>
                         <div
@@ -283,7 +286,7 @@ export default function VolunteersPage() {
                     </div>
 
                     {/* Contact Info */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
                       {u.email && (
                         <div
                           style={{
@@ -297,7 +300,7 @@ export default function VolunteersPage() {
                             color: "var(--text-secondary)",
                           }}
                         >
-                          <span style={{ opacity: 0.6 }}>✉</span>
+                          <span style={{ opacity: 0.5, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", minWidth: 28 }}>Email</span>
                           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {u.email}
                           </span>
@@ -316,7 +319,7 @@ export default function VolunteersPage() {
                             color: "var(--text-secondary)",
                           }}
                         >
-                          <span style={{ opacity: 0.6 }}>📞</span>
+                          <span style={{ opacity: 0.5, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", minWidth: 28 }}>Tel</span>
                           <span>{u.phone}</span>
                         </div>
                       )}
@@ -333,7 +336,7 @@ export default function VolunteersPage() {
                             color: "var(--text-secondary)",
                           }}
                         >
-                          <span style={{ opacity: 0.6 }}>📍</span>
+                          <span style={{ opacity: 0.5, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", minWidth: 28 }}>Loc</span>
                           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {u.address}
                           </span>
