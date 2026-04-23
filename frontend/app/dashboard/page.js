@@ -188,24 +188,21 @@ export default function Dashboard() {
       })
     : problems;
 
-  // Loading State with Skeleton Premium UX
+  // ─── Loading skeleton ───
   if (loading) {
     return (
       <div className="min-h-screen bg-[#020617]">
         <Navbar />
-        <main className="container pt-28 pb-20">
-          <div className="animate-pulse space-y-8">
-            <div className="h-8 bg-white/5 rounded-md w-48 mb-8"></div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {[1,2,3,4].map(i => (
-                <div key={i} className="h-32 card"></div>
-              ))}
+        <main className="page-container">
+          <div className="animate-pulse space-y-6">
+            <div className="h-7 bg-white/5 rounded w-40 mb-8" />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1,2,3,4].map(i => <div key={i} className="card h-24" />)}
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {[1,2,3].map(i => (
-                <div key={i} className="h-64 card"></div>
-              ))}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              {[1,2,3].map(i => <div key={i} className="card h-52" />)}
             </div>
+            <div className="card h-[400px]" />
           </div>
         </main>
       </div>
@@ -213,169 +210,190 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#020617]">
       <Navbar />
-      
+
       <PageWrapper>
-      <main className="container pt-28 pb-20">
-        
-        {/* HEADER SECTION */}
-        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <h1 className="text-3xl font-semibold text-white tracking-tight">
-              Command Center
-            </h1>
-            <p className="text-gray-400 mt-2 text-sm">
-              Synchronized as <span className="text-white">{user?.name}</span>
-              {user?.role && <span className="ml-2 uppercase text-[10px] tracking-wider px-2 py-0.5 rounded-sm bg-white/10 text-gray-300">{user.role}</span>}
-            </p>
-          </motion.div>
+        <main className="page-container">
 
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="flex gap-3"
-          >
-            <button
-              onClick={handleLocateAndSort}
-              className="btn-secondary"
-            >
-              📍 {sortNearest ? "Reset Sort" : "Nearest"}
-            </button>
-            <Link href="/submit">
-              <button className="btn-primary">
-                Initialize Report
-              </button>
-            </Link>
-          </motion.div>
-        </div>
-
-        {/* STATS GRID */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {[
-            { label: "Total Problems", value: counts.total },
-            { label: "Volunteers", value: counts.volunteers },
-            { label: "Field Workers", value: counts.workers },
-            { label: "Partner NGOs", value: counts.ngos }
-          ].map((stat, i) => (
-            <div key={i} className="card">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">{stat.label}</p>
-              <p className="text-3xl font-bold text-white">
-                <Counter value={stat.value} />
+          {/* ── PAGE HEADER ── */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+              <h1 className="text-2xl font-semibold text-white tracking-tight">Command Center</h1>
+              <p className="text-gray-500 text-sm mt-1">
+                Logged in as <span className="text-gray-300">{user?.name}</span>
+                {user?.role && (
+                  <span className="ml-2 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-white/8 text-gray-400">
+                    {user.role}
+                  </span>
+                )}
+                {lastUpdate && <span className="ml-2 text-[10px] text-gray-600">· {lastUpdate}</span>}
               </p>
-            </div>
-          ))}
-        </div>
+            </motion.div>
 
-        {/* ANALYTICS SECTION */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="card">
-            <h3 className="text-sm font-semibold uppercase tracking-widest text-gray-400 mb-5">Problem Flow</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center pb-3 border-b border-white/5">
-                <span className="text-gray-300 text-sm">Open Issues</span>
-                <span className="font-semibold text-white">{openCount}</span>
-              </div>
-              <div className="flex justify-between items-center pb-3 border-b border-white/5">
-                <span className="text-gray-300 text-sm">In Progress</span>
-                <span className="font-semibold text-white">{progressCount}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-300 text-sm">Resolved Cases</span>
-                <span className="font-semibold text-white">{resolvedCount}</span>
-              </div>
-            </div>
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.08 }} className="flex items-center gap-2">
+              <button onClick={handleLocateAndSort} className="btn-secondary text-sm">
+                📍 {sortNearest ? "Reset Sort" : "Nearest"}
+              </button>
+              <Link href="/submit">
+                <button className="btn-primary text-sm">+ Initialize Report</button>
+              </Link>
+            </motion.div>
           </div>
 
-          <div className="card">
-            <h3 className="text-sm font-semibold uppercase tracking-widest text-gray-400 mb-5">Distribution</h3>
-            <div className="space-y-3 max-h-[160px] overflow-y-auto pr-2 custom-scrollbar">
-              {categoryData.length === 0 ? (
-                <p className="text-xs text-gray-500 py-6">No data yet</p>
-              ) : categoryData.map(c => (
-                <div key={c.name} className="flex justify-between items-center pb-2 border-b border-white/5 last:border-0">
-                  <span className="text-sm text-gray-300 truncate">{c.name}</span>
-                  <span className="text-xs font-medium text-gray-400">{c.percent}%</span>
+          {/* ── KPI CARDS ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}
+            className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+          >
+            {[
+              { label: "Total Problems",  value: counts.total,      icon: "🗂" },
+              { label: "Volunteers",      value: counts.volunteers,  icon: "🤝" },
+              { label: "Field Workers",   value: counts.workers,     icon: "🔧" },
+              { label: "Partner NGOs",    value: counts.ngos,        icon: "🏢" },
+            ].map((s, i) => (
+              <div key={i} className="card flex items-start gap-4">
+                <span className="text-2xl mt-0.5">{s.icon}</span>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 mb-1">{s.label}</p>
+                  <p className="text-2xl font-bold text-white leading-none"><Counter value={s.value} /></p>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            ))}
+          </motion.div>
 
-          <div className="card">
-            <h3 className="text-sm font-semibold uppercase tracking-widest text-gray-400 mb-5">Urgency Matrix</h3>
-            <div className="space-y-3">
-              {[
-                { name: "Critical", count: criticalCount, color: "text-red-400" },
-                { name: "High", count: highCount, color: "text-orange-400" },
-                { name: "Medium", count: mediumCount, color: "text-yellow-400" },
-                { name: "Low", count: lowCount, color: "text-green-400" },
-              ].map(u => (
-                <div key={u.name} className="flex items-center justify-between">
-                  <span className={`text-xs font-semibold uppercase tracking-widest ${u.color}`}>{u.name}</span>
-                  <span className="text-sm font-semibold text-white">{u.count}</span>
-                </div>
-              ))}
+          {/* ── ANALYTICS ROW ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.18 }}
+            className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6"
+          >
+            {/* Problem Flow */}
+            <div className="card">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 mb-5">Problem Flow</p>
+              <div className="space-y-3">
+                {[
+                  { label: "Open Issues",    val: openCount,     dot: "bg-red-400" },
+                  { label: "In Progress",    val: progressCount, dot: "bg-yellow-400" },
+                  { label: "Resolved",       val: resolvedCount, dot: "bg-green-400" },
+                ].map(r => (
+                  <div key={r.label} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${r.dot}`} />
+                      <span className="text-sm text-gray-300">{r.label}</span>
+                    </div>
+                    <span className="text-sm font-semibold text-white">{r.val}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* MAP SECTION */}
-        <div className="card p-0 mb-12 overflow-hidden border border-white/10">
-          <div className="h-[450px] w-full relative">
-            <MapView 
-              problems={problems} 
-              type="problems" 
-              height="100%" 
-              zoom={6} 
-              center={[22.3, 87.3]}
-            />
-          </div>
-        </div>
-
-        {/* RECENT REPORTS */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white">
-              {sortNearest ? "Nearest Solutions" : "Recent Reports"}
-            </h2>
-            <Link href="/problems" className="text-purple-400 text-sm font-medium hover:text-purple-300 transition-colors">View All →</Link>
-          </div>
-
-          {problems.length === 0 ? (
-            <div className="card text-center py-16">
-              <p className="text-white font-medium text-lg">No active reports found</p>
-              <p className="text-gray-400 text-sm mt-2">The platform is currently clear.</p>
+            {/* Distribution */}
+            <div className="card">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 mb-5">Category Distribution</p>
+              <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
+                {categoryData.length === 0 ? (
+                  <p className="text-xs text-gray-600 py-4">No data yet</p>
+                ) : categoryData.map(c => (
+                  <div key={c.name} className="flex items-center gap-3 py-1.5 border-b border-white/5 last:border-0">
+                    <span className="text-sm text-gray-300 flex-1 truncate">{c.name}</span>
+                    <div className="w-16 h-1 rounded-full bg-white/5 overflow-hidden">
+                      <div className="h-full bg-purple-500/60 rounded-full" style={{ width: `${c.percent}%` }} />
+                    </div>
+                    <span className="text-[11px] text-gray-500 w-8 text-right">{c.percent}%</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sortedProblems.slice(0, 6).map((p) => (
-                <ProblemCard key={p._id} problem={p} />
-              ))}
+
+            {/* Urgency Matrix */}
+            <div className="card">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 mb-5">Urgency Matrix</p>
+              <div className="space-y-3">
+                {[
+                  { label: "Critical", count: criticalCount, bar: "bg-red-500",    text: "text-red-400"    },
+                  { label: "High",     count: highCount,     bar: "bg-orange-500", text: "text-orange-400" },
+                  { label: "Medium",   count: mediumCount,   bar: "bg-yellow-500", text: "text-yellow-400" },
+                  { label: "Low",      count: lowCount,      bar: "bg-green-500",  text: "text-green-400"  },
+                ].map(u => (
+                  <div key={u.label} className="flex items-center gap-3">
+                    <span className={`text-[11px] font-bold uppercase tracking-wider w-14 ${u.text}`}>{u.label}</span>
+                    <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${u.bar} opacity-70`}
+                        style={{ width: `${Math.min((u.count / (problems.length || 1)) * 100, 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-semibold text-white w-6 text-right">{u.count}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          )}
-        </div>
-      </main>
+          </motion.div>
+
+          {/* ── LIVE MAP ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.24 }}
+            className="card p-0 overflow-hidden mb-8"
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
+              <div>
+                <p className="text-sm font-semibold text-white">Live Operations Map</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">{problems.length} active incidents</p>
+              </div>
+              <span className="flex items-center gap-1.5 text-[11px] text-green-400 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                Live
+              </span>
+            </div>
+            <div className="h-[420px] w-full">
+              <MapView problems={problems} type="problems" height="100%" zoom={6} center={[22.3, 87.3]} />
+            </div>
+          </motion.div>
+
+          {/* ── RECENT REPORTS ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.3 }}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-base font-semibold text-white">
+                {sortNearest ? "Nearest Problems" : "Recent Reports"}
+              </h2>
+              <Link href="/problems" className="text-purple-400 text-sm font-medium hover:text-purple-300 transition-colors">
+                View All →
+              </Link>
+            </div>
+
+            {problems.length === 0 ? (
+              <div className="card text-center py-16">
+                <p className="text-white font-medium">No active reports</p>
+                <p className="text-gray-500 text-sm mt-1">The platform is currently clear.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {sortedProblems.slice(0, 6).map(p => (
+                  <ProblemCard key={p._id} problem={p} />
+                ))}
+              </div>
+            )}
+          </motion.div>
+
+        </main>
       </PageWrapper>
 
-      {/* Floating Action Button */}
-      <div className="fixed bottom-8 right-8 z-[60]">
+      {/* ── FAB ── */}
+      <div className="fixed bottom-7 right-7 z-50">
         <Link href="/submit">
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="relative flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-2xl shadow-purple-500/40 overflow-hidden group border border-white/20"
+            whileHover={{ scale: 1.06 }}
+            whileTap={{ scale: 0.94 }}
+            className="w-13 h-13 flex items-center justify-center rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-xl shadow-purple-600/30 border border-white/15 text-xl"
             title="New Report"
           >
-            <span className="relative z-10 text-2xl drop-shadow-md">➕</span>
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-300 bg-white/20 blur-lg"></div>
+            ＋
           </motion.button>
         </Link>
       </div>
     </div>
   );
 }
+
