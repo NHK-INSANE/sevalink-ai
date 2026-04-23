@@ -360,12 +360,12 @@ export default function MapView({
                       </div>
                       <p style={{ fontSize: "11px", color: "#6b7280", marginBottom: 6, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.description}</p>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: "10px", color: "#9ca3af" }}>📂 {p.category}</span>
+                        <span style={{ fontSize: "10px", color: "#9ca3af" }}>📂 {Array.isArray(p.category) ? p.category.join(", ") : p.category}</span>
                         {p.status && (
                           <span style={{
                             fontSize: "10px", fontWeight: "700", padding: "1px 6px", borderRadius: 4,
-                            background: p.status === "Open" ? "#eff6ff" : p.status === "In Progress" ? "#fefce8" : "#f0fdf4",
-                            color: p.status === "Open" ? "#2563eb" : p.status === "In Progress" ? "#ca8a04" : "#16a34a",
+                            background: String(p.status).toLowerCase() === "open" ? "#eff6ff" : String(p.status).toLowerCase() === "in progress" ? "#fefce8" : "#f0fdf4",
+                            color: String(p.status).toLowerCase() === "open" ? "#2563eb" : String(p.status).toLowerCase() === "in progress" ? "#ca8a04" : "#16a34a",
                           }}>{p.status}</span>
                         )}
                       </div>

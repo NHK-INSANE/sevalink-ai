@@ -36,12 +36,16 @@ async function matchVolunteers(problem, topN = 5) {
       const distScore = Math.max(0, 100 - dist);
       score += distScore;
 
-      const uSkills = (u.skills || []).map(s => s.toLowerCase());
-      if (u.skill) uSkills.push(u.skill.toLowerCase());
-      const pSkill = (problem.category || "").toLowerCase();
+      const uSkills = (u.skills || []).map(s => String(s).toLowerCase());
+      if (u.skill) uSkills.push(String(u.skill).toLowerCase());
+      
+      const pCat = Array.isArray(problem.category) ? problem.category[0] : problem.category;
+      const pSkill = String(pCat || "").toLowerCase();
+      
       if (pSkill && uSkills.includes(pSkill)) score += 50;
 
-      score += (urgencyBoost[problem.urgency?.toLowerCase()] || 0);
+      const urgencyStr = String(problem.urgency || "").toLowerCase();
+      score += (urgencyBoost[urgencyStr] || 0);
 
       return { user: u, score, distKm: Math.round(dist) };
     });

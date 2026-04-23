@@ -25,11 +25,15 @@ function matchVolunteers(problem, helpers, topN = 5) {
       const dist = getDistance(problem.location?.lat, problem.location?.lng, h.location?.lat, h.location?.lng);
       const distKm = dist ?? 999;
       score += Math.max(0, 100 - distKm);
-      const hSkills = (h.skills || []).map((s) => s.toLowerCase());
-      if (h.skill) hSkills.push(h.skill.toLowerCase());
-      const pSkill = (problem.requiredSkill || problem.category || "").toLowerCase();
+      const hSkills = (h.skills || []).map((s) => String(s).toLowerCase());
+      if (h.skill) hSkills.push(String(h.skill).toLowerCase());
+      
+      const pCat = Array.isArray(problem.category) ? problem.category[0] : problem.category;
+      const pReqSkill = Array.isArray(problem.requiredSkills) ? problem.requiredSkills[0] : problem.requiredSkill;
+      const pSkill = String(pReqSkill || pCat || "").toLowerCase();
+
       if (pSkill && hSkills.includes(pSkill)) score += 50;
-      score += urgencyBoost[problem.urgency?.toLowerCase()] || 0;
+      score += urgencyBoost[String(problem.urgency || "").toLowerCase()] || 0;
       return { ...h, score: Math.round(score), distKm };
     })
     .sort((a, b) => b.score - a.score)
