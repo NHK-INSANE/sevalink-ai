@@ -132,7 +132,7 @@ export default function ProblemsPage() {
     <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] transition duration-300">
       <Navbar />
       <PageWrapper>
-      <main className="page-container">
+      <main className="page-container px-6 lg:px-12">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
           <div>
@@ -175,68 +175,43 @@ export default function ProblemsPage() {
             />
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Urgency Level</label>
-              <div className="relative">
-                <select
-                  value={filterUrgency}
-                  onChange={(e) => setFilterUrgency(e.target.value)}
-                  className="w-full pl-4 pr-10 py-2.5 rounded-[10px] border border-white/10 bg-black/20 text-[13px] font-semibold text-white outline-none focus:border-purple-500 cursor-pointer appearance-none"
-                >
-                  <option value="All">&nbsp;&nbsp;All Levels</option>
-                  <option value="Critical">&nbsp;&nbsp;Critical Only</option>
-                  <option value="High">&nbsp;&nbsp;High Priority</option>
-                  <option value="Medium">&nbsp;&nbsp;Medium</option>
-                  <option value="Low">&nbsp;&nbsp;Low Priority</option>
-                </select>
-                <svg className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            {/* Urgency */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs text-gray-400">URGENCY LEVEL</label>
+              <select
+                value={filterUrgency}
+                onChange={(e) => setFilterUrgency(e.target.value)}
+                className="w-full px-4 py-2 rounded-md bg-[#0B1220] border border-gray-700 focus:outline-none text-sm text-white"
+              >
+                <option value="All">All Levels</option>
+                <option value="Critical">Critical Only</option>
+                <option value="High">High Priority</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low Priority</option>
+              </select>
             </div>
             
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Current Status</label>
-              <div className="relative">
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="w-full pl-4 pr-10 py-2.5 rounded-[10px] border border-white/10 bg-black/20 text-[13px] font-semibold text-white outline-none focus:border-purple-500 cursor-pointer appearance-none"
-                >
-                  <option value="All">&nbsp;&nbsp;All Statuses</option>
-                  <option value="Open">&nbsp;&nbsp;Open Reports</option>
-                  <option value="In Progress">&nbsp;&nbsp;Active Responding</option>
-                  <option value="Resolved">&nbsp;&nbsp;Resolved Cases</option>
-                </select>
-                <svg className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-              </div>
-            </div>
-            
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Sort Logic</label>
-              <div className="relative">
-                <select
-                  value={sortBy}
-                  onChange={(e) => {
-                    setSortBy(e.target.value);
-                    if (e.target.value === "nearest" && !userLoc) {
-                      handleLocateAndSort();
-                    }
-                  }}
-                  className="w-full pl-4 pr-10 py-2.5 rounded-[10px] border border-white/10 bg-black/20 text-[13px] font-semibold text-white outline-none focus:border-purple-500 cursor-pointer appearance-none"
-                >
-                  <option value="nearest">&nbsp;&nbsp;Sorted at nearest</option>
-                  <option value="urgency">&nbsp;&nbsp;Sorted at urgency level</option>
-                  <option value="score">&nbsp;&nbsp;Priority indexing</option>
-                </select>
-                <svg className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-              </div>
+            {/* Status */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs text-gray-400">CURRENT STATUS</label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full px-4 py-2 rounded-md bg-[#0B1220] border border-gray-700 focus:outline-none text-sm text-white"
+              >
+                <option value="All">All Statuses</option>
+                <option value="Open">Open</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Resolved">Resolved</option>
+              </select>
             </div>
           </div>
         </div>
 
         {/* Grid */}
         {loading && problems.length === 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
             {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : (
@@ -254,7 +229,7 @@ export default function ProblemsPage() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
                 {filtered.map((p) => (
                   <ProblemCard
                     key={p._id}
