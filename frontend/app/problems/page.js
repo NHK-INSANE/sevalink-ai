@@ -254,13 +254,23 @@ export default function ProblemsPage() {
       </PageWrapper>
 
 
-      {/* Floating Action Button - Moved up to avoid chat overlap */}
-      <Link 
-        href="/submit" 
-        className="fixed bottom-24 right-6 z-50 bg-[var(--primary)] text-white w-14 h-14 flex items-center justify-center rounded-full shadow-lg hover:scale-110 active:scale-95 transition text-2xl"
-      >
-        ➕
-      </Link>
+      {/* FAB - using global fab class (bottom-100px, right-28px, z-fab) */}
+      <div className="fab">
+        <Link
+          href="/submit"
+          className="btn-primary"
+          style={{
+            width: 52, height: 52,
+            borderRadius: 16,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 22,
+            boxShadow: "0 8px 32px rgba(99,102,241,0.4)",
+          }}
+          title="New Report"
+        >
+          ➕
+        </Link>
+      </div>
     </div>
   );
 }

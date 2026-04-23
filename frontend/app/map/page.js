@@ -17,10 +17,16 @@ const API_BASE =
 const MapView = dynamic(() => import("../components/MapView"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full flex items-center justify-center bg-gray-50 animate-pulse">
-      <div className="flex flex-col items-center gap-3 text-blue-600">
-        <span className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-        <span className="font-medium text-sm">Initializing Map...</span>
+    <div
+      style={{
+        width: "100%", height: "100%",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        background: "var(--bg-card)",
+      }}
+    >
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+        <span className="loader" />
+        <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>Initializing Map…</span>
       </div>
     </div>
   ),

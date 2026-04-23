@@ -33,8 +33,7 @@ const SKILLS_LIST = [
   "Other",
 ];
 
-const INPUT_CLS =
-  "w-full p-3 rounded-lg bg-[#1F2937] text-white border border-gray-600 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200";
+const INPUT_CLS = "auth-input";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ role: "User" });
@@ -146,28 +145,46 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B1120] text-[#E5E7EB] flex items-center justify-center px-4 py-12 transition duration-200">
+    <div
+      style={{
+        minHeight: "100vh",
+        background:
+          "radial-gradient(ellipse at 20% 20%, rgba(99,102,241,0.12), transparent 45%)," +
+          "radial-gradient(ellipse at 80% 80%, rgba(168,85,247,0.10), transparent 45%)," +
+          "var(--bg-main)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "32px 16px",
+      }}
+    >
       <PageWrapper>
-      <div className="w-full max-w-lg">
+      <div style={{ width: "100%", maxWidth: 480 }}>
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <span className="font-bold text-3xl text-blue-500 tracking-tight">
-              SevaLink AI
-            </span>
-          </div>
-          <h1 className="text-2xl font-bold text-white">Create your account</h1>
-          <p className="text-gray-400 mt-1 text-sm">
-            Join the community — pick your role below
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <h1
+            style={{
+              fontSize: 26, fontWeight: 800,
+              background: "linear-gradient(135deg,#fff 30%,#a78bfa 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              marginBottom: 6,
+            }}
+          >
+            Create your account
+          </h1>
+          <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+            Join SevaLink — pick your role to get started
           </p>
         </div>
 
-        <div className="bg-[#111827] text-white rounded-2xl shadow-lg p-8 border border-gray-700 transition duration-200">
+        <div className="auth-card" style={{ padding: 28 }}>
           <form onSubmit={handleRegister} className="space-y-4">
 
             {/* Role selector */}
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-2">
+              <label className="section-label" style={{ display: "block", marginBottom: 10 }}>
                 I am a…
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -178,16 +195,29 @@ export default function RegisterPage() {
                     onClick={() =>
                       setForm((prev) => ({ ...prev, role }))
                     }
-                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition duration-200 text-left ${
-                      form.role === role
-                        ? "border-blue-500 bg-blue-600 text-white shadow-sm"
-                        : "border-gray-700 bg-[#1F2937] text-gray-300 hover:border-gray-600 hover:bg-gray-800"
-                    }`}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: "10px 12px",
+                      borderRadius: 10,
+                      border: form.role === role
+                        ? "1px solid rgba(99,102,241,0.5)"
+                        : "1px solid var(--glass-border)",
+                      background: form.role === role
+                        ? "rgba(99,102,241,0.15)"
+                        : "rgba(255,255,255,0.03)",
+                      color: "var(--text-primary)",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      transition: "all 0.2s ease",
+                      boxShadow: form.role === role
+                        ? "0 4px 12px rgba(99,102,241,0.2)"
+                        : "none",
+                    }}
                   >
-                    <span>{ROLE_INFO[role].icon}</span>
+                    <span style={{ fontSize: 20 }}>{ROLE_INFO[role].icon}</span>
                     <div>
-                      <div className="leading-tight text-white">{role}</div>
-                      <div className="text-[10px] text-gray-400 font-normal leading-tight">
+                      <div style={{ fontSize: 13, fontWeight: 600, color: form.role === role ? "white" : "var(--text-primary)" }}>{role}</div>
+                      <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 1 }}>
                         {ROLE_INFO[role].desc}
                       </div>
                     </div>
@@ -271,7 +301,8 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
+                      style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: 12, fontWeight: 500 }}
+                      className="hover:text-white transition-colors"
                     >
                       {showPassword ? "Hide" : "Show"}
                     </button>
@@ -343,7 +374,8 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                      style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: 12, fontWeight: 500 }}
+                      className="hover:text-white transition-colors"
                     >
                       {showPassword ? "Hide" : "Show"}
                     </button>
@@ -366,7 +398,8 @@ export default function RegisterPage() {
                   type="button"
                   id="detect-location-btn"
                   onClick={detectLocation}
-                  className="flex items-center gap-1.5 text-blue-600 hover:text-blue-500 font-semibold text-xs transition duration-200"
+                  style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--primary-light)", fontSize: 12, fontWeight: 600, background: "none", border: "none", cursor: "pointer", transition: "color 0.2s ease" }}
+                  className="hover:text-white"
                 >
                   📍 Auto Detect GPS
                 </button>
@@ -374,23 +407,23 @@ export default function RegisterPage() {
               
               {/* Show Selected Location */}
               {location && (
-                <p className="text-sm text-blue-600 mt-2 text-center font-medium">
+                <p style={{ fontSize: 12, color: "var(--primary-light)", marginTop: 8, textAlign: "center", fontWeight: 500 }}>
                   📍 GPS Location: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
                 </p>
               )}
 
               {/* Pin-to-map restoration */}
-              <div className="mt-4">
-                <p className="text-sm font-medium text-gray-600 mb-1">Pin your location on map <span className="text-gray-400">(click on map)</span></p>
-                <div style={{ height: "250px" }} className="rounded-xl overflow-hidden border border-gray-100 shadow-md transition-colors">
+              <div style={{ marginTop: 12 }}>
+                <p style={{ fontSize: 12, fontWeight: 500, color: "var(--text-secondary)", marginBottom: 8 }}>Pin your location on map <span style={{ color: "var(--text-muted)" }}>(click on map)</span></p>
+                <div style={{ height: 220, borderRadius: 12, overflow: "hidden", border: "1px solid var(--glass-border)" }}>
                   <MapPicker 
                     setLocation={setLocation} 
                     setAddress={setAddress} 
                   />
                 </div>
                 {location && (
-                  <p className="text-xs text-emerald-600 mt-2.5 font-medium flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <p style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#4ade80", marginTop: 8, fontWeight: 500 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e" }} />
                     Verified Pin: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
                   </p>
                 )}
@@ -486,11 +519,12 @@ export default function RegisterPage() {
               id="register-submit"
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg transition duration-200 shadow-sm text-sm font-semibold mt-2 disabled:opacity-60 flex items-center justify-center gap-2"
+              className="btn-primary"
+              style={{ width: "100%", padding: "13px", fontSize: 14, marginTop: 4, opacity: loading ? 0.7 : 1 }}
             >
               {loading ? (
                 <>
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span className="loader-small" />
                   Creating account…
                 </>
               ) : (
@@ -499,15 +533,10 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-400">
+          <p style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "var(--text-muted)" }}>
             Already have an account?{" "}
-            <Link
-              href="/login"
-              className="text-blue-400 hover:text-blue-300 font-medium transition duration-200"
-            >
-              Login
-            </Link>
-          </div>
+            <Link href="/login" style={{ color: "var(--primary-light)", fontWeight: 600 }}>Sign in →</Link>
+          </p>
         </div>
       </div>
       </PageWrapper>

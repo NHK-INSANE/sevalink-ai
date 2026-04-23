@@ -4,7 +4,7 @@ import { login } from "../utils/auth";
 import { loginUser } from "../utils/api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import PageWrapper from "../components/PageWrapper";
+import { Eye, EyeOff, MapPin, Link2, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
   const [form, setForm] = useState({ identifier: "", password: "" });
@@ -37,113 +37,223 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B1120] text-[#E5E7EB] flex items-center justify-center px-4 transition duration-200">
-      <PageWrapper>
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <h1 className="font-bold text-3xl text-blue-500 mb-2">SevaLink AI</h1>
-          <h2 className="text-2xl font-bold text-white">Welcome back</h2>
-          <p className="text-gray-400 mt-1 text-sm">Login to continue helping your community</p>
+    <div
+      style={{
+        minHeight: "100vh",
+        background:
+          "radial-gradient(ellipse at 20% 20%, rgba(99,102,241,0.12), transparent 45%)," +
+          "radial-gradient(ellipse at 80% 80%, rgba(168,85,247,0.10), transparent 45%)," +
+          "var(--bg-main)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px 16px",
+      }}
+    >
+      <div style={{ width: "100%", maxWidth: 420 }}>
+        {/* Brand */}
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{ display: "inline-flex", gap: 6, marginBottom: 16, alignItems: "center" }}>
+            <div
+              style={{
+                width: 36, height: 36, borderRadius: 11,
+                background: "linear-gradient(135deg,#6366f1,#4f46e5)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "white", boxShadow: "0 4px 16px rgba(99,102,241,0.4)",
+              }}
+            >
+              <MapPin size={18} />
+            </div>
+            <div
+              style={{
+                width: 36, height: 36, borderRadius: 11,
+                background: "linear-gradient(135deg,#a855f7,#9333ea)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "white", boxShadow: "0 4px 16px rgba(168,85,247,0.4)",
+                marginLeft: -10,
+              }}
+            >
+              <Link2 size={18} />
+            </div>
+          </div>
+          <h1
+            style={{
+              fontSize: 28, fontWeight: 800,
+              background: "linear-gradient(135deg,#fff 30%,#a78bfa 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              marginBottom: 6,
+            }}
+          >
+            Welcome back
+          </h1>
+          <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+            Sign in to SevaLink AI to continue
+          </p>
         </div>
 
         {/* Card */}
-        <div className="bg-[#111827] text-white shadow-lg border border-gray-700 rounded-2xl p-8 transition duration-200">
+        <div className="auth-card" style={{ padding: 28 }}>
 
-          {/* Tabs */}
-          <div className="flex gap-2 mb-6 p-1 bg-[#1F2937] rounded-xl border border-gray-700">
-            <button
-              type="button"
-              onClick={() => setMode("user")}
-              className={`flex-1 py-2 text-sm font-medium rounded-lg transition duration-200 ${
-                mode === "user"
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "text-gray-400 hover:text-gray-200"
-              }`}
-            >
-              👤 User / Volunteer
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("ngo")}
-              className={`flex-1 py-2 text-sm font-medium rounded-lg transition duration-200 ${
-                mode === "ngo"
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "text-gray-400 hover:text-gray-200"
-              }`}
-            >
-              🏢 NGO Login
-            </button>
+          {/* Mode Tabs */}
+          <div
+            style={{
+              display: "flex",
+              gap: 6,
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid var(--glass-border)",
+              borderRadius: 12,
+              padding: 4,
+              marginBottom: 24,
+            }}
+          >
+            {[
+              { key: "user", label: "User / Volunteer" },
+              { key: "ngo",  label: "NGO Login" },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setMode(tab.key)}
+                style={{
+                  flex: 1, padding: "9px 12px",
+                  borderRadius: 9,
+                  fontSize: 13, fontWeight: 600,
+                  cursor: "pointer",
+                  border: "none",
+                  transition: "all 0.2s ease",
+                  background: mode === tab.key
+                    ? "var(--primary-gradient)"
+                    : "transparent",
+                  color: mode === tab.key ? "white" : "var(--text-secondary)",
+                  boxShadow: mode === tab.key
+                    ? "0 4px 12px rgba(99,102,241,0.3)"
+                    : "none",
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* Identifier */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">
+              <label
+                style={{
+                  display: "block", fontSize: 12, fontWeight: 600,
+                  color: "var(--text-secondary)", marginBottom: 7,
+                  letterSpacing: "0.04em", textTransform: "uppercase",
+                }}
+              >
                 {mode === "ngo" ? "NGO Name or Email" : "Email / Username / Phone"}
               </label>
               <input
                 id="login-identifier"
                 type="text"
-                placeholder={mode === "ngo" ? "Enter NGO Name or Email" : "Enter Email / Username / Phone"}
+                placeholder={mode === "ngo" ? "org@example.com" : "you@example.com"}
                 value={form.identifier}
                 onChange={update("identifier")}
-                className="w-full p-3 rounded-lg bg-[#1F2937] text-white border border-gray-600 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+                className="auth-input"
+                style={{ width: "100%", padding: "12px 16px" }}
               />
             </div>
 
+            {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">Password</label>
-              <div className="relative">
+              <label
+                style={{
+                  display: "block", fontSize: 12, fontWeight: 600,
+                  color: "var(--text-secondary)", marginBottom: 7,
+                  letterSpacing: "0.04em", textTransform: "uppercase",
+                }}
+              >
+                Password
+              </label>
+              <div style={{ position: "relative" }}>
                 <input
                   id="login-password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={form.password}
                   onChange={update("password")}
-                  className="w-full p-3 rounded-lg bg-[#1F2937] text-white border border-gray-600 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+                  className="auth-input"
+                  style={{ width: "100%", padding: "12px 44px 12px 16px" }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors"
+                  style={{
+                    position: "absolute", right: 12, top: "50%",
+                    transform: "translateY(-50%)",
+                    color: "var(--text-muted)", background: "none",
+                    border: "none", cursor: "pointer",
+                    display: "flex", alignItems: "center",
+                    transition: "color 0.2s ease",
+                  }}
+                  className="hover:text-white"
                 >
-                  {showPassword ? "Hide" : "Show"}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
+            {/* Error */}
             {error && (
-              <div className="p-3 rounded-lg bg-red-900/30 border border-red-800 text-red-400 text-xs">
-                ⚠️ {error}
+              <div
+                style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  padding: "10px 14px",
+                  background: "rgba(239,68,68,0.08)",
+                  border: "1px solid rgba(239,68,68,0.2)",
+                  borderRadius: 10,
+                  color: "#f87171",
+                  fontSize: 13,
+                }}
+              >
+                <AlertCircle size={14} style={{ flexShrink: 0 }} />
+                {error}
               </div>
             )}
 
+            {/* Submit */}
             <button
               id="login-submit"
               type="submit"
               disabled={loading}
-              className="ripple w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition duration-200 shadow-sm font-semibold text-sm mt-2 disabled:opacity-60 flex items-center justify-center gap-2 hover:scale-105 active:scale-95"
+              className="btn-primary"
+              style={{
+                width: "100%", padding: "13px",
+                fontSize: 14, marginTop: 4,
+                opacity: loading ? 0.7 : 1,
+              }}
             >
               {loading ? (
                 <>
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Logging in…
+                  <span className="loader-small" />
+                  Signing in…
                 </>
               ) : (
-                "Login →"
+                "Sign In →"
               )}
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-400">
-            Don&apos;t have an account?{" "}
-            <Link href="/register" className="text-blue-400 hover:text-blue-300 font-medium transition duration-200">
-              Register here
+          {/* Footer */}
+          <p style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "var(--text-muted)" }}>
+            No account?{" "}
+            <Link href="/register" style={{ color: "var(--primary-light)", fontWeight: 600, transition: "color 0.2s" }}>
+              Create one →
             </Link>
-          </div>
+          </p>
         </div>
+
+        {/* Subtle tagline */}
+        <p style={{ textAlign: "center", marginTop: 24, fontSize: 12, color: "var(--text-muted)", lineHeight: 1.5 }}>
+          Connecting communities to crisis response<br />through AI-powered coordination.
+        </p>
       </div>
-      </PageWrapper>
     </div>
   );
 }

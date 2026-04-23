@@ -240,20 +240,17 @@ export default function Dashboard() {
   // Loading State with Skeletons
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--bg-main)]">
+      <div style={{ minHeight: "100vh", background: "var(--bg-main)" }}>
         <Navbar />
-        <main className="max-w-7xl mx-auto px-6 py-10 mt-16 space-y-12 pt-16">
-          <div className="h-12 bg-white/5 rounded-2xl w-64 animate-pulse"></div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <main style={{ maxWidth: "var(--content-max)", margin: "0 auto", padding: "0 var(--content-pad)", paddingTop: "calc(var(--navbar-height) + 48px)", paddingBottom: 80 }}>
+          <div className="h-12 skeleton rounded-2xl w-64" style={{ marginBottom: 32 }} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" style={{ marginBottom: 32 }}>
             <SkeletonStats /> <SkeletonStats /> <SkeletonStats /> <SkeletonStats />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-             <div className="card h-64 animate-pulse bg-white/5 border-white/5" />
-             <div className="card h-64 animate-pulse bg-white/5 border-white/5" />
-             <div className="card h-64 animate-pulse bg-white/5 border-white/5" />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
+             <div className="card h-64 skeleton border-white/5" />
+             <div className="card h-64 skeleton border-white/5" />
+             <div className="card h-64 skeleton border-white/5" />
           </div>
         </main>
       </div>
@@ -261,11 +258,11 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] transition duration-300">
+    <div style={{ minHeight: "100vh", background: "var(--bg-main)" }}>
       <Navbar />
       
       <PageWrapper>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 space-y-12">
+      <main style={{ maxWidth: "var(--content-max)", margin: "0 auto", padding: "0 var(--content-pad)", paddingTop: "calc(var(--navbar-height) + 48px)", paddingBottom: 80 }}>
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
           <div>
             <h1 className="text-4xl font-extrabold tracking-tight gradient-text">
@@ -477,14 +474,19 @@ export default function Dashboard() {
       </main>
       </PageWrapper>
 
-      {/* Floating Action Buttons */}
+      {/* Floating Action Button - Correct position using --z-fab */}
       <div className="fab">
-        <Link 
-          href="/submit" 
-        >
+        <Link href="/submit">
           <motion.button
             whileTap={{ scale: 0.9 }}
-            className="w-14 h-14 btn-glow text-white flex items-center justify-center rounded-[1.25rem] shadow-[0_10px_40px_var(--primary-glow)] hover:scale-110 active:scale-95 transition text-2xl border border-white/10"
+            className="btn-primary"
+            style={{
+              width: 52, height: 52,
+              borderRadius: 16,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 22,
+              boxShadow: "0 8px 32px rgba(99,102,241,0.4)",
+            }}
             title="New Report"
           >
             ➕
