@@ -133,6 +133,11 @@ app.get("/api/users", async (req, res) => {
 });
 
 // Routes
+const problemRoutes = require("./routes/problemRoutes");
+const aiRoutes = require("./routes/aiRoutes");
+const userRoutes = require("./routes/userRoutes");
+const statsRoutes = require("./routes/statsRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 const teamRoutes = require("./routes/teamRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 
