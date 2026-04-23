@@ -39,9 +39,10 @@ const io = new Server(server, {
 // Attach io to app for use in routes
 app.set("io", io);
 
-// Middleware
+// Middleware — CORS first, before everything else
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+// Express 5 compatible preflight: use regex instead of bare "*"
+app.options(/.*/, cors(corsOptions));
 app.use(express.json());
 
 // Real-time Socket Mapping
