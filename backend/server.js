@@ -24,19 +24,26 @@ const limiter = rateLimit({
 });
 app.use("/api/", limiter);
 
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Reflect the request origin, or allow if no origin (e.g. Postman)
+    callback(null, origin || true);
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"]
+};
+
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: (origin, callback) => callback(null, true), credentials: true }
+  cors: corsOptions
 });
 
 // Attach io to app for use in routes
 app.set("io", io);
 
 // Middleware
-app.use(cors({
-  origin: (origin, callback) => callback(null, true),
-  credentials: true
-}));
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Real-time Socket Mapping
