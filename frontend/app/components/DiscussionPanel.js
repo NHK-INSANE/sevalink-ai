@@ -124,12 +124,27 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
   };
 
   return (
+    <>
+    {/* Overlay */}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998]"
+      style={{ top: "var(--navbar-height)" }}
+    />
+
     <motion.div
       initial={{ x: "100%" }}
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 30, stiffness: 300 }}
-      className="fixed top-0 right-0 h-full w-full md:w-[420px] glass-strong shadow-2xl z-[10000] flex flex-col border-l border-white/10"
+      className="fixed right-0 w-full md:w-[420px] glass-strong shadow-2xl z-[10000] flex flex-col border-l border-white/10"
+      style={{ 
+        top: "var(--navbar-height)",
+        height: "calc(100vh - var(--navbar-height))"
+      }}
     >
       {/* Header */}
       <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">

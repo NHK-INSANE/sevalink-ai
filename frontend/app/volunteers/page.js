@@ -5,7 +5,7 @@ import PageWrapper from "../components/PageWrapper";
 import { getUsers } from "../utils/api";
 import { getUserLocation } from "../utils/location";
 import toast from "react-hot-toast";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const ROLE_FILTERS = [
   { key: "all",       label: "All Helpers" },
@@ -18,18 +18,17 @@ export default function VolunteersPage() {
   const [loading, setLoading] = useState(true);
   const [filterRole, setFilterRole] = useState("all");
   const [userLoc, setUserLoc] = useState(null);
-  const [sortNearest, setSortNearest] = useState(false);
+  const [sortBy, setSortBy] = useState("name");
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [connectReason, setConnectReason] = useState("");
 
-  const handleLocateAndSort = async () => {
-    if (sortNearest) {
-      setSortNearest(false);
-      return;
-    }
+  const handleLocate = async () => {
     try {
       const loc = await getUserLocation();
       setUserLoc(loc);
-      setSortNearest(true);
-      toast.success("Sorting by proximity");
+      setSortBy("nearest");
+      toast.success("Location acquired. Sorting by proximity.");
     } catch (err) {
       toast.error("Could not get location");
     }
@@ -40,112 +39,82 @@ export default function VolunteersPage() {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
   }
 
   useEffect(() => {
     getUsers()
       .then((data) => {
-        const helpers = data.filter(
-          (u) =>
-            u.role?.toLowerCase() === "volunteer" ||
-            u.role?.toLowerCase() === "worker"
-        );
+        const helpers = data.filter((u) => u.role?.toLowerCase() === "volunteer" || u.role?.toLowerCase() === "worker");
         setUsers(helpers);
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
   }, []);
 
-  let filtered =
-    filterRole === "all"
-      ? users
-      : users.filter((u) => u.role?.toLowerCase() === filterRole);
+  const filtered = filterRole === "all" ? users : users.filter((u) => u.role?.toLowerCase() === filterRole);
 
-  if (sortNearest && userLoc) {
-    filtered = [...filtered].sort((a, b) => {
+  const sorted = [...filtered].sort((a, b) => {
+    if (sortBy === "nearest" && userLoc) {
       const d1 = getDistance(userLoc.lat, userLoc.lng, a.location?.lat, a.location?.lng);
       const d2 = getDistance(userLoc.lat, userLoc.lng, b.location?.lat, b.location?.lng);
       return d1 - d2;
-    });
-  }
+    }
+    return (a.name || "").toLowerCase().localeCompare((b.name || "").toLowerCase());
+  });
+
+  const handleConnect = (user) => {
+    setSelectedUser(user);
+    setShowConnectModal(true);
+  };
+
+  const submitConnectRequest = () => {
+    if (!connectReason.trim()) return toast.error("Please provide a reason");
+    toast.success(`Request sent to ${selectedUser.name}`);
+    setShowConnectModal(false);
+    setConnectReason("");
+  };
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-main)" }}>
+    <div className="min-h-screen bg-[var(--bg-main)]">
       <Navbar />
       <PageWrapper>
-        <main
-          style={{
-            maxWidth: "var(--content-max)",
-            margin: "0 auto",
-            padding: "0 var(--content-pad)",
-            paddingTop: "calc(var(--navbar-height) + 48px)",
-            paddingBottom: 80,
-          }}
-        >
+        <main className="max-w-[var(--content-max)] mx-auto px-6 lg:px-12 py-12 flex flex-col gap-[28px]">
+          
           {/* ── Header ── */}
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "space-between",
-              alignItems: "flex-end",
-              gap: 16,
-              marginBottom: 32,
-            }}
-          >
-            <div>
-              <h1
-                style={{
-                  fontSize: 30,
-                  fontWeight: 800,
-                  color: "var(--text-primary)",
-                  marginBottom: 6,
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                Helpers &amp; Volunteers
-              </h1>
-              <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-                People actively resolving civic issues across the SevaLink network.
-              </p>
+          <div className="flex flex-col md:flex-row justify-between items-end gap-6">
+            <div className="space-y-1.5">
+              <h1 className="text-3xl font-extrabold tracking-tight text-white">Helpers &amp; Volunteers</h1>
+              <p className="text-[var(--text-secondary)] text-sm font-medium">People actively resolving civic issues across the network.</p>
             </div>
 
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={handleLocateAndSort}
-              className="btn-secondary"
-              style={{ fontSize: 12, padding: "8px 24px" }}
-            >
-              {sortNearest ? "Reset Sort" : "Sort by Nearest"}
-            </motion.button>
+            <div className="flex items-center gap-3">
+              <select 
+                value={sortBy} 
+                onChange={(e) => {
+                  if (e.target.value === "nearest" && !userLoc) handleLocate();
+                  else setSortBy(e.target.value);
+                }}
+                className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs font-semibold text-gray-300 outline-none hover:border-purple-500/50 transition cursor-pointer"
+              >
+                <option value="name" className="bg-[#0f172a]">Sort by Name</option>
+                <option value="nearest" className="bg-[#0f172a]">Sort by Nearest</option>
+              </select>
+            </div>
           </div>
 
           {/* ── Filter Pills ── */}
-          <div style={{ display: "flex", gap: 6, marginBottom: 32 }}>
+          <div className="flex flex-wrap gap-2">
             {ROLE_FILTERS.map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => setFilterRole(key)}
-                style={{
-                  padding: "7px 16px",
-                  borderRadius: 10,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  border: filterRole === key
-                    ? "1px solid rgba(99,102,241,0.5)"
-                    : "1px solid var(--glass-border)",
-                  background: filterRole === key
-                    ? "rgba(99,102,241,0.15)"
-                    : "rgba(255,255,255,0.03)",
-                  color: filterRole === key ? "white" : "var(--text-secondary)",
-                  transition: "all 0.2s ease",
-                  boxShadow: filterRole === key ? "0 2px 8px rgba(99,102,241,0.2)" : "none",
-                }}
+                className={`px-5 py-2 rounded-xl text-xs font-bold transition-all border ${
+                  filterRole === key 
+                    ? "bg-indigo-600/20 text-white border-indigo-500/50 shadow-lg shadow-indigo-500/10" 
+                    : "bg-white/5 text-gray-400 border-white/5 hover:bg-white/10 hover:text-gray-200"
+                }`}
               >
                 {label}
               </button>
@@ -154,204 +123,55 @@ export default function VolunteersPage() {
 
           {/* ── Content ── */}
           {loading ? (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-                gap: 28,
-              }}
-            >
-              {[...Array(8)].map((_, i) => (
-                <div
-                  key={i}
-                  className="skeleton"
-                  style={{ height: 200, borderRadius: 16 }}
-                />
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => <div key={i} className="skeleton h-64 rounded-2xl" />)}
             </div>
-          ) : filtered.length === 0 ? (
-            <div
-              className="card"
-              style={{
-                padding: "64px 24px",
-                textAlign: "center",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 12,
-                border: "1px dashed rgba(255,255,255,0.08)",
-              }}
-            >
-              <div style={{ fontSize: 32, fontWeight: 800, color: "var(--text-muted)" }}>
-                No Helpers
-              </div>
-              <p style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>
-                No helpers registered yet
-              </p>
-              <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-                Be the first to join as a volunteer
-              </p>
-              <a
-                href="/register"
-                className="btn-primary"
-                style={{ marginTop: 12, padding: "10px 24px", fontSize: 13 }}
-              >
-                Register as Volunteer →
-              </a>
+          ) : sorted.length === 0 ? (
+            <div className="py-20 text-center border border-dashed border-white/10 rounded-3xl">
+              <p className="text-white font-semibold">No helpers found</p>
             </div>
           ) : (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-                gap: 28,
-              }}
-            >
-              {filtered.map((u, i) => {
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {sorted.map((u) => {
                 const isVol = u.role?.toLowerCase() === "volunteer";
-                const skills = Array.from(
-                  new Set([...(u.skills || []), u.skill].filter(Boolean))
-                );
+                const skills = Array.from(new Set([...(u.skills || []), u.skill].filter(Boolean)));
 
                 return (
-                  <div
-                    key={u._id || i}
-                    className="card card-hover-effect"
-                    style={{ padding: "22px 24px", display: "flex", flexDirection: "column", gap: 0 }}
-                  >
-                    {/* ── Card Header: Name + Role Badge ── */}
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        justifyContent: "space-between",
-                        gap: 12,
-                        marginBottom: 20,
-                        paddingBottom: 16,
-                        borderBottom: "1px solid rgba(255,255,255,0.06)",
-                      }}
-                    >
-                      <h3
-                        style={{
-                          fontSize: 15,
-                          fontWeight: 700,
-                          color: "var(--text-primary)",
-                          lineHeight: 1.3,
-                          margin: 0,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {u.name || "Unnamed Helper"}
-                      </h3>
-                      <span
-                        style={{
-                          flexShrink: 0,
-                          fontSize: 9,
-                          fontWeight: 700,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.1em",
-                          color: isVol ? "#4ade80" : "#a5b4fc",
-                          border: `1px solid ${isVol ? "rgba(74,222,128,0.35)" : "rgba(165,180,252,0.35)"}`,
-                          padding: "3px 8px",
-                          borderRadius: 6,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
+                  <div key={u._id} className="card card-hover-effect !p-6 flex flex-col gap-0">
+                    <div className="flex justify-between items-start pb-4 mb-4 border-b border-white/5">
+                      <h3 className="text-base font-bold text-white line-clamp-1">{u.name || "Unnamed Helper"}</h3>
+                      <span className={`text-[9px] font-bold ${isVol ? "text-emerald-400 border-emerald-400/30" : "text-blue-400 border-blue-400/30"} border px-2 py-0.5 rounded-md uppercase tracking-wider`}>
                         {isVol ? "Volunteer" : "Worker"}
                       </span>
                     </div>
 
-                    {/* ── Fields: key-value aligned rows ── */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
-                      {u.email && (
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)", flexShrink: 0 }}>
-                            Email
-                          </span>
-                          <span style={{ fontSize: 12, color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "right" }}>
-                            {u.email}
-                          </span>
-                        </div>
-                      )}
-
-                      {u.phone && (
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)", flexShrink: 0 }}>
-                            Phone
-                          </span>
-                          <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>
-                            {u.phone}
-                          </span>
-                        </div>
-                      )}
-
-                      {u.address && (
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)", flexShrink: 0 }}>
-                            Location
-                          </span>
-                          <span style={{ fontSize: 12, color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "right" }}>
-                            {u.address}
-                          </span>
-                        </div>
-                      )}
+                    <div className="flex flex-col gap-2.5 mb-6">
+                      <div className="flex justify-between items-center text-[13px]">
+                        <span className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider">Email</span>
+                        <span className="text-gray-300 truncate max-w-[120px]">{u.email}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-[13px]">
+                        <span className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider">Phone</span>
+                        <span className="text-gray-300">{u.phone || "Not listed"}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-[13px]">
+                        <span className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider">Loc</span>
+                        <span className="text-gray-300 truncate max-w-[120px]">{u.address || "Unknown"}</span>
+                      </div>
                     </div>
 
-                    {/* ── Skills (if any) ── */}
                     {skills.length > 0 && (
-                      <div
-                        style={{
-                          paddingTop: 12,
-                          borderTop: "1px solid rgba(255,255,255,0.06)",
-                          display: "flex",
-                          flexWrap: "wrap",
-                          gap: 6,
-                          marginBottom: 16,
-                        }}
-                      >
-                        {skills.slice(0, 4).map((s) => (
-                          <span
-                            key={s}
-                            style={{
-                              padding: "3px 10px",
-                              borderRadius: 6,
-                              background: "rgba(99,102,241,0.08)",
-                              border: "1px solid rgba(99,102,241,0.18)",
-                              color: "#a5b4fc",
-                              fontSize: 10,
-                              fontWeight: 700,
-                              letterSpacing: "0.04em",
-                              textTransform: "uppercase",
-                            }}
-                          >
-                            {s}
-                          </span>
+                      <div className="flex flex-wrap gap-1.5 pt-4 border-t border-white/5 mb-6">
+                        {skills.slice(0, 2).map((s) => (
+                          <span key={s} className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 text-[9px] font-bold uppercase tracking-wider">{s}</span>
                         ))}
-                        {skills.length > 4 && (
-                          <span style={{ fontSize: 10, color: "var(--text-muted)", padding: "3px 4px" }}>
-                            +{skills.length - 4}
-                          </span>
-                        )}
                       </div>
                     )}
 
-                    {/* ── CTA Button ── */}
-                    <button
-                      className="btn-primary"
-                      style={{
-                        width: "100%",
-                        padding: "10px 16px",
-                        fontSize: 13,
-                        marginTop: "auto",
-                        background: isVol
-                          ? "linear-gradient(135deg, #059669, #10b981)"
-                          : "linear-gradient(135deg, #7c3aed, #4f46e5)",
-                        boxShadow: isVol
-                          ? "0 4px 14px rgba(16,185,129,0.25)"
-                          : "0 4px 14px rgba(99,102,241,0.25)",
-                      }}
+                    <button 
+                      onClick={() => handleConnect(u)}
+                      className="w-full py-2.5 rounded-xl text-xs font-bold text-white transition-all shadow-lg shadow-indigo-500/20 mt-auto"
+                      style={{ background: isVol ? "linear-gradient(to right, #059669, #10b981)" : "linear-gradient(to right, #7c3aed, #6366f1)" }}
                     >
                       Connect
                     </button>
@@ -362,6 +182,24 @@ export default function VolunteersPage() {
           )}
         </main>
       </PageWrapper>
+
+      {/* ── Connect Modal ── */}
+      <AnimatePresence>
+        {showConnectModal && (
+          <div className="fixed inset-0 z-[20000] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowConnectModal(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative w-full max-w-md bg-[#0f172a] border border-white/10 rounded-2xl p-8 shadow-2xl">
+              <h2 className="text-xl font-extrabold text-white mb-2">Connect with {selectedUser?.name}</h2>
+              <p className="text-gray-400 text-sm mb-6">Briefly explain why you want to coordinate with this helper.</p>
+              <textarea placeholder="Reason for connection..." value={connectReason} onChange={(e) => setConnectReason(e.target.value)} className="w-full h-32 bg-black/20 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 outline-none focus:border-purple-500 transition-all mb-6 resize-none" />
+              <div className="flex gap-3">
+                <button onClick={() => setShowConnectModal(false)} className="flex-1 py-3 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-colors">Cancel</button>
+                <button onClick={submitConnectRequest} className="flex-[2] py-3 rounded-xl text-xs font-bold text-white shadow-lg shadow-indigo-500/20" style={{ background: "linear-gradient(to right, #7c3aed, #6366f1)" }}>Send Request</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
