@@ -1,8 +1,8 @@
-"use client";
 import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import DiscussionPanel from "./DiscussionPanel";
 import { getUser } from "../utils/auth";
+import toast from "react-hot-toast";
 
 export default function ProblemCard({ problem, onStatusChange, onDelete }) {
   const [user, setUser] = useState(null);
@@ -86,7 +86,10 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
 
         {/* Chat — 40px square, prominent */}
         <button
-          onClick={() => setShowChat(true)}
+          onClick={() => {
+            if (!user) return toast.error("Please login to join the discussion");
+            setShowChat(true);
+          }}
           title="Open Discussion"
           className="flex items-center justify-center rounded-[8px] bg-white/5 hover:bg-purple-600/20 border border-white/10 hover:border-purple-500/30 transition-all"
           style={{ width: 40, height: 40 }}

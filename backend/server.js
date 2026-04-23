@@ -83,6 +83,14 @@ io.on("connection", (socket) => {
     io.to(data.problemId).emit("new-discussion-message", data);
   });
 
+  socket.on("typing", ({ problemId, userName }) => {
+    socket.to(problemId).emit("user-typing", { userName, userId: socket.id });
+  });
+
+  socket.on("stop-typing", ({ problemId }) => {
+    socket.to(problemId).emit("user-stop-typing", { userId: socket.id });
+  });
+
   socket.on("disconnect", () => {
     for (const [uid, sid] of userSockets.entries()) {
       if (sid === socket.id) {
@@ -96,6 +104,7 @@ io.on("connection", (socket) => {
 
 const User = require("./models/User");
 const SOS = require("./models/SOS");
+const Notification = require("./models/Notification");
 
 const { auth, authorize } = require("./middleware/auth");
 
@@ -114,10 +123,12 @@ const problemRoutes = require("./routes/problemRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const userRoutes = require("./routes/userRoutes");
 const statsRoutes = require("./routes/statsRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 app.use("/api/problems", problemRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/notifications", notificationRoutes);
 app.use("/api", statsRoutes);
 
 // Rate limiter for SOS
@@ -158,21 +169,33 @@ app.post("/api/sos", sosLimiter, async (req, res) => {
 });
 
 // Social Connect Request
-app.post("/api/connect", auth, (req, res) => {
-  const { fromUser, toUser, fromName } = req.body;
-  if (!fromUser || !toUser) {
-    return res.status(400).json({ error: "Missing fromUser or toUser" });
-  }
-  const recipientSocketId = userSockets.get(toUser);
-  if (recipientSocketId) {
-    io.to(recipientSocketId).emit("connect-request", {
-      fromId: fromUser,
+app.post("/api/connect", auth, async (req, res) => {
+  try {
+    const { fromUser, toUser, fromName, message } = req.body;
+    if (!fromUser || !toUser) {
+      return res.status(400).json({ error: "Missing fromUser or toUser" });
+    }
+
+    // 1. Save to DB
+    const notification = new Notification({
+      userId: toUser,
+      type: "connection_request",
+      message: message || `${fromName || "Someone"} wants to coordinate with you.`,
+      fromUser: fromUser,
       fromName: fromName || "Someone",
-      time: new Date().toISOString()
     });
-    return res.json({ success: true, message: "Request sent!" });
+    await notification.save();
+
+    // 2. Emit via Socket if online
+    const recipientSocketId = userSockets.get(toUser);
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit("new-notification", notification);
+    }
+
+    res.json({ success: true, message: "Connection request broadcasted!" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  res.json({ success: false, message: "User is currently offline, but they will see this later." });
 });
 
 // Health check

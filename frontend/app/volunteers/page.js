@@ -7,6 +7,8 @@ import { getUserLocation } from "../utils/location";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
+
 const ROLE_FILTERS = [
   { key: "all",       label: "All Helpers" },
   { key: "volunteer", label: "Volunteers"  },
@@ -22,6 +24,13 @@ export default function VolunteersPage() {
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [connectReason, setConnectReason] = useState("");
+  const [user, setUser] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const u = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("seva_user")) : null;
+    setUser(u);
+  }, []);
 
   const handleLocate = async () => {
     try {
@@ -69,18 +78,47 @@ export default function VolunteersPage() {
     setShowConnectModal(true);
   };
 
-  const submitConnectRequest = () => {
+  const submitConnectRequest = async () => {
+    if (!user) return toast.error("Please login to connect");
     if (!connectReason.trim()) return toast.error("Please provide a reason");
-    toast.success(`Request sent to ${selectedUser.name}`);
-    setShowConnectModal(false);
-    setConnectReason("");
+    
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE.replace("/api", "")}/api/connect`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          fromUser: user._id || user.id,
+          toUser: selectedUser._id,
+          fromName: user.name,
+          message: connectReason
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Request sent to ${selectedUser.name}`);
+        setShowConnectModal(false);
+        setConnectReason("");
+      } else {
+        toast.error(data.error || "Failed to send request");
+      }
+    } catch (err) {
+      toast.error("Connection failed");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-[var(--bg-main)]">
       <Navbar />
       <PageWrapper>
-        <main className="max-w-[var(--content-max)] mx-auto px-6 lg:px-12 py-12 flex flex-col gap-[28px]">
+        {/* 🔥 Updated to use page-container for consistent spacing & Navbar clearance */}
+        <main className="page-container flex flex-col gap-[28px]">
           
           {/* ── Header ── */}
           <div className="flex flex-col md:flex-row justify-between items-end gap-6">
@@ -194,7 +232,14 @@ export default function VolunteersPage() {
               <textarea placeholder="Reason for connection..." value={connectReason} onChange={(e) => setConnectReason(e.target.value)} className="w-full h-32 bg-black/20 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 outline-none focus:border-purple-500 transition-all mb-6 resize-none" />
               <div className="flex gap-3">
                 <button onClick={() => setShowConnectModal(false)} className="flex-1 py-3 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-colors">Cancel</button>
-                <button onClick={submitConnectRequest} className="flex-[2] py-3 rounded-xl text-xs font-bold text-white shadow-lg shadow-indigo-500/20" style={{ background: "linear-gradient(to right, #7c3aed, #6366f1)" }}>Send Request</button>
+                <button 
+                  onClick={submitConnectRequest} 
+                  disabled={isSubmitting}
+                  className="flex-[2] py-3 rounded-xl text-xs font-bold text-white shadow-lg shadow-indigo-500/20 disabled:opacity-50" 
+                  style={{ background: "linear-gradient(to right, #7c3aed, #6366f1)" }}
+                >
+                  {isSubmitting ? "Sending..." : "Send Request"}
+                </button>
               </div>
             </motion.div>
           </div>

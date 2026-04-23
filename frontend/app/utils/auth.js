@@ -16,6 +16,7 @@ export const login = (data) => {
 export const logout = () => {
   if (typeof window !== "undefined") {
     localStorage.removeItem("seva_user");
+    localStorage.removeItem("token");
   }
 };
 

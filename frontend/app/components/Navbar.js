@@ -5,8 +5,9 @@ import { useEffect, useState, useContext } from "react";
 import { getUser, logout } from "../utils/auth";
 import { io } from "socket.io-client";
 import toast from "react-hot-toast";
-import { MapPin, Link2, Bell, ChevronDown, Menu, X } from "lucide-react";
+import { MapPin, Link2, Bell, ChevronDown, Menu, X, Trash2, CheckCircle } from "lucide-react";
 import { NotificationContext } from "../context/NotificationContext";
+import { motion, AnimatePresence } from "framer-motion";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
@@ -19,20 +20,8 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  let notifs = [];
-  let addNotif = () => {};
-  try {
-    const context = useContext(NotificationContext);
-    if (context) {
-      notifs = context.notifications || [];
-      addNotif = context.addNotification || (() => {});
-    }
-  } catch (e) {}
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useContext(NotificationContext);
 
-  const notifications = notifs;
-  const addNotification = addNotif;
-
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const close = () => { setNotifOpen(false); setProfileOpen(false); };
     document.addEventListener("click", close);
@@ -49,56 +38,18 @@ export default function Navbar() {
     const currentUser = getUser();
     setUser(currentUser);
 
+    // SOS Alerts are global, keep them in Navbar for now but they could move to context too
     const socket = io(API_BASE);
-    if (currentUser) {
-      socket.emit("register-user", currentUser._id || currentUser.id);
-    }
-
     socket.on("sos-alert", (data) => {
       try {
         const audio = new Audio("https://www.soundjay.com/buttons/beep-07a.mp3");
         audio.play().catch(() => {});
       } catch (err) {}
 
-      let isNearby = false;
-      if (navigator.geolocation && data.latitude && data.longitude) {
-        navigator.geolocation.getCurrentPosition((pos) => {
-          const R = 6371;
-          const dLat = (data.latitude - pos.coords.latitude) * (Math.PI / 180);
-          const dLon = (data.longitude - pos.coords.longitude) * (Math.PI / 180);
-          const a = Math.sin(dLat / 2) ** 2 +
-            Math.cos(pos.coords.latitude * Math.PI / 180) *
-            Math.cos(data.latitude * Math.PI / 180) *
-            Math.sin(dLon / 2) ** 2;
-          const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-          if (dist < 5) {
-            isNearby = true;
-            toast.error(`🚨 SOS NEAR YOU! (${dist.toFixed(1)}km away)`, {
-              duration: 15000,
-              style: { background: "#dc2626", color: "#fff", fontWeight: "bold" },
-            });
-            addNotification(`🚨 URGENT: SOS near you! (${dist.toFixed(1)}km away)`);
-          }
-        });
-      }
-
-      setTimeout(() => {
-        if (!isNearby) {
-          toast.error(`🚨 EMERGENCY: ${data.message}`, {
-            duration: 8000,
-            position: "top-center",
-            style: { background: "#dc2626", color: "#fff", fontWeight: "bold", borderRadius: "12px" },
-          });
-          addNotification(`🚨 SOS EMERGENCY: ${data.message}`);
-        }
-      }, 500);
-    });
-
-    socket.on("connect-request", (data) => {
-      addNotification(`${data.fromName} wants to connect!`);
-      toast(`🤝 ${data.fromName} wants to connect!`, {
-        icon: "💬",
-        style: { borderRadius: "12px", background: "#1e293b", color: "#fff" },
+      toast.error(`🚨 SOS: ${data.message}`, {
+        duration: 8000,
+        position: "top-center",
+        style: { background: "#dc2626", color: "#fff", fontWeight: "bold", borderRadius: "12px" },
       });
     });
 
@@ -116,7 +67,6 @@ export default function Navbar() {
     { href: "/volunteers", label: "Helpers"  },
     { href: "/ngo",       label: "NGOs"      },
     { href: "/map",       label: "Map"       },
-    { href: "/ai-match",  label: "AI Match"  },
   ];
 
   return (
@@ -126,100 +76,40 @@ export default function Navbar() {
         position: "sticky",
         top: 0,
         zIndex: 9999,
-        background: scrolled
-          ? "rgba(8, 12, 26, 0.92)"
-          : "rgba(8, 12, 26, 0.75)",
-        boxShadow: scrolled ? "0 1px 0 rgba(255,255,255,0.06)" : "none",
-        transition: "background 0.3s ease, box-shadow 0.3s ease",
+        background: scrolled ? "rgba(8, 12, 26, 0.95)" : "rgba(8, 12, 26, 0.8)",
+        backdropFilter: "blur(20px)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        transition: "all 0.3s ease",
       }}
     >
-      <div
-        style={{
-          maxWidth: "var(--content-max)",
-          margin: "0 auto",
-          padding: "0 var(--content-pad)",
-          height: "var(--navbar-height)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "24px",
-        }}
-      >
-        {/* ── Brand ── */}
-        <Link
-          href="/"
-          style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}
-          className="group"
-        >
-          <div style={{ display: "flex", gap: "-4px" }}>
-            <div
-              style={{
-                width: 32, height: 32, borderRadius: 10,
-                background: "linear-gradient(135deg, #6366f1, #4f46e5)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "white", boxShadow: "0 4px 12px rgba(99,102,241,0.35)",
-                transition: "transform 0.2s ease",
-              }}
-              className="group-hover:scale-110"
-            >
+      <div className="max-w-[var(--content-max)] mx-auto px-6 h-[var(--navbar-height)] flex items-center justify-between gap-6">
+        
+        {/* Brand */}
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="flex -space-x-1.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition-transform">
               <MapPin size={15} />
             </div>
-            <div
-              style={{
-                width: 32, height: 32, borderRadius: 10,
-                background: "linear-gradient(135deg, #a855f7, #9333ea)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "white", boxShadow: "0 4px 12px rgba(168,85,247,0.35)",
-                marginLeft: -6,
-                transition: "transform 0.2s ease",
-              }}
-              className="group-hover:scale-110"
-              style2={{ transitionDelay: "50ms" }}
-            >
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white shadow-lg shadow-purple-500/20 group-hover:scale-110 transition-transform delay-75">
               <Link2 size={15} />
             </div>
           </div>
-          <span
-            style={{
-              fontWeight: 800,
-              fontSize: 17,
-              letterSpacing: "-0.02em",
-              color: "var(--text-primary)",
-            }}
-          >
-            Seva<span style={{ color: "#818cf8" }}>Link</span>{" "}
-            <span style={{ color: "var(--text-muted)", fontWeight: 500, fontSize: 14 }}>
-              AI
-            </span>
+          <span className="font-extrabold text-lg tracking-tight text-white">
+            SevaLink <span className="text-indigo-400 font-medium text-sm ml-1 uppercase tracking-widest">AI</span>
           </span>
         </Link>
 
-        {/* ── Desktop Nav ── */}
-        <nav
-          style={{
-            display: "flex",
-            gap: "4px",
-            alignItems: "center",
-          }}
-          className="hidden lg:flex"
-        >
+        {/* Desktop Nav */}
+        <nav className="hidden lg:flex items-center gap-1">
           {navLinks.map((link) => {
-            const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
+            const isActive = pathname === link.href;
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                style={{
-                  padding: "6px 12px",
-                  borderRadius: 8,
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: isActive ? "white" : "var(--text-secondary)",
-                  background: isActive ? "rgba(99,102,241,0.1)" : "transparent",
-                  transition: "all 0.2s ease",
-                  position: "relative",
-                }}
-                className={`nav-link ${isActive ? "active" : ""} hover:text-white hover:bg-white/5`}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  isActive ? "bg-white/10 text-white" : "text-gray-400 hover:text-white hover:bg-white/5"
+                }`}
               >
                 {link.label}
               </Link>
@@ -227,230 +117,142 @@ export default function Navbar() {
           })}
         </nav>
 
-        {/* ── Right Actions ── */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+        {/* Actions */}
+        <div className="flex items-center gap-3">
           {user ? (
             <>
-              {/* Notification */}
-              <div style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
-                <button
-                  onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); setMobileMenuOpen(false); }}
-                  style={{
-                    width: 36, height: 36,
-                    borderRadius: 10,
-                    background: "rgba(255,255,255,0.04)",
-                    border: "1px solid var(--glass-border)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    color: "var(--text-secondary)",
-                    cursor: "pointer",
-                    position: "relative",
-                    transition: "all 0.2s ease",
-                  }}
-                  className="hover:bg-white/8 hover:text-white"
+              {/* Notification Bell */}
+              <div className="relative" onClick={(e) => e.stopPropagation()}>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); }}
+                  className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:border-white/20 transition-all relative"
                 >
-                  <Bell size={15} />
-                  {notifications.length > 0 && (
-                    <span
-                      style={{
-                        position: "absolute", top: 6, right: 6,
-                        width: 7, height: 7, borderRadius: "50%",
-                        background: "#ef4444",
-                        border: "1px solid var(--bg-main)",
-                        boxShadow: "0 0 6px rgba(239,68,68,0.6)",
-                      }}
-                    />
+                  <Bell size={18} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-[#080c1a] animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
                   )}
-                </button>
+                </motion.button>
 
-                {notifOpen && (
-                  <div
-                    style={{
-                      position: "absolute", right: 0, top: "calc(100% + 10px)",
-                      width: 300,
-                      background: "rgba(10, 16, 32, 0.95)",
-                      backdropFilter: "blur(24px)",
-                      border: "1px solid var(--glass-border)",
-                      borderRadius: 16,
-                      padding: 16,
-                      boxShadow: "0 24px 48px rgba(0,0,0,0.5)",
-                      zIndex: "var(--z-modal)",
-                    }}
-                  >
-                    <p className="section-label" style={{ marginBottom: 12 }}>Notifications</p>
-                    {notifications.length === 0 ? (
-                      <p style={{ fontSize: 13, color: "var(--text-secondary)", textAlign: "center", padding: "20px 0" }}>
-                        All clear — no new alerts
-                      </p>
-                    ) : (
-                      <div style={{ maxHeight: 240, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
-                        {notifications.map((n, i) => (
-                          <div
-                            key={i}
-                            style={{
-                              fontSize: 12,
-                              color: "var(--text-primary)",
-                              padding: "8px 0",
-                              borderBottom: "1px solid var(--border)",
-                              lineHeight: 1.5,
-                            }}
-                          >
-                            {n.text || n.message}
-                          </div>
-                        ))}
+                <AnimatePresence>
+                  {notifOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-3 w-80 bg-[#0B1220] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[10000]"
+                    >
+                      <div className="p-4 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Notifications</span>
+                        {unreadCount > 0 && (
+                          <button onClick={markAllAsRead} className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors">Mark all as read</button>
+                        )}
                       </div>
-                    )}
-                  </div>
-                )}
+                      
+                      <div className="max-h-[320px] overflow-y-auto">
+                        {notifications.length === 0 ? (
+                          <div className="py-12 text-center flex flex-col items-center gap-2">
+                            <Bell size={24} className="text-gray-700" />
+                            <p className="text-xs text-gray-500 font-medium">All clear! No alerts</p>
+                          </div>
+                        ) : (
+                          notifications.map((n) => (
+                            <div 
+                              key={n._id} 
+                              onClick={() => markAsRead(n._id)}
+                              className={`p-4 border-b border-white/5 last:border-0 cursor-pointer transition-colors ${!n.isRead ? "bg-indigo-500/[0.03]" : "opacity-60"} hover:bg-white/5`}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${!n.isRead ? "bg-indigo-500" : "bg-gray-700"}`} />
+                                <div className="space-y-1">
+                                  <p className="text-[12px] text-gray-200 leading-relaxed font-medium">{n.message}</p>
+                                  <p className="text-[9px] text-gray-600 font-bold uppercase tracking-wider">
+                                    {new Date(n.createdAt).toLocaleDateString()} · {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Profile */}
-              <div style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
-                <button
-                  onClick={() => { setProfileOpen(!profileOpen); setNotifOpen(false); setMobileMenuOpen(false); }}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    padding: "6px 10px 6px 6px",
-                    borderRadius: 10,
-                    border: "1px solid var(--glass-border)",
-                    background: "rgba(255,255,255,0.04)",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                  }}
-                  className="hover:bg-white/8"
+              <div className="relative" onClick={(e) => e.stopPropagation()}>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => { setProfileOpen(!profileOpen); setNotifOpen(false); }}
+                  className="flex items-center gap-2.5 p-1.5 pr-3 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all"
                 >
-                  <div
-                    style={{
-                      width: 26, height: 26, borderRadius: 8,
-                      background: "var(--primary-gradient)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 11, fontWeight: 700, color: "white",
-                      boxShadow: "0 2px 8px rgba(99,102,241,0.3)",
-                    }}
-                  >
-                    {user.name ? user.name[0].toUpperCase() : "U"}
+                  <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-indigo-500/20">
+                    {user.name?.[0].toUpperCase() || "U"}
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)" }} className="hidden sm:block">
-                    {user.name?.split(" ")[0] || "User"}
-                  </span>
-                  <ChevronDown size={12} style={{ color: "var(--text-muted)" }} className="hidden sm:block" />
-                </button>
+                  <span className="text-xs font-bold text-gray-200 hidden sm:block">{user.name?.split(" ")[0] || "User"}</span>
+                  <ChevronDown size={14} className={`text-gray-500 transition-transform ${profileOpen ? "rotate-180" : ""}`} />
+                </motion.button>
 
-                {profileOpen && (
-                  <div
-                    style={{
-                      position: "absolute", right: 0, top: "calc(100% + 10px)",
-                      width: 180,
-                      background: "rgba(10, 16, 32, 0.95)",
-                      backdropFilter: "blur(24px)",
-                      border: "1px solid var(--glass-border)",
-                      borderRadius: 14,
-                      overflow: "hidden",
-                      boxShadow: "0 24px 48px rgba(0,0,0,0.5)",
-                      zIndex: "var(--z-modal)",
-                    }}
-                  >
-                    <Link
-                      href="/profile"
-                      onClick={() => setProfileOpen(false)}
-                      style={{
-                        display: "block", padding: "12px 16px",
-                        fontSize: 13, color: "var(--text-primary)",
-                        borderBottom: "1px solid var(--border)",
-                        transition: "background 0.2s ease",
-                      }}
-                      className="hover:bg-white/5"
+                <AnimatePresence>
+                  {profileOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-3 w-48 bg-[#0B1220] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[10000]"
                     >
-                      My Profile
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      style={{
-                        display: "block", width: "100%", textAlign: "left",
-                        padding: "12px 16px",
-                        fontSize: 13, color: "#f87171",
-                        fontWeight: 600, cursor: "pointer",
-                        background: "none", border: "none",
-                        transition: "background 0.2s ease",
-                      }}
-                      className="hover:bg-red-500/10"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                )}
+                      <Link href="/profile" className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-gray-300 hover:bg-white/5 hover:text-white transition-all border-b border-white/5">
+                        My Profile
+                      </Link>
+                      <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold text-red-400 hover:bg-red-500/10 transition-all">
+                        Sign Out
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </>
           ) : (
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Link
-                href="/login"
-                style={{ fontSize: 13, fontWeight: 500, color: "var(--text-secondary)", padding: "6px 12px", transition: "color 0.2s" }}
-                className="hover:text-white"
-              >
-                Login
-              </Link>
-              <Link href="/register" className="btn-primary" style={{ fontSize: 13, padding: "8px 16px" }}>
-                Register
-              </Link>
+            <div className="flex items-center gap-2">
+              <Link href="/login" className="text-xs font-bold text-gray-400 hover:text-white px-4">Login</Link>
+              <Link href="/register" className="btn-primary !text-[11px] !px-5 !py-2 !rounded-xl shadow-indigo-500/20">Register</Link>
             </div>
           )}
 
-          {/* Mobile Menu Toggle */}
-          <button
-            onClick={() => { setMobileMenuOpen(!mobileMenuOpen); setNotifOpen(false); setProfileOpen(false); }}
-            style={{
-              width: 36, height: 36,
-              borderRadius: 10,
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid var(--glass-border)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "var(--text-secondary)", cursor: "pointer",
-              transition: "all 0.2s ease",
-            }}
-            className="lg:hidden hover:bg-white/8 hover:text-white"
-          >
-            {mobileMenuOpen ? <X size={16} /> : <Menu size={16} />}
+          {/* Mobile Menu */}
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white">
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </div>
 
-      {/* ── Mobile Menu ── */}
-      {mobileMenuOpen && (
-        <div
-          style={{
-            background: "rgba(8, 14, 28, 0.97)",
-            backdropFilter: "blur(24px)",
-            borderTop: "1px solid var(--border)",
-            padding: "12px var(--content-pad) 20px",
-          }}
-          className="lg:hidden"
-        >
-          <nav style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {navLinks.map((link) => {
-              const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
-              return (
+      {/* Mobile Nav */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="lg:hidden border-t border-white/5 bg-[#080c1a] overflow-hidden"
+          >
+            <div className="px-6 py-4 flex flex-col gap-1">
+              {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  style={{
-                    padding: "12px 14px",
-                    borderRadius: 10,
-                    fontSize: 14,
-                    fontWeight: 500,
-                    color: isActive ? "white" : "var(--text-secondary)",
-                    background: isActive ? "rgba(99,102,241,0.12)" : "transparent",
-                    transition: "all 0.2s ease",
-                  }}
-                  className="hover:bg-white/5 hover:text-white"
+                  className="py-3 text-sm font-bold text-gray-400 hover:text-white"
                 >
                   {link.label}
                 </Link>
-              );
-            })}
-          </nav>
-        </div>
-      )}
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

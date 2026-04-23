@@ -20,7 +20,7 @@ export default function ProblemsPage() {
   const [search, setSearch] = useState("");
   const [filterUrgency, setFilterUrgency] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
-  const [sortBy, setSortBy] = useState("nearest");
+  const [sortBy, setSortBy] = useState("newest"); // Default to newest
   const [userLoc, setUserLoc] = useState(null);
   const [sortNearest, setSortNearest] = useState(false);
 
@@ -51,12 +51,11 @@ export default function ProblemsPage() {
     setProblems((prev) => prev.map((p) => (p._id === id ? { ...p, status } : p)));
   };
 
-  const handleLocateAndSort = async () => {
-    if (sortNearest) { setSortNearest(false); return; }
+  const handleLocate = async () => {
     try {
       const loc = await getUserLocation();
       setUserLoc(loc);
-      setSortNearest(true);
+      setSortBy("nearest");
       toast.success("Sorting by proximity");
     } catch (err) {
       toast.error("Could not get location");
@@ -91,22 +90,21 @@ export default function ProblemsPage() {
       return true;
     })
     .sort((a, b) => {
-      if ((sortNearest || sortBy === "nearest") && userLoc) {
+      if (sortBy === "nearest" && userLoc) {
         const d1 = getDistance(userLoc.lat, userLoc.lng, a.location?.lat, a.location?.lng);
         const d2 = getDistance(userLoc.lat, userLoc.lng, b.location?.lat, b.location?.lng);
         return d1 - d2;
       }
-      if (sortBy === "newest") return new Date(b.createdAt) - new Date(a.createdAt);
       if (sortBy === "urgency") return (URGENCY_ORDER[a.urgency] ?? 9) - (URGENCY_ORDER[b.urgency] ?? 9);
-      return 0;
+      return new Date(b.createdAt) - new Date(a.createdAt); // newest
     });
 
   return (
     <div className="min-h-screen bg-[var(--bg-main)]">
       <Navbar />
       <PageWrapper>
-        {/* 🔥 PAGE CONTAINER — 28px gap + proper padding */}
-        <main className="max-w-[var(--content-max)] mx-auto px-6 lg:px-12 py-10 flex flex-col gap-[28px]">
+        {/* 🔥 PAGE CONTAINER — Added pt-28 to clear fixed Navbar */}
+        <main className="max-w-[var(--content-max)] mx-auto px-6 lg:px-12 pt-28 pb-20 flex flex-col gap-[28px]">
           
           {/* ── HEADER SECTION ── */}
           <div className="flex flex-col gap-1.5">
@@ -126,13 +124,19 @@ export default function ProblemsPage() {
               className="w-full md:max-w-md px-4 py-2.5 rounded-xl border border-white/10 bg-black/20 text-sm focus:border-purple-500 transition-all outline-none text-white"
             />
             <div className="flex items-center gap-3 w-full md:w-auto">
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={handleLocateAndSort}
-                className="btn-secondary !text-xs !px-5 flex-1 md:flex-none h-10"
+              <select 
+                value={sortBy} 
+                onChange={(e) => {
+                  if (e.target.value === "nearest" && !userLoc) handleLocate();
+                  else setSortBy(e.target.value);
+                }}
+                className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs font-semibold text-gray-300 outline-none hover:border-purple-500/50 transition cursor-pointer h-10"
               >
-                📍 {sortNearest ? "Reset Sort" : "Sort by Nearest"}
-              </motion.button>
+                <option value="newest" className="bg-[#0f172a]">Sort by Newest</option>
+                <option value="urgency" className="bg-[#0f172a]">Sort by Urgency</option>
+                <option value="nearest" className="bg-[#0f172a]">Sort by Nearest</option>
+              </select>
+
               <Link href="/submit" className="flex-1 md:flex-none">
                 <motion.button
                   whileTap={{ scale: 0.95 }}
