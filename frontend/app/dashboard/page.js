@@ -229,14 +229,6 @@ export default function Dashboard() {
               </p>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.08 }} className="flex items-center gap-2">
-              <button onClick={handleLocateAndSort} className="btn-secondary text-sm">
-                {sortNearest ? "Reset Sort" : "Nearest"}
-              </button>
-              <Link href="/submit">
-                <button className="btn-primary text-sm">+ Initialize Report</button>
-              </Link>
-            </motion.div>
           </div>
 
           <div className="flex flex-col gap-4">
@@ -378,19 +370,6 @@ export default function Dashboard() {
         </main>
       </PageWrapper>
 
-      {/* ── FAB ── */}
-      <div className="fixed bottom-7 right-7 z-50">
-        <Link href="/submit">
-          <motion.button
-            whileHover={{ scale: 1.06 }}
-            whileTap={{ scale: 0.94 }}
-            className="w-13 h-13 flex items-center justify-center rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-xl shadow-purple-600/30 border border-white/15 text-xl"
-            title="New Report"
-          >
-            ＋
-          </motion.button>
-        </Link>
-      </div>
     </div>
   );
 }
