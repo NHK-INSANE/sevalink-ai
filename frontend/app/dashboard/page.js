@@ -259,15 +259,15 @@ export default function Dashboard() {
             ))}
           </motion.div>
 
-          {/* ── ANALYTICS ROW: left 2-stack | right wide ── */}
+          {/* ── ANALYTICS ROW: perfectly aligned to 4-col KPI grid ── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.18 }}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6"
+            className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6"
           >
-            {/* LEFT COL: Problem Flow + Urgency Matrix stacked */}
-            <div className="flex flex-col gap-6">
+            {/* LEFT COL (Col 1): Under "Total Problems" */}
+            <div className="flex flex-col gap-6 lg:col-span-1">
               {/* Problem Flow */}
-              <div className="card">
+              <div className="card h-full">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-4">Problem Flow</p>
                 <div className="space-y-2">
                   {[
@@ -287,7 +287,7 @@ export default function Dashboard() {
               </div>
 
               {/* Urgency Matrix */}
-              <div className="card">
+              <div className="card h-full">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-4">Urgency Matrix</p>
                 <div className="space-y-3">
                   {[
@@ -309,8 +309,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* RIGHT COL: Category Distribution — spans 2 cols */}
-            <div className="card lg:col-span-2">
+            {/* RIGHT COL (Cols 2, 3, 4): Under Volunteers, Field Workers, Partner NGOs */}
+            <div className="card lg:col-span-3">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-4">Category Distribution</p>
               <div className="space-y-2">
                 {categoryData.length === 0 ? (
