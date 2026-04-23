@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Team = require("../models/Team");
 const { auth } = require("../middleware/auth");
+console.log("teamRoutes: auth middleware type:", typeof auth);
 
 // Get teams for a problem
 router.get("/problem/:problemId", async (req, res) => {
