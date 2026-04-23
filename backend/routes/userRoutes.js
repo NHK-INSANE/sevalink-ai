@@ -7,6 +7,7 @@ const { auth } = require("../middleware/auth");
 
 // POST /api/users/register
 router.post("/register", validate(userSchema), async (req, res) => {
+  console.log("📥 Registration Attempt Payload:", req.body);
   try {
     const { email, username } = req.body;
 
