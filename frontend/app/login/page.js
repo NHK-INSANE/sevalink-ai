@@ -37,28 +37,28 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-4 transition duration-200">
+    <div className="min-h-screen bg-[#0B1120] text-[#E5E7EB] flex items-center justify-center px-4 transition duration-200">
       <PageWrapper>
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="font-bold text-3xl text-blue-600 mb-2">SevaLink AI</h1>
-          <h2 className="text-2xl font-bold text-gray-800">Welcome back</h2>
-          <p className="text-gray-500 mt-1 text-sm">Login to continue helping your community</p>
+          <h1 className="font-bold text-3xl text-blue-500 mb-2">SevaLink AI</h1>
+          <h2 className="text-2xl font-bold text-white">Welcome back</h2>
+          <p className="text-gray-400 mt-1 text-sm">Login to continue helping your community</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-md p-8 border border-gray-100 transition duration-200">
+        <div className="bg-[#111827] text-white shadow-lg border border-gray-700 rounded-2xl p-8 transition duration-200">
 
           {/* Tabs */}
-          <div className="flex gap-2 mb-6 p-1 bg-gray-50 rounded-xl border border-gray-200">
+          <div className="flex gap-2 mb-6 p-1 bg-[#1F2937] rounded-xl border border-gray-700">
             <button
               type="button"
               onClick={() => setMode("user")}
               className={`flex-1 py-2 text-sm font-medium rounded-lg transition duration-200 ${
                 mode === "user"
                   ? "bg-blue-600 text-white shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  : "text-gray-400 hover:text-gray-200"
               }`}
             >
               👤 User / Volunteer
@@ -69,7 +69,7 @@ export default function LoginPage() {
               className={`flex-1 py-2 text-sm font-medium rounded-lg transition duration-200 ${
                 mode === "ngo"
                   ? "bg-blue-600 text-white shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  : "text-gray-400 hover:text-gray-200"
               }`}
             >
               🏢 NGO Login
@@ -78,7 +78,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1.5">
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">
                 {mode === "ngo" ? "NGO Name or Email" : "Email / Username / Phone"}
               </label>
               <input
@@ -87,12 +87,12 @@ export default function LoginPage() {
                 placeholder={mode === "ngo" ? "Enter NGO Name or Email" : "Enter Email / Username / Phone"}
                 value={form.identifier}
                 onChange={update("identifier")}
-                className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 text-gray-800"
+                className="w-full p-3 rounded-lg bg-[#1F2937] text-white border border-gray-600 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1.5">Password</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">Password</label>
               <div className="relative">
                 <input
                   id="login-password"
@@ -100,12 +100,12 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   value={form.password}
                   onChange={update("password")}
-                  className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 text-gray-800"
+                  className="w-full p-3 rounded-lg bg-[#1F2937] text-white border border-gray-600 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors"
                 >
                   {showPassword ? "Hide" : "Show"}
                 </button>
@@ -113,7 +113,7 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-xs">
+              <div className="p-3 rounded-lg bg-red-900/30 border border-red-800 text-red-400 text-xs">
                 ⚠️ {error}
               </div>
             )}
@@ -135,9 +135,9 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-500">
+          <div className="mt-6 text-center text-sm text-gray-400">
             Don&apos;t have an account?{" "}
-            <Link href="/register" className="text-blue-600 hover:text-blue-500 font-medium transition duration-200">
+            <Link href="/register" className="text-blue-400 hover:text-blue-300 font-medium transition duration-200">
               Register here
             </Link>
           </div>

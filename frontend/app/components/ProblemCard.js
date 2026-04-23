@@ -62,6 +62,17 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
             <svg className="w-3 h-3 opacity-40" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>
             <span className="truncate max-w-[200px]">{problem.locationName || problem.address || "Location unavailable"}</span>
           </div>
+          
+          {problem.location && problem.location.lat && (
+            <button
+              onClick={() => {
+                window.location.href = `/map?lat=${problem.location.lat}&lng=${problem.location.lng}&title=${encodeURIComponent(problem.title)}`;
+              }}
+              className="ml-auto text-[10px] font-bold text-blue-500 hover:text-blue-400 hover:underline flex items-center gap-1 transition"
+            >
+              📍 Locate
+            </button>
+          )}
         </div>
       </div>
 

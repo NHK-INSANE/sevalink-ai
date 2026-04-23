@@ -34,7 +34,7 @@ const SKILLS_LIST = [
 ];
 
 const INPUT_CLS =
-  "w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 text-gray-800 placeholder-gray-400";
+  "w-full p-3 rounded-lg bg-[#1F2937] text-white border border-gray-600 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ role: "User" });
@@ -146,23 +146,23 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-4 py-12 transition duration-200">
+    <div className="min-h-screen bg-[#0B1120] text-[#E5E7EB] flex items-center justify-center px-4 py-12 transition duration-200">
       <PageWrapper>
       <div className="w-full max-w-lg">
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
-            <span className="font-bold text-3xl text-blue-600 tracking-tight">
+            <span className="font-bold text-3xl text-blue-500 tracking-tight">
               SevaLink AI
             </span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">Create your account</h1>
-          <p className="text-gray-500 mt-1 text-sm">
+          <h1 className="text-2xl font-bold text-white">Create your account</h1>
+          <p className="text-gray-400 mt-1 text-sm">
             Join the community — pick your role below
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-md p-8 border border-gray-100 transition duration-200">
+        <div className="bg-[#111827] text-white rounded-2xl shadow-lg p-8 border border-gray-700 transition duration-200">
           <form onSubmit={handleRegister} className="space-y-4">
 
             {/* Role selector */}
@@ -180,14 +180,14 @@ export default function RegisterPage() {
                     }
                     className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition duration-200 text-left ${
                       form.role === role
-                        ? "border-blue-500 bg-blue-50 text-blue-600 shadow-sm"
-                        : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                        ? "border-blue-500 bg-blue-600 text-white shadow-sm"
+                        : "border-gray-700 bg-[#1F2937] text-gray-300 hover:border-gray-600 hover:bg-gray-800"
                     }`}
                   >
                     <span>{ROLE_INFO[role].icon}</span>
                     <div>
-                      <div className="leading-tight text-gray-800">{role}</div>
-                      <div className="text-[10px] text-gray-500 font-normal leading-tight">
+                      <div className="leading-tight text-white">{role}</div>
+                      <div className="text-[10px] text-gray-400 font-normal leading-tight">
                         {ROLE_INFO[role].desc}
                       </div>
                     </div>
@@ -319,16 +319,7 @@ export default function RegisterPage() {
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1.5">NGO Address</label>
-                  <input
-                    id="reg-ngo-address"
-                    type="text"
-                    placeholder="City / Full Address"
-                    onChange={update("address")}
-                    className={INPUT_CLS}
-                  />
-                </div>
+
                 <div>
                   <label className="block text-xs font-medium text-slate-400 mb-1.5">Website / Contact</label>
                   <input
@@ -508,11 +499,11 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-500">
+          <div className="mt-6 text-center text-sm text-gray-400">
             Already have an account?{" "}
             <Link
               href="/login"
-              className="text-blue-600 hover:text-blue-500 font-medium transition duration-200"
+              className="text-blue-400 hover:text-blue-300 font-medium transition duration-200"
             >
               Login
             </Link>

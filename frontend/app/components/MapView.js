@@ -104,6 +104,11 @@ const ngoIcon    = makePulseIcon("#16a34a", "rgba(22,163,74,0.5)");
 function ZoomToUser() {
   const map = useMap();
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("lat") && params.get("lng")) return; // skip if focusing on problem
+    }
+
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -115,6 +120,32 @@ function ZoomToUser() {
       },
       () => {}
     );
+  }, [map]);
+  return null;
+}
+
+// ── Auto-Focus Problem ───────────────────────────────────────────────────────
+function FocusProblem() {
+  const map = useMap();
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const lat = params.get("lat");
+      const lng = params.get("lng");
+      const title = params.get("title");
+      if (lat && lng) {
+        const target = [parseFloat(lat), parseFloat(lng)];
+        map.flyTo(target, 15, { duration: 1.5 });
+        if (title) {
+          setTimeout(() => {
+            L.popup({ closeButton: true })
+              .setLatLng(target)
+              .setContent(`<div style="font-weight:bold;font-size:13px;padding:4px;">📍 ${title}</div>`)
+              .openOn(map);
+          }, 1500);
+        }
+      }
+    }
   }, [map]);
   return null;
 }
@@ -251,6 +282,7 @@ export default function MapView({
         />
 
         {zoomToUser && <ZoomToUser />}
+        <FocusProblem />
         <LocateMeButton />
 
         {/* 🔥 Crisis Heatmap Layer */}

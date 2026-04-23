@@ -36,6 +36,9 @@ export async function apiRequest(endpoint, options = {}) {
     return data;
   } catch (err) {
     console.error("API ERROR:", err.message);
+    if (err.message === "Failed to fetch") {
+      throw new Error("Server not reachable. Please try again.");
+    }
     throw err;
   }
 }
