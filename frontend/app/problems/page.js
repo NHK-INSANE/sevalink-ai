@@ -137,9 +137,9 @@ export default function ProblemsPage() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-white">
-              Crisis Archive
+              Crisis Problems
             </h1>
-            <p className="text-[#9CA3AF] text-[13px] mt-1 font-medium tracking-wide">
+            <p className="text-[#9CA3AF] text-[14px] mt-1 font-medium tracking-wide">
               {loading ? "Synchronizing logs..." : `Accessing ${filtered.length} active event records`}
             </p>
           </div>
@@ -167,35 +167,13 @@ export default function ProblemsPage() {
 
           {/* ── Search Row ── */}
           <div className="px-5 pt-5 pb-4">
-            <div className="relative">
-              {/* Blue pulsing dot — active filter indicator */}
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center justify-center">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-60" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500" />
-                </span>
-              </span>
-              <input
-                type="text"
-                placeholder="Search by title, area, description, or date…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-5 py-3 rounded-[10px] border border-white/10 bg-black/20 text-[13px] focus:border-purple-500 transition-all outline-none text-white placeholder-gray-500"
-              />
-            </div>
-
-            {/* Filter-by pills */}
-            <div className="flex items-center gap-2 mt-3 flex-wrap">
-              <span className="text-[10px] text-gray-600 uppercase tracking-wider font-semibold">Filter by:</span>
-              {["Title", "Area", "Description", "Date"].map((tag) => (
-                <span
-                  key={tag}
-                  className="text-[10px] font-semibold px-2.5 py-1 rounded-full border border-white/8 bg-white/4 text-gray-400 tracking-wide"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
+            <input
+              type="text"
+              placeholder="Search by title, area, description, or date…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full px-4 py-3 rounded-[10px] border border-white/10 bg-black/20 text-[13px] focus:border-purple-500 transition-all outline-none text-white placeholder-gray-500"
+            />
           </div>
 
           {/* ── Divider ── */}
@@ -203,9 +181,9 @@ export default function ProblemsPage() {
 
           {/* ── Dropdowns Row ── */}
           <div className="px-5 pt-4 pb-5">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col md:flex-row gap-4">
               {/* Urgency */}
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 md:w-[48%]">
                 <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.12em]">Urgency Level</label>
                 <select
                   value={filterUrgency}
@@ -220,8 +198,8 @@ export default function ProblemsPage() {
                 </select>
               </div>
 
-              {/* Status */}
-              <div className="flex flex-col gap-2">
+              {/* Status — pushed right */}
+              <div className="flex flex-col gap-2 md:w-[48%] md:ml-auto">
                 <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.12em]">Current Status</label>
                 <select
                   value={filterStatus}
@@ -240,7 +218,7 @@ export default function ProblemsPage() {
 
         {/* Grid */}
         {loading && problems.length === 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
             {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : (
@@ -258,7 +236,7 @@ export default function ProblemsPage() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
                 {filtered.map((p) => (
                   <ProblemCard
                     key={p._id}
