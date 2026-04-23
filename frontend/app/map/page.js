@@ -154,11 +154,11 @@ export default function MapPage() {
   // Loading Skeleton for Map
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)]">
         <Navbar />
-        <main className="max-w-7xl mx-auto px-6 md:px-10 pt-24 pb-20">
-          <div className="h-10 bg-gray-100 rounded-xl w-64 mb-8 animate-pulse"></div>
-          <div className="h-[70vh] bg-gray-50 rounded-3xl border border-gray-100 p-4">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20">
+          <div className="h-12 bg-white/10 rounded-2xl w-64 mb-8 animate-pulse"></div>
+          <div className="card h-[75vh] p-3 rounded-[2.5rem] border-white/5 shadow-2xl">
              <SkeletonMap />
           </div>
         </main>
@@ -167,57 +167,37 @@ export default function MapPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition duration-300">
+    <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] transition duration-300">
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
+      <PageWrapper>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20">
         
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">🌍 Global Crisis Map</h1>
-          <p className="text-[var(--muted)] text-sm mt-1">
-            Live tracking of problems, volunteers, and NGOs in real-time.
-          </p>
-        </div>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+              Global Crisis Map
+            </h1>
+            <p className="text-[var(--text-secondary)] text-sm mt-2 font-medium">
+              Real-time synchronization of crisis reports, volunteer assets, and NGO operations.
+            </p>
+          </div>
 
-        {/* Action Bar */}
-        <div className="flex flex-col gap-4 mb-6">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-3">
             <button
               onClick={sendSOS}
               disabled={sendingSOS}
-              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white px-4 py-2 rounded-xl font-bold text-sm transition shadow-sm active:scale-95"
+              className="btn-primary !bg-red-600 !shadow-[0_0_20px_rgba(220,38,38,0.3)] !px-6"
             >
               <span className={sendingSOS ? "animate-spin" : "animate-pulse"}>🚨</span>
-              {sendingSOS ? "Sending..." : "Send SOS"}
+              {sendingSOS ? "Broadcasting..." : "Broadcast SOS"}
             </button>
-
             <button
               onClick={() => setShowHeatmap(!showHeatmap)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm border ${
-                showHeatmap
-                  ? "bg-purple-600 text-white border-purple-500"
-                  : "bg-[var(--card)] text-[var(--muted)] border-[var(--border)]"
-              }`}
+              className={`btn-secondary !text-xs !px-5 ${showHeatmap ? "!bg-indigo-500/10 !border-indigo-500/30 !text-indigo-400" : ""}`}
             >
-              🔥 {showHeatmap ? "Hide Heatmap" : "Crisis Heatmap"}
+              {showHeatmap ? "Hide Heatmap" : "Crisis Heatmap"}
             </button>
-          </div>
-
-          <div className="flex flex-wrap gap-1 p-1 bg-[var(--card)] border border-[var(--border)] rounded-2xl w-fit">
-            {MODES.map((mode) => (
-              <button
-                key={mode.id}
-                onClick={() => setType(mode.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition text-[10px] sm:text-xs font-bold ${
-                  type === mode.id
-                    ? "bg-[var(--primary)] text-white shadow-sm"
-                    : "text-[var(--muted)] hover:text-[var(--text)]"
-                }`}
-              >
-                <span>{mode.icon}</span>
-                <span className={type === mode.id ? "block" : "hidden sm:block"}>{mode.label}</span>
-              </button>
-            ))}
           </div>
         </div>
 
@@ -225,29 +205,44 @@ export default function MapPage() {
         <AnimatePresence>
           {sosAlert && (
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="mb-6 flex items-start gap-4 bg-red-600 text-white px-5 py-4 rounded-2xl shadow-lg border border-red-400"
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="mb-8 flex items-center gap-6 bg-red-600/90 backdrop-blur-xl text-white px-6 py-5 rounded-[2rem] shadow-2xl border border-red-400/30"
             >
-              <span className="text-2xl sm:text-3xl animate-bounce">🚨</span>
-              <div className="flex-1 min-w-0">
-                <div className="font-bold text-base sm:text-lg">SOS EMERGENCY</div>
-                <div className="text-red-100 text-xs sm:text-sm mt-0.5 truncate">
-                  {sosAlert.message} — <strong>{sosAlert.senderName || "Unknown"}</strong>
-                </div>
-                <div className="text-red-200 text-[10px] sm:text-xs mt-1">
-                  📍 {sosAlert.latitude?.toFixed(4)}, {sosAlert.longitude?.toFixed(4)} · {new Date(sosAlert.time).toLocaleTimeString()}
+              <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-2xl animate-bounce">🚨</div>
+              <div className="flex-1">
+                <div className="font-bold text-lg leading-tight uppercase tracking-tight">SOS EMERGENCY DETECTED</div>
+                <div className="text-red-100 text-sm mt-1">
+                  "{sosAlert.message}" — <span className="font-bold">{sosAlert.senderName || "Unknown"}</span>
                 </div>
               </div>
-              <button onClick={() => setSosAlert(null)} className="text-red-200 hover:text-white p-1">✕</button>
+              <button onClick={() => setSosAlert(null)} className="w-10 h-10 bg-black/10 hover:bg-black/20 rounded-xl flex items-center justify-center transition-colors">✕</button>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Map Container */}
-        <div className="bg-[var(--card)] p-2 sm:p-4 rounded-3xl shadow-xl border border-[var(--border)] relative overflow-hidden">
-          <div className="h-[50vh] sm:h-[65vh] md:h-[70vh] rounded-2xl overflow-hidden">
+        <div className="card p-3 !rounded-[2.5rem] shadow-2xl border-white/5 relative overflow-hidden group">
+          {/* Floating Category Filter */}
+          <div className="map-controls absolute top-6 left-6 z-[10] flex gap-1 p-1">
+            {MODES.map((mode) => (
+              <button
+                key={mode.id}
+                onClick={() => setType(mode.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition text-[10px] font-bold uppercase tracking-widest ${
+                  type === mode.id
+                    ? "bg-[var(--primary)] text-white shadow-lg shadow-indigo-500/20"
+                    : "text-[var(--text-secondary)] hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <span>{mode.icon}</span>
+                <span className={type === mode.id ? "block" : "hidden md:block"}>{mode.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="h-[60vh] sm:h-[75vh] rounded-[2rem] overflow-hidden border border-white/5">
             <MapView
               problems={problems}
               ngos={ngos}
@@ -263,21 +258,21 @@ export default function MapPage() {
         </div>
 
         {/* Bottom Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
           {[
-            { label: "Reports",     val: problems.length, icon: "🔴" },
-            { label: "NGOs",        val: ngos.length,     icon: "🏢" },
-            { label: "Volunteers",  val: helpers.length,  icon: "🤝" },
-            { label: "Critical",    val: problems.filter(p => p.urgency?.toLowerCase() === "critical").length, icon: "⚠️" },
+            { label: "Active Reports", val: problems.length, color: "text-red-500" },
+            { label: "Partner NGOs",   val: ngos.length,     color: "text-blue-500" },
+            { label: "Available Assets", val: helpers.length,  color: "text-emerald-500" },
+            { label: "Critical Priority", val: problems.filter(p => p.urgency?.toLowerCase() === "critical").length, color: "text-orange-500" },
           ].map((s) => (
-            <div key={s.label} className="bg-[var(--card)] border border-[var(--border)] p-4 rounded-2xl text-center shadow-sm hover:shadow-md transition">
-              <div className="text-lg">{s.icon}</div>
-              <div className="text-xl font-bold text-[var(--text)] mt-1">{s.val}</div>
-              <div className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-widest mt-0.5">{s.label}</div>
+            <div key={s.label} className="card p-6 !rounded-2xl border-white/5 hover:border-white/10">
+              <div className={`text-3xl font-bold ${s.color} tracking-tight`}>{s.val}</div>
+              <div className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-2">{s.label}</div>
             </div>
           ))}
         </div>
       </main>
+      </PageWrapper>
     </div>
   );
 }

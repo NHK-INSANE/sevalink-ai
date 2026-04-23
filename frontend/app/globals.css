@@ -1,222 +1,262 @@
 @import "tailwindcss";
+@import "@fontsource/inter";
 
 :root {
-  --bg: #f8fafc;
-  --card: #ffffff;
-  --text: #0f172a;
-  --muted: #64748b;
-  --border: #e2e8f0;
-  --primary: #4f46e5;
-  
-  --color-critical: #ef4444;
-  --color-high: #f97316;
-  --color-medium: #eab308;
-  --color-low: #22c55e;
-}
+  /* Backgrounds */
+  --bg-main: #020617;
+  --bg-card: #0b1220;
+  --bg-hover: #111827;
 
-.dark {
-  --bg: #020617;
-  --card: #0b1220;
-  --text: #e2e8f0;
-  --muted: #94a3b8;
-  --border: #1e293b;
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.08);
+
+  /* Text */
+  --text-primary: #e5e7eb;
+  --text-secondary: #9ca3af;
+
+  /* Brand */
   --primary: #6366f1;
-  
-  --color-critical: #f87171;
+  --primary-glow: rgba(99, 102, 241, 0.4);
+
+  /* Status */
+  --critical: #ef4444;
+  --high: #f97316;
+  --medium: #eab308;
+  --low: #22c55e;
+
+  /* Spacing Scale */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 40px;
+
+  /* Legacy compatibility for components not yet fully updated */
+  --bg: var(--bg-main);
+  --card: var(--bg-card);
+  --text: var(--text-primary);
+  --muted: var(--text-secondary);
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  transition: all 0.2s ease;
 }
 
 body {
-  background: var(--bg);
-  color: var(--text);
+  background: var(--bg-main);
+  color: var(--text-primary);
+  font-family: "Inter", sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-inter), sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* Glassmorphism card */
-.glass {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  color: #1e293b;
-}
-
-/* Solid opaque navbar */
-.navbar-solid {
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-}
-
-/* Glow button */
-.btn-primary {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
-  transition: all 0.25s ease;
-}
-.btn-primary:hover {
-  box-shadow: 0 0 32px rgba(99, 102, 241, 0.65);
-  transform: translateY(-1px);
-}
-.btn-primary:active {
-  transform: translateY(0);
-}
-
-/* Urgency badges */
-.badge-critical { background: rgba(239,68,68,0.18); color: #f87171; border: 1px solid rgba(239,68,68,0.4); }
-.badge-high     { background: rgba(249,115,22,0.18); color: #fb923c; border: 1px solid rgba(249,115,22,0.4); }
-.badge-medium   { background: rgba(234,179,8,0.18);  color: #facc15; border: 1px solid rgba(234,179,8,0.4); }
-.badge-low      { background: rgba(34,197,94,0.18);  color: #4ade80; border: 1px solid rgba(34,197,94,0.4); }
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #f1f5f9; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #2563eb; }
-
-/* MapLibre specific custom styles */
-.maplibregl-map {
-  font-family: inherit;
-}
-.maplibregl-ctrl-group {
-  background-color: rgba(18, 18, 26, 0.8) !important;
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-}
-.maplibregl-ctrl-group button {
-  width: 32px !important;
-  height: 32px !important;
-}
-.maplibregl-ctrl-icon {
-  filter: invert(1);
-}
-
-/* Subtle pulse animation for critical cards */
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.2); }
-  50%       { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
-}
-.animate-pulse-critical { animation: pulse-glow 2s ease-in-out infinite; }
-
-
-/* ─── Professional UI Utilities ─────────────────────────── */
-.premium-bg {
-  background: #f1f5f9;
-}
-
-.premium-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-}
-
-.premium-btn {
-  background: linear-gradient(to right, #4f46e5, #7c3aed);
-  color: white;
-  padding: 0.5rem 1.25rem;
-  border-radius: 0.75rem;
+h1 {
+  font-size: 36px;
   font-weight: 600;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.3);
+  letter-spacing: -0.02em;
 }
 
-.premium-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.45);
+h2 {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
-.premium-input {
-  width: 100%;
-  padding: 0.75rem;
-  border-radius: 0.75rem;
-  background: var(--card);
+p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* 🧊 Card Design */
+.card {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0.01)
+  );
+  background-color: var(--bg-card);
   border: 1px solid var(--border);
-  color: var(--text);
-  transition: all 0.2s;
-  outline: none;
-}
-
-.premium-input:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
-}
-
-/* ─── Ripple Button Effect ──────────────────────────────── */
-.ripple {
+  border-radius: 16px;
+  padding: var(--space-md);
+  backdrop-filter: blur(10px);
   position: relative;
   overflow: hidden;
 }
 
-.ripple:after {
+.card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* 🔘 Button System */
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-weight: 500;
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 0 30px var(--primary-glow);
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-secondary:hover {
+  background: var(--bg-hover);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* 🧭 Navbar */
+.navbar {
+  background: rgba(2, 6, 23, 0.7);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.nav-link.active {
+  color: white;
+  position: relative;
+}
+
+.nav-link.active::after {
   content: "";
   position: absolute;
-  background: rgba(255, 255, 255, 0.45);
-  border-radius: 50%;
-  transform: scale(0);
-  width: 120px;
-  height: 120px;
-  left: 50%;
-  top: 50%;
-  margin-left: -60px;
-  margin-top: -60px;
-  opacity: 0;
-  transition: transform 0.55s ease, opacity 1s ease;
-  pointer-events: none;
+  bottom: -6px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--primary);
 }
 
-.ripple:active:after {
-  transform: scale(3.5);
-  opacity: 1;
-  transition: 0s;
+/* 📊 Problem Card Components */
+.problem-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-/* ─── Animated Map Marker Pulse ────────────────────────── */
-@keyframes markerPulse {
-  0%   { transform: scale(1);   box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
-  50%  { transform: scale(1.35); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
-  100% { transform: scale(1);   box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+.badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid transparent;
 }
 
-.pulse-dot {
-  width: 13px;
-  height: 13px;
-  border-radius: 50%;
-  background: #ef4444;
-  animation: markerPulse 1.8s ease-in-out infinite;
-  display: inline-block;
+.badge-critical { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2); }
+.badge-high     { background: rgba(249, 115, 22, 0.1); color: #f97316; border-color: rgba(249, 115, 22, 0.2); }
+.badge-medium   { background: rgba(234, 179, 8, 0.1);  color: #eab308; border-color: rgba(234, 179, 8, 0.2); }
+.badge-low      { background: rgba(34, 197, 94, 0.1);  color: #22c55e; border-color: rgba(34, 197, 94, 0.2); }
+
+.progress-container {
+  height: 6px;
+  background: #1f2937;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-.pulse-dot-blue {
-  width: 13px;
-  height: 13px;
-  border-radius: 50%;
-  background: #2563eb;
-  animation: markerPulse 1.8s ease-in-out infinite;
-  animation-delay: 0.3s;
+.progress-fill {
+  background: var(--primary);
+  height: 100%;
+  transition: width 0.5s ease;
 }
 
-/* ─── Card Hover Micro-interaction ─────────────────────── */
-.card-hover {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* 🗺️ Map UI */
+.map-controls {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(10px);
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
-.card-hover:hover {
-  transform: translateY(-3px) scale(1.01);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+/* 🧠 Interaction */
+input:focus, textarea:focus, select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+  outline: none;
 }
+
+/* 📍 Floating Buttons */
+.floating-action {
+  position: fixed;
+  z-index: 50;
+  box-shadow: 0 10px 40px rgba(99, 102, 241, 0.4);
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-main); }
+::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
 /* --- Leaflet Fix --- */
 .leaflet-container {
   z-index: 0 !important;
+  background: var(--bg-main) !important;
 }
-.leaflet-pane {
-  z-index: 1 !important;
+.leaflet-tile {
+  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
 }
-.leaflet-top, .leaflet-bottom {
-  z-index: 2 !important;
+
+/* ⏳ Loaders */
+.loader {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255,255,255,0.1);
+  border-top: 3px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loader-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid white;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }

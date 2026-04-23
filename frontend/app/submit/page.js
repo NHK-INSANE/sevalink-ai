@@ -225,31 +225,31 @@ export default function SubmitPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition duration-200">
+      <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] transition duration-200">
         <Navbar />
         <PageWrapper>
-        <div className="max-w-lg mx-auto px-6 py-24 text-center">
-          <div className="text-7xl mb-6">✅</div>
-          <h1 className="text-3xl font-bold text-slate-800 mb-3">Problem Submitted!</h1>
-          <p className="text-slate-500 mb-8">
+        <div className="max-w-lg mx-auto px-6 py-32 text-center flex flex-col items-center">
+          <div className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center text-5xl mb-8 border border-emerald-500/20 shadow-lg shadow-emerald-500/10">✅</div>
+          <h1 className="text-4xl font-extrabold text-white mb-4 tracking-tight">Signal Received</h1>
+          <p className="text-[var(--text-secondary)] mb-10 max-w-sm">
             AI classified it as{" "}
-            <span className={URGENCY_INFO[aiUrgency]?.color || "text-slate-900"}>
+            <span className={`font-bold ${URGENCY_INFO[aiUrgency]?.color || "text-white"}`}>
               {aiUrgency}
             </span>{" "}
-            urgency. The community will respond.
+            priority. The response network has been alerted.
           </p>
-          <div className="flex gap-3 justify-center">
+          <div className="flex gap-4 justify-center w-full sm:w-auto">
             <button
               onClick={() => setSuccess(false)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition duration-200 shadow-sm font-medium"
+              className="btn-primary !px-8 shadow-[0_0_20px_var(--primary-glow)]"
             >
-              Submit Another
+              Report Another
             </button>
             <a
-              href="/problems"
-              className="px-6 py-3 rounded-xl text-slate-300 font-medium border border-white/10 hover:bg-white/5 transition-colors"
+              href="/dashboard"
+              className="btn-secondary !px-8"
             >
-              View All Problems
+              Command Dashboard
             </a>
           </div>
         </div>
@@ -259,183 +259,221 @@ export default function SubmitPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition duration-300">
+    <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] transition duration-300">
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pt-24">
-        <div className="max-w-2xl mx-auto bg-[var(--card)] border border-[var(--border)] rounded-3xl p-6 sm:p-10 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <PageWrapper>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pt-32 pb-20">
+        <div className="max-w-2xl mx-auto card !p-8 sm:!p-12 shadow-2xl border-white/5 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Report a Problem</h1>
-            <p className="text-[var(--muted)] text-sm mt-1">
-              Describe the issue and our AI will assess urgency and match help.
+          <div className="mb-10 text-center">
+            <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
+              Report Crisis
+            </h1>
+            <p className="text-[var(--text-secondary)] text-sm mt-3 font-medium max-w-sm mx-auto">
+              Our AI coordination engine will instantly analyze urgency and broadcast to nearby responders.
             </p>
-            <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--primary)]/20 bg-[var(--primary)]/5 text-[10px] font-bold text-[var(--primary)]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] animate-pulse" />
-              ⚡ AI Urgency Detection
+            <div className="mt-8 flex justify-center">
+              <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full border border-indigo-500/20 bg-indigo-500/5 text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                SevaLink Intelligence Active
+              </div>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-10">
             {/* Title */}
-            <div>
-              <label className="block text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-2">Problem Title *</label>
+            <div className="space-y-3">
+              <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Crisis Header *</label>
               <input
                 type="text"
-                placeholder="e.g. No clean water in Block C"
+                placeholder="e.g. Structural failure at East Bridge"
                 value={form.title}
                 onChange={updateForm("title")}
-                className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-sm focus:ring-2 focus:ring-[var(--primary)] transition outline-none"
+                className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:border-[var(--primary)] outline-none transition-all placeholder-white/10"
               />
             </div>
 
             {/* Description */}
-            <div>
-              <label className="block text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-2">Description *</label>
-              <textarea
-                placeholder="Describe the situation in detail..."
-                value={form.description}
-                onChange={updateForm("description")}
-                rows={4}
-                className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-sm focus:ring-2 focus:ring-[var(--primary)] transition outline-none resize-none"
-              />
-              <div className="flex flex-wrap gap-4 mt-2">
-                <button type="button" onClick={analyzeUrgency} disabled={!form.description.trim() || aiLoading} className="text-[10px] font-bold text-[var(--primary)] hover:opacity-80 disabled:opacity-30">
-                  {aiLoading ? "Analyzing..." : "🤖 Analyze Urgency"}
-                </button>
-                <button type="button" onClick={getAISuggestionHandler} disabled={!form.description.trim() || suggestLoading} className="text-[10px] font-bold text-purple-500 hover:opacity-80 disabled:opacity-30">
-                  {suggestLoading ? "Thinking..." : "🤖 AI Suggestion"}
-                </button>
+            <div className="space-y-3">
+              <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Incident Report *</label>
+              <div className="relative group">
+                <textarea
+                  placeholder="Provide detailed context for AI assessment..."
+                  value={form.description}
+                  onChange={updateForm("description")}
+                  rows={5}
+                  className="w-full bg-white/5 border border-white/10 rounded-[2rem] px-6 py-5 text-sm focus:border-[var(--primary)] outline-none transition-all placeholder-white/10 resize-none"
+                />
+                <div className="absolute bottom-4 right-4 flex gap-2">
+                  <button 
+                    type="button" 
+                    onClick={analyzeUrgency} 
+                    disabled={!form.description.trim() || aiLoading} 
+                    className="btn-secondary !text-[9px] !px-4 !py-2 !rounded-xl !bg-black/40 backdrop-blur-md border-white/5 hover:!border-white/20"
+                  >
+                    {aiLoading ? "Analyzing..." : "🤖 Classify"}
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={getAISuggestionHandler} 
+                    disabled={!form.description.trim() || suggestLoading} 
+                    className="btn-secondary !text-[9px] !px-4 !py-2 !rounded-xl !bg-black/40 backdrop-blur-md !text-purple-400 border-purple-500/20 hover:!border-purple-500/40"
+                  >
+                    {suggestLoading ? "Thinking..." : "🤖 Refine"}
+                  </button>
+                </div>
               </div>
 
-              {aiSuggestion && (
-                <div className="mt-4 p-4 rounded-2xl bg-purple-500/5 border border-purple-500/20">
-                  <p className="text-[10px] font-bold text-purple-500 uppercase tracking-widest mb-2">AI Version:</p>
-                  <p className="text-sm italic opacity-80 mb-3">"{aiSuggestion}"</p>
-                  <button type="button" onClick={applySuggestion} className="bg-purple-500 text-white px-4 py-1.5 rounded-lg text-[10px] font-bold hover:opacity-90">Apply</button>
-                </div>
-              )}
+              <AnimatePresence>
+                {aiSuggestion && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-4 p-6 rounded-2xl bg-purple-500/5 border border-purple-500/10 shadow-inner">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-xs">🤖</span>
+                        <p className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Optimized Version</p>
+                      </div>
+                      <p className="text-sm italic text-gray-300 leading-relaxed mb-4">"{aiSuggestion}"</p>
+                      <button type="button" onClick={applySuggestion} className="btn-primary !text-[9px] !px-4 !py-2 !bg-purple-600 shadow-none">Apply Suggestion</button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* AI Urgency Result */}
-            {aiUrgency && (
-              <div className="p-4 rounded-2xl bg-[var(--bg)] border border-[var(--border)] flex items-center gap-4">
-                <div className="text-2xl">🤖</div>
-                <div className="flex-1 min-w-0">
-                  <div className={`text-sm font-bold ${URGENCY_INFO[aiUrgency]?.color}`}>{aiUrgency} Urgency</div>
-                  <div className="text-[10px] text-[var(--muted)] truncate">{URGENCY_INFO[aiUrgency]?.desc}</div>
-                </div>
-                {aiScore !== null && (
-                  <div className="text-right">
-                    <div className={`text-lg font-bold ${URGENCY_INFO[aiUrgency]?.color}`}>{aiScore}%</div>
-                    <div className="text-[8px] text-[var(--muted)] font-bold uppercase tracking-widest">Score</div>
+            <AnimatePresence>
+              {aiUrgency && (
+                <motion.div 
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="card !bg-white/[0.02] border-white/10 flex items-center gap-6 p-6"
+                >
+                  <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-3xl">🤖</div>
+                  <div className="flex-1">
+                    <div className={`text-sm font-bold uppercase tracking-tight ${URGENCY_INFO[aiUrgency]?.color}`}>{aiUrgency} Priority</div>
+                    <div className="text-[10px] text-[var(--text-secondary)] mt-1 font-medium">{URGENCY_INFO[aiUrgency]?.desc}</div>
                   </div>
-                )}
-              </div>
-            )}
+                  {aiScore !== null && (
+                    <div className="text-right">
+                      <div className={`text-3xl font-extrabold ${URGENCY_INFO[aiUrgency]?.color} tracking-tighter`}>{aiScore}%</div>
+                      <div className="text-[8px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-0.5">Urgency Index</div>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-            {/* Multiple Selects (Pills) */}
-            <div className="space-y-6">
-              <div>
-                <label className="block text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-3">Categories (Select all that apply)</label>
+            {/* Multi-select Pills */}
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Classification Categories</label>
                 <div className="flex flex-wrap gap-2">
                   {CATEGORIES.map(c => (
                     <button
                       key={c}
                       type="button"
                       onClick={() => toggleSelection("categories", c)}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                      className={`px-5 py-2.5 rounded-xl text-[10px] font-bold border uppercase tracking-widest transition-all ${
                         form.categories.includes(c)
-                          ? "bg-[var(--primary)] text-white border-[var(--primary)] shadow-md shadow-indigo-500/20"
-                          : "bg-[var(--bg)] text-[var(--muted)] border-[var(--border)] hover:border-[var(--primary)]/50"
+                          ? "bg-[var(--primary)] text-white border-transparent shadow-lg shadow-indigo-500/20"
+                          : "bg-white/5 text-[var(--text-secondary)] border-white/5 hover:border-white/10 hover:text-white"
                       }`}
                     >
                       {c}
                     </button>
                   ))}
                 </div>
-                {form.categories.includes("Other") && (
-                  <input
-                    type="text"
-                    placeholder="Enter custom category..."
-                    value={customCategory}
-                    onChange={(e) => setCustomCategory(e.target.value)}
-                    className="mt-3 w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none"
-                  />
-                )}
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-3">Required Skills</label>
+              <div className="space-y-4">
+                <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Operational Skills Needed</label>
                 <div className="flex flex-wrap gap-2">
                   {SKILLS.map(s => (
                     <button
                       key={s}
                       type="button"
                       onClick={() => toggleSelection("requiredSkills", s)}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                      className={`px-5 py-2.5 rounded-xl text-[10px] font-bold border uppercase tracking-widest transition-all ${
                         form.requiredSkills.includes(s)
-                          ? "bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-500/20"
-                          : "bg-[var(--bg)] text-[var(--muted)] border-[var(--border)] hover:border-purple-500/50"
+                          ? "bg-purple-600 text-white border-transparent shadow-lg shadow-purple-500/20"
+                          : "bg-white/5 text-[var(--text-secondary)] border-white/5 hover:border-white/10 hover:text-white"
                       }`}
                     >
                       {s}
                     </button>
                   ))}
                 </div>
-                {form.requiredSkills.includes("Other") && (
-                  <input
-                    type="text"
-                    placeholder="Enter custom skill..."
-                    value={customSkill}
-                    onChange={(e) => setCustomSkill(e.target.value)}
-                    className="mt-3 w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-sm focus:ring-2 focus:ring-purple-500 outline-none"
-                  />
-                )}
               </div>
             </div>
 
-            {/* Location */}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-2">Address / Neighborhood</label>
-                <div className="flex flex-col sm:flex-row gap-2">
+            {/* Location Section */}
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Target Coordinates</label>
+                <div className="flex gap-3">
                   <input
-                    placeholder="Enter address manually"
+                    placeholder="Search location or enter address"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    className="flex-1 px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none"
+                    className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:border-[var(--primary)] outline-none transition-all placeholder-white/10"
                   />
-                  <button type="button" onClick={handleUseMyLocation} className="px-4 py-3 rounded-xl bg-[var(--bg)] border border-[var(--border)] text-[var(--text)] text-xs font-bold hover:bg-[var(--card)] active:scale-95 transition">
-                    📍 Locate Me
+                  <button 
+                    type="button" 
+                    onClick={handleUseMyLocation} 
+                    className="btn-secondary !px-6 !text-[10px] !uppercase !tracking-widest"
+                  >
+                    GPS Detect
                   </button>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="block text-xs font-bold text-[var(--muted)] uppercase tracking-widest">Pin on Map</label>
-                <div className="h-[250px] sm:h-[300px] rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--bg)]">
+              <div className="space-y-3">
+                <div className="h-[300px] rounded-[2rem] overflow-hidden border border-white/10 bg-black/40 group relative">
                   <MapPicker setLocation={setLocation} setAddress={setAddress} initialLocation={location} />
+                  {!location && (
+                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center bg-black/20 backdrop-blur-[2px] transition-opacity opacity-100 group-hover:opacity-0">
+                      <p className="text-[10px] font-bold text-white uppercase tracking-widest">Pin exact location on map</p>
+                    </div>
+                  )}
                 </div>
                 {location && (
-                  <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-400 uppercase tracking-widest ml-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Coordinates Saved
+                    Geolocation Locked
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[var(--primary)] text-white py-4 rounded-xl font-bold text-base shadow-lg shadow-indigo-500/20 hover:opacity-90 active:scale-[0.98] transition disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {loading ? "Submitting Report..." : "Submit Crisis Report"}
-            </button>
+            {/* Submit Action */}
+            <div className="pt-6">
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary w-full !py-6 !text-lg !rounded-3xl shadow-[0_20px_50px_var(--primary-glow)] active:scale-95 disabled:opacity-50 group flex items-center justify-center gap-3"
+              >
+                {loading ? (
+                  <>
+                    <span className="loader-small"></span>
+                    <span>Transmitting...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Transmit Crisis Signal</span>
+                    <span className="text-xl group-hover:translate-x-2 transition-transform">→</span>
+                  </>
+                )}
+              </button>
+            </div>
           </form>
         </div>
       </main>
+      </PageWrapper>
     </div>
   );
 }

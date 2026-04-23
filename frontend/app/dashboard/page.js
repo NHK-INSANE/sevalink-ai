@@ -239,17 +239,28 @@ export default function Dashboard() {
   // Loading State with Skeletons
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--bg)]">
+      <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)]">
         <Navbar />
-        <main className="max-w-7xl mx-auto px-6 py-10 mt-16">
-          <div className="h-10 bg-[var(--card)] rounded-xl w-64 mb-8 animate-pulse"></div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 space-y-12">
+          {/* Header Skeleton */}
+          <div className="flex justify-between items-end">
+            <div>
+              <div className="h-10 bg-white/10 rounded-2xl w-64 mb-4 animate-pulse"></div>
+              <div className="h-4 bg-white/5 rounded-full w-40 animate-pulse"></div>
+            </div>
+            <div className="flex gap-3">
+              <div className="h-10 bg-white/5 rounded-xl w-32 animate-pulse"></div>
+              <div className="h-10 bg-white/10 rounded-xl w-32 animate-pulse"></div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <SkeletonStats /> <SkeletonStats /> <SkeletonStats /> <SkeletonStats />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-             {[...Array(3)].map((_, i) => <div key={i} className="h-48 bg-[var(--card)] rounded-2xl animate-pulse border border-[var(--border)]" />)}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+             {[...Array(3)].map((_, i) => <div key={i} className="card h-64 border-white/5 animate-pulse" />)}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         </main>
@@ -258,113 +269,113 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition duration-300">
+    <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] transition duration-300">
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <PageWrapper>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 space-y-12">
         {/* Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-[var(--text)] tracking-tight">
+            <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
               Command Dashboard
             </h1>
-            <p className="text-[var(--muted)] text-sm">
-              Logged in as <span className="font-medium text-[var(--text)]">{user?.name}</span>
-              {user?.role && <span className="capitalize"> ({user.role})</span>}
+            <p className="text-[var(--text-secondary)] text-sm mt-2 font-medium">
+              Synchronized as <span className="text-[var(--primary)]">{user?.name}</span>
+              {user?.role && <span className="opacity-60 uppercase text-[10px] ml-2 tracking-widest px-2 py-0.5 rounded-full bg-white/5 border border-white/10">{user.role}</span>}
             </p>
           </div>
 
           <div className="flex w-full md:w-auto gap-3">
             <button
               onClick={handleLocateAndSort}
-              className="flex-1 md:flex-none px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm font-medium text-[var(--text)] hover:bg-[var(--bg)] transition shadow-sm"
+              className="btn-secondary !text-xs !px-6"
             >
               📍 {sortNearest ? "Reset Sort" : "Sort by Nearest"}
             </button>
-            <Link href="/submit" className="flex-1 md:flex-none bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition shadow-sm text-center">
+            <Link href="/submit" className="btn-primary !text-xs !px-6 shadow-[0_0_20px_var(--primary-glow)]">
               + Report New
             </Link>
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 shadow-sm hover:shadow-md transition">
-            <p className="text-sm text-[var(--muted)] mb-1">Total Problems</p>
-            <p className="text-2xl font-bold text-[var(--primary)]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="card hover:border-[var(--primary)] group">
+            <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-2">Total Problems</p>
+            <p className="text-4xl font-bold text-white group-hover:text-[var(--primary)] transition-colors">
               <Counter value={problems.length} />
             </p>
           </div>
 
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 shadow-sm hover:shadow-md transition">
-            <p className="text-sm text-[var(--muted)] mb-1">Volunteers</p>
-            <p className="text-2xl font-bold text-[var(--primary)]">
+          <div className="card hover:border-[var(--primary)] group">
+            <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-2">Volunteers</p>
+            <p className="text-4xl font-bold text-white group-hover:text-[var(--primary)] transition-colors">
               <Counter value={volunteersCount} />
             </p>
           </div>
 
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 shadow-sm hover:shadow-md transition">
-            <p className="text-sm text-[var(--muted)] mb-1">Workers</p>
-            <p className="text-2xl font-bold text-[var(--primary)]">
+          <div className="card hover:border-[var(--primary)] group">
+            <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-2">Field Workers</p>
+            <p className="text-4xl font-bold text-white group-hover:text-[var(--primary)] transition-colors">
               <Counter value={workersCount} />
             </p>
           </div>
 
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 shadow-sm hover:shadow-md transition">
-            <p className="text-sm text-[var(--muted)] mb-1">NGOs</p>
-            <p className="text-2xl font-bold text-[var(--primary)]">
+          <div className="card hover:border-[var(--primary)] group">
+            <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-2">Partner NGOs</p>
+            <p className="text-4xl font-bold text-white group-hover:text-[var(--primary)] transition-colors">
               <Counter value={ngosCount} />
             </p>
           </div>
         </div>
 
         {/* Analytics Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
-            <h3 className="font-semibold text-sm text-[var(--text)] mb-4">📈 Problem Flow</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center py-2 border-b border-[var(--border)]">
-                <span className="text-[var(--muted)] text-sm">Open Issues</span>
-                <span className="font-bold text-blue-500">{openCount}</span>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="card !p-8">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-6">📈 Problem Flow</h3>
+            <div className="space-y-6">
+              <div className="flex justify-between items-center pb-4 border-b border-[var(--border)]">
+                <span className="text-[var(--text-secondary)] text-sm font-medium">Open Issues</span>
+                <span className="font-bold text-blue-400 text-lg">{openCount}</span>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-[var(--border)]">
-                <span className="text-[var(--muted)] text-sm">In Progress</span>
-                <span className="font-bold text-yellow-500">{progressCount}</span>
+              <div className="flex justify-between items-center pb-4 border-b border-[var(--border)]">
+                <span className="text-[var(--text-secondary)] text-sm font-medium">In Progress</span>
+                <span className="font-bold text-yellow-400 text-lg">{progressCount}</span>
               </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-[var(--muted)] text-sm">Resolved Cases</span>
-                <span className="font-bold text-emerald-500">{resolvedCount}</span>
+              <div className="flex justify-between items-center">
+                <span className="text-[var(--text-secondary)] text-sm font-medium">Resolved Cases</span>
+                <span className="font-bold text-emerald-400 text-lg">{resolvedCount}</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
-            <h3 className="font-semibold text-sm text-[var(--text)] mb-4">📊 Categories</h3>
-            <div className="space-y-3 max-h-[160px] overflow-y-auto pr-1">
+          <div className="card !p-8 lg:col-span-1">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-6">📊 Distribution</h3>
+            <div className="space-y-4 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
               {categoryData.length === 0 ? (
-                <p className="text-xs text-[var(--muted)] text-center py-8">No data</p>
+                <p className="text-xs text-[var(--text-secondary)] text-center py-12">No categorized data yet</p>
               ) : categoryData.map(c => (
-                <div key={c.name} className="flex justify-between items-center pb-2 border-b border-[var(--border)] last:border-0">
-                  <span className="text-xs text-[var(--text)] font-medium truncate">{c.name}</span>
-                  <span className="text-[10px] font-bold text-[var(--primary)] bg-[var(--primary)]/10 px-2 py-0.5 rounded-full">{c.percent}%</span>
+                <div key={c.name} className="flex justify-between items-center pb-3 border-b border-[var(--border)] last:border-0">
+                  <span className="text-xs text-white font-medium truncate">{c.name}</span>
+                  <span className="text-[10px] font-bold text-[var(--primary)] bg-[var(--primary)]/10 px-3 py-1 rounded-full border border-[var(--primary)]/20">{c.percent}%</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 shadow-sm md:col-span-2 lg:col-span-1">
-            <h3 className="font-semibold text-sm text-[var(--text)] mb-4">⚡ Urgency</h3>
-            <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
+          <div className="card !p-8">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-6">⚡ Urgency Matrix</h3>
+            <div className="space-y-5">
               {[
-                { name: "Critical", count: criticalCount, dot: "bg-red-500", text: "text-red-500" },
-                { name: "High", count: highCount, dot: "bg-orange-500", text: "text-orange-500" },
-                { name: "Medium", count: mediumCount, dot: "bg-yellow-500", text: "text-yellow-500" },
-                { name: "Low", count: lowCount, dot: "bg-green-500", text: "text-green-500" },
+                { name: "Critical", count: criticalCount, badge: "badge-critical" },
+                { name: "High", count: highCount, badge: "badge-high" },
+                { name: "Medium", count: mediumCount, badge: "badge-medium" },
+                { name: "Low", count: lowCount, badge: "badge-low" },
               ].map(u => (
-                <div key={u.name} className="flex items-center gap-3">
-                  <div className={`w-2 h-2 rounded-full ${u.dot}`} />
-                  <span className="text-xs sm:text-sm text-[var(--text)] grow">{u.name}</span>
-                  <span className={`text-xs sm:text-sm font-bold ${u.text}`}>{u.count}</span>
+                <div key={u.name} className="flex items-center justify-between">
+                  <span className={`badge ${u.badge} !text-[10px] !px-4`}>{u.name}</span>
+                  <span className="text-lg font-bold text-white">{u.count}</span>
                 </div>
               ))}
             </div>
@@ -372,11 +383,13 @@ export default function Dashboard() {
         </div>
 
         {/* Map Section */}
-        <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-3 shadow-sm">
-          <h2 className="text-sm font-semibold text-[var(--text)] mb-3 pl-2">
-            Live Operation Map
-          </h2>
-          <div className="h-[300px] sm:h-[400px] lg:h-[500px] rounded-xl overflow-hidden border border-[var(--border)]">
+        <div className="card !p-4 !rounded-[2rem] shadow-2xl overflow-hidden border-white/5 relative">
+          <div className="absolute top-8 left-8 z-10">
+            <h2 className="text-xs font-bold text-white uppercase tracking-[0.2em] bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10">
+              Live Operation Map
+            </h2>
+          </div>
+          <div className="h-[400px] sm:h-[500px] rounded-[1.5rem] overflow-hidden">
             <MapView 
               problems={problems} 
               type="problems" 
@@ -388,24 +401,25 @@ export default function Dashboard() {
         </div>
 
         {/* Recent Reports */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg sm:text-xl font-bold text-[var(--text)] tracking-tight">
+        <div className="space-y-10">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-2xl font-bold tracking-tight text-white">
               {sortNearest ? "📍 Nearest Solutions" : "🕒 Recent Reports"}
             </h2>
-            <Link href="/problems" className="text-[var(--primary)] text-sm font-medium hover:underline">View All →</Link>
+            <Link href="/problems" className="text-[var(--primary)] text-sm font-bold uppercase tracking-widest hover:text-white transition-colors">View All Archive →</Link>
           </div>
 
           {problems.length === 0 ? (
-            <div className="text-center py-20 bg-[var(--card)] rounded-2xl border border-dashed border-[var(--border)] flex flex-col items-center p-6">
-              <p className="text-[var(--text)] font-bold text-lg">No problems reported yet</p>
-              <p className="text-[var(--muted)] text-sm mt-1">Be the first to report and help your community stay safe.</p>
-              <Link href="/submit" className="mt-6 w-full sm:w-auto bg-[var(--primary)] text-white px-6 py-2 rounded-lg text-sm font-medium shadow-sm hover:opacity-90 transition text-center">
-                + Report Your First Crisis
+            <div className="card !p-20 text-center flex flex-col items-center">
+              <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center text-3xl mb-6">📂</div>
+              <p className="text-white font-bold text-xl">No active reports found</p>
+              <p className="text-[var(--text-secondary)] text-sm mt-2 max-w-sm">The platform is currently clear. Any new reports will appear here in real-time.</p>
+              <Link href="/submit" className="btn-primary mt-8 !px-10">
+                Submit Report
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {sortedProblems.slice(0, 6).map((p) => (
                 <ProblemCard key={p._id} problem={p} />
               ))}
@@ -413,14 +427,18 @@ export default function Dashboard() {
           )}
         </div>
       </main>
+      </PageWrapper>
 
-      {/* Floating Action Button - Moved up to avoid chat overlap */}
-      <Link 
-        href="/submit" 
-        className="fixed bottom-24 right-6 z-50 bg-[var(--primary)] text-white w-12 h-12 flex items-center justify-center rounded-full shadow-lg hover:scale-105 active:scale-95 transition text-xl"
-      >
-        ➕
-      </Link>
+      {/* Floating Action Buttons */}
+      <div className="fixed bottom-10 right-10 z-[100] flex flex-col gap-4">
+        <Link 
+          href="/submit" 
+          className="w-14 h-14 bg-[var(--primary)] text-white flex items-center justify-center rounded-[1.25rem] shadow-[0_10px_40px_var(--primary-glow)] hover:scale-110 active:scale-95 transition text-2xl border border-white/10"
+          title="New Report"
+        >
+          ➕
+        </Link>
+      </div>
     </div>
   );
 }

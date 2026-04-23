@@ -31,7 +31,7 @@ export default function Landing() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition duration-300">
+    <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] transition duration-300">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20">
@@ -41,7 +41,7 @@ export default function Landing() {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-4xl mx-auto text-center"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 text-[10px] font-bold uppercase tracking-widest mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 text-[10px] font-bold uppercase tracking-widest mb-8">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
@@ -49,83 +49,86 @@ export default function Landing() {
             Live Disaster Response Network
           </div>
 
-          <h1 className="text-5xl sm:text-7xl font-extrabold mb-8 tracking-tight bg-gradient-to-b from-[var(--text)] to-[var(--muted)] bg-clip-text text-transparent">
+          <h1 className="text-6xl sm:text-8xl font-extrabold mb-8 tracking-tighter bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent leading-[1.1]">
             Connecting Humanity <br /> 
             <span className="text-[var(--primary)]">Through Intelligence.</span>
           </h1>
 
-          <p className="text-lg sm:text-xl text-[var(--muted)] max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-lg sm:text-xl text-[var(--text-secondary)] max-w-2xl mx-auto mb-12 leading-relaxed">
             SevaLink AI is a next-generation coordination layer for crisis management. 
             Real-time matching, live data streams, and instant emergency response.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-20">
             <Link 
               href="/register" 
-              className="w-full sm:w-auto bg-[var(--primary)] hover:scale-105 active:scale-95 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-[0_0_20px_rgba(99,102,241,0.4)] hover:shadow-[0_0_40px_rgba(99,102,241,0.6)] transition-all text-center"
+              className="btn-primary !px-10 !py-5 !text-xl shadow-[0_0_40px_var(--primary-glow)] hover:scale-105 active:scale-95"
             >
               Get Started Free
             </Link>
 
             <Link 
               href="/map" 
-              className="w-full sm:w-auto bg-[var(--card)] border border-[var(--border)] text-[var(--text)] px-8 py-4 rounded-2xl font-bold text-lg hover:bg-[var(--bg)] transition-all shadow-sm text-center"
+              className="btn-secondary !px-10 !py-5 !text-xl"
             >
               View Live Map
             </Link>
           </div>
 
           {/* Live Stats */}
-          <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
-            <div className="p-4 bg-[var(--card)] border border-[var(--border)] rounded-2xl">
-              <div className="text-2xl font-bold text-[var(--text)]">{stats.users}+</div>
-              <div className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-wider">Active Users</div>
+          <div className="grid grid-cols-3 gap-6 max-w-3xl mx-auto">
+            <div className="card p-6 border-white/5">
+              <div className="text-3xl font-bold text-white">{stats.users}+</div>
+              <div className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mt-1">Active Users</div>
             </div>
-            <div className="p-4 bg-[var(--card)] border border-[var(--border)] rounded-2xl">
-              <div className="text-2xl font-bold text-red-500">{stats.problems}+</div>
-              <div className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-wider">Crises Managed</div>
+            <div className="card p-6 border-white/5">
+              <div className="text-3xl font-bold text-red-500">{stats.problems}+</div>
+              <div className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mt-1">Crises Managed</div>
             </div>
-            <div className="p-4 bg-[var(--card)] border border-[var(--border)] rounded-2xl">
-              <div className="text-2xl font-bold text-emerald-500">{stats.volunteers}+</div>
-              <div className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-wider">Volunteers</div>
+            <div className="card p-6 border-white/5">
+              <div className="text-3xl font-bold text-emerald-500">{stats.volunteers}+</div>
+              <div className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mt-1">Volunteers</div>
             </div>
           </div>
         </motion.div>
 
         {/* Live Activity Feed */}
-        <div className="mt-32 max-w-5xl mx-auto">
-          <div className="flex items-center justify-between mb-8 px-4">
-            <h2 className="text-xl font-bold tracking-tight">Live Activity Feed</h2>
-            <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
+        <div className="mt-40 max-w-5xl mx-auto">
+          <div className="flex items-center justify-between mb-10 px-4">
+            <h2 className="text-2xl font-bold tracking-tight">Live Activity Feed</h2>
+            <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-              Real-time
+              System Live
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {loading ? (
               [1,2,3].map(i => (
-                <div key={i} className="h-32 bg-[var(--card)] animate-pulse rounded-2xl border border-[var(--border)]" />
+                <div key={i} className="h-32 card animate-pulse" />
               ))
             ) : (
               feed.map((item, idx) => (
                 <motion.div 
                   key={item._id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.1 }}
-                  className="p-5 bg-[var(--card)] border border-[var(--border)] rounded-2xl shadow-sm hover:-translate-y-2 hover:shadow-xl hover:shadow-indigo-500/5 transition-all group"
+                  className="card p-6 hover:border-[var(--primary)] group cursor-default"
                 >
-                  <div className="flex justify-between items-start mb-3">
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase border ${
-                      item.urgency === "Critical" ? "text-red-500 bg-red-500/10 border-red-500/20" : "text-indigo-500 bg-indigo-500/10 border-indigo-500/20"
-                    }`}>
+                  <div className="flex justify-between items-start mb-4">
+                    <span className={`badge ${
+                      item.urgency === "Critical" ? "badge-critical" : "badge-low"
+                    } !text-[9px]`}>
                       {item.urgency}
                     </span>
-                    <span className="text-[9px] text-[var(--muted)]">{new Date(item.createdAt).toLocaleTimeString()}</span>
+                    <span className="text-[9px] text-[var(--text-secondary)] font-medium">{new Date(item.createdAt).toLocaleTimeString()}</span>
                   </div>
-                  <h3 className="font-bold text-sm mb-1 group-hover:text-[var(--primary)] transition-colors">{item.title}</h3>
-                  <p className="text-[11px] text-[var(--muted)] line-clamp-1">{item.location?.address || "Location updated"}</p>
+                  <h3 className="font-bold text-sm mb-2 group-hover:text-[var(--primary)] transition-colors line-clamp-1">{item.title}</h3>
+                  <div className="flex items-center gap-2 text-[11px] text-[var(--text-secondary)]">
+                    <svg className="w-3 h-3 opacity-50" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>
+                    <span className="truncate">{item.location?.address || "Region updated"}</span>
+                  </div>
                 </motion.div>
               ))
             )}
@@ -133,21 +136,21 @@ export default function Landing() {
         </div>
 
         {/* Feature Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-32 pb-20">
-          <div className="p-10 bg-[var(--card)] border border-[var(--border)] rounded-[2.5rem] shadow-sm hover:shadow-2xl hover:shadow-indigo-500/5 transition-all">
-            <div className="w-14 h-14 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-2xl mb-6">🤖</div>
-            <h3 className="font-bold text-[var(--text)] mb-3 text-xl">AI Matching</h3>
-            <p className="text-[var(--muted)] text-sm leading-relaxed">Instantly match crises with the best available volunteers based on proximity, skills, and past response performance.</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-40 pb-20">
+          <div className="card p-10 !rounded-[2rem] hover:shadow-[0_0_50px_rgba(99,102,241,0.05)]">
+            <div className="w-14 h-14 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-2xl mb-8 shadow-inner border border-indigo-500/10">🤖</div>
+            <h3 className="font-bold text-white mb-4 text-xl tracking-tight">AI Matching</h3>
+            <p className="text-[var(--text-secondary)] text-sm leading-relaxed font-medium">Instantly match crises with the best available volunteers based on proximity, skills, and past response performance.</p>
           </div>
-          <div className="p-10 bg-[var(--card)] border border-[var(--border)] rounded-[2.5rem] shadow-sm hover:shadow-2xl hover:shadow-indigo-500/5 transition-all">
-            <div className="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-2xl mb-6">🗺️</div>
-            <h3 className="font-bold text-[var(--text)] mb-3 text-xl">Live Network</h3>
-            <p className="text-[var(--muted)] text-sm leading-relaxed">Real-time visualization of all active reports, nearby NGOs, and field assets in a single, unified command interface.</p>
+          <div className="card p-10 !rounded-[2rem] hover:shadow-[0_0_50px_rgba(99,102,241,0.05)]">
+            <div className="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-2xl mb-8 shadow-inner border border-emerald-500/10">🗺️</div>
+            <h3 className="font-bold text-white mb-4 text-xl tracking-tight">Live Network</h3>
+            <p className="text-[var(--text-secondary)] text-sm leading-relaxed font-medium">Real-time visualization of all active reports, nearby NGOs, and field assets in a single, unified command interface.</p>
           </div>
-          <div className="p-10 bg-[var(--card)] border border-[var(--border)] rounded-[2.5rem] shadow-sm hover:shadow-2xl hover:shadow-indigo-500/5 transition-all">
-            <div className="w-14 h-14 bg-red-500/10 rounded-2xl flex items-center justify-center text-2xl mb-6">🚨</div>
-            <h3 className="font-bold text-[var(--text)] mb-3 text-xl">SOS Protocol</h3>
-            <p className="text-[var(--muted)] text-sm leading-relaxed">Broadcast emergency signals to every connected user instantly during critical events, ensuring no one is left behind.</p>
+          <div className="card p-10 !rounded-[2rem] hover:shadow-[0_0_50px_rgba(99,102,241,0.05)]">
+            <div className="w-14 h-14 bg-red-500/10 rounded-2xl flex items-center justify-center text-2xl mb-8 shadow-inner border border-red-500/10">🚨</div>
+            <h3 className="font-bold text-white mb-4 text-xl tracking-tight">SOS Protocol</h3>
+            <p className="text-[var(--text-secondary)] text-sm leading-relaxed font-medium">Broadcast emergency signals to every connected user instantly during critical events, ensuring no one is left behind.</p>
           </div>
         </div>
       </main>
