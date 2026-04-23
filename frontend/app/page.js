@@ -29,7 +29,24 @@ const STEPS = [
   { num: "04", title: "Track & Resolve", desc: "All parties coordinate on a live map until the crisis is marked resolved." },
 ];
 
-// Typing text removed for cleaner aesthetic
+const words = ["NGOs", "Volunteers", "Workers", "Responders"];
+
+function TypingText() {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % words.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <span className="text-purple-400 transition-opacity duration-500">
+      {words[index]}
+    </span>
+  );
+}
 
 function Stat({ end, suffix, label }) {
   return (
@@ -66,7 +83,9 @@ export default function Landing() {
           className="container max-w-3xl mx-auto"
         >
           <h1 className="text-4xl md:text-5xl font-semibold leading-tight text-white">
-            Connecting People to Crisis Response
+            Connecting <TypingText />
+            <br />
+            Where It Matters Most
           </h1>
           <p className="mt-4 text-gray-400 text-lg max-w-2xl mx-auto">
             Real-time crisis coordination powered by AI — from reporting to response,
