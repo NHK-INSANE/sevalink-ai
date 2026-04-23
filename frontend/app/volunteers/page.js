@@ -37,7 +37,7 @@ export default function VolunteersPage() {
 
   function getDistance(lat1, lon1, lat2, lon2) {
     if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
-    const R = 6371; // km
+    const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -90,68 +90,66 @@ export default function VolunteersPage() {
           <div
             style={{
               display: "flex",
-              flexDirection: "column",
+              flexWrap: "wrap",
+              justifyContent: "space-between",
+              alignItems: "flex-end",
               gap: 16,
-              marginBottom: 36,
+              marginBottom: 32,
             }}
           >
-            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-end", gap: 16 }}>
-              <div>
-                <h1
-                  style={{
-                    background: "linear-gradient(135deg,#fff 25%,#a78bfa 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
-                    marginBottom: 8,
-                  }}
-                >
-                  Helpers &amp; Volunteers
-                </h1>
-                <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
-                  People actively resolving civic issues across the SevaLink network.
-                </p>
-              </div>
-              
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={handleLocateAndSort}
-                className="btn-secondary"
-                style={{ fontSize: 12, padding: "8px 24px" }}
+            <div>
+              <h1
+                style={{
+                  fontSize: 30,
+                  fontWeight: 800,
+                  color: "var(--text-primary)",
+                  marginBottom: 6,
+                  letterSpacing: "-0.02em",
+                }}
               >
-                {sortNearest ? "Reset Sort" : "Sort by Nearest"}
-              </motion.button>
+                Helpers &amp; Volunteers
+              </h1>
+              <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                People actively resolving civic issues across the SevaLink network.
+              </p>
             </div>
 
-            {/* Filter pills */}
-            <div style={{ display: "flex", gap: 6 }}>
-              {ROLE_FILTERS.map(({ key, label }) => (
-                <button
-                  key={key}
-                  onClick={() => setFilterRole(key)}
-                  style={{
-                    padding: "7px 16px",
-                    borderRadius: 10,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    border: filterRole === key
-                      ? "1px solid rgba(99,102,241,0.5)"
-                      : "1px solid var(--glass-border)",
-                    background: filterRole === key
-                      ? "rgba(99,102,241,0.15)"
-                      : "rgba(255,255,255,0.03)",
-                    color: filterRole === key ? "white" : "var(--text-secondary)",
-                    transition: "all 0.2s ease",
-                    boxShadow: filterRole === key
-                      ? "0 2px 8px rgba(99,102,241,0.2)"
-                      : "none",
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={handleLocateAndSort}
+              className="btn-secondary"
+              style={{ fontSize: 12, padding: "8px 24px" }}
+            >
+              {sortNearest ? "Reset Sort" : "Sort by Nearest"}
+            </motion.button>
+          </div>
+
+          {/* ── Filter Pills ── */}
+          <div style={{ display: "flex", gap: 6, marginBottom: 32 }}>
+            {ROLE_FILTERS.map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setFilterRole(key)}
+                style={{
+                  padding: "7px 16px",
+                  borderRadius: 10,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  border: filterRole === key
+                    ? "1px solid rgba(99,102,241,0.5)"
+                    : "1px solid var(--glass-border)",
+                  background: filterRole === key
+                    ? "rgba(99,102,241,0.15)"
+                    : "rgba(255,255,255,0.03)",
+                  color: filterRole === key ? "white" : "var(--text-secondary)",
+                  transition: "all 0.2s ease",
+                  boxShadow: filterRole === key ? "0 2px 8px rgba(99,102,241,0.2)" : "none",
+                }}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
           {/* ── Content ── */}
@@ -163,11 +161,11 @@ export default function VolunteersPage() {
                 gap: 28,
               }}
             >
-              {[...Array(6)].map((_, i) => (
+              {[...Array(8)].map((_, i) => (
                 <div
                   key={i}
                   className="skeleton"
-                  style={{ height: 160, borderRadius: 16 }}
+                  style={{ height: 200, borderRadius: 16 }}
                 />
               ))}
             </div>
@@ -184,7 +182,9 @@ export default function VolunteersPage() {
                 border: "1px dashed rgba(255,255,255,0.08)",
               }}
             >
-              <div style={{ fontSize: 36, fontWeight: 800, color: "var(--text-muted)" }}>No Helpers</div>
+              <div style={{ fontSize: 32, fontWeight: 800, color: "var(--text-muted)" }}>
+                No Helpers
+              </div>
               <p style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>
                 No helpers registered yet
               </p>
@@ -212,147 +212,103 @@ export default function VolunteersPage() {
                 const skills = Array.from(
                   new Set([...(u.skills || []), u.skill].filter(Boolean))
                 );
+
                 return (
                   <div
                     key={u._id || i}
                     className="card card-hover-effect"
-                    style={{ padding: 20, cursor: "default" }}
+                    style={{ padding: "22px 24px", display: "flex", flexDirection: "column", gap: 0 }}
                   >
-                    {/* Avatar + Name */}
+                    {/* ── Card Header: Name + Role Badge ── */}
                     <div
                       style={{
                         display: "flex",
-                        alignItems: "center",
-                        gap: 14,
-                        marginBottom: 16,
+                        alignItems: "flex-start",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        marginBottom: 20,
+                        paddingBottom: 16,
+                        borderBottom: "1px solid rgba(255,255,255,0.06)",
                       }}
                     >
-                      <div
+                      <h3
                         style={{
-                          width: 46,
-                          height: 46,
-                          borderRadius: 14,
-                          background: isVol
-                            ? "linear-gradient(135deg,#10b981,#059669)"
-                            : "linear-gradient(135deg,#6366f1,#4f46e5)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 16,
-                          fontWeight: 800,
-                          color: "#fff",
-                          letterSpacing: "0.02em",
-                          boxShadow: isVol
-                            ? "0 4px 12px rgba(16,185,129,0.3)"
-                            : "0 4px 12px rgba(99,102,241,0.3)",
-                          flexShrink: 0,
+                          fontSize: 15,
+                          fontWeight: 700,
+                          color: "var(--text-primary)",
+                          lineHeight: 1.3,
+                          margin: 0,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
                         }}
                       >
-                        {(u.name || "U").charAt(0).toUpperCase()}
-                      </div>
-                      <div style={{ minWidth: 0 }}>
-                        <div
-                          style={{
-                            fontSize: 14,
-                            fontWeight: 700,
-                            color: "var(--text-primary)",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          {u.name || "Unnamed Helper"}
-                        </div>
-                        <span
-                          style={{
-                            display: "inline-block",
-                            marginTop: 3,
-                            fontSize: 9,
-                            fontWeight: 700,
-                            textTransform: "uppercase",
-                            letterSpacing: "0.08em",
-                            padding: "2px 8px",
-                            borderRadius: 6,
-                            background: isVol
-                              ? "rgba(16,185,129,0.1)"
-                              : "rgba(99,102,241,0.1)",
-                            color: isVol ? "#4ade80" : "#a5b4fc",
-                            border: `1px solid ${isVol ? "rgba(16,185,129,0.2)" : "rgba(99,102,241,0.2)"}`,
-                          }}
-                        >
-                          {isVol ? "Volunteer" : "Worker"}
-                        </span>
-                      </div>
+                        {u.name || "Unnamed Helper"}
+                      </h3>
+                      <span
+                        style={{
+                          flexShrink: 0,
+                          fontSize: 9,
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.1em",
+                          color: isVol ? "#4ade80" : "#a5b4fc",
+                          border: `1px solid ${isVol ? "rgba(74,222,128,0.35)" : "rgba(165,180,252,0.35)"}`,
+                          padding: "3px 8px",
+                          borderRadius: 6,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {isVol ? "Volunteer" : "Worker"}
+                      </span>
                     </div>
 
-                    {/* Contact Info */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
+                    {/* ── Fields: key-value aligned rows ── */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
                       {u.email && (
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                            background: "rgba(255,255,255,0.03)",
-                            padding: "6px 10px",
-                            borderRadius: 8,
-                            fontSize: 12,
-                            color: "var(--text-secondary)",
-                          }}
-                        >
-                          <span style={{ opacity: 0.5, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", minWidth: 28 }}>Email</span>
-                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)", flexShrink: 0 }}>
+                            Email
+                          </span>
+                          <span style={{ fontSize: 12, color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "right" }}>
                             {u.email}
                           </span>
                         </div>
                       )}
+
                       {u.phone && (
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                            background: "rgba(255,255,255,0.03)",
-                            padding: "6px 10px",
-                            borderRadius: 8,
-                            fontSize: 12,
-                            color: "var(--text-secondary)",
-                          }}
-                        >
-                          <span style={{ opacity: 0.5, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", minWidth: 28 }}>Tel</span>
-                          <span>{u.phone}</span>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)", flexShrink: 0 }}>
+                            Phone
+                          </span>
+                          <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>
+                            {u.phone}
+                          </span>
                         </div>
                       )}
+
                       {u.address && (
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                            background: "rgba(255,255,255,0.03)",
-                            padding: "6px 10px",
-                            borderRadius: 8,
-                            fontSize: 12,
-                            color: "var(--text-secondary)",
-                          }}
-                        >
-                          <span style={{ opacity: 0.5, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", minWidth: 28 }}>Loc</span>
-                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)", flexShrink: 0 }}>
+                            Location
+                          </span>
+                          <span style={{ fontSize: 12, color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "right" }}>
                             {u.address}
                           </span>
                         </div>
                       )}
                     </div>
 
-                    {/* Skills */}
+                    {/* ── Skills (if any) ── */}
                     {skills.length > 0 && (
                       <div
                         style={{
                           paddingTop: 12,
-                          borderTop: "1px solid var(--border)",
+                          borderTop: "1px solid rgba(255,255,255,0.06)",
                           display: "flex",
                           flexWrap: "wrap",
                           gap: 6,
+                          marginBottom: 16,
                         }}
                       >
                         {skills.slice(0, 4).map((s) => (
@@ -380,6 +336,25 @@ export default function VolunteersPage() {
                         )}
                       </div>
                     )}
+
+                    {/* ── CTA Button ── */}
+                    <button
+                      className="btn-primary"
+                      style={{
+                        width: "100%",
+                        padding: "10px 16px",
+                        fontSize: 13,
+                        marginTop: "auto",
+                        background: isVol
+                          ? "linear-gradient(135deg, #059669, #10b981)"
+                          : "linear-gradient(135deg, #7c3aed, #4f46e5)",
+                        boxShadow: isVol
+                          ? "0 4px 14px rgba(16,185,129,0.25)"
+                          : "0 4px 14px rgba(99,102,241,0.25)",
+                      }}
+                    >
+                      Connect
+                    </button>
                   </div>
                 );
               })}

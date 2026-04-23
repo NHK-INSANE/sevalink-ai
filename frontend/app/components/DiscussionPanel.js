@@ -129,7 +129,7 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 30, stiffness: 300 }}
-      className="fixed top-0 right-0 h-full w-full md:w-[420px] glass-strong shadow-2xl z-[150] flex flex-col border-l border-white/10"
+      className="fixed top-0 right-0 h-full w-full md:w-[420px] glass-strong shadow-2xl z-[10000] flex flex-col border-l border-white/10"
     >
       {/* Header */}
       <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">

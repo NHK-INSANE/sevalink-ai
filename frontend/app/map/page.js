@@ -243,35 +243,35 @@ export default function MapPage() {
           ))}
         </div>
 
+        {/* ── FILTER ROW: Filters (left) + Live count (right) ── */}
+        <div className="flex items-center justify-between gap-4 mb-5">
+          {/* Mode filter pills */}
+          <div className="flex items-center gap-2">
+            {MODES.map((mode) => (
+              <button
+                key={mode.id}
+                onClick={() => setType(mode.id)}
+                className={`px-4 py-1.5 rounded-[8px] text-[11px] font-semibold transition-all border ${
+                  type === mode.id
+                    ? "bg-indigo-600/20 text-indigo-400 border-indigo-500/30"
+                    : "text-gray-500 hover:text-gray-300 bg-white/3 hover:bg-white/5 border-white/8"
+                }`}
+              >
+                {mode.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Live indicator + counts */}
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[11px] font-semibold text-emerald-400">Live</span>
+            <span className="text-[11px] text-gray-600 ml-1">{problems.length} incidents · {ngos.length} NGOs</span>
+          </div>
+        </div>
+
         {/* ── MAP CARD ── */}
         <div className="card !p-0 overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)" }}>
-
-          {/* Map toolbar */}
-          <div className="flex items-center justify-between px-5 py-3 border-b border-white/8 bg-[#0f172a]/60">
-            {/* Mode tabs */}
-            <div className="flex items-center gap-1">
-              {MODES.map((mode) => (
-                <button
-                  key={mode.id}
-                  onClick={() => setType(mode.id)}
-                  className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
-                    type === mode.id
-                      ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/30"
-                      : "text-gray-500 hover:text-gray-300 hover:bg-white/5 border border-transparent"
-                  }`}
-                >
-                  {mode.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Live indicator */}
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[11px] font-semibold text-emerald-400">Live</span>
-              <span className="text-[11px] text-gray-600 ml-2">{problems.length} incidents · {ngos.length} NGOs</span>
-            </div>
-          </div>
 
           {/* Map itself */}
           <div className="h-[68vh] w-full relative">

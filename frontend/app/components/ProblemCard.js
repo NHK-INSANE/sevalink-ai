@@ -1,15 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
-import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import DiscussionPanel from "./DiscussionPanel";
 import { getUser } from "../utils/auth";
 
 export default function ProblemCard({ problem, onStatusChange, onDelete }) {
   const [user, setUser] = useState(null);
   const [showChat, setShowChat] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     setUser(getUser());
@@ -30,11 +27,11 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
     <>
     <div className="report-card relative group">
 
-      {/* ── Delete button (owner only, hover) ── */}
+      {/* ── Delete button (owner only, on hover) ── */}
       {user && user._id === problem.createdBy && (
         <button
           onClick={() => onDelete(problem._id)}
-          className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 p-1 hover:bg-red-500/10 rounded"
+          className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 p-1 hover:bg-red-500/10 rounded z-10"
           title="Delete"
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -43,23 +40,36 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
         </button>
       )}
 
-      {/* ── Row 1: Urgency badge + Date ── */}
-      <div className="flex justify-between items-start mb-3">
+      {/* ── Row 1: Urgency badge (left) + Status select (right) ── */}
+      <div className="flex justify-between items-center mb-4">
         <span className={`badge ${urgencyBadges[problem.urgency] || "badge-medium"} text-[10px] px-1.5 py-0.5 rounded`}>
           {problem.urgency}
         </span>
-        <span className="date text-[10px] text-[#6B7280]">
-          {new Date(problem.createdAt).toLocaleDateString()}
-        </span>
+
+        {/* Status — top-right, compact */}
+        <select
+          value={problem.status}
+          onChange={(e) => handleStatusChange(e.target.value)}
+          className="bg-white/5 border border-white/10 rounded-[6px] text-gray-400 px-2 py-1 text-[11px] font-medium outline-none hover:border-purple-500/40 transition cursor-pointer"
+        >
+          <option value="Open" className="bg-[#0f172a]">Open</option>
+          <option value="In Progress" className="bg-[#0f172a]">In Progress</option>
+          <option value="Resolved" className="bg-[#0f172a]">Resolved</option>
+        </select>
+      </div>
+
+      {/* ── Date ── */}
+      <div className="text-[10px] text-[#6B7280] mb-2">
+        {new Date(problem.createdAt).toLocaleDateString()}
       </div>
 
       {/* ── Title ── */}
-      <h3 className="title text-[14px] font-semibold leading-[1.4] mb-[6px] text-white line-clamp-2 pr-4 group-hover:text-purple-400 transition-colors">
+      <h3 className="title text-[14px] font-semibold leading-[1.4] mb-2 text-white line-clamp-2 group-hover:text-purple-400 transition-colors">
         {problem.title}
       </h3>
 
       {/* ── Description ── */}
-      <p className="desc text-[12px] text-[#9CA3AF] leading-[1.4] mb-[10px] line-clamp-2">
+      <p className="desc text-[12px] text-[#9CA3AF] leading-[1.5] mb-4 line-clamp-2">
         {problem.description}
       </p>
 
@@ -71,43 +81,29 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
         <span className="truncate">{problem.locationName || problem.address || "Location unavailable"}</span>
       </div>
 
-      {/* ── Footer: Status (left) | Chat + Assign (right) ── */}
+      {/* ── Footer: Chat (left) + Assign (right) ── */}
       <div className="flex items-center justify-between gap-2 pt-3 border-t border-white/5">
 
-        {/* Status dropdown — compact, left-aligned */}
-        <select
-          value={problem.status}
-          onChange={(e) => handleStatusChange(e.target.value)}
-          className="bg-white/5 border border-white/10 rounded-[6px] text-gray-300 px-2 py-1.5 text-[11px] font-medium outline-none hover:border-purple-500/50 transition cursor-pointer"
-          style={{ minWidth: 100 }}
+        {/* Chat — 40px square, prominent */}
+        <button
+          onClick={() => setShowChat(true)}
+          title="Open Discussion"
+          className="flex items-center justify-center rounded-[8px] bg-white/5 hover:bg-purple-600/20 border border-white/10 hover:border-purple-500/30 transition-all"
+          style={{ width: 40, height: 40 }}
         >
-          <option value="Open" className="bg-[#0f172a]">Open</option>
-          <option value="In Progress" className="bg-[#0f172a]">In Progress</option>
-          <option value="Resolved" className="bg-[#0f172a]">Resolved</option>
-        </select>
+          <svg className="w-[18px] h-[18px] text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+          </svg>
+        </button>
 
-        {/* Actions — right */}
-        <div className="flex items-center gap-2">
-          {/* Chat button — bigger, visible */}
-          <button
-            onClick={() => setShowChat(true)}
-            title="Discussion"
-            className="flex items-center justify-center w-8 h-8 rounded-[6px] bg-white/5 hover:bg-purple-600/20 hover:border-purple-500/30 border border-white/10 transition-all"
-          >
-            <svg className="w-4 h-4 text-gray-400 hover:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-            </svg>
-          </button>
-
-          {/* Assign button */}
-          <button
-            onClick={() => onStatusChange(problem._id, "In Progress")}
-            disabled={problem.status !== "Open"}
-            className="px-4 py-1.5 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white border border-purple-500/30 text-[11px] font-semibold rounded-[6px] transition disabled:opacity-40"
-          >
-            Assign
-          </button>
-        </div>
+        {/* Assign */}
+        <button
+          onClick={() => onStatusChange(problem._id, "In Progress")}
+          disabled={problem.status !== "Open"}
+          className="flex-1 py-2 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white border border-purple-500/30 text-[11px] font-semibold rounded-[8px] transition disabled:opacity-40"
+        >
+          Assign
+        </button>
       </div>
     </div>
 
