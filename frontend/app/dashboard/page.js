@@ -368,7 +368,7 @@ export default function Dashboard() {
                 <p className="text-gray-500 text-xs mt-1">The platform is currently clear.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {sortedProblems.slice(0, 6).map(p => (
                   <ProblemCard key={p._id} problem={p} />
                 ))}
