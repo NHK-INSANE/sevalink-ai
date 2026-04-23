@@ -111,12 +111,16 @@ export default function Landing() {
           viewport={{ once: true }}
           className="container"
         >
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <Stat end={stats.problems || 125} suffix="+" label="Active Reports" />
-            <Stat end={stats.users || 200} suffix="+" label="Responders" />
-            <Stat end={12} suffix="+" label="NGOs" />
-            <Stat end={95} suffix="%" label="Accuracy" />
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 text-center">
+            <Stat end={stats.problems || 125} suffix="+" label="Active Crisis Reports" />
+            <Stat end={stats.users || 200} suffix="" label="Registered Users" />
+            <Stat end={stats.citizens || 70} suffix="" label="Citizens Reporting Issues" />
+            <Stat end={stats.responders || 110} suffix="" label="Responders (Volunteers + Workers)" />
+            <Stat end={stats.ngos || 20} suffix="" label="Partner NGOs" />
           </div>
+          <p className="text-xs text-gray-500 mt-8 text-center">
+            Based on current demo dataset
+          </p>
         </motion.div>
       </section>
 
