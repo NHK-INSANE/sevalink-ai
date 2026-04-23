@@ -236,7 +236,7 @@ export default function SubmitPage() {
           >
             ✅
           </motion.div>
-          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent mb-4">Transmission Successful</h1>
+          <h1 className="text-4xl font-extrabold tracking-tight gradient-text mb-4">Transmission Successful</h1>
           <p className="text-[var(--text-secondary)] mb-10 text-sm font-medium">
             AI has classified this incident as{" "}
             <span className={`badge ${URGENCY_INFO[aiUrgency]?.color} !text-[10px] !px-4`}>
@@ -275,7 +275,7 @@ export default function SubmitPage() {
         <div className="max-w-2xl mx-auto card !p-8 sm:!p-12 shadow-2xl border-white/5 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* Header */}
           <div className="mb-10 text-center">
-            <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-extrabold tracking-tight gradient-text">
               Report Crisis
             </h1>
             <p className="text-[var(--text-secondary)] text-sm mt-3 font-medium max-w-sm mx-auto">
@@ -465,7 +465,7 @@ export default function SubmitPage() {
                 whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={loading}
-                className="btn-primary w-full !py-6 !text-lg !rounded-3xl shadow-[0_20px_50px_var(--primary-glow)] active:scale-95 disabled:opacity-50 group flex items-center justify-center gap-3"
+                className="btn-glow w-full !py-6 !text-lg !rounded-3xl shadow-[0_20px_50px_var(--primary-glow)] active:scale-95 disabled:opacity-50 group flex items-center justify-center gap-3"
               >
                 {loading ? (
                   <div className="loader-small"></div>

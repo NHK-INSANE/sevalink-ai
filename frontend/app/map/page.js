@@ -175,7 +175,7 @@ export default function MapPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight gradient-text">
               Global Crisis Map
             </h1>
             <p className="text-[var(--text-secondary)] text-sm mt-2 font-medium">
@@ -249,6 +249,13 @@ export default function MapPage() {
                 <span className={type === mode.id ? "block" : "hidden md:block"}>{mode.label}</span>
               </motion.button>
             ))}
+          </div>
+
+          <div className="absolute top-6 right-6 z-[10]">
+            <div className="glass px-4 py-2 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-bold text-white uppercase tracking-widest">Live Signal</span>
+            </div>
           </div>
 
           <div className="h-[60vh] sm:h-[75vh] rounded-[2rem] overflow-hidden border border-white/5">

@@ -126,7 +126,7 @@ export default function ProfilePage() {
               </motion.button>
             </div>
             
-            <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-extrabold tracking-tight gradient-text">
               {user.name || "SevaLink User"}
             </h1>
             {user.username && (

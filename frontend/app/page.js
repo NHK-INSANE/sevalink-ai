@@ -46,7 +46,7 @@ export default function Landing() {
             Live Disaster Response Network
           </div>
 
-          <h1 className="text-6xl sm:text-8xl font-extrabold mb-8 tracking-tighter bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent leading-[1.1]">
+          <h1 className="text-6xl sm:text-8xl font-extrabold mb-8 tracking-tighter gradient-text leading-[1.1]">
             Connecting Humanity <br /> 
             <span className="text-[var(--primary)]">Through Intelligence.</span>
           </h1>

@@ -265,10 +265,9 @@ export default function Dashboard() {
       
       <PageWrapper>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 space-y-12">
-        {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
           <div>
-            <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-extrabold tracking-tight gradient-text">
               Command Dashboard
             </h1>
             <p className="text-[var(--text-secondary)] text-sm mt-2 font-medium">
@@ -427,13 +426,13 @@ export default function Dashboard() {
       </PageWrapper>
 
       {/* Floating Action Buttons */}
-      <div className="fixed bottom-10 right-10 z-[100] flex flex-col gap-4">
+      <div className="fab">
         <Link 
           href="/submit" 
         >
           <motion.button
             whileTap={{ scale: 0.9 }}
-            className="w-14 h-14 bg-[var(--primary)] text-white flex items-center justify-center rounded-[1.25rem] shadow-[0_10px_40px_var(--primary-glow)] hover:scale-110 active:scale-95 transition text-2xl border border-white/10"
+            className="w-14 h-14 btn-glow text-white flex items-center justify-center rounded-[1.25rem] shadow-[0_10px_40px_var(--primary-glow)] hover:scale-110 active:scale-95 transition text-2xl border border-white/10"
             title="New Report"
           >
             ➕
