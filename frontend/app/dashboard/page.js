@@ -244,7 +244,7 @@ export default function Dashboard() {
           {/* ── KPI CARDS ── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-7"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-7"
           >
             {[
               { label: "Total Problems",  value: counts.total      },
@@ -253,74 +253,75 @@ export default function Dashboard() {
               { label: "Partner NGOs",    value: counts.ngos        },
             ].map((s, i) => (
               <div key={i} className="card">
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 mb-3">{s.label}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-2">{s.label}</p>
                 <p className="text-3xl font-bold text-white leading-none"><Counter value={s.value} /></p>
               </div>
             ))}
           </motion.div>
 
-          {/* ── ANALYTICS ROW ── */}
+          {/* ── ANALYTICS ROW: left 2-stack | right wide ── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.18 }}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-7"
+            className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-7"
           >
-            {/* Problem Flow */}
-            <div className="card">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 mb-5">Problem Flow</p>
-              <div className="space-y-3">
-                {[
-                  { label: "Open Issues",    val: openCount,     dot: "bg-red-400" },
-                  { label: "In Progress",    val: progressCount, dot: "bg-yellow-400" },
-                  { label: "Resolved",       val: resolvedCount, dot: "bg-green-400" },
-                ].map(r => (
-                  <div key={r.label} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${r.dot}`} />
-                      <span className="text-sm text-gray-300">{r.label}</span>
+            {/* LEFT COL: Problem Flow + Urgency Matrix stacked */}
+            <div className="flex flex-col gap-6">
+              {/* Problem Flow */}
+              <div className="card">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-4">Problem Flow</p>
+                <div className="space-y-2">
+                  {[
+                    { label: "Open Issues", val: openCount,     dot: "bg-red-400"    },
+                    { label: "In Progress", val: progressCount, dot: "bg-yellow-400" },
+                    { label: "Resolved",    val: resolvedCount, dot: "bg-green-400"  },
+                  ].map(r => (
+                    <div key={r.label} className="flex items-center justify-between py-1.5 border-b border-white/5 last:border-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-1.5 h-1.5 rounded-full ${r.dot}`} />
+                        <span className="text-xs text-gray-300">{r.label}</span>
+                      </div>
+                      <span className="text-xs font-semibold text-white">{r.val}</span>
                     </div>
-                    <span className="text-sm font-semibold text-white">{r.val}</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              </div>
+
+              {/* Urgency Matrix */}
+              <div className="card">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-4">Urgency Matrix</p>
+                <div className="space-y-3">
+                  {[
+                    { label: "Critical", count: criticalCount, bar: "bg-red-500",    text: "text-red-400"    },
+                    { label: "High",     count: highCount,     bar: "bg-orange-500", text: "text-orange-400" },
+                    { label: "Medium",   count: mediumCount,   bar: "bg-yellow-500", text: "text-yellow-400" },
+                    { label: "Low",      count: lowCount,      bar: "bg-green-500",  text: "text-green-400"  },
+                  ].map(u => (
+                    <div key={u.label} className="flex items-center gap-3">
+                      <span className={`text-[10px] font-bold uppercase tracking-wider w-12 shrink-0 ${u.text}`}>{u.label}</span>
+                      <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${u.bar} opacity-70`}
+                          style={{ width: `${Math.min((u.count / (problems.length || 1)) * 100, 100)}%` }} />
+                      </div>
+                      <span className="text-xs font-semibold text-white w-5 text-right">{u.count}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Distribution */}
-            <div className="card">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 mb-5">Category Distribution</p>
-              <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
+            {/* RIGHT COL: Category Distribution — spans 2 cols */}
+            <div className="card lg:col-span-2">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-4">Category Distribution</p>
+              <div className="space-y-2">
                 {categoryData.length === 0 ? (
                   <p className="text-xs text-gray-600 py-4">No data yet</p>
                 ) : categoryData.map(c => (
-                  <div key={c.name} className="flex items-center gap-3 py-1.5 border-b border-white/5 last:border-0">
-                    <span className="text-sm text-gray-300 flex-1 truncate">{c.name}</span>
-                    <div className="w-16 h-1 rounded-full bg-white/5 overflow-hidden">
+                  <div key={c.name} className="flex items-center gap-4 py-1.5 border-b border-white/5 last:border-0">
+                    <span className="text-xs text-gray-300 w-28 shrink-0 truncate">{c.name}</span>
+                    <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
                       <div className="h-full bg-purple-500/60 rounded-full" style={{ width: `${c.percent}%` }} />
                     </div>
-                    <span className="text-[11px] text-gray-500 w-8 text-right">{c.percent}%</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Urgency Matrix */}
-            <div className="card">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 mb-5">Urgency Matrix</p>
-              <div className="space-y-3">
-                {[
-                  { label: "Critical", count: criticalCount, bar: "bg-red-500",    text: "text-red-400"    },
-                  { label: "High",     count: highCount,     bar: "bg-orange-500", text: "text-orange-400" },
-                  { label: "Medium",   count: mediumCount,   bar: "bg-yellow-500", text: "text-yellow-400" },
-                  { label: "Low",      count: lowCount,      bar: "bg-green-500",  text: "text-green-400"  },
-                ].map(u => (
-                  <div key={u.label} className="flex items-center gap-3">
-                    <span className={`text-[11px] font-bold uppercase tracking-wider w-14 ${u.text}`}>{u.label}</span>
-                    <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${u.bar} opacity-70`}
-                        style={{ width: `${Math.min((u.count / (problems.length || 1)) * 100, 100)}%` }}
-                      />
-                    </div>
-                    <span className="text-sm font-semibold text-white w-6 text-right">{u.count}</span>
+                    <span className="text-[11px] text-gray-500 w-10 text-right shrink-0">{c.percent}%</span>
                   </div>
                 ))}
               </div>
