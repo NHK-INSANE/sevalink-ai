@@ -26,20 +26,33 @@ const getFallbackUrgency = (text) => {
 
   if (
     lower.includes("death") ||
-    lower.includes("emergency") ||
+    lower.includes("flood") ||
+    lower.includes("earthquake") ||
+    lower.includes("accident") ||
+    lower.includes("fire") ||
     lower.includes("no food") ||
     lower.includes("no water")
   ) {
-    return { urgency: "Critical", score: 90 };
+    return { urgency: "Critical", score: 95 };
   }
-  if (lower.includes("medical") || lower.includes("injury")) {
-    return { urgency: "High", score: 70 };
+  if (
+    lower.includes("medical") || 
+    lower.includes("injury") || 
+    lower.includes("damage") ||
+    lower.includes("urgent")
+  ) {
+    return { urgency: "High", score: 75 };
   }
-  if (lower.includes("school") || lower.includes("education")) {
-    return { urgency: "Medium", score: 40 };
+  if (
+    lower.includes("water") || 
+    lower.includes("food") || 
+    lower.includes("electricity") ||
+    lower.includes("school")
+  ) {
+    return { urgency: "Medium", score: 50 };
   }
 
-  return { urgency: "Low", score: 10 };
+  return { urgency: "Low", score: 20 };
 };
 
 exports.getUrgency = async (req, res) => {

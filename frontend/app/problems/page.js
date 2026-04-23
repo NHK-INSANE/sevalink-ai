@@ -232,10 +232,10 @@ export default function ProblemsPage() {
         )}
       </main>
 
-      {/* Floating Action Button */}
+      {/* Floating Action Button - Moved up to avoid chat overlap */}
       <Link 
         href="/submit" 
-        className="fixed bottom-6 right-6 z-50 bg-[var(--primary)] text-white w-14 h-14 flex items-center justify-center rounded-full shadow-lg hover:scale-110 active:scale-95 transition text-2xl"
+        className="fixed bottom-24 right-6 z-50 bg-[var(--primary)] text-white w-14 h-14 flex items-center justify-center rounded-full shadow-lg hover:scale-110 active:scale-95 transition text-2xl"
       >
         ➕
       </Link>

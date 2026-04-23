@@ -87,27 +87,27 @@ export default function VolunteersPage() {
               return (
                 <div
                   key={u._id || i}
-                  className="glass rounded-xl p-5 border border-white/8 hover:border-indigo-500/30 transition-all"
+                  className="bg-[#1e293b]/50 backdrop-blur-md rounded-2xl p-6 border border-white/5 hover:border-[var(--primary)]/30 transition-all shadow-xl group"
                 >
-                  <div className="flex items-center gap-3 mb-3">
+                  <div className="flex items-center gap-4 mb-5">
                     <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-lg ${
+                      className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-2xl transition-transform group-hover:scale-110 ${
                         isVol
-                          ? "bg-gradient-to-br from-emerald-600 to-teal-600"
-                          : "bg-gradient-to-br from-orange-600 to-amber-600"
+                          ? "bg-gradient-to-br from-emerald-500 to-teal-600"
+                          : "bg-gradient-to-br from-indigo-500 to-purple-600"
                       }`}
                     >
                       {isVol ? "🤝" : "🔧"}
                     </div>
                     <div>
-                      <h2 className="text-white font-bold text-sm leading-tight">
-                        {u.name || "Unnamed"}
+                      <h2 className="text-white font-bold text-base leading-tight group-hover:text-[var(--primary)] transition-colors">
+                        {u.name || "Unnamed Helper"}
                       </h2>
                       <span
-                        className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                        className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-lg mt-1 inline-block ${
                           isVol
-                            ? "text-emerald-300 bg-emerald-500/15"
-                            : "text-orange-300 bg-orange-500/15"
+                            ? "text-emerald-300 bg-emerald-500/10 border border-emerald-500/20"
+                            : "text-indigo-300 bg-indigo-500/10 border border-indigo-500/20"
                         }`}
                       >
                         {isVol ? "Volunteer" : "Worker"}
@@ -115,31 +115,31 @@ export default function VolunteersPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-1.5 text-xs">
+                  <div className="space-y-2.5 text-xs text-slate-400 mb-6">
                     {u.email && (
-                      <div className="flex items-center gap-2 text-slate-400">
-                        <span>📧</span> <span className="truncate">{u.email}</span>
+                      <div className="flex items-center gap-2.5 bg-white/5 p-2 rounded-xl">
+                        <span className="text-sm">📧</span> <span className="truncate">{u.email}</span>
                       </div>
                     )}
                     {u.phone && (
-                      <div className="flex items-center gap-2 text-slate-400">
-                        <span>📞</span> <span>{u.phone}</span>
+                      <div className="flex items-center gap-2.5 bg-white/5 p-2 rounded-xl">
+                        <span className="text-sm">📞</span> <span>{u.phone}</span>
                       </div>
                     )}
                     {u.address && (
-                      <div className="flex items-center gap-2 text-slate-400">
-                        <span>📍</span> <span>{u.address}</span>
+                      <div className="flex items-center gap-2.5 bg-white/5 p-2 rounded-xl">
+                        <span className="text-sm">📍</span> <span className="truncate">{u.address}</span>
                       </div>
                     )}
                   </div>
 
-                  {/* Skills */}
-                  {u.skills && u.skills.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-3">
-                      {u.skills.map((s) => (
+                  {/* Skills Section */}
+                  {(u.skills?.length > 0 || u.skill) && (
+                    <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-white/5">
+                      {Array.from(new Set([...(u.skills || []), u.skill])).filter(Boolean).map((s) => (
                         <span
                           key={s}
-                          className="px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-medium"
+                          className="px-2.5 py-1 rounded-lg bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-[var(--primary)] text-[10px] font-bold"
                         >
                           {s}
                         </span>

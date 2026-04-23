@@ -42,17 +42,19 @@ const userSchema = Joi.object({
 const problemSchema = Joi.object({
   title: Joi.string().min(5).max(100).required(),
   description: Joi.string().min(10).required(),
-  category: Joi.string().required(),
-  address: Joi.string().optional(),
+  category: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.string())).required(),
+  address: Joi.string().optional().allow(""),
   latitude: Joi.number().optional(),
   longitude: Joi.number().optional(),
   location: Joi.object({
     lat: Joi.number().optional(),
     lng: Joi.number().optional(),
-    address: Joi.string().optional(),
+    address: Joi.string().optional().allow(""),
   }).optional(),
   urgency: Joi.string().valid("Low", "Medium", "High", "Critical").optional(),
   requiredSkill: Joi.string().optional().allow(""),
+  requiredSkills: Joi.array().items(Joi.string()).optional(),
+  score: Joi.number().optional(), // ✅ allow score
 });
 
 module.exports = {

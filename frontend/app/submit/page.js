@@ -47,8 +47,8 @@ export default function SubmitPage() {
   const [form, setForm] = useState({
     title: "",
     description: "",
-    category: "",
-    requiredSkill: "",
+    categories: [], // ✅ multiple
+    requiredSkills: [], // ✅ multiple
   });
   const [customCategory, setCustomCategory] = useState("");
   const [customSkill, setCustomSkill] = useState("");
@@ -70,6 +70,17 @@ export default function SubmitPage() {
 
   const updateForm = (field) => (e) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
+
+  const toggleSelection = (field, value) => {
+    setForm(prev => {
+      const current = prev[field];
+      if (current.includes(value)) {
+        return { ...prev, [field]: current.filter(v => v !== value) };
+      } else {
+        return { ...prev, [field]: [...current, value] };
+      }
+    });
+  };
 
   const detectLocation = () => {
     if (!navigator.geolocation) return;
@@ -141,6 +152,10 @@ export default function SubmitPage() {
       toast.error("Title and description are required.");
       return;
     }
+    if (form.categories.length === 0) {
+      toast.error("Please select at least one category.");
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -155,13 +170,19 @@ export default function SubmitPage() {
         setAiScore(score);
       }
 
-      const finalCategory = form.category === "Other" && customCategory.trim() ? customCategory : form.category;
-      const finalSkill = form.requiredSkill === "Other" && customSkill.trim() ? customSkill : form.requiredSkill;
+      const finalCategories = form.categories.includes("Other") && customCategory.trim() 
+        ? [...form.categories.filter(c => c !== "Other"), customCategory] 
+        : form.categories;
+
+      const finalSkills = form.requiredSkills.includes("Other") && customSkill.trim() 
+        ? [...form.requiredSkills.filter(s => s !== "Other"), customSkill] 
+        : form.requiredSkills;
 
       const response = await createProblem({ 
-        ...form, 
-        category: finalCategory, 
-        requiredSkill: finalSkill, 
+        title: form.title,
+        description: form.description,
+        category: finalCategories, // Now sending array
+        requiredSkills: finalSkills, // Now sending array
         urgency, 
         score: score ?? 0, 
         location: {
@@ -312,21 +333,64 @@ export default function SubmitPage() {
               </div>
             )}
 
-            {/* Selects */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Multiple Selects (Pills) */}
+            <div className="space-y-6">
               <div>
-                <label className="block text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-2">Category</label>
-                <select value={form.category} onChange={updateForm("category")} className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none">
-                  <option value="">Select...</option>
-                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+                <label className="block text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-3">Categories (Select all that apply)</label>
+                <div className="flex flex-wrap gap-2">
+                  {CATEGORIES.map(c => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => toggleSelection("categories", c)}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                        form.categories.includes(c)
+                          ? "bg-[var(--primary)] text-white border-[var(--primary)] shadow-md shadow-indigo-500/20"
+                          : "bg-[var(--bg)] text-[var(--muted)] border-[var(--border)] hover:border-[var(--primary)]/50"
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+                {form.categories.includes("Other") && (
+                  <input
+                    type="text"
+                    placeholder="Enter custom category..."
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    className="mt-3 w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none"
+                  />
+                )}
               </div>
+
               <div>
-                <label className="block text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-2">Required Skill</label>
-                <select value={form.requiredSkill} onChange={updateForm("requiredSkill")} className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none">
-                  <option value="">Select...</option>
-                  {SKILLS.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
+                <label className="block text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-3">Required Skills</label>
+                <div className="flex flex-wrap gap-2">
+                  {SKILLS.map(s => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => toggleSelection("requiredSkills", s)}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                        form.requiredSkills.includes(s)
+                          ? "bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-500/20"
+                          : "bg-[var(--bg)] text-[var(--muted)] border-[var(--border)] hover:border-purple-500/50"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+                {form.requiredSkills.includes("Other") && (
+                  <input
+                    type="text"
+                    placeholder="Enter custom skill..."
+                    value={customSkill}
+                    onChange={(e) => setCustomSkill(e.target.value)}
+                    className="mt-3 w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-sm focus:ring-2 focus:ring-purple-500 outline-none"
+                  />
+                )}
               </div>
             </div>
 
