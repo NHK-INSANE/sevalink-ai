@@ -12,6 +12,7 @@ import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { io } from "socket.io-client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
@@ -229,6 +230,28 @@ export default function Dashboard() {
               </p>
             </motion.div>
 
+            <motion.div
+              initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.1 }}
+              className="flex items-center gap-3"
+            >
+              <button
+                onClick={handleLocateAndSort}
+                className="btn-secondary !text-xs !px-5 !py-2"
+              >
+                {sortNearest ? "Reset Sort" : "Nearest"}
+              </button>
+              <Link href="/submit">
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="btn-primary !text-xs !px-5 !py-2 flex items-center gap-2"
+                  style={{ boxShadow: "0 0 20px rgba(99,102,241,0.35)" }}
+                >
+                  <span className="text-base leading-none">+</span>
+                  Initialize Report
+                </motion.button>
+              </Link>
+            </motion.div>
           </div>
 
           <div className="flex flex-col gap-4">
@@ -339,9 +362,119 @@ export default function Dashboard() {
               </div>
             </motion.div>
 
+            {/* ── FEATURED: ADD NEW REPORT ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.28 }}
+            >
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
+                <h2 className="text-sm font-semibold text-white tracking-tight">Featured</h2>
+                <Link href="/problems" className="text-purple-400 text-xs font-medium hover:text-purple-300 transition-colors">
+                  Browse All →
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+                {/* CTA Card */}
+                <Link href="/submit" className="block group">
+                  <motion.div
+                    whileHover={{ scale: 1.015, y: -2 }}
+                    whileTap={{ scale: 0.985 }}
+                    className="relative card overflow-hidden cursor-pointer h-full min-h-[160px] flex flex-col justify-between"
+                    style={{
+                      background: "linear-gradient(135deg, rgba(99,102,241,0.18) 0%, rgba(139,92,246,0.10) 100%)",
+                      border: "1px solid rgba(99,102,241,0.25)",
+                      boxShadow: "0 0 40px rgba(99,102,241,0.12) inset"
+                    }}
+                  >
+                    {/* Glow orb */}
+                    <div
+                      className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-20 pointer-events-none"
+                      style={{ background: "radial-gradient(circle, #6366f1 0%, transparent 70%)" }}
+                    />
+                    <div>
+                      <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center mb-4">
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className="text-indigo-400">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                      </div>
+                      <p className="text-white font-semibold text-sm mb-1">Submit New Report</p>
+                      <p className="text-[#9CA3AF] text-[12px] leading-relaxed">
+                        Flag a crisis in your area. AI instantly classifies urgency and alerts nearby responders.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-indigo-400 text-xs font-semibold mt-5 group-hover:gap-3 transition-all">
+                      Initialize Report
+                      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </motion.div>
+                </Link>
+
+                {/* Top 2 critical/high featured problems */}
+                {(() => {
+                  const featured = [...problems]
+                    .filter(p => p.urgency === "Critical" || p.urgency === "High")
+                    .sort((a, b) => (a.urgency === "Critical" ? -1 : 1))
+                    .slice(0, 2);
+                  if (featured.length === 0) {
+                    return (
+                      <div className="card lg:col-span-2 flex items-center justify-center py-8">
+                        <p className="text-gray-600 text-[13px]">No critical or high-urgency reports at this time.</p>
+                      </div>
+                    );
+                  }
+                  return featured.map(p => (
+                    <Link key={p._id} href={`/problems`} className="block group">
+                      <motion.div
+                        whileHover={{ scale: 1.015, y: -2 }}
+                        whileTap={{ scale: 0.985 }}
+                        className="card h-full min-h-[160px] flex flex-col justify-between cursor-pointer transition-all"
+                        style={{
+                          border: p.urgency === "Critical"
+                            ? "1px solid rgba(239,68,68,0.2)"
+                            : "1px solid rgba(249,115,22,0.2)",
+                          background: p.urgency === "Critical"
+                            ? "linear-gradient(135deg, rgba(239,68,68,0.07) 0%, rgba(15,23,42,0.9) 100%)"
+                            : "linear-gradient(135deg, rgba(249,115,22,0.07) 0%, rgba(15,23,42,0.9) 100%)"
+                        }}
+                      >
+                        <div>
+                          <div className="flex items-center gap-2 mb-3">
+                            <span
+                              className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                                p.urgency === "Critical"
+                                  ? "bg-red-500/15 text-red-400"
+                                  : "bg-orange-500/15 text-orange-400"
+                              }`}
+                            >
+                              {p.urgency}
+                            </span>
+                            <span className="text-[10px] text-gray-600 uppercase tracking-wider">{p.category?.[0] || p.category || "Uncategorized"}</span>
+                          </div>
+                          <p className="text-white text-[13px] font-semibold leading-snug line-clamp-2 mb-2">{p.title}</p>
+                          <p className="text-gray-500 text-[11px] leading-relaxed line-clamp-2">{p.description}</p>
+                        </div>
+                        <div className="flex items-center justify-between mt-4">
+                          <span className="text-[10px] text-gray-600">
+                            {p.location?.address ? p.location.address.split(",").slice(0, 2).join(",") : "Location unavailable"}
+                          </span>
+                          <span className={`text-[10px] font-semibold group-hover:opacity-80 transition-opacity ${
+                            p.urgency === "Critical" ? "text-red-400" : "text-orange-400"
+                          }`}>
+                            View →
+                          </span>
+                        </div>
+                      </motion.div>
+                    </Link>
+                  ));
+                })()}
+              </div>
+            </motion.div>
+
             {/* ── RECENT REPORTS ── */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.3 }}
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.34 }}
             >
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
                 <h2 className="text-sm font-semibold text-white tracking-tight">
