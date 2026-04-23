@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import DiscussionPanel from "./DiscussionPanel";
 import { getUser } from "../utils/auth";
@@ -8,6 +9,7 @@ import { getUser } from "../utils/auth";
 export default function ProblemCard({ problem, onStatusChange, onDelete }) {
   const [user, setUser] = useState(null);
   const [showChat, setShowChat] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setUser(getUser());
@@ -66,7 +68,7 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
           {problem.location && problem.location.lat && (
             <button
               onClick={() => {
-                window.location.href = `/map?lat=${problem.location.lat}&lng=${problem.location.lng}&title=${encodeURIComponent(problem.title)}`;
+                router.push(`/map?lat=${problem.location.lat}&lng=${problem.location.lng}&title=${encodeURIComponent(problem.title)}`);
               }}
               className="ml-auto text-[10px] font-bold text-blue-500 hover:text-blue-400 hover:underline flex items-center gap-1 transition"
             >

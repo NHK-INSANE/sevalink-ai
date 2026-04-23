@@ -102,4 +102,32 @@ router.patch("/:id/notifications/read", auth, async (req, res) => {
   }
 });
 
+// PUT /api/users/update-profile
+router.put("/update-profile", auth, async (req, res) => {
+  try {
+    const { name, email, phone, address, location, bio, skill, skills } = req.body;
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (phone) user.phone = phone;
+    if (address) user.address = address;
+    if (location) user.location = location;
+    if (bio) user.bio = bio;
+    if (skill) user.skill = skill;
+    if (skills) user.skills = skills;
+
+    await user.save();
+
+    const safeUser = await User.findById(user._id).select("-password");
+    res.json(safeUser);
+  } catch (err) {
+    console.error("Update Profile Error:", err);
+    res.status(500).json({ error: "Update failed" });
+  }
+});
+
 module.exports = router;
+

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { getUser, logout } from "../utils/auth";
 import { io } from "socket.io-client";
 import toast from "react-hot-toast";
+import { MapPin, Link2 } from "lucide-react";
 
 import { NotificationContext } from "../context/NotificationContext";
 
@@ -121,9 +122,17 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
         
         {/* Left: Brand */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <h1 className="text-lg font-bold text-[var(--text)] tracking-tight">
-            SevaLink AI
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="flex -space-x-2">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition-transform">
+              <MapPin size={18} />
+            </div>
+            <div className="w-8 h-8 rounded-lg bg-purple-600 flex items-center justify-center text-white shadow-lg shadow-purple-500/20 group-hover:scale-110 transition-transform delay-75">
+              <Link2 size={18} />
+            </div>
+          </div>
+          <h1 className="text-xl font-bold text-[var(--text)] tracking-tight">
+            Seva<span className="text-indigo-500">Link</span> AI
           </h1>
         </Link>
 

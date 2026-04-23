@@ -295,5 +295,16 @@ router.post("/:id/messages", auth, async (req, res) => {
   }
 });
 
+// GET /api/problems/latest — Get latest 5 problems
+router.get("/latest", async (req, res) => {
+  try {
+    const latest = await Problem.find().sort({ createdAt: -1 }).limit(5);
+    res.json(latest);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch latest problems" });
+  }
+});
+
 module.exports = router;
+
 

@@ -102,7 +102,7 @@ const { auth, authorize } = require("./middleware/auth");
 // Public user list (safe fields only — no passwords/emails exposed fully)
 app.get("/api/users", async (req, res) => {
   try {
-    const users = await User.find().select("name role location ngoName ngoContact skill skills latitude longitude");
+    const users = await User.find().select("name role location ngoName ngoContact skill skills latitude longitude email phone address bio");
     res.json(users);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch users" });
@@ -113,10 +113,12 @@ app.get("/api/users", async (req, res) => {
 const problemRoutes = require("./routes/problemRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const userRoutes = require("./routes/userRoutes");
+const statsRoutes = require("./routes/statsRoutes");
 
 app.use("/api/problems", problemRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api", statsRoutes);
 
 // Rate limiter for SOS
 const sosLimiter = rateLimit({
