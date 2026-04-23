@@ -3,16 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Navbar from "../components/Navbar";
 import ProblemCard from "../components/ProblemCard";
-import TiltCard from "../components/TiltCard";
+import Tilt from "react-parallax-tilt";
 import Counter from "../components/Counter";
 import PageWrapper from "../components/PageWrapper";
-import { getProblems, updateProblemStatus, getUsers } from "../utils/api";
+import { getProblems, getUsers } from "../utils/api";
 import { getUser } from "../utils/auth";
 import { getUserLocation } from "../utils/location";
-import { SkeletonCard, SkeletonStats } from "../components/Skeleton";
 import toast from "react-hot-toast";
-import { motion, AnimatePresence } from "framer-motion";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
+import { motion } from "framer-motion";
 import { io } from "socket.io-client";
 import Link from "next/link";
 
@@ -22,41 +20,6 @@ const MapView = dynamic(() => import("../components/MapView"), {
   ssr: false,
   loading: () => <div className="h-full w-full bg-slate-900 animate-pulse rounded-xl" />
 });
-
-const STAT_CONFIG = [
-  {
-    key: "total",
-    label: "Total Problems",
-    icon: "📊",
-    color: "from-indigo-600/20 to-purple-600/20",
-    border: "border-indigo-500/20",
-    text: "text-indigo-600",
-  },
-  {
-    key: "volunteers",
-    label: "Total Volunteers",
-    icon: "🤝",
-    color: "from-blue-600/20 to-blue-800/10",
-    border: "border-blue-500/20",
-    text: "text-blue-600",
-  },
-  {
-    key: "workers",
-    label: "Total Workers",
-    icon: "🔧",
-    color: "from-orange-600/20 to-orange-800/10",
-    border: "border-orange-500/20",
-    text: "text-orange-600",
-  },
-  {
-    key: "ngos",
-    label: "Total NGOs",
-    icon: "🏢",
-    color: "from-emerald-600/20 to-emerald-800/10",
-    border: "border-emerald-500/20",
-    text: "text-emerald-600",
-  },
-];
 
 export default function Dashboard() {
   const [problems, setProblems] = useState([]);
@@ -151,7 +114,6 @@ export default function Dashboard() {
   const mediumCount = problems.filter(p => p.urgency?.toLowerCase() === "medium").length;
   const lowCount = problems.filter(p => p.urgency?.toLowerCase() === "low").length;
 
-  // Category with Percentage logic
   const categoryCount = {};
   problems.forEach(p => {
     const cat = p.category || "Other";
@@ -163,16 +125,6 @@ export default function Dashboard() {
     value: categoryCount[cat],
     percent: ((categoryCount[cat] / totalProblems) * 100).toFixed(1)
   })).sort((a, b) => b.value - a.value);
-
-  const pieData = categoryData.filter(d => d.value > 0);
-  
-  const urgencyData = [
-    { name: "Critical", value: criticalCount, fill: "#ef4444" },
-    { name: "High", value: highCount, fill: "#f97316" },
-    { name: "Medium", value: mediumCount, fill: "#eab308" },
-    { name: "Low", value: lowCount, fill: "#22c55e" },
-  ];
-  const COLORS = ["#6366f1", "#ec4899", "#8b5cf6", "#14b8a6"];
 
   // 🔢 Live Counter Animation Logic
   useEffect(() => {
@@ -237,20 +189,27 @@ export default function Dashboard() {
       })
     : problems;
 
-  // Loading State with Skeletons
+  // Loading State with Skeleton Premium UX
   if (loading) {
     return (
-      <div style={{ minHeight: "100vh", background: "var(--bg-main)" }}>
+      <div className="min-h-screen bg-[#0b0f1a]">
         <Navbar />
-        <main style={{ maxWidth: "var(--content-max)", margin: "0 auto", padding: "0 var(--content-pad)", paddingTop: "calc(var(--navbar-height) + 48px)", paddingBottom: 80 }}>
-          <div className="h-12 skeleton rounded-2xl w-64" style={{ marginBottom: 32 }} />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" style={{ marginBottom: 32 }}>
-            <SkeletonStats /> <SkeletonStats /> <SkeletonStats /> <SkeletonStats />
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-             <div className="card h-64 skeleton border-white/5" />
-             <div className="card h-64 skeleton border-white/5" />
-             <div className="card h-64 skeleton border-white/5" />
+        <main className="max-w-[1280px] mx-auto px-4 md:px-10 pt-28 pb-20">
+          <div className="animate-pulse space-y-8">
+            <div className="h-12 bg-white/10 rounded-2xl w-64 mb-8"></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {[1,2,3,4].map(i => (
+                <div key={i} className="h-32 bg-white/5 backdrop-blur-2xl border border-white/10 shadow-xl rounded-2xl p-6">
+                  <div className="h-4 bg-white/10 rounded w-1/2 mb-4"></div>
+                  <div className="h-8 bg-white/10 rounded w-1/3"></div>
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {[1,2,3].map(i => (
+                <div key={i} className="h-64 bg-white/5 backdrop-blur-2xl border border-white/10 shadow-xl rounded-2xl"></div>
+              ))}
+            </div>
           </div>
         </main>
       </div>
@@ -258,215 +217,258 @@ export default function Dashboard() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-main)" }}>
+    <div className="min-h-screen">
       <Navbar />
       
       <PageWrapper>
-      <main style={{ maxWidth: "var(--content-max)", margin: "0 auto", padding: "0 var(--content-pad)", paddingTop: "calc(var(--navbar-height) + 48px)", paddingBottom: 80 }}>
-        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
-          <div>
-            <h1 className="text-4xl font-extrabold tracking-tight gradient-text">
-              Command Dashboard
+      <main className="max-w-[1280px] mx-auto px-4 md:px-10 pt-28 pb-20">
+        
+        {/* HERO PARALLAX SECTION */}
+        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="animate-float"
+          >
+            <h1 className="text-5xl md:text-6xl font-bold text-white tracking-tight drop-shadow-2xl">
+              Command <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">Center</span>
             </h1>
-            <p className="text-[var(--text-secondary)] text-sm mt-2 font-medium">
-              Synchronized as <span className="text-[var(--primary)]">{user?.name}</span>
-              {user?.role && <span className="opacity-60 uppercase text-[10px] ml-2 tracking-widest px-2 py-0.5 rounded-full bg-white/5 border border-white/10">{user.role}</span>}
+            <p className="text-white/60 text-sm md:text-base mt-3 font-medium">
+              Synchronized as <span className="text-blue-400">{user?.name}</span>
+              {user?.role && <span className="opacity-80 uppercase text-[10px] ml-3 tracking-widest px-3 py-1 rounded-full bg-white/10 border border-white/20 backdrop-blur-md">{user.role}</span>}
             </p>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="flex w-full md:w-auto gap-4"
+          >
+            <button
+              onClick={handleLocateAndSort}
+              className="relative px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-medium overflow-hidden group backdrop-blur-md"
+            >
+              <span className="relative z-10 text-sm transition group-hover:text-blue-300">📍 {sortNearest ? "Reset Sort" : "Nearest"}</span>
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition bg-white/5 blur-md"></div>
+            </button>
+            <Link href="/submit">
+              <button className="relative px-8 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 text-white font-medium overflow-hidden shadow-lg shadow-purple-500/25 group">
+                <span className="relative z-10 text-sm drop-shadow-md">Initialize Report</span>
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-white/20 blur-xl"></div>
+              </button>
+            </Link>
+          </motion.div>
+        </div>
+
+        {/* 3D TILT CARDS: INTELLIGENCE LAYER */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+          <Tilt glareEnable={true} glareMaxOpacity={0.1} scale={1.02} tiltMaxAngleX={5} tiltMaxAngleY={5} className="h-full">
+            <div className="relative group rounded-2xl overflow-hidden p-[1px] h-full">
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500">
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/40 to-teal-500/40 blur-xl"></div>
+              </div>
+              <div className="relative bg-white/5 backdrop-blur-2xl border border-white/10 shadow-xl rounded-2xl p-8 h-full flex justify-between items-center z-10">
+                <div>
+                  <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">Neural Core Status</p>
+                  <h2 className="text-2xl font-extrabold text-emerald-400 tracking-tight drop-shadow-md">
+                    Active & Learning
+                  </h2>
+                </div>
+                <div className="relative">
+                  <div className="w-4 h-4 bg-emerald-500 rounded-full animate-ping absolute opacity-75" />
+                  <div className="w-4 h-4 bg-emerald-400 rounded-full relative shadow-[0_0_15px_rgba(52,211,153,0.8)]" />
+                </div>
+              </div>
+            </div>
+          </Tilt>
+
+          <Tilt glareEnable={true} glareMaxOpacity={0.1} scale={1.02} tiltMaxAngleX={5} tiltMaxAngleY={5} className="h-full">
+            <div className="relative group rounded-2xl overflow-hidden p-[1px] h-full">
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-blue-500/30 blur-xl"></div>
+              </div>
+              <div className="relative bg-white/5 backdrop-blur-2xl border border-white/10 shadow-xl rounded-2xl p-8 h-full z-10">
+                <h3 className="text-sm font-bold text-white mb-5 uppercase tracking-widest drop-shadow-md">System Insights</h3>
+                <ul className="space-y-4">
+                  {[
+                    { icon: "🚨", text: `${criticalCount} Critical events detected` },
+                    { icon: "🧑‍🤝‍🧑", text: `${progressCount} Active deployments` },
+                    { icon: "📍", text: "Zone 4 high-risk identified" }
+                  ].map((insight, i) => (
+                    <li key={i} className="flex items-center gap-4 text-sm text-white/70 font-medium">
+                      <span className="text-lg drop-shadow-md">{insight.icon}</span>
+                      {insight.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </Tilt>
+
+          <Tilt glareEnable={true} glareMaxOpacity={0.1} scale={1.02} tiltMaxAngleX={5} tiltMaxAngleY={5} className="h-full">
+            <div className="relative group rounded-2xl overflow-hidden p-[1px] h-full">
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500">
+                <div className="absolute inset-0 bg-gradient-to-r from-red-500/30 to-orange-500/30 blur-xl"></div>
+              </div>
+              <div className="relative bg-white/5 backdrop-blur-2xl border border-white/10 shadow-xl rounded-2xl p-8 h-full z-10">
+                <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-5">Regional Pressure Index</p>
+                <div className="space-y-4">
+                  <div className="h-3 rounded-full bg-black/40 border border-white/5 overflow-hidden relative shadow-inner">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: "78%" }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      className="absolute top-0 left-0 h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 shadow-[0_0_10px_rgba(168,85,247,0.8)]"
+                    />
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-indigo-300 uppercase tracking-wide">High Intensity</span>
+                    <span className="text-xs font-bold text-white bg-white/10 px-2 py-1 rounded backdrop-blur-sm">78%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Tilt>
+        </div>
+
+        {/* SPOTLIGHT STATS GRID */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          {[
+            { label: "Total Problems", value: counts.total, color: "from-blue-500/40" },
+            { label: "Volunteers", value: counts.volunteers, color: "from-purple-500/40" },
+            { label: "Field Workers", value: counts.workers, color: "from-emerald-500/40" },
+            { label: "Partner NGOs", value: counts.ngos, color: "from-orange-500/40" }
+          ].map((stat, i) => (
+            <div key={i} className="relative group rounded-2xl overflow-hidden p-[1px]">
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500">
+                <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} to-transparent blur-xl`}></div>
+              </div>
+              <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl rounded-2xl p-6 z-10 flex flex-col justify-center">
+                <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">{stat.label}</p>
+                <p className="text-4xl font-extrabold text-white drop-shadow-lg">
+                  <Counter value={stat.value} />
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* APPLE STYLE ANALYTICS */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+          <div className="relative group rounded-3xl overflow-hidden p-[1px]">
+             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-br from-white/10 to-transparent blur-md"></div>
+             <div className="relative bg-white/5 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl p-8 h-full z-10">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-white/50 mb-6 drop-shadow-sm">📈 Problem Flow</h3>
+              <div className="space-y-6">
+                <div className="flex justify-between items-center pb-4 border-b border-white/10">
+                  <span className="text-white/80 text-sm font-medium">Open Issues</span>
+                  <span className="font-bold text-blue-400 text-xl drop-shadow-md">{openCount}</span>
+                </div>
+                <div className="flex justify-between items-center pb-4 border-b border-white/10">
+                  <span className="text-white/80 text-sm font-medium">In Progress</span>
+                  <span className="font-bold text-yellow-400 text-xl drop-shadow-md">{progressCount}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-white/80 text-sm font-medium">Resolved Cases</span>
+                  <span className="font-bold text-emerald-400 text-xl drop-shadow-md">{resolvedCount}</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="flex w-full md:w-auto gap-3">
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={handleLocateAndSort}
-              className="btn-secondary !text-xs !px-6"
-            >
-              📍 {sortNearest ? "Reset Sort" : "Sort by Nearest"}
-            </motion.button>
-            <Link href="/submit">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="btn-glow !text-xs !px-8 shadow-[0_10px_30px_var(--primary-glow)]"
-              >
-                + Initialize Report
-              </motion.button>
-            </Link>
+          <div className="relative group rounded-3xl overflow-hidden p-[1px] lg:col-span-1">
+             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-br from-white/10 to-transparent blur-md"></div>
+             <div className="relative bg-white/5 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl p-8 h-full z-10">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-white/50 mb-6 drop-shadow-sm">📊 Distribution</h3>
+              <div className="space-y-4 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
+                {categoryData.length === 0 ? (
+                  <p className="text-xs text-white/50 text-center py-12">No categorized data yet</p>
+                ) : categoryData.map(c => (
+                  <div key={c.name} className="flex justify-between items-center pb-3 border-b border-white/5 last:border-0 hover:bg-white/5 px-2 -mx-2 rounded transition">
+                    <span className="text-sm text-white font-medium truncate drop-shadow-sm">{c.name}</span>
+                    <span className="text-[10px] font-bold text-purple-300 bg-purple-500/20 px-3 py-1 rounded-full border border-purple-500/30 backdrop-blur-sm">{c.percent}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="relative group rounded-3xl overflow-hidden p-[1px]">
+             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-br from-white/10 to-transparent blur-md"></div>
+             <div className="relative bg-white/5 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl p-8 h-full z-10">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-white/50 mb-6 drop-shadow-sm">⚡ Urgency Matrix</h3>
+              <div className="space-y-5">
+                {[
+                  { name: "Critical", count: criticalCount, color: "text-red-400", bg: "bg-red-500/20", border: "border-red-500/30" },
+                  { name: "High", count: highCount, color: "text-orange-400", bg: "bg-orange-500/20", border: "border-orange-500/30" },
+                  { name: "Medium", count: mediumCount, color: "text-yellow-400", bg: "bg-yellow-500/20", border: "border-yellow-500/30" },
+                  { name: "Low", count: lowCount, color: "text-emerald-400", bg: "bg-emerald-500/20", border: "border-emerald-500/30" },
+                ].map(u => (
+                  <div key={u.name} className="flex items-center justify-between hover:bg-white/5 px-2 -mx-2 py-1 rounded transition">
+                    <span className={`text-[11px] font-bold uppercase tracking-widest px-3 py-1 rounded-md border backdrop-blur-sm ${u.color} ${u.bg} ${u.border}`}>{u.name}</span>
+                    <span className="text-xl font-bold text-white drop-shadow-md">{u.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* AI Intelligence Layer */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <TiltCard className="!p-8 flex justify-between items-center border-gradient">
-            <div>
-              <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-1">Neural Core Status</p>
-              <h2 className="text-2xl font-extrabold text-emerald-400 tracking-tight">
-                Active & Learning
+        {/* MAP SECTION PREMIUM */}
+        <div className="relative rounded-[2.5rem] overflow-hidden p-[1px] mb-16 shadow-2xl">
+          <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent opacity-50"></div>
+          <div className="relative bg-[#0b0f1a] rounded-[2.5rem] overflow-hidden">
+            <div className="absolute top-8 left-8 z-10 pointer-events-none">
+              <h2 className="text-xs font-bold text-white uppercase tracking-[0.2em] bg-black/40 backdrop-blur-xl px-5 py-3 rounded-2xl border border-white/10 shadow-lg shadow-black/50">
+                Live Operation Map
               </h2>
             </div>
-            <div className="relative">
-              <div className="w-3 h-3 bg-emerald-500 rounded-full animate-ping absolute" />
-              <div className="w-3 h-3 bg-emerald-500 rounded-full relative" />
-            </div>
-          </TiltCard>
-
-          <TiltCard className="!p-8 border-white/5">
-            <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-widest">System Insights</h3>
-            <ul className="space-y-3">
-              {[
-                { icon: "🚨", text: `${problems.filter(p => p.urgency === 'Critical').length} Critical events detected` },
-                { icon: "🧑‍🤝‍🧑", text: `${problems.filter(p => p.status === 'In Progress').length} Active deployments` },
-                { icon: "📍", text: "Zone 4 high-risk identified" }
-              ].map((insight, i) => (
-                <li key={i} className="flex items-center gap-3 text-xs text-[var(--text-secondary)] font-medium">
-                  <span className="opacity-100">{insight.icon}</span>
-                  {insight.text}
-                </li>
-              ))}
-            </ul>
-          </TiltCard>
-
-          <TiltCard className="!p-8 border-white/5">
-            <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-4">Regional Pressure Index</p>
-            <div className="space-y-3">
-              <div className="h-2 rounded-full bg-white/5 overflow-hidden">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: "78%" }}
-                  transition={{ duration: 1.5, ease: "easeOut" }}
-                  className="h-full bg-gradient-to-r from-indigo-500 to-purple-500"
-                />
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] font-bold text-indigo-400 uppercase">High Intensity</span>
-                <span className="text-[10px] font-bold text-white">78%</span>
-              </div>
-            </div>
-          </TiltCard>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="card hover:border-[var(--primary)] group">
-            <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-2">Total Problems</p>
-            <p className="text-4xl font-bold text-white group-hover:text-[var(--primary)] transition-colors">
-              <Counter value={problems.length} />
-            </p>
-          </div>
-
-          <div className="card hover:border-[var(--primary)] group">
-            <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-2">Volunteers</p>
-            <p className="text-4xl font-bold text-white group-hover:text-[var(--primary)] transition-colors">
-              <Counter value={volunteersCount} />
-            </p>
-          </div>
-
-          <div className="card hover:border-[var(--primary)] group">
-            <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-2">Field Workers</p>
-            <p className="text-4xl font-bold text-white group-hover:text-[var(--primary)] transition-colors">
-              <Counter value={workersCount} />
-            </p>
-          </div>
-
-          <div className="card hover:border-[var(--primary)] group">
-            <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-2">Partner NGOs</p>
-            <p className="text-4xl font-bold text-white group-hover:text-[var(--primary)] transition-colors">
-              <Counter value={ngosCount} />
-            </p>
-          </div>
-        </div>
-
-        {/* Analytics Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="card !p-8">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-6">📈 Problem Flow</h3>
-            <div className="space-y-6">
-              <div className="flex justify-between items-center pb-4 border-b border-[var(--border)]">
-                <span className="text-[var(--text-secondary)] text-sm font-medium">Open Issues</span>
-                <span className="font-bold text-blue-400 text-lg">{openCount}</span>
-              </div>
-              <div className="flex justify-between items-center pb-4 border-b border-[var(--border)]">
-                <span className="text-[var(--text-secondary)] text-sm font-medium">In Progress</span>
-                <span className="font-bold text-yellow-400 text-lg">{progressCount}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[var(--text-secondary)] text-sm font-medium">Resolved Cases</span>
-                <span className="font-bold text-emerald-400 text-lg">{resolvedCount}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="card !p-8 lg:col-span-1">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-6">📊 Distribution</h3>
-            <div className="space-y-4 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
-              {categoryData.length === 0 ? (
-                <p className="text-xs text-[var(--text-secondary)] text-center py-12">No categorized data yet</p>
-              ) : categoryData.map(c => (
-                <div key={c.name} className="flex justify-between items-center pb-3 border-b border-[var(--border)] last:border-0">
-                  <span className="text-xs text-white font-medium truncate">{c.name}</span>
-                  <span className="text-[10px] font-bold text-[var(--primary)] bg-[var(--primary)]/10 px-3 py-1 rounded-full border border-[var(--primary)]/20">{c.percent}%</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="card !p-8">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-6">⚡ Urgency Matrix</h3>
-            <div className="space-y-5">
-              {[
-                { name: "Critical", count: criticalCount, badge: "badge-critical" },
-                { name: "High", count: highCount, badge: "badge-high" },
-                { name: "Medium", count: mediumCount, badge: "badge-medium" },
-                { name: "Low", count: lowCount, badge: "badge-low" },
-              ].map(u => (
-                <div key={u.name} className="flex items-center justify-between">
-                  <span className={`badge ${u.badge} !text-[10px] !px-4`}>{u.name}</span>
-                  <span className="text-lg font-bold text-white">{u.count}</span>
-                </div>
-              ))}
+            <div className="h-[450px] sm:h-[600px] w-full relative">
+              <MapView 
+                problems={problems} 
+                type="problems" 
+                height="100%" 
+                zoom={6} 
+                center={[22.3, 87.3]}
+              />
+              {/* Vignette effect for depth */}
+              <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] z-10"></div>
             </div>
           </div>
         </div>
 
-        {/* Map Section */}
-        <div className="card !p-4 !rounded-[2rem] shadow-2xl overflow-hidden border-white/5 relative">
-          <div className="absolute top-8 left-8 z-10">
-            <h2 className="text-xs font-bold text-white uppercase tracking-[0.2em] bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10">
-              Live Operation Map
-            </h2>
-          </div>
-          <div className="h-[400px] sm:h-[500px] rounded-[1.5rem] overflow-hidden">
-            <MapView 
-              problems={problems} 
-              type="problems" 
-              height="100%" 
-              zoom={6} 
-              center={[22.3, 87.3]}
-            />
-          </div>
-        </div>
-
-        {/* Recent Reports */}
+        {/* RECENT REPORTS */}
         <div className="space-y-10">
           <div className="flex items-center justify-between px-2">
-            <h2 className="text-2xl font-bold tracking-tight text-white">
+            <h2 className="text-3xl font-bold tracking-tight text-white drop-shadow-md">
               {sortNearest ? "📍 Nearest Solutions" : "🕒 Recent Reports"}
             </h2>
-            <Link href="/problems" className="text-[var(--primary)] text-sm font-bold uppercase tracking-widest hover:text-white transition-colors">View All Archive →</Link>
+            <Link href="/problems" className="text-blue-400 text-sm font-bold uppercase tracking-widest hover:text-white transition-colors">View All Archive →</Link>
           </div>
 
           {problems.length === 0 ? (
-            <div className="card !p-20 text-center flex flex-col items-center">
-              <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center text-3xl mb-6">📂</div>
-              <p className="text-white font-bold text-xl">No active reports found</p>
-              <p className="text-[var(--text-secondary)] text-sm mt-2 max-w-sm">The platform is currently clear. Any new reports will appear here in real-time.</p>
-              <Link href="/submit" className="btn-primary mt-8 !px-10">
-                Submit Report
+            <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-20 text-center flex flex-col items-center shadow-xl">
+              <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center text-4xl mb-8 shadow-inner border border-white/5">📂</div>
+              <p className="text-white font-bold text-2xl drop-shadow-md">No active reports found</p>
+              <p className="text-white/50 text-base mt-3 max-w-md">The platform is currently clear. Any new reports will appear here in real-time.</p>
+              <Link href="/submit">
+                <button className="relative px-8 py-3 mt-8 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 text-white font-medium overflow-hidden shadow-lg shadow-purple-500/25 group">
+                  <span className="relative z-10">Submit Report</span>
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-white/20 blur-xl"></div>
+                </button>
               </Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {sortedProblems.slice(0, 6).map((p) => (
-                <ProblemCard key={p._id} problem={p} />
+                <div key={p._id} className="relative group rounded-3xl overflow-hidden p-[1px]">
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-b from-white/20 to-transparent blur-md"></div>
+                  <div className="relative bg-[#0b0f1a] rounded-3xl h-full z-10">
+                    <ProblemCard problem={p} />
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -474,22 +476,17 @@ export default function Dashboard() {
       </main>
       </PageWrapper>
 
-      {/* Floating Action Button - Correct position using --z-fab */}
-      <div className="fab">
+      {/* Floating Action Button */}
+      <div className="fixed bottom-8 right-8 z-[60]">
         <Link href="/submit">
           <motion.button
-            whileTap={{ scale: 0.9 }}
-            className="btn-primary"
-            style={{
-              width: 52, height: 52,
-              borderRadius: 16,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 22,
-              boxShadow: "0 8px 32px rgba(99,102,241,0.4)",
-            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="relative flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-2xl shadow-purple-500/40 overflow-hidden group border border-white/20"
             title="New Report"
           >
-            ➕
+            <span className="relative z-10 text-2xl drop-shadow-md">➕</span>
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-300 bg-white/20 blur-lg"></div>
           </motion.button>
         </Link>
       </div>
