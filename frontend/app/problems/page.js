@@ -253,19 +253,6 @@ export default function ProblemsPage() {
       </main>
       </PageWrapper>
 
-      {/* Floating Action Button */}
-      <div className="fab">
-        <Link href="/submit">
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            className="w-14 h-14 btn-glow text-white flex items-center justify-center rounded-[1.25rem] shadow-[0_10px_40px_var(--primary-glow)] hover:scale-110 active:scale-95 transition text-2xl border border-white/10"
-            title="New Report"
-          >
-            ➕
-          </motion.button>
-        </Link>
-      </div>
-    </div>
 
       {/* Floating Action Button - Moved up to avoid chat overlap */}
       <Link 
