@@ -25,7 +25,7 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
   useEffect(() => {
     setLoading(true);
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    fetch(`${API_BASE}/api/problems/${problemId}/history`, {
+    fetch(`${API_BASE}/api/messages/${problemId}`, {
       headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
     })
       .then(res => res.json())

@@ -80,7 +80,21 @@ io.on("connection", (socket) => {
   });
 
   socket.on("send-discussion-message", async (data) => {
-    io.to(data.problemId).emit("new-discussion-message", data);
+    try {
+      const Message = require("./models/Message");
+      const newMessage = new Message({
+        problemId: data.problemId,
+        senderId: data.senderId,
+        senderName: data.senderName,
+        content: data.content,
+        type: data.type || "text",
+        mediaUrl: data.mediaUrl,
+      });
+      await newMessage.save();
+      io.to(data.problemId).emit("new-discussion-message", newMessage);
+    } catch (err) {
+      console.error("Failed to save socket message:", err);
+    }
   });
 
   socket.on("typing", ({ problemId, userName }) => {
@@ -119,18 +133,15 @@ app.get("/api/users", async (req, res) => {
 });
 
 // Routes
-const problemRoutes = require("./routes/problemRoutes");
-const aiRoutes = require("./routes/aiRoutes");
-const userRoutes = require("./routes/userRoutes");
-const statsRoutes = require("./routes/statsRoutes");
-const notificationRoutes = require("./routes/notificationRoutes");
 const teamRoutes = require("./routes/teamRoutes");
+const messageRoutes = require("./routes/messageRoutes");
 
 app.use("/api/problems", problemRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/teams", teamRoutes);
+app.use("/api/messages", messageRoutes);
 app.use("/api", statsRoutes);
 
 // Rate limiter for SOS

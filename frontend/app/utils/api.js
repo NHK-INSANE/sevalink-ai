@@ -12,6 +12,7 @@ export async function apiRequest(endpoint, options = {}) {
     }
 
     const res = await fetch(`${BASE_URL}${endpoint}`, {
+      cache: "no-store",
       ...options,
       headers: {
         "Content-Type": "application/json",

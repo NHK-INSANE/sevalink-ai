@@ -29,10 +29,12 @@ async function matchVolunteers(problem, topN = 5) {
 
     const scored = users.map(u => {
       let score = 0;
-      const dist = getDistance(
-        problem.latitude, problem.longitude,
-        u.latitude,       u.longitude
-      );
+      const pLat = problem.location?.lat || problem.latitude || 22.3;
+      const pLng = problem.location?.lng || problem.longitude || 87.3;
+      const uLat = u.location?.lat || u.latitude || 22.3;
+      const uLng = u.location?.lng || u.longitude || 87.3;
+
+      const dist = getDistance(pLat, pLng, uLat, uLng);
       const distScore = Math.max(0, 100 - dist);
       score += distScore;
 
@@ -89,11 +91,14 @@ router.post("/", auth, validate(problemSchema), async (req, res) => {
 
       const notifText = `🚨 You matched a nearby ${problem.urgency || ""} crisis: "${problem.title}"`;
       await Promise.all(
-        topMatches.map(m =>
-          User.findByIdAndUpdate(m._id, {
-            $push: { notifications: { text: notifText, type: "alert", date: new Date() } }
-          })
-        )
+        topMatches.map(m => {
+          const notification = new Notification({
+            userId: m._id,
+            text: notifText,
+            type: "alert",
+          });
+          return notification.save();
+        })
       );
     }
 
@@ -205,9 +210,12 @@ router.patch("/:id/assign", auth, authorize("ngo", "worker", "admin"), async (re
     );
 
     if (problem) {
-      await User.findByIdAndUpdate(volunteerId, {
-        $push: { notifications: { text: `You were assigned to problem: ${problem.title}`, type: "task", date: new Date() } }
+      const notification = new Notification({
+        userId: volunteerId,
+        text: `You were assigned to problem: ${problem.title}`,
+        type: "task",
       });
+      await notification.save();
       const io = req.app.get("io");
       if (io) io.emit("problem-updated", problem);
     }
