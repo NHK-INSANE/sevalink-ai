@@ -44,6 +44,10 @@ export default function ProblemsPage() {
       });
     });
 
+    socket.on("problem-updated", (updatedProb) => {
+      setProblems(prev => prev.map(p => p._id === updatedProb._id ? updatedProb : p));
+    });
+
     return () => socket.disconnect();
   }, []);
 

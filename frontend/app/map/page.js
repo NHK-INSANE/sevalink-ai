@@ -79,11 +79,23 @@ export default function MapPage() {
       });
     });
 
+    socket.on("problem-updated", (updatedProb) => {
+      setProblems(prev => prev.map(p => p._id === updatedProb._id ? updatedProb : p));
+    });
+
     socket.on("sos-alert", (data) => {
       // Show persistent banner
       setSosAlert(data);
       // Add to map markers
-      setSosMarkers(prev => [data, ...prev]);
+      const sosId = Date.now();
+      const newSos = { ...data, id: sosId };
+      setSosMarkers(prev => [newSos, ...prev]);
+      
+      // Auto-remove marker after 5 mins
+      setTimeout(() => {
+        setSosMarkers(prev => prev.filter(s => s.id !== sosId));
+      }, 5 * 60 * 1000);
+
       // Toast too
       toast.error(`🚨 SOS: ${data.message} — from ${data.senderName || "Unknown"}`, {
         duration: 8000,

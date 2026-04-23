@@ -12,30 +12,34 @@ export const metadata = {
   keywords: "civic tech, AI, volunteer, community, crisis response",
 };
 
+import { Providers } from "./providers";
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased min-h-screen bg-[var(--bg)] text-[var(--text)] transition duration-300`}>
-        {children}
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: "#333",
-              color: "#fff",
-              borderRadius: "10px",
-              fontSize: "13px",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
-            },
-            success: {
-              iconTheme: { primary: "#22c55e", secondary: "#1e1e2e" },
-            },
-            error: {
-              iconTheme: { primary: "#ef4444", secondary: "#1e1e2e" },
-            },
-          }}
-        />
+        <Providers>
+          {children}
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: "#333",
+                color: "#fff",
+                borderRadius: "10px",
+                fontSize: "13px",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
+              },
+              success: {
+                iconTheme: { primary: "#22c55e", secondary: "#1e1e2e" },
+              },
+              error: {
+                iconTheme: { primary: "#ef4444", secondary: "#1e1e2e" },
+              },
+            }}
+          />
+        </Providers>
       </body>
     </html>
   );

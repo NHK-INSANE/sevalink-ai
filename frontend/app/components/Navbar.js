@@ -6,16 +6,31 @@ import { getUser, logout } from "../utils/auth";
 import { io } from "socket.io-client";
 import toast from "react-hot-toast";
 
+import { NotificationContext } from "../context/NotificationContext";
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState(null);
-  const [notifications, setNotifications] = useState([]);
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // Use global context but handle SSR gracefully
+  let notifs = [];
+  let addNotif = () => {};
+  try {
+    const context = require("react").useContext(NotificationContext);
+    if (context) {
+      notifs = context.notifications || [];
+      addNotif = context.addNotification || (() => {});
+    }
+  } catch (e) {}
+
+  const notifications = notifs;
+  const addNotification = addNotif;
 
   useEffect(() => {
     const currentUser = getUser();
@@ -37,16 +52,42 @@ export default function Navbar() {
         audio.play().catch(() => {});
       } catch (err) {}
 
-      toast.error(`🚨 EMERGENCY: ${data.message}`, {
-        duration: 8000,
-        position: "top-center",
-        style: { background: "#dc2626", color: "#fff", fontWeight: "bold", borderRadius: "12px" },
-      });
+      // Default alert
+      let isNearby = false;
+      if (navigator.geolocation && data.latitude && data.longitude) {
+        navigator.geolocation.getCurrentPosition((pos) => {
+          const lat1 = pos.coords.latitude;
+          const lon1 = pos.coords.longitude;
+          const lat2 = data.latitude;
+          const lon2 = data.longitude;
+          const R = 6371; 
+          const dLat = (lat2 - lat1) * (Math.PI / 180);
+          const dLon = (lon2 - lon1) * (Math.PI / 180);
+          const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+          const dist = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+          
+          if (dist < 5) {
+            isNearby = true;
+            toast.error("🚨 SOS IS NEAR YOU! Immediate help needed!", { duration: 15000, style: { background: "#dc2626", color: "#fff", fontWeight: "bold" } });
+            addNotification(`🚨 URGENT: SOS near you! (${dist.toFixed(1)}km away)`);
+          }
+        });
+      }
+
+      setTimeout(() => {
+        if (!isNearby) {
+          toast.error(`🚨 EMERGENCY: ${data.message}`, {
+            duration: 8000,
+            position: "top-center",
+            style: { background: "#dc2626", color: "#fff", fontWeight: "bold", borderRadius: "12px" },
+          });
+          addNotification(`🚨 SOS EMERGENCY: ${data.message}`);
+        }
+      }, 500); // slight delay to allow geo check
     });
 
     socket.on("connect-request", (data) => {
-      const newNotif = { message: `${data.fromName} wants to connect!`, time: new Date() };
-      setNotifications(prev => [newNotif, ...prev]);
+      addNotification(`${data.fromName} wants to connect!`);
       toast(`🤝 ${data.fromName} wants to connect!`, {
         icon: "💬",
         style: { borderRadius: "12px", background: "#333", color: "#fff" },
@@ -136,7 +177,7 @@ export default function Navbar() {
                       <div className="space-y-3 max-h-60 overflow-y-auto">
                         {notifications.map((n, i) => (
                           <div key={i} className="text-sm border-b border-[var(--border)] pb-2 last:border-0 text-[var(--text)]">
-                            {n.message}
+                            {n.text || n.message}
                           </div>
                         ))}
                       </div>

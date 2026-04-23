@@ -3,7 +3,7 @@
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { HeatmapLayer } from "react-leaflet-heatmap-layer-v3";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -100,9 +100,11 @@ const sosIcon = new L.DivIcon({
 const helperIcon = makePulseIcon("#2563eb", "rgba(37,99,235,0.5)");
 const ngoIcon    = makePulseIcon("#16a34a", "rgba(22,163,74,0.5)");
 
-// ── Zoom-to-User Sub-Component ───────────────────────────────────────────────
-function ZoomToUser() {
+// ── Live Tracking (Uber-style) ────────────────────────────────────────────────
+function LiveTracking() {
   const map = useMap();
+  const [userLocation, setUserLocation] = useState(null);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -110,18 +112,30 @@ function ZoomToUser() {
     }
 
     if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
+
+    const watchId = navigator.geolocation.watchPosition(
       (pos) => {
-        map.flyTo(
-          [pos.coords.latitude, pos.coords.longitude],
-          13,
-          { duration: 1.5, easeLinearity: 0.25 }
-        );
+        const { latitude, longitude } = pos.coords;
+        setUserLocation([latitude, longitude]);
+        map.flyTo([latitude, longitude], 14, {
+          animate: true,
+          duration: 1.5,
+        });
       },
-      () => {}
+      (err) => console.log("Geolocation error:", err),
+      { enableHighAccuracy: true }
     );
+
+    return () => navigator.geolocation.clearWatch(watchId);
   }, [map]);
-  return null;
+
+  if (!userLocation) return null;
+
+  return (
+    <Marker position={userLocation} icon={makePulseIcon("#3b82f6", "rgba(59,130,246,0.7)", 14)}>
+      <Popup>📍 You are here</Popup>
+    </Marker>
+  );
 }
 
 // ── Auto-Focus Problem ───────────────────────────────────────────────────────
@@ -281,7 +295,7 @@ export default function MapView({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {zoomToUser && <ZoomToUser />}
+        {zoomToUser && <LiveTracking />}
         <FocusProblem />
         <LocateMeButton />
 

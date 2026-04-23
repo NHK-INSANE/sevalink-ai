@@ -109,7 +109,15 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
           </button>
           
           <button
-            onClick={() => onStatusChange(problem._id, "In Progress")}
+            onClick={() => {
+              onStatusChange(problem._id, "In Progress");
+              try {
+                const context = require("react").useContext(require("../context/NotificationContext").NotificationContext);
+                if (context && context.addNotification) {
+                  context.addNotification(`You were assigned to: ${problem.title}`);
+                }
+              } catch(e) {}
+            }}
             disabled={problem.status !== "Open"}
             className="py-2 bg-[var(--primary)] text-white rounded-lg text-[11px] font-semibold hover:opacity-90 transition disabled:opacity-50"
           >
