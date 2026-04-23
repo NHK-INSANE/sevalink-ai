@@ -694,7 +694,7 @@ option {
   right: 0;
   width: 420px;
   height: 100vh;
-  background: rgba(15, 23, 42, 0.85);
+  background:  rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
   border-left: 1px solid rgba(255, 255, 255, 0.08);
@@ -844,5 +844,3 @@ option {
 .card:hover {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(99, 102, 241, 0.05);
 }
-
-

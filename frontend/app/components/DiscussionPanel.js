@@ -291,8 +291,7 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
                     </div>
                   </div>
                 );
-              })
-            )}
+              })}
 
             {/* Typing Indicator */}
             {typingArray.length > 0 && (
