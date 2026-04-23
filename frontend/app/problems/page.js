@@ -126,98 +126,118 @@ export default function ProblemsPage() {
     });
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition duration-300">
+    <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] transition duration-300">
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pt-24">
+      <PageWrapper>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pt-32 pb-20">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              All Problems
+            <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+              Crisis Archive
             </h1>
-            <p className="text-[var(--muted)] text-sm">
-              {loading ? "…" : `${filtered.length} of ${problems.length} reports`}
+            <p className="text-[var(--text-secondary)] text-sm mt-2 font-medium">
+              {loading ? "Synchronizing logs..." : `Accessing ${filtered.length} active event records`}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-            <button
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               onClick={handleLocateAndSort}
-              className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm font-medium hover:bg-[var(--bg)] transition shadow-sm flex items-center justify-center gap-1.5"
+              className="btn-secondary !text-xs !px-6"
             >
               📍 {sortNearest ? "Reset Sort" : "Sort by Nearest"}
-            </button>
-            <Link
-              href="/submit"
-              className="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition shadow-sm text-center"
-            >
-              + Report New
+            </motion.button>
+            <Link href="/submit">
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                className="btn-primary !text-xs !px-6 shadow-[0_0_20px_var(--primary-glow)]"
+              >
+                + Report New
+              </motion.button>
             </Link>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-4 sm:p-5 mb-8 space-y-4">
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 opacity-50">🔍</span>
+        <div className="card !p-6 mb-12 space-y-6 border-white/5 shadow-2xl">
+          <div className="relative group">
+            <span className="absolute left-5 top-1/2 -translate-y-1/2 opacity-30 group-focus-within:opacity-100 transition-opacity">🔍</span>
             <input
               type="text"
-              placeholder="Search problems…"
+              placeholder="Filter by title, description, or location..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-sm focus:ring-2 focus:ring-[var(--primary)] transition outline-none"
+              className="w-full pl-12 pr-6 py-4 rounded-[1.25rem] border border-white/5 bg-white/5 text-sm focus:border-[var(--primary)] transition-all outline-none placeholder-white/10"
             />
           </div>
           
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-            <select
-              value={filterUrgency}
-              onChange={(e) => setFilterUrgency(e.target.value)}
-              className="px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-[var(--primary)]"
-            >
-              <option value="All">All Urgencies</option>
-              <option value="Critical">Critical</option>
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
-            </select>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest ml-1">Urgency Level</label>
+              <select
+                value={filterUrgency}
+                onChange={(e) => setFilterUrgency(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-white/5 bg-white/5 text-xs font-bold uppercase tracking-wider outline-none focus:border-[var(--primary)] cursor-pointer"
+              >
+                <option value="All">All Levels</option>
+                <option value="Critical">Critical Only</option>
+                <option value="High">High Priority</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low Priority</option>
+              </select>
+            </div>
             
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-[var(--primary)]"
-            >
-              <option value="All">All Statuses</option>
-              <option value="Open">Open</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Resolved">Resolved</option>
-            </select>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest ml-1">Current Status</label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-white/5 bg-white/5 text-xs font-bold uppercase tracking-wider outline-none focus:border-[var(--primary)] cursor-pointer"
+              >
+                <option value="All">All Statuses</option>
+                <option value="Open">Open Reports</option>
+                <option value="In Progress">Active Responding</option>
+                <option value="Resolved">Resolved Cases</option>
+              </select>
+            </div>
             
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="col-span-2 lg:col-span-1 px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-[var(--primary)]"
-            >
-              <option value="newest">Newest First</option>
-              <option value="urgency">By Urgency</option>
-              <option value="score">By Priority Score</option>
-            </select>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest ml-1">Sort Logic</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-white/5 bg-white/5 text-xs font-bold uppercase tracking-wider outline-none focus:border-[var(--primary)] cursor-pointer"
+              >
+                <option value="newest">Chronological</option>
+                <option value="urgency">Urgency Weight</option>
+                <option value="score">Priority Index</option>
+              </select>
+            </div>
           </div>
         </div>
 
         {/* Grid */}
         {loading && problems.length === 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : (
-          <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <div>
             {filtered.length === 0 ? (
-              <div className="text-center py-20 bg-[var(--card)] rounded-2xl border border-dashed border-[var(--border)] flex flex-col items-center">
-                <p className="text-[var(--text)] font-bold text-lg">No results found</p>
-                <p className="text-[var(--muted)] text-sm mt-1">Try adjusting your filters.</p>
+              <div className="card !p-20 text-center flex flex-col items-center">
+                <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center text-3xl mb-6">🔍</div>
+                <p className="text-white font-bold text-xl">No matching reports</p>
+                <p className="text-[var(--text-secondary)] text-sm mt-2 max-w-sm">No crises match your current filters. Try broadening your search parameters.</p>
+                <button 
+                  onClick={() => { setSearch(""); setFilterUrgency("All"); setFilterStatus("All"); }}
+                  className="btn-secondary mt-8 !px-8"
+                >
+                  Clear Filters
+                </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filtered.map((p) => (
                   <ProblemCard
                     key={p._id}
@@ -231,6 +251,21 @@ export default function ProblemsPage() {
           </div>
         )}
       </main>
+      </PageWrapper>
+
+      {/* Floating Action Button */}
+      <div className="fixed bottom-10 right-10 z-[100]">
+        <Link href="/submit">
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            className="w-14 h-14 bg-[var(--primary)] text-white flex items-center justify-center rounded-[1.25rem] shadow-[0_10px_40px_var(--primary-glow)] hover:scale-110 active:scale-95 transition text-2xl border border-white/10"
+            title="New Report"
+          >
+            ➕
+          </motion.button>
+        </Link>
+      </div>
+    </div>
 
       {/* Floating Action Button - Moved up to avoid chat overlap */}
       <Link 

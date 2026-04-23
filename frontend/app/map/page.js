@@ -154,11 +154,11 @@ export default function MapPage() {
   // Loading Skeleton for Map
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)]">
+      <div className="min-h-screen bg-[var(--bg-main)]">
         <Navbar />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20">
-          <div className="h-12 bg-white/10 rounded-2xl w-64 mb-8 animate-pulse"></div>
-          <div className="card h-[75vh] p-3 rounded-[2.5rem] border-white/5 shadow-2xl">
+        <main className="max-w-7xl mx-auto px-6 md:px-10 pt-32 pb-20 space-y-12">
+          <div className="h-10 bg-white/5 rounded-2xl w-64 animate-pulse"></div>
+          <div className="h-[70vh] bg-white/5 rounded-[2.5rem] border border-white/5 p-3">
              <SkeletonMap />
           </div>
         </main>
@@ -184,20 +184,28 @@ export default function MapPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               onClick={sendSOS}
               disabled={sendingSOS}
               className="btn-primary !bg-red-600 !shadow-[0_0_20px_rgba(220,38,38,0.3)] !px-6"
             >
-              <span className={sendingSOS ? "animate-spin" : "animate-pulse"}>🚨</span>
-              {sendingSOS ? "Broadcasting..." : "Broadcast SOS"}
-            </button>
-            <button
+              {sendingSOS ? (
+                <div className="loader-small border-red-200"></div>
+              ) : (
+                <>
+                  <span className="animate-pulse">🚨</span>
+                  Broadcast SOS
+                </>
+              )}
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               onClick={() => setShowHeatmap(!showHeatmap)}
               className={`btn-secondary !text-xs !px-5 ${showHeatmap ? "!bg-indigo-500/10 !border-indigo-500/30 !text-indigo-400" : ""}`}
             >
               {showHeatmap ? "Hide Heatmap" : "Crisis Heatmap"}
-            </button>
+            </motion.button>
           </div>
         </div>
 
@@ -227,7 +235,8 @@ export default function MapPage() {
           {/* Floating Category Filter */}
           <div className="map-controls absolute top-6 left-6 z-[10] flex gap-1 p-1">
             {MODES.map((mode) => (
-              <button
+              <motion.button
+                whileTap={{ scale: 0.95 }}
                 key={mode.id}
                 onClick={() => setType(mode.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl transition text-[10px] font-bold uppercase tracking-widest ${
@@ -238,7 +247,7 @@ export default function MapPage() {
               >
                 <span>{mode.icon}</span>
                 <span className={type === mode.id ? "block" : "hidden md:block"}>{mode.label}</span>
-              </button>
+              </motion.button>
             ))}
           </div>
 
@@ -265,10 +274,14 @@ export default function MapPage() {
             { label: "Available Assets", val: helpers.length,  color: "text-emerald-500" },
             { label: "Critical Priority", val: problems.filter(p => p.urgency?.toLowerCase() === "critical").length, color: "text-orange-500" },
           ].map((s) => (
-            <div key={s.label} className="card p-6 !rounded-2xl border-white/5 hover:border-white/10">
+            <motion.div 
+              whileHover={{ y: -5 }}
+              key={s.label} 
+              className="card p-6 !rounded-2xl border-white/5 hover:border-white/10"
+            >
               <div className={`text-3xl font-bold ${s.color} tracking-tight`}>{s.val}</div>
               <div className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-2">{s.label}</div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </main>

@@ -34,13 +34,10 @@ export default function Landing() {
     <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] transition duration-300">
       <Navbar />
 
+      <PageWrapper>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20">
         {/* Hero Section */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-4xl mx-auto text-center"
-        >
+        <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 text-[10px] font-bold uppercase tracking-widest mb-8">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
@@ -60,37 +57,43 @@ export default function Landing() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-20">
-            <Link 
-              href="/register" 
-              className="btn-primary !px-10 !py-5 !text-xl shadow-[0_0_40px_var(--primary-glow)] hover:scale-105 active:scale-95"
-            >
-              Get Started Free
+            <Link href="/register">
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="btn-primary !px-10 !py-5 !text-xl shadow-[0_0_40px_var(--primary-glow)]"
+              >
+                Get Started Free
+              </motion.button>
             </Link>
 
-            <Link 
-              href="/map" 
-              className="btn-secondary !px-10 !py-5 !text-xl"
-            >
-              View Live Map
+            <Link href="/map">
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="btn-secondary !px-10 !py-5 !text-xl"
+              >
+                View Live Map
+              </motion.button>
             </Link>
           </div>
 
           {/* Live Stats */}
           <div className="grid grid-cols-3 gap-6 max-w-3xl mx-auto">
-            <div className="card p-6 border-white/5">
+            <motion.div whileHover={{ y: -5 }} className="card p-6 border-white/5">
               <div className="text-3xl font-bold text-white">{stats.users}+</div>
               <div className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mt-1">Active Users</div>
-            </div>
-            <div className="card p-6 border-white/5">
+            </motion.div>
+            <motion.div whileHover={{ y: -5 }} className="card p-6 border-white/5">
               <div className="text-3xl font-bold text-red-500">{stats.problems}+</div>
               <div className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mt-1">Crises Managed</div>
-            </div>
-            <div className="card p-6 border-white/5">
+            </motion.div>
+            <motion.div whileHover={{ y: -5 }} className="card p-6 border-white/5">
               <div className="text-3xl font-bold text-emerald-500">{stats.volunteers}+</div>
               <div className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mt-1">Volunteers</div>
-            </div>
+            </motion.div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Live Activity Feed */}
         <div className="mt-40 max-w-5xl mx-auto">
@@ -105,15 +108,17 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {loading ? (
               [1,2,3].map(i => (
-                <div key={i} className="h-32 card animate-pulse" />
+                <SkeletonCard key={i} />
               ))
             ) : (
               feed.map((item, idx) => (
                 <motion.div 
                   key={item._id}
                   initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  whileHover={{ y: -5, scale: 1.02 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.05 }}
                   className="card p-6 hover:border-[var(--primary)] group cursor-default"
                 >
                   <div className="flex justify-between items-start mb-4">
@@ -137,23 +142,25 @@ export default function Landing() {
 
         {/* Feature Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-40 pb-20">
-          <div className="card p-10 !rounded-[2rem] hover:shadow-[0_0_50px_rgba(99,102,241,0.05)]">
-            <div className="w-14 h-14 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-2xl mb-8 shadow-inner border border-indigo-500/10">🤖</div>
-            <h3 className="font-bold text-white mb-4 text-xl tracking-tight">AI Matching</h3>
-            <p className="text-[var(--text-secondary)] text-sm leading-relaxed font-medium">Instantly match crises with the best available volunteers based on proximity, skills, and past response performance.</p>
-          </div>
-          <div className="card p-10 !rounded-[2rem] hover:shadow-[0_0_50px_rgba(99,102,241,0.05)]">
-            <div className="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-2xl mb-8 shadow-inner border border-emerald-500/10">🗺️</div>
-            <h3 className="font-bold text-white mb-4 text-xl tracking-tight">Live Network</h3>
-            <p className="text-[var(--text-secondary)] text-sm leading-relaxed font-medium">Real-time visualization of all active reports, nearby NGOs, and field assets in a single, unified command interface.</p>
-          </div>
-          <div className="card p-10 !rounded-[2rem] hover:shadow-[0_0_50px_rgba(99,102,241,0.05)]">
-            <div className="w-14 h-14 bg-red-500/10 rounded-2xl flex items-center justify-center text-2xl mb-8 shadow-inner border border-red-500/10">🚨</div>
-            <h3 className="font-bold text-white mb-4 text-xl tracking-tight">SOS Protocol</h3>
-            <p className="text-[var(--text-secondary)] text-sm leading-relaxed font-medium">Broadcast emergency signals to every connected user instantly during critical events, ensuring no one is left behind.</p>
-          </div>
+          {[
+            { icon: "🤖", title: "AI Matching", desc: "Instantly match crises with the best available volunteers based on proximity, skills, and past response performance.", bg: "bg-indigo-500/10", border: "border-indigo-500/10" },
+            { icon: "🗺️", title: "Live Network", desc: "Real-time visualization of all active reports, nearby NGOs, and field assets in a single, unified command interface.", bg: "bg-emerald-500/10", border: "border-emerald-500/10" },
+            { icon: "🚨", title: "SOS Protocol", desc: "Broadcast emergency signals to every connected user instantly during critical events, ensuring no one is left behind.", bg: "bg-red-500/10", border: "border-red-500/10" }
+          ].map((feature, i) => (
+            <motion.div 
+              key={feature.title}
+              whileHover={{ y: -10 }}
+              className="card p-10 !rounded-[2rem] hover:shadow-[0_0_50px_rgba(99,102,241,0.05)]"
+            >
+              <div className={`w-14 h-14 ${feature.bg} rounded-2xl flex items-center justify-center text-2xl mb-8 shadow-inner border ${feature.border}`}>{feature.icon}</div>
+              <h3 className="font-bold text-white mb-4 text-xl tracking-tight">{feature.title}</h3>
+              <p className="text-[var(--text-secondary)] text-sm leading-relaxed font-medium">{feature.desc}</p>
+            </motion.div>
+          ))}
         </div>
       </main>
+      </PageWrapper>
+    </div>
     </div>
   );
 }

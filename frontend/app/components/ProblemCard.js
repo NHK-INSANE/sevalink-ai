@@ -28,16 +28,21 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
 
   return (
     <>
-    <div className="card problem-card group">
+    <motion.div 
+      whileHover={{ y: -5, scale: 1.01 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      className="card problem-card group"
+    >
       {/* Delete button (Owner only) */}
       {user && user._id === problem.createdBy && (
-        <button 
+        <motion.button 
+          whileTap={{ scale: 0.9 }}
           onClick={() => onDelete(problem._id)}
-          className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 p-2 hover:bg-red-500/10 rounded-xl shadow-sm"
+          className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 p-2 hover:bg-red-500/10 rounded-xl shadow-sm z-10"
           title="Delete Report"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-        </button>
+        </motion.button>
       )}
 
       {/* Header: Urgency & Date */}
@@ -66,14 +71,15 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
           </div>
           
           {problem.location && problem.location.lat && (
-            <button
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               onClick={() => {
                 router.push(`/map?lat=${problem.location.lat}&lng=${problem.location.lng}&title=${encodeURIComponent(problem.title)}`);
               }}
               className="ml-auto btn-secondary !py-1 !px-3 !text-[10px] !rounded-lg"
             >
               Locate
-            </button>
+            </motion.button>
           )}
         </div>
       </div>
@@ -94,7 +100,7 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
           <select
             value={problem.status}
             onChange={(e) => handleStatusChange(e.target.value)}
-            className="flex-1 bg-[var(--bg-hover)] text-[var(--text-primary)] px-3 py-2 rounded-xl border border-[var(--border)] text-xs font-medium cursor-pointer"
+            className="flex-1 bg-[var(--bg-hover)] text-[var(--text-primary)] px-3 py-2 rounded-xl border border-[var(--border)] text-xs font-medium cursor-pointer transition-colors hover:border-[var(--primary)]"
           >
             <option value="Open">Open</option>
             <option value="In Progress">In Progress</option>
@@ -102,15 +108,17 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
           </select>
 
           <div className="flex gap-2">
-            <button
+            <motion.button
+              whileTap={{ scale: 0.9 }}
               onClick={() => setShowChat(true)}
               className="btn-secondary !p-2"
               title="Open Discussion"
             >
               <svg className="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-            </button>
+            </motion.button>
             
-            <button
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               onClick={() => {
                 onStatusChange(problem._id, "In Progress");
               }}
@@ -118,11 +126,11 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
               className="btn-primary !py-2 !px-4 !text-xs whitespace-nowrap disabled:opacity-50"
             >
               Assign Me
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
 
     <AnimatePresence>
       {showChat && (

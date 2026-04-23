@@ -65,10 +65,16 @@ export default function ProfilePage() {
     }
   }, [router]);
 
-  if (!user) return null;
+  if (!user) return (
+    <div className="min-h-screen bg-[var(--bg-main)]">
+      <Navbar />
+      <div className="pt-40">
+        <Loader />
+      </div>
+    </div>
+  );
 
   const roleKey = (user.role || "user").toLowerCase();
-  const roleColor = ROLE_COLORS[roleKey] || ROLE_COLORS.user;
   const roleIcon = ROLE_ICONS[roleKey] || "👤";
 
   const handleLogout = () => {
@@ -101,21 +107,23 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] transition duration-300">
       <Navbar />
+      <PageWrapper>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20">
         <div className="max-w-xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <div className="text-center mb-12">
             <div className="relative inline-block mb-8">
               <div className="w-28 h-28 rounded-[2.5rem] bg-indigo-500/10 flex items-center justify-center text-5xl mx-auto border border-white/5 shadow-2xl shadow-indigo-500/10">
                 {roleIcon}
               </div>
-              <button 
+              <motion.button 
+                whileTap={{ scale: 0.9 }}
                 onClick={() => setIsEditing(!isEditing)}
                 className="absolute -bottom-2 -right-2 w-10 h-10 bg-[var(--bg-card)] border border-white/10 rounded-2xl flex items-center justify-center text-xs shadow-2xl hover:scale-110 transition active:scale-95 z-10"
                 title="Edit Profile"
               >
                 {isEditing ? "✕" : "✏️"}
-              </button>
+              </motion.button>
             </div>
             
             <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
@@ -195,20 +203,22 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="flex gap-4 pt-4">
-                  <button 
+                  <motion.button 
+                    whileTap={{ scale: 0.95 }}
                     type="button" 
                     onClick={() => setIsEditing(false)}
                     className="btn-secondary flex-1 !py-4"
                   >
                     Cancel
-                  </button>
-                  <button 
+                  </motion.button>
+                  <motion.button 
+                    whileTap={{ scale: 0.95 }}
                     type="submit" 
                     disabled={saving}
-                    className="btn-primary flex-1 !py-4 shadow-[0_0_30px_var(--primary-glow)] disabled:opacity-50"
+                    className="btn-primary flex-1 !py-4 shadow-[0_0_30px_var(--primary-glow)] disabled:opacity-50 flex items-center justify-center"
                   >
-                    {saving ? "Syncing..." : "Sync Changes"}
-                  </button>
+                    {saving ? <div className="loader-small"></div> : "Sync Changes"}
+                  </motion.button>
                 </div>
               </form>
             ) : (
@@ -237,18 +247,21 @@ export default function ProfilePage() {
 
                 {/* Actions */}
                 <div className="p-10 bg-black/20 border-t border-white/5 grid grid-cols-2 gap-6">
-                  <Link href="/dashboard" className="btn-secondary !py-5 !text-xs !uppercase !tracking-widest">
-                    Dashboard
+                  <Link href="/dashboard">
+                    <motion.button whileTap={{ scale: 0.95 }} className="btn-secondary !py-5 !text-xs !uppercase !tracking-widest w-full">
+                      Dashboard
+                    </motion.button>
                   </Link>
-                  <button onClick={handleLogout} className="btn-secondary !text-red-500 !border-red-500/20 hover:!bg-red-500/10 !py-5 !text-xs !uppercase !tracking-widest">
+                  <motion.button whileTap={{ scale: 0.95 }} onClick={handleLogout} className="btn-secondary !text-red-500 !border-red-500/20 hover:!bg-red-500/10 !py-5 !text-xs !uppercase !tracking-widest">
                     Sign Out
-                  </button>
+                  </motion.button>
                 </div>
               </>
             )}
           </div>
         </div>
       </main>
+      </PageWrapper>
     </div>
   );
 }

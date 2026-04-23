@@ -225,32 +225,41 @@ export default function SubmitPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] transition duration-200">
+      <div className="min-h-screen bg-[var(--bg-main)]">
         <Navbar />
         <PageWrapper>
-        <div className="max-w-lg mx-auto px-6 py-32 text-center flex flex-col items-center">
-          <div className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center text-5xl mb-8 border border-emerald-500/20 shadow-lg shadow-emerald-500/10">✅</div>
-          <h1 className="text-4xl font-extrabold text-white mb-4 tracking-tight">Signal Received</h1>
-          <p className="text-[var(--text-secondary)] mb-10 max-w-sm">
-            AI classified it as{" "}
-            <span className={`font-bold ${URGENCY_INFO[aiUrgency]?.color || "text-white"}`}>
+        <div className="max-w-lg mx-auto px-6 py-40 text-center">
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="text-7xl mb-8"
+          >
+            ✅
+          </motion.div>
+          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent mb-4">Transmission Successful</h1>
+          <p className="text-[var(--text-secondary)] mb-10 text-sm font-medium">
+            AI has classified this incident as{" "}
+            <span className={`badge ${URGENCY_INFO[aiUrgency]?.color} !text-[10px] !px-4`}>
               {aiUrgency}
             </span>{" "}
-            priority. The response network has been alerted.
+            priority. Emergency protocols initiated.
           </p>
-          <div className="flex gap-4 justify-center w-full sm:w-auto">
-            <button
+          <div className="flex gap-4 justify-center">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               onClick={() => setSuccess(false)}
-              className="btn-primary !px-8 shadow-[0_0_20px_var(--primary-glow)]"
+              className="btn-primary !px-8 !py-4"
             >
               Report Another
-            </button>
-            <a
-              href="/dashboard"
-              className="btn-secondary !px-8"
-            >
-              Command Dashboard
-            </a>
+            </motion.button>
+            <Link href="/problems">
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                className="btn-secondary !px-8 !py-4"
+              >
+                View Network
+              </motion.button>
+            </Link>
           </div>
         </div>
         </PageWrapper>
@@ -452,23 +461,21 @@ export default function SubmitPage() {
 
             {/* Submit Action */}
             <div className="pt-6">
-              <button
+              <motion.button
+                whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={loading}
                 className="btn-primary w-full !py-6 !text-lg !rounded-3xl shadow-[0_20px_50px_var(--primary-glow)] active:scale-95 disabled:opacity-50 group flex items-center justify-center gap-3"
               >
                 {loading ? (
-                  <>
-                    <span className="loader-small"></span>
-                    <span>Transmitting...</span>
-                  </>
+                  <div className="loader-small"></div>
                 ) : (
                   <>
-                    <span>Transmit Crisis Signal</span>
+                    Transmit Crisis Signal
                     <span className="text-xl group-hover:translate-x-2 transition-transform">→</span>
                   </>
                 )}
-              </button>
+              </motion.button>
             </div>
           </form>
         </div>

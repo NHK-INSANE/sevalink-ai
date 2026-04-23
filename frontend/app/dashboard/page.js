@@ -239,26 +239,17 @@ export default function Dashboard() {
   // Loading State with Skeletons
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)]">
+      <div className="min-h-screen bg-[var(--bg-main)]">
         <Navbar />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 space-y-12">
-          {/* Header Skeleton */}
-          <div className="flex justify-between items-end">
-            <div>
-              <div className="h-10 bg-white/10 rounded-2xl w-64 mb-4 animate-pulse"></div>
-              <div className="h-4 bg-white/5 rounded-full w-40 animate-pulse"></div>
-            </div>
-            <div className="flex gap-3">
-              <div className="h-10 bg-white/5 rounded-xl w-32 animate-pulse"></div>
-              <div className="h-10 bg-white/10 rounded-xl w-32 animate-pulse"></div>
-            </div>
-          </div>
-          
+        <main className="max-w-7xl mx-auto px-6 py-10 mt-16 space-y-12 pt-16">
+          <div className="h-12 bg-white/5 rounded-2xl w-64 animate-pulse"></div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <SkeletonStats /> <SkeletonStats /> <SkeletonStats /> <SkeletonStats />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-             {[...Array(3)].map((_, i) => <div key={i} className="card h-64 border-white/5 animate-pulse" />)}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+             <div className="card h-64 animate-pulse bg-white/5 border-white/5" />
+             <div className="card h-64 animate-pulse bg-white/5 border-white/5" />
+             <div className="card h-64 animate-pulse bg-white/5 border-white/5" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
@@ -287,14 +278,20 @@ export default function Dashboard() {
           </div>
 
           <div className="flex w-full md:w-auto gap-3">
-            <button
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               onClick={handleLocateAndSort}
               className="btn-secondary !text-xs !px-6"
             >
               📍 {sortNearest ? "Reset Sort" : "Sort by Nearest"}
-            </button>
-            <Link href="/submit" className="btn-primary !text-xs !px-6 shadow-[0_0_20px_var(--primary-glow)]">
-              + Report New
+            </motion.button>
+            <Link href="/submit">
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
+                className="btn-primary !text-xs !px-6 shadow-[0_0_20px_var(--primary-glow)]"
+              >
+                + Report New
+              </motion.button>
             </Link>
           </div>
         </div>
@@ -433,10 +430,14 @@ export default function Dashboard() {
       <div className="fixed bottom-10 right-10 z-[100] flex flex-col gap-4">
         <Link 
           href="/submit" 
-          className="w-14 h-14 bg-[var(--primary)] text-white flex items-center justify-center rounded-[1.25rem] shadow-[0_10px_40px_var(--primary-glow)] hover:scale-110 active:scale-95 transition text-2xl border border-white/10"
-          title="New Report"
         >
-          ➕
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            className="w-14 h-14 bg-[var(--primary)] text-white flex items-center justify-center rounded-[1.25rem] shadow-[0_10px_40px_var(--primary-glow)] hover:scale-110 active:scale-95 transition text-2xl border border-white/10"
+            title="New Report"
+          >
+            ➕
+          </motion.button>
         </Link>
       </div>
     </div>
