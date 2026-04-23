@@ -11,25 +11,49 @@ require("dotenv").config();
 
 const app = express();
 
-// Security Middlewares
-app.use(helmet());
+const corsOptions = {
+  origin: ["https://sevalink-ai.vercel.app", "http://localhost:3000", "http://localhost:3001"],
+  credentials: true
+};
+
+// 1. CORS - MUST BE FIRST
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = ["https://sevalink-ai.vercel.app", "http://localhost:3000", "http://localhost:3001"];
+  
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  } else if (!origin) {
+    // Allow non-browser requests (like mobile or postman)
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
+  
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+
+  // Handle preflight
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+  next();
+});
+
+// 2. Security Middlewares
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: false, // Disable CSP for now to avoid blocking
+}));
 app.use(mongoSanitize());
 app.use(xss());
 
-// Rate Limiting
+// 3. Rate Limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100,
   message: "Too many requests from this IP, please try again after 15 minutes"
 });
 app.use("/api/", limiter);
-
-const corsOptions = {
-  origin: "https://sevalink-ai.vercel.app",
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  credentials: true,
-  allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"]
-};
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -39,10 +63,6 @@ const io = new Server(server, {
 // Attach io to app for use in routes
 app.set("io", io);
 
-// Middleware — CORS first, before everything else
-app.use(cors(corsOptions));
-// Express 5 compatible preflight: use regex instead of bare "*"
-app.options(/.*/, cors(corsOptions));
 app.use(express.json());
 
 // Real-time Socket Mapping
