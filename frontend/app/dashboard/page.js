@@ -262,7 +262,7 @@ export default function Dashboard() {
           {/* ── MAIN SECTION ── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.18 }}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6"
+            className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4"
           >
             {/* LEFT COLUMN */}
             <div className="flex flex-col gap-4">
@@ -331,7 +331,7 @@ export default function Dashboard() {
           {/* ── LIVE MAP ── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.24 }}
-            className="card p-0 overflow-hidden mb-8"
+            className="card p-0 overflow-hidden mb-4"
           >
             <div className="flex items-center justify-between px-5 py-3 border-b border-white/8 bg-[#0f172a]/50">
               <div>
