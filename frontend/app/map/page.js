@@ -176,95 +176,108 @@ export default function MapPage() {
     <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] transition duration-300">
       <Navbar />
       <PageWrapper>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20">
-        
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-20">
+
+        {/* ── PAGE HEADER ── */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight gradient-text">
-              Global Crisis Map
-            </h1>
-            <p className="text-[var(--text-secondary)] text-sm mt-2 font-medium">
+            <h1 className="text-3xl font-extrabold tracking-tight text-white">Global Crisis Map</h1>
+            <p className="text-[#9CA3AF] text-[13px] mt-1 font-medium">
               Real-time synchronization of crisis reports, volunteer assets, and NGO operations.
             </p>
           </div>
-
           <div className="flex items-center gap-3">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowHeatmap(!showHeatmap)}
+              className={`btn-secondary !text-xs !px-5 !py-2 ${showHeatmap ? "!bg-indigo-500/10 !border-indigo-500/30 !text-indigo-400" : ""}`}
+            >
+              {showHeatmap ? "Hide Heatmap" : "Crisis Heatmap"}
+            </motion.button>
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={sendSOS}
               disabled={sendingSOS}
-              className="btn-primary !bg-red-600 !shadow-[0_0_20px_rgba(220,38,38,0.3)] !px-6"
+              className="btn-primary !bg-red-600 !text-xs !px-5 !py-2"
+              style={{ boxShadow: "0 0 16px rgba(220,38,38,0.35)" }}
             >
-              {sendingSOS ? (
-                <div className="loader-small border-red-200"></div>
-              ) : (
-                <>
-                  <span className="animate-pulse">🚨</span>
-                  Broadcast SOS
-                </>
-              )}
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowHeatmap(!showHeatmap)}
-              className={`btn-secondary !text-xs !px-5 ${showHeatmap ? "!bg-indigo-500/10 !border-indigo-500/30 !text-indigo-400" : ""}`}
-            >
-              {showHeatmap ? "Hide Heatmap" : "Crisis Heatmap"}
+              {sendingSOS ? <div className="loader-small" /> : <><span>🚨</span> Broadcast SOS</>}
             </motion.button>
           </div>
         </div>
 
-        {/* SOS Alert Banner */}
+        {/* ── SOS Alert Banner ── */}
         <AnimatePresence>
           {sosAlert && (
             <motion.div
-              initial={{ opacity: 0, y: -20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="mb-8 flex items-center gap-6 bg-red-600/90 backdrop-blur-xl text-white px-6 py-5 rounded-[2rem] shadow-2xl border border-red-400/30"
+              initial={{ opacity: 0, y: -12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              className="mb-6 flex items-center gap-4 bg-red-600/90 backdrop-blur-xl text-white px-5 py-4 rounded-xl shadow-2xl border border-red-400/30"
             >
-              <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-2xl animate-bounce">🚨</div>
+              <span className="text-xl animate-bounce">🚨</span>
               <div className="flex-1">
-                <div className="font-bold text-lg leading-tight uppercase tracking-tight">SOS EMERGENCY DETECTED</div>
-                <div className="text-red-100 text-sm mt-1">
+                <div className="font-bold text-sm uppercase tracking-tight">SOS Emergency Detected</div>
+                <div className="text-red-100 text-xs mt-0.5">
                   "{sosAlert.message}" — <span className="font-bold">{sosAlert.senderName || "Unknown"}</span>
                 </div>
               </div>
-              <button onClick={() => setSosAlert(null)} className="w-10 h-10 bg-black/10 hover:bg-black/20 rounded-xl flex items-center justify-center transition-colors">✕</button>
+              <button onClick={() => setSosAlert(null)} className="w-7 h-7 bg-black/10 hover:bg-black/25 rounded-lg flex items-center justify-center text-xs transition-colors">✕</button>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Map Container */}
-        <div className="card p-3 !rounded-[2.5rem] shadow-2xl border-white/5 relative overflow-hidden group">
-          {/* Floating Category Filter */}
-          <div className="map-controls absolute top-6 left-6 z-[10] flex gap-1 p-1">
-            {MODES.map((mode) => (
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                key={mode.id}
-                onClick={() => setType(mode.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition text-[10px] font-bold uppercase tracking-widest ${
-                  type === mode.id
-                    ? "bg-[var(--primary)] text-white shadow-lg shadow-indigo-500/20"
-                    : "text-[var(--text-secondary)] hover:text-white hover:bg-white/5"
-                }`}
-              >
-                <span>{mode.icon}</span>
-                <span className={type === mode.id ? "block" : "hidden md:block"}>{mode.label}</span>
-              </motion.button>
-            ))}
-          </div>
+        {/* ── STATS ROW (above map) ── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          {[
+            { label: "Active Reports",    val: problems.length,                                                               color: "text-red-400",     dot: "bg-red-500"     },
+            { label: "Partner NGOs",      val: ngos.length,                                                                   color: "text-blue-400",    dot: "bg-blue-500"    },
+            { label: "Available Assets",  val: helpers.length,                                                                color: "text-emerald-400", dot: "bg-emerald-500" },
+            { label: "Critical Priority", val: problems.filter(p => p.urgency?.toLowerCase() === "critical").length,         color: "text-orange-400",  dot: "bg-orange-500"  },
+          ].map((s) => (
+            <div key={s.label} className="card flex items-center gap-4">
+              <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${s.dot}`} />
+              <div>
+                <div className={`text-2xl font-bold tracking-tight leading-none ${s.color}`}>{s.val}</div>
+                <div className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider mt-1">{s.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
 
-          <div className="absolute top-6 right-6 z-[10]">
-            <div className="glass px-4 py-2 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-bold text-white uppercase tracking-widest">Live Signal</span>
+        {/* ── MAP CARD ── */}
+        <div className="card !p-0 overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)" }}>
+
+          {/* Map toolbar */}
+          <div className="flex items-center justify-between px-5 py-3 border-b border-white/8 bg-[#0f172a]/60">
+            {/* Mode tabs */}
+            <div className="flex items-center gap-1">
+              {MODES.map((mode) => (
+                <button
+                  key={mode.id}
+                  onClick={() => setType(mode.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+                    type === mode.id
+                      ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/30"
+                      : "text-gray-500 hover:text-gray-300 hover:bg-white/5 border border-transparent"
+                  }`}
+                >
+                  <span className="text-[13px]">{mode.icon}</span>
+                  <span className="hidden sm:block">{mode.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Live indicator */}
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[11px] font-semibold text-emerald-400">Live</span>
+              <span className="text-[11px] text-gray-600 ml-2">{problems.length} incidents · {helpers.length} assets</span>
             </div>
           </div>
 
-          <div className="h-[60vh] sm:h-[75vh] rounded-[2rem] overflow-hidden border border-white/5">
+          {/* Map itself */}
+          <div className="h-[68vh] w-full relative">
             <MapView
               problems={problems}
               ngos={ngos}
@@ -279,26 +292,9 @@ export default function MapPage() {
           </div>
         </div>
 
-        {/* Bottom Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
-          {[
-            { label: "Active Reports", val: problems.length, color: "text-red-500" },
-            { label: "Partner NGOs",   val: ngos.length,     color: "text-blue-500" },
-            { label: "Available Assets", val: helpers.length,  color: "text-emerald-500" },
-            { label: "Critical Priority", val: problems.filter(p => p.urgency?.toLowerCase() === "critical").length, color: "text-orange-500" },
-          ].map((s) => (
-            <motion.div 
-              whileHover={{ y: -5 }}
-              key={s.label} 
-              className="card p-6 !rounded-2xl border-white/5 hover:border-white/10"
-            >
-              <div className={`text-3xl font-bold ${s.color} tracking-tight`}>{s.val}</div>
-              <div className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-2">{s.label}</div>
-            </motion.div>
-          ))}
-        </div>
       </main>
       </PageWrapper>
     </div>
   );
 }
+
