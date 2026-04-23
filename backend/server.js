@@ -178,6 +178,22 @@ app.get("/", (req, res) => {
   res.json({ message: "SevaLink AI Backend Running ✅", status: "ok" });
 });
 
+// DB Status check
+app.get("/api/db-status", (req, res) => {
+  const state = mongoose.connection.readyState;
+  const states = {
+    0: "disconnected",
+    1: "connected",
+    2: "connecting",
+    3: "disconnecting",
+  };
+  res.json({ 
+    status: states[state] || "unknown", 
+    connected: state === 1,
+    dbName: mongoose.connection.name
+  });
+});
+
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error("🔥 Global Error:", err);
