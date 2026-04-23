@@ -19,18 +19,15 @@ app.use(xss());
 // Rate Limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 100,
   message: "Too many requests from this IP, please try again after 15 minutes"
 });
 app.use("/api/", limiter);
 
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Reflect the request origin, or allow if no origin (e.g. Postman)
-    callback(null, origin || true);
-  },
-  credentials: true,
+  origin: "https://sevalink-ai.vercel.app",
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  credentials: true,
   allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"]
 };
 
@@ -44,6 +41,7 @@ app.set("io", io);
 
 // Middleware
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(express.json());
 
 // Real-time Socket Mapping
@@ -84,10 +82,10 @@ const SOS = require("./models/SOS");
 
 const { auth, authorize } = require("./middleware/auth");
 
-// API Check - Admin Only
-app.get("/api/users", auth, authorize("admin"), async (req, res) => {
+// Public user list (safe fields only — no passwords/emails exposed fully)
+app.get("/api/users", async (req, res) => {
   try {
-    const users = await User.find().select("-password");
+    const users = await User.find().select("name role location ngoName ngoContact skill skills latitude longitude");
     res.json(users);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch users" });
