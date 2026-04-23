@@ -134,7 +134,7 @@ export default function ProblemsPage() {
       <PageWrapper>
       <main className="page-container px-6 lg:px-12">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-white">
               Crisis Problems
@@ -163,10 +163,10 @@ export default function ProblemsPage() {
         </div>
 
         {/* Filters */}
-        <div className="card !p-0 mb-8 overflow-hidden">
+        <div className="card !p-0 mb-10 overflow-hidden">
 
           {/* ── Search Row ── */}
-          <div className="px-5 pt-5 pb-4">
+          <div className="px-5 pt-6 pb-5">
             <input
               type="text"
               placeholder="Search by title, area, description, or date…"
@@ -180,11 +180,11 @@ export default function ProblemsPage() {
           <div className="border-t border-white/6 mx-5" />
 
           {/* ── Dropdowns Row ── */}
-          <div className="px-5 pt-4 pb-5">
+          <div className="px-5 pt-5 pb-6">
             <div className="flex flex-col md:flex-row gap-4">
               {/* Urgency */}
               <div className="flex flex-col gap-2 md:w-[48%]">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.12em]">Urgency Level</label>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.12em] pl-1.5">Urgency Level</label>
                 <select
                   value={filterUrgency}
                   onChange={(e) => setFilterUrgency(e.target.value)}
@@ -200,7 +200,7 @@ export default function ProblemsPage() {
 
               {/* Status — pushed right */}
               <div className="flex flex-col gap-2 md:w-[48%] md:ml-auto">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.12em]">Current Status</label>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.12em] pl-1.5">Current Status</label>
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
@@ -218,7 +218,7 @@ export default function ProblemsPage() {
 
         {/* Grid */}
         {loading && problems.length === 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 mt-10">
             {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : (
@@ -236,7 +236,7 @@ export default function ProblemsPage() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 mt-10">
                 {filtered.map((p) => (
                   <ProblemCard
                     key={p._id}
