@@ -173,6 +173,7 @@ export default function VolunteersPage() {
               {sorted.map((u) => {
                 const rawSkills = Array.isArray(u.skills) ? u.skills : (u.skills ? [u.skills] : []);
                 const skills = Array.from(new Set([...rawSkills, u.skill].filter(Boolean)));
+                const isVol = u.role?.toLowerCase() === "volunteer";
 
                 return (
                   <div key={u._id} className="card card-hover-effect !p-6 flex flex-col gap-0">
