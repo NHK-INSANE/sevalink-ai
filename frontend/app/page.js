@@ -162,12 +162,8 @@ export default function Landing() {
               <motion.div
                 key={i} variants={fadeUp}
                 whileHover={{ y: -5 }}
-                className="card"
+                className="card flex flex-col items-center justify-center text-center h-full"
               >
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl mb-5"
-                  style={{ background: p.accent + "18", border: `1px solid ${p.accent}33` }}>
-                  {p.icon}
-                </div>
                 <h3 className="text-base font-bold text-white mb-2">{p.title}</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">{p.text}</p>
               </motion.div>
@@ -187,11 +183,7 @@ export default function Landing() {
           </div>
           <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURES.map((f, i) => (
-              <motion.div key={i} variants={fadeUp} whileHover={{ y: -5 }} className="card group cursor-default">
-                <div className="w-11 h-11 rounded-lg flex items-center justify-center text-xl mb-5 transition-transform duration-300 group-hover:scale-110"
-                  style={{ background: f.color + "18", border: `1px solid ${f.color}33` }}>
-                  {f.icon}
-                </div>
+              <motion.div key={i} variants={fadeUp} whileHover={{ y: -5 }} className="card group cursor-default flex flex-col items-center justify-center text-center h-full">
                 <h3 className="text-base font-bold text-white mb-2">{f.title}</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">{f.desc}</p>
               </motion.div>
@@ -209,9 +201,7 @@ export default function Landing() {
           </div>
           <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
             {STEPS.map((s, i) => (
-              <motion.div key={i} variants={fadeUp} whileHover={{ y: -5 }} className="card group cursor-default">
-                <div className="text-3xl mb-3 transition-transform duration-300 group-hover:scale-110">{s.icon}</div>
-                <div className="text-[10px] font-bold text-purple-400/70 tracking-widest mb-2">{s.num}</div>
+              <motion.div key={i} variants={fadeUp} whileHover={{ y: -5 }} className="card group cursor-default flex flex-col items-center justify-center text-center h-full">
                 <h3 className="text-sm font-bold text-white mb-2">{s.title}</h3>
                 <p className="text-gray-400 text-xs leading-relaxed">{s.desc}</p>
               </motion.div>
