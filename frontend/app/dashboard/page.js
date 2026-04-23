@@ -233,7 +233,7 @@ export default function Dashboard() {
 
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.08 }} className="flex items-center gap-2">
               <button onClick={handleLocateAndSort} className="btn-secondary text-sm">
-                📍 {sortNearest ? "Reset Sort" : "Nearest"}
+                {sortNearest ? "Reset Sort" : "Nearest"}
               </button>
               <Link href="/submit">
                 <button className="btn-primary text-sm">+ Initialize Report</button>
@@ -244,20 +244,17 @@ export default function Dashboard() {
           {/* ── KPI CARDS ── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-7"
           >
             {[
-              { label: "Total Problems",  value: counts.total,      icon: "🗂" },
-              { label: "Volunteers",      value: counts.volunteers,  icon: "🤝" },
-              { label: "Field Workers",   value: counts.workers,     icon: "🔧" },
-              { label: "Partner NGOs",    value: counts.ngos,        icon: "🏢" },
+              { label: "Total Problems",  value: counts.total      },
+              { label: "Volunteers",      value: counts.volunteers  },
+              { label: "Field Workers",   value: counts.workers     },
+              { label: "Partner NGOs",    value: counts.ngos        },
             ].map((s, i) => (
-              <div key={i} className="card flex items-start gap-4">
-                <span className="text-2xl mt-0.5">{s.icon}</span>
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 mb-1">{s.label}</p>
-                  <p className="text-2xl font-bold text-white leading-none"><Counter value={s.value} /></p>
-                </div>
+              <div key={i} className="card">
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 mb-3">{s.label}</p>
+                <p className="text-3xl font-bold text-white leading-none"><Counter value={s.value} /></p>
               </div>
             ))}
           </motion.div>
@@ -265,7 +262,7 @@ export default function Dashboard() {
           {/* ── ANALYTICS ROW ── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.18 }}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6"
+            className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-7"
           >
             {/* Problem Flow */}
             <div className="card">

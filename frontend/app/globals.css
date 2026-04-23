@@ -193,17 +193,17 @@ a {
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .card {
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
+  border-radius: 4px;
   padding: 20px;
   background: rgba(255, 255, 255, 0.02);
-  transition: all 0.25s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease;
   position: relative;
   overflow: hidden;
 }
 
 .card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(124, 58, 237, 0.5);
+  transform: translateY(-3px);
+  border-color: rgba(124, 58, 237, 0.4);
 }
 
 /* Glass alias */
