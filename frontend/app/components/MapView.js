@@ -301,8 +301,8 @@ export default function MapView({
         {showHeatmap && (
           <HeatmapLayer
             points={problems.filter(p => p.location?.lat && p.location?.lng)}
-            longitudeExtractor={(p) => p.location.lng}
-            latitudeExtractor={(p) => p.location.lat}
+            longitudeExtractor={(p) => p.location?.lng || p.longitude}
+            latitudeExtractor={(p) => p.location?.lat || p.latitude}
             intensityExtractor={(p) => {
               const u = p.urgency?.toLowerCase();
               if (u === "critical") return 1.0;
@@ -341,11 +341,13 @@ export default function MapView({
 
           {/* 🔴 Problems — color by urgency */}
           {(type === "all" || type === "problems") &&
-            problems.filter(p => p.location?.lat && p.location?.lng).slice(0, 100).map((p, i) => {
+            problems.filter(p => (p.location?.lat && p.location?.lng) || (p.latitude && p.longitude)).slice(0, 100).map((p, i) => {
               const { bg, glow } = getUrgencyColor(p.urgency);
               const icon = makePulseIcon(bg, glow);
+              const lat = p.location?.lat || p.latitude;
+              const lng = p.location?.lng || p.longitude;
               return (
-                <Marker key={`p-${p._id || i}`} position={[p.location.lat, p.location.lng]} icon={icon}>
+                <Marker key={`p-${p._id || i}`} position={[lat, lng]} icon={icon}>
                   <Popup>
                     <div style={{ minWidth: 200, fontFamily: "system-ui, sans-serif" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
@@ -375,8 +377,11 @@ export default function MapView({
 
           {/* 🟢 NGOs */}
           {(type === "all" || type === "ngo") &&
-            ngos.filter(n => n.location?.lat && n.location?.lng).slice(0, 50).map((n, i) => (
-              <Marker key={`n-${n._id || i}`} position={[n.location.lat, n.location.lng]} icon={ngoIcon}>
+            ngos.filter(n => (n.location?.lat && n.location?.lng) || (n.latitude && n.longitude)).slice(0, 50).map((n, i) => {
+              const lat = n.location?.lat || n.latitude;
+              const lng = n.location?.lng || n.longitude;
+              return (
+                <Marker key={`n-${n._id || i}`} position={[lat, lng]} icon={ngoIcon}>
                 <Popup>
                   <div style={{ minWidth: 160, fontFamily: "system-ui, sans-serif" }}>
                     <div style={{ fontWeight: "700", fontSize: "13px", color: "#111827", marginBottom: 4 }}>
