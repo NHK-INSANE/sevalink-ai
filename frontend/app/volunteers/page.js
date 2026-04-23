@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import PageWrapper from "../components/PageWrapper";
 import { getUsers } from "../utils/api";
+import { getUserLocation } from "../utils/location";
+import toast from "react-hot-toast";
+import { motion } from "framer-motion";
 
 const ROLE_FILTERS = [
   { key: "all",       label: "All Helpers" },
@@ -14,6 +17,34 @@ export default function VolunteersPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterRole, setFilterRole] = useState("all");
+  const [userLoc, setUserLoc] = useState(null);
+  const [sortNearest, setSortNearest] = useState(false);
+
+  const handleLocateAndSort = async () => {
+    if (sortNearest) {
+      setSortNearest(false);
+      return;
+    }
+    try {
+      const loc = await getUserLocation();
+      setUserLoc(loc);
+      setSortNearest(true);
+      toast.success("Sorting by proximity");
+    } catch (err) {
+      toast.error("Could not get location");
+    }
+  };
+
+  function getDistance(lat1, lon1, lat2, lon2) {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+  }
 
   useEffect(() => {
     getUsers()
@@ -29,10 +60,18 @@ export default function VolunteersPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered =
+  let filtered =
     filterRole === "all"
       ? users
       : users.filter((u) => u.role?.toLowerCase() === filterRole);
+
+  if (sortNearest && userLoc) {
+    filtered = [...filtered].sort((a, b) => {
+      const d1 = getDistance(userLoc.lat, userLoc.lng, a.location?.lat, a.location?.lng);
+      const d2 = getDistance(userLoc.lat, userLoc.lng, b.location?.lat, b.location?.lng);
+      return d1 - d2;
+    });
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg-main)" }}>
@@ -56,21 +95,32 @@ export default function VolunteersPage() {
               marginBottom: 36,
             }}
           >
-            <div>
-              <h1
-                style={{
-                  background: "linear-gradient(135deg,#fff 25%,#a78bfa 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                  marginBottom: 8,
-                }}
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-end", gap: 16 }}>
+              <div>
+                <h1
+                  style={{
+                    background: "linear-gradient(135deg,#fff 25%,#a78bfa 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                    marginBottom: 8,
+                  }}
+                >
+                  Helpers &amp; Volunteers
+                </h1>
+                <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+                  People actively resolving civic issues across the SevaLink network.
+                </p>
+              </div>
+              
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={handleLocateAndSort}
+                className="btn-secondary"
+                style={{ fontSize: 12, padding: "8px 24px" }}
               >
-                Helpers &amp; Volunteers
-              </h1>
-              <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
-                People actively resolving civic issues across the SevaLink network.
-              </p>
+                📍 {sortNearest ? "Reset Sort" : "Sort by Nearest"}
+              </motion.button>
             </div>
 
             {/* Filter pills */}

@@ -5,10 +5,41 @@ import PageWrapper from "../components/PageWrapper";
 import { getUsers } from "../utils/api";
 import { SkeletonCard } from "../components/Skeleton";
 import { Globe, Phone, Mail, MapPin, Building2, CheckCircle } from "lucide-react";
+import { getUserLocation } from "../utils/location";
+import toast from "react-hot-toast";
+import { motion } from "framer-motion";
 
 export default function NGOPage() {
   const [ngos, setNgos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userLoc, setUserLoc] = useState(null);
+  const [sortNearest, setSortNearest] = useState(false);
+
+  const handleLocateAndSort = async () => {
+    if (sortNearest) {
+      setSortNearest(false);
+      return;
+    }
+    try {
+      const loc = await getUserLocation();
+      setUserLoc(loc);
+      setSortNearest(true);
+      toast.success("Sorting by proximity");
+    } catch (err) {
+      toast.error("Could not get location");
+    }
+  };
+
+  function getDistance(lat1, lon1, lat2, lon2) {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+  }
 
   useEffect(() => {
     setLoading(true);
@@ -22,6 +53,15 @@ export default function NGOPage() {
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
   }, []);
+
+  let filteredNgos = [...ngos];
+  if (sortNearest && userLoc) {
+    filteredNgos.sort((a, b) => {
+      const d1 = getDistance(userLoc.lat, userLoc.lng, a.location?.lat, a.location?.lng);
+      const d2 = getDistance(userLoc.lat, userLoc.lng, b.location?.lat, b.location?.lng);
+      return d1 - d2;
+    });
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg-main)" }}>
@@ -37,8 +77,8 @@ export default function NGOPage() {
           }}
         >
           {/* ── Header ── */}
-          <div style={{ marginBottom: 36 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+          <div style={{ marginBottom: 36, display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-end", gap: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <div
                 style={{
                   width: 44, height: 44, borderRadius: 14,
@@ -52,11 +92,20 @@ export default function NGOPage() {
               </div>
               <div>
                 <h1 style={{ fontSize: 30, marginBottom: 4 }}>Registered NGOs</h1>
-                <p style={{ fontSize: 13 }}>
+                <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>
                   Active organizations coordinating response on SevaLink.
                 </p>
               </div>
             </div>
+            
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={handleLocateAndSort}
+              className="btn-secondary"
+              style={{ fontSize: 12, padding: "8px 24px" }}
+            >
+              📍 {sortNearest ? "Reset Sort" : "Sort by Nearest"}
+            </motion.button>
           </div>
 
           {/* ── Content ── */}
@@ -101,7 +150,7 @@ export default function NGOPage() {
                 gap: 20,
               }}
             >
-              {ngos.map((ngo, i) => (
+              {filteredNgos.map((ngo, i) => (
                 <div key={ngo._id || i} className="card card-hover-effect" style={{ padding: 22 }}>
                   {/* Header */}
                   <div
