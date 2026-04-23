@@ -234,12 +234,6 @@ export default function Dashboard() {
               initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.1 }}
               className="flex items-center gap-3"
             >
-              <button
-                onClick={handleLocateAndSort}
-                className="btn-secondary !text-xs !px-5 !py-2"
-              >
-                {sortNearest ? "Reset Sort" : "Nearest"}
-              </button>
               <Link href="/submit">
                 <motion.button
                   whileHover={{ scale: 1.03 }}

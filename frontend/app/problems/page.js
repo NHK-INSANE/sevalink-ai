@@ -163,48 +163,77 @@ export default function ProblemsPage() {
         </div>
 
         {/* Filters */}
-        <div className="card !p-5 mb-8 flex flex-col gap-5">
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 opacity-50 text-[14px]">🔍</span>
-            <input
-              type="text"
-              placeholder="Filter by title, description, or location..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-5 py-3 rounded-[10px] border border-white/10 bg-black/20 text-[13px] focus:border-purple-500 transition-all outline-none text-white placeholder-gray-500"
-            />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            {/* Urgency */}
-            <div className="flex flex-col gap-2">
-              <label className="text-xs text-gray-400">URGENCY LEVEL</label>
-              <select
-                value={filterUrgency}
-                onChange={(e) => setFilterUrgency(e.target.value)}
-                className="w-full px-4 py-2 rounded-md bg-[#0B1220] border border-gray-700 focus:outline-none text-sm text-white"
-              >
-                <option value="All">All Levels</option>
-                <option value="Critical">Critical Only</option>
-                <option value="High">High Priority</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low Priority</option>
-              </select>
+        <div className="card !p-0 mb-8 overflow-hidden">
+
+          {/* ── Search Row ── */}
+          <div className="px-5 pt-5 pb-4">
+            <div className="relative">
+              {/* Blue pulsing dot — active filter indicator */}
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-60" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500" />
+                </span>
+              </span>
+              <input
+                type="text"
+                placeholder="Search by title, area, description, or date…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-9 pr-5 py-3 rounded-[10px] border border-white/10 bg-black/20 text-[13px] focus:border-purple-500 transition-all outline-none text-white placeholder-gray-500"
+              />
             </div>
-            
-            {/* Status */}
-            <div className="flex flex-col gap-2">
-              <label className="text-xs text-gray-400">CURRENT STATUS</label>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-4 py-2 rounded-md bg-[#0B1220] border border-gray-700 focus:outline-none text-sm text-white"
-              >
-                <option value="All">All Statuses</option>
-                <option value="Open">Open</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Resolved">Resolved</option>
-              </select>
+
+            {/* Filter-by pills */}
+            <div className="flex items-center gap-2 mt-3 flex-wrap">
+              <span className="text-[10px] text-gray-600 uppercase tracking-wider font-semibold">Filter by:</span>
+              {["Title", "Area", "Description", "Date"].map((tag) => (
+                <span
+                  key={tag}
+                  className="text-[10px] font-semibold px-2.5 py-1 rounded-full border border-white/8 bg-white/4 text-gray-400 tracking-wide"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Divider ── */}
+          <div className="border-t border-white/6 mx-5" />
+
+          {/* ── Dropdowns Row ── */}
+          <div className="px-5 pt-4 pb-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Urgency */}
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.12em]">Urgency Level</label>
+                <select
+                  value={filterUrgency}
+                  onChange={(e) => setFilterUrgency(e.target.value)}
+                  className="w-full px-4 py-2 rounded-md bg-[#0B1220] border border-gray-700 focus:outline-none text-sm text-white"
+                >
+                  <option value="All">All Levels</option>
+                  <option value="Critical">Critical Only</option>
+                  <option value="High">High Priority</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low Priority</option>
+                </select>
+              </div>
+
+              {/* Status */}
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.12em]">Current Status</label>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="w-full px-4 py-2 rounded-md bg-[#0B1220] border border-gray-700 focus:outline-none text-sm text-white"
+                >
+                  <option value="All">All Statuses</option>
+                  <option value="Open">Open</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Resolved">Resolved</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
