@@ -241,10 +241,10 @@ export default function Dashboard() {
             </motion.div>
           </div>
 
-          {/* ── KPI CARDS ── */}
+          {/* ── TOP STATS ── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-6"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4"
           >
             {[
               { label: "Total Problems",  value: counts.total      },
@@ -253,22 +253,22 @@ export default function Dashboard() {
               { label: "Partner NGOs",    value: counts.ngos        },
             ].map((s, i) => (
               <div key={i} className="card">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-2">{s.label}</p>
-                <p className="text-3xl font-bold text-white leading-none"><Counter value={s.value} /></p>
+                <p className="text-[11px] tracking-[0.08em] text-[#9CA3AF] mb-2">{s.label}</p>
+                <p className="text-[20px] font-semibold text-white leading-none"><Counter value={s.value} /></p>
               </div>
             ))}
           </motion.div>
 
-          {/* ── ANALYTICS ROW: perfectly aligned to 4-col KPI grid ── */}
+          {/* ── MAIN SECTION ── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.18 }}
-            className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6"
+            className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6"
           >
-            {/* LEFT COL (Col 1): Under "Total Problems" */}
-            <div className="flex flex-col gap-6 lg:col-span-1">
+            {/* LEFT COLUMN */}
+            <div className="flex flex-col gap-4">
               {/* Problem Flow */}
-              <div className="card h-full">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-4">Problem Flow</p>
+              <div className="card">
+                <p className="text-[11px] tracking-[0.08em] text-[#9CA3AF] mb-4">Problem Flow</p>
                 <div className="space-y-2">
                   {[
                     { label: "Open Issues", val: openCount,     dot: "bg-red-400"    },
@@ -278,17 +278,17 @@ export default function Dashboard() {
                     <div key={r.label} className="flex items-center justify-between py-1.5 border-b border-white/5 last:border-0">
                       <div className="flex items-center gap-2">
                         <span className={`w-1.5 h-1.5 rounded-full ${r.dot}`} />
-                        <span className="text-xs text-gray-300">{r.label}</span>
+                        <span className="text-[13px] text-gray-300">{r.label}</span>
                       </div>
-                      <span className="text-xs font-semibold text-white">{r.val}</span>
+                      <span className="text-[13px] font-medium text-white">{r.val}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Urgency Matrix */}
-              <div className="card h-full">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-4">Urgency Matrix</p>
+              <div className="card">
+                <p className="text-[11px] tracking-[0.08em] text-[#9CA3AF] mb-4">Urgency Matrix</p>
                 <div className="space-y-3">
                   {[
                     { label: "Critical", count: criticalCount, bar: "bg-red-500",    text: "text-red-400"    },
@@ -302,26 +302,26 @@ export default function Dashboard() {
                         <div className={`h-full rounded-full ${u.bar} opacity-70`}
                           style={{ width: `${Math.min((u.count / (problems.length || 1)) * 100, 100)}%` }} />
                       </div>
-                      <span className="text-xs font-semibold text-white w-5 text-right">{u.count}</span>
+                      <span className="text-[13px] font-medium text-white w-5 text-right">{u.count}</span>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* RIGHT COL (Cols 2, 3, 4): Under Volunteers, Field Workers, Partner NGOs */}
-            <div className="card lg:col-span-3">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-4">Category Distribution</p>
+            {/* RIGHT SIDE (WIDE) */}
+            <div className="card lg:col-span-2">
+              <p className="text-[11px] tracking-[0.08em] text-[#9CA3AF] mb-4">Category Distribution</p>
               <div className="space-y-2">
                 {categoryData.length === 0 ? (
-                  <p className="text-xs text-gray-600 py-4">No data yet</p>
+                  <p className="text-[13px] text-gray-600 py-4">No data yet</p>
                 ) : categoryData.map(c => (
-                  <div key={c.name} className="flex items-center gap-4 py-1.5 border-b border-white/5 last:border-0">
-                    <span className="text-xs text-gray-300 w-28 shrink-0 truncate">{c.name}</span>
-                    <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <div key={c.name} className="grid grid-cols-[120px_1fr_50px] items-center gap-2.5 py-1.5 border-b border-white/5 last:border-0">
+                    <span className="text-[13px] text-gray-300 truncate">{c.name}</span>
+                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden w-full">
                       <div className="h-full bg-purple-500/60 rounded-full" style={{ width: `${c.percent}%` }} />
                     </div>
-                    <span className="text-[11px] text-gray-500 w-10 text-right shrink-0">{c.percent}%</span>
+                    <span className="text-[11px] text-gray-500 text-right">{c.percent}%</span>
                   </div>
                 ))}
               </div>
@@ -333,17 +333,17 @@ export default function Dashboard() {
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.24 }}
             className="card p-0 overflow-hidden mb-8"
           >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-white/8 bg-[#0f172a]/50">
               <div>
-                <p className="text-sm font-semibold text-white">Live Operations Map</p>
-                <p className="text-[11px] text-gray-500 mt-0.5">{problems.length} active incidents</p>
+                <p className="text-[13px] font-semibold text-white">Live Operations Map</p>
+                <p className="text-[11px] text-[#9CA3AF] mt-0.5">{problems.length} active incidents</p>
               </div>
               <span className="flex items-center gap-1.5 text-[11px] text-green-400 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                 Live
               </span>
             </div>
-            <div className="h-[420px] w-full">
+            <div className="h-[320px] w-full rounded-b-[10px] overflow-hidden">
               <MapView problems={problems} type="problems" height="100%" zoom={6} center={[22.3, 87.3]} />
             </div>
           </motion.div>
