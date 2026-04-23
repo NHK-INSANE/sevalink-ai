@@ -158,7 +158,10 @@ a {
 
 /* Section spacing */
 .section {
-  padding: 80px 0;
+  padding: 70px 0;
+}
+.section-large {
+  padding: 100px 0;
 }
 .section-gap {
   margin-top: 48px;
@@ -168,17 +171,18 @@ a {
    CARD COMPONENT (Unified)
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .card {
-  background: #0f172a;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.02);
+  transition: all 0.25s ease;
   position: relative;
   overflow: hidden;
-  transition: border-color 0.2s ease;
 }
 
 .card:hover {
-  border-color: rgba(168, 85, 247, 0.4);
+  transform: translateY(-4px);
+  border-color: rgba(124, 58, 237, 0.5);
 }
 
 /* Glass alias */

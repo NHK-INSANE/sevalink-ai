@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "./components/Navbar";
 import Link from "next/link";
+import { motion } from "framer-motion";
+import CountUp from "react-countup";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
@@ -27,10 +29,31 @@ const STEPS = [
   { num: "04", title: "Track & Resolve", desc: "All parties coordinate on a live map until the crisis is marked resolved." },
 ];
 
-function Stat({ number, label }) {
+const words = ["Responders", "Volunteers", "NGOs", "Communities"];
+
+function TypingText() {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % words.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <span className="text-purple-400 transition-all duration-500">
+      {words[index]}
+    </span>
+  );
+}
+
+function Stat({ end, suffix, label }) {
   return (
     <div>
-      <div className="text-3xl md:text-5xl font-bold text-white mb-2">{number}</div>
+      <div className="text-3xl md:text-5xl font-bold text-white mb-2">
+        <CountUp end={end} duration={2} />{suffix}
+      </div>
       <div className="text-xs text-gray-400 font-semibold uppercase tracking-widest">{label}</div>
     </div>
   );
@@ -51,15 +74,22 @@ export default function Landing() {
       <Navbar />
 
       {/* ── HERO ── */}
-      <section className="section text-center pt-32 pb-20">
-        <div className="container max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-6xl font-bold leading-tight text-white">
-            Connecting <span className="text-purple-400">NGOs</span><br />
-            Where It Matters
+      <section className="section-large text-center pt-32 pb-20">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="container max-w-3xl mx-auto"
+        >
+          <h1 className="text-4xl md:text-5xl font-semibold leading-tight text-white">
+            Connecting <TypingText />
+            <br />
+            Where It Matters Most
           </h1>
-          <p className="mt-6 text-gray-400 text-base md:text-lg max-w-2xl mx-auto">
-            SevaLink AI connects volunteers, NGOs, and resources in real-time
-            using intelligent crisis matching and geospatial tracking.
+          <p className="mt-4 text-gray-400 text-lg max-w-2xl mx-auto">
+            Real-time crisis coordination powered by AI — from reporting to response,
+            all in one unified platform.
           </p>
           <div className="mt-8 flex justify-center gap-4">
             <Link href="/register">
@@ -69,24 +99,36 @@ export default function Landing() {
               <button className="btn-secondary">View Dashboard</button>
             </Link>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── STATS SECTION ── */}
       <section className="section border-y border-white/10 bg-white/[0.01]">
-        <div className="container">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="container"
+        >
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <Stat number={stats.problems ? `${stats.problems}+` : "125+"} label="Active Reports" />
-            <Stat number={stats.users ? `${stats.users}+` : "200+"} label="Responders" />
-            <Stat number="12+" label="NGOs" />
-            <Stat number="95%" label="Accuracy" />
+            <Stat end={stats.problems || 125} suffix="+" label="Active Reports" />
+            <Stat end={stats.users || 200} suffix="+" label="Responders" />
+            <Stat end={12} suffix="+" label="NGOs" />
+            <Stat end={95} suffix="%" label="Accuracy" />
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── PROBLEM SECTION ── */}
       <section className="section">
-        <div className="container">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="container"
+        >
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Emergency Response Needs Speed & Coordination
@@ -98,19 +140,25 @@ export default function Landing() {
 
           <div className="grid md:grid-cols-3 gap-6">
             {PROBLEMS.map((p, i) => (
-              <div key={i} className="bg-[#0f172a] border border-white/10 rounded-md p-8 hover:border-purple-500/40 transition">
+              <div key={i} className="card">
                 <div className="text-3xl mb-4">{p.icon}</div>
                 <h3 className="text-xl font-bold text-white mb-3">{p.title}</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">{p.text}</p>
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── SOLUTION: FEATURES ── */}
       <section className="section bg-white/[0.01] border-y border-white/10">
-        <div className="container">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="container"
+        >
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Everything You Need to Respond
@@ -122,7 +170,7 @@ export default function Landing() {
 
           <div className="grid md:grid-cols-3 gap-6">
             {FEATURES.map((f, i) => (
-              <div key={i} className="bg-[#0f172a] border border-white/10 rounded-md p-8 hover:border-purple-500/40 transition">
+              <div key={i} className="card">
                 <div className="w-12 h-12 rounded-md bg-white/5 border border-white/10 flex items-center justify-center text-xl mb-6">
                   {f.icon}
                 </div>
@@ -131,12 +179,18 @@ export default function Landing() {
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── HOW IT WORKS ── */}
       <section className="section">
-        <div className="container">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="container"
+        >
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               How SevaLink Works
@@ -146,19 +200,25 @@ export default function Landing() {
 
           <div className="grid md:grid-cols-4 gap-6 text-center">
             {STEPS.map((s, i) => (
-              <div key={i} className="bg-[#0f172a] border border-white/10 rounded-md p-8">
+              <div key={i} className="card">
                 <div className="text-4xl font-bold text-white/10 mb-4">{s.num}</div>
                 <h3 className="text-lg font-bold text-white mb-3">{s.title}</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── ROLES SECTION ── */}
       <section className="section bg-white/[0.01] border-y border-white/10">
-        <div className="container">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="container"
+        >
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Built for Every Responder</h2>
             <p className="text-gray-400 max-w-2xl mx-auto">Whether individual or institutional — SevaLink scales with you.</p>
@@ -171,19 +231,25 @@ export default function Landing() {
               { icon:"🔧", role:"Field Workers", desc:"Receive deployment orders and coordinate with teams in real-time." },
               { icon:"🏢", role:"NGOs", desc:"Command your resources, track impact, coordinate multi-agency ops." },
             ].map((r, i) => (
-              <div key={i} className="bg-[#0f172a] border border-white/10 rounded-md p-8 text-center hover:border-purple-500/40 transition">
+              <div key={i} className="card text-center">
                 <div className="text-3xl mb-4">{r.icon}</div>
                 <h3 className="text-lg font-bold text-white mb-3">{r.role}</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">{r.desc}</p>
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── MAP PREVIEW ── */}
       <section className="section">
-        <div className="container">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="container"
+        >
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Operational Visibility
@@ -193,17 +259,24 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="border border-white/10 rounded-md overflow-hidden bg-[#0f172a]">
+          <div className="relative border border-white/10 rounded-md overflow-hidden bg-[#0f172a]">
             <img src="/map-preview.png" alt="Map Preview" className="w-full opacity-80" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#020617]/80 to-transparent" />
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── FINAL CTA ── */}
-      <section className="section text-center bg-white/[0.01] border-t border-white/10">
-        <div className="container max-w-xl">
+      <section className="section-large text-center bg-white/[0.01] border-t border-white/10">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="container max-w-xl"
+        >
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Ready to Make Faster Impact?
+            Be the Difference When It Matters Most
           </h2>
           <p className="text-gray-400 mt-3 mb-8">
             Join SevaLink and respond to crises with speed and intelligence.
@@ -216,7 +289,7 @@ export default function Landing() {
               <button className="btn-secondary">Sign In</button>
             </Link>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── FOOTER ── */}
@@ -224,12 +297,6 @@ export default function Landing() {
         <div className="container flex flex-col items-center gap-6">
           <div className="flex items-center gap-2">
             <span className="font-bold text-lg text-white">SevaLink<span className="text-purple-400"> AI</span></span>
-          </div>
-          <div className="flex gap-6 flex-wrap justify-center text-sm text-gray-400">
-            <Link href="/dashboard" className="hover:text-white transition">Dashboard</Link>
-            <Link href="/problems" className="hover:text-white transition">Problems</Link>
-            <Link href="/volunteers" className="hover:text-white transition">Helpers</Link>
-            <Link href="/map" className="hover:text-white transition">Map</Link>
           </div>
           <p className="text-xs text-gray-500">
             © 2026 SevaLink AI · Built for impact
