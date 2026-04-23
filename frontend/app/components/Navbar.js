@@ -110,7 +110,7 @@ export default function Navbar() {
   const navLinks = [
     { href: "/dashboard", label: "Dashboard" },
     { href: "/problems",  label: "Problems" },
-    { href: "/helper",    label: "Helpers" },
+    { href: "/volunteers", label: "Helpers" },
     { href: "/ngo",       label: "NGO" },
     { href: "/map",       label: "Map" },
     { href: "/ai-match",  label: "AI Match" },

@@ -28,7 +28,11 @@ router.post("/register", validate(userSchema), async (req, res) => {
     const safeUser = await User.findById(user._id).select("-password");
     res.status(201).json({ user: safeUser, token });
   } catch (err) {
-    res.status(500).json({ error: "Registration failed. Please try again." });
+    console.error("🔥 REGISTRATION ERROR:", err);
+    res.status(500).json({ 
+      error: "Registration failed. Please try again.",
+      details: err.message 
+    });
   }
 });
 
