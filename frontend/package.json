@@ -12,6 +12,7 @@
     "axios": "^1.15.2",
     "framer-motion": "^12.38.0",
     "leaflet": "^1.9.4",
+    "leaflet.heat": "^0.2.0",
     "lucide-react": "^1.8.0",
     "maplibre-gl": "^5.23.0",
     "next": "15.5.15",

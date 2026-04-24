@@ -2,7 +2,7 @@
 
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
-import { HeatmapLayer } from "react-leaflet-heatmap-layer-v3";
+import HeatmapLayer from "./HeatmapLayer";
 import { useEffect, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -285,22 +285,17 @@ export default function MapView({
         <FocusProblem />
         <LocateMeButton />
 
-        {/* 🔥 Crisis Heatmap Layer */}
+        {/* 🔥 Custom Crisis Heatmap Layer */}
         {showHeatmap && (
-          <HeatmapLayer
-            points={problems.filter(p => p.location?.lat && p.location?.lng)}
-            longitudeExtractor={(p) => p.location?.lng || p.longitude}
-            latitudeExtractor={(p) => p.location?.lat || p.latitude}
-            intensityExtractor={(p) => {
-              const u = p.urgency?.toLowerCase();
-              if (u === "critical") return 1.0;
-              if (u === "high") return 0.7;
-              if (u === "medium") return 0.4;
-              return 0.2;
-            }}
-            radius={25}
-            blur={15}
-            max={1.0}
+          <HeatmapLayer 
+            points={problems
+              .filter(p => p.location?.lat && p.location?.lng)
+              .map(p => ({
+                lat: p.location.lat,
+                lng: p.location.lng,
+                urgency: p.urgency
+              }))
+            } 
           />
         )}
 

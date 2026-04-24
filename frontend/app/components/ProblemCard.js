@@ -107,7 +107,7 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
       {/* ── Footer: Chat (left) + Assign (right) ── */}
       <div className="flex items-center justify-between gap-2 pt-3 border-t border-white/5">
 
-        <div className="flex-1 grid grid-cols-3 gap-2">
+        <div className="flex-1 grid grid-cols-4 gap-2">
           <button
             onClick={() => {
               if (!user) return toast.error("Please login to join the discussion");
@@ -129,6 +129,28 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
           >
             <span className="text-sm mb-1 group-hover/btn:scale-110 transition-transform">👥</span>
             <span className="text-[8px] font-bold uppercase tracking-widest text-gray-400 group-hover/btn:text-emerald-400">Units</span>
+          </button>
+
+          <button
+            onClick={async () => {
+              if (!user) return toast.error("Please login");
+              const token = localStorage.getItem("token");
+              const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/ai/auto-assign/${problem._id}`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              const data = await res.json();
+              if (data.success) {
+                toast.success(`AI assigned ${data.matched.length} responders!`);
+                if (onStatusChange) onStatusChange(problem._id, "In Progress");
+              } else {
+                toast.error(data.error || "Auto-assignment failed");
+              }
+            }}
+            className="flex flex-col items-center justify-center py-2 bg-white/5 hover:bg-yellow-600/10 border border-white/10 hover:border-yellow-500/20 rounded-xl transition group/btn"
+          >
+            <span className="text-sm mb-1 group-hover/btn:scale-110 transition-transform">⚡</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-gray-400 group-hover/btn:text-yellow-400">AI Assign</span>
           </button>
 
           <button

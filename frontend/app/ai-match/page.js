@@ -98,23 +98,49 @@ export default function AIMatchPage() {
   const [liveEvent, setLiveEvent] = useState(null);
   const currentUser = getUser();
 
+  const autoAssign = async (problemId) => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_BASE}/api/ai/auto-assign/${problemId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`🤖 AI auto-assigned ${data.matched.length} responders!`);
+        // Refresh matches
+        fetchMatches();
+      }
+    } catch (err) {
+      toast.error("Auto-assignment failed");
+    }
+  };
+
+  const fetchMatches = async () => {
+    setLoading(true);
+    try {
+      const probs = await getProblems();
+      const openProblems = probs.filter((p) => p.status === "Open");
+      
+      const matchedResults = await Promise.all(openProblems.map(async (p) => {
+        const res = await fetch(`${API_BASE}/api/ai/match/users/${p._id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
+        const vols = await res.json();
+        return { problem: p, volunteers: Array.isArray(vols) ? vols : [] };
+      }));
+      
+      setMatches(matchedResults);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load AI matches");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    Promise.all([getProblems(), getUsers()])
-      .then(([probs, allUsers]) => {
-        const helpers = allUsers.filter(
-          (u) =>
-            u.role?.toLowerCase() === "volunteer" ||
-            u.role?.toLowerCase() === "worker"
-        );
-        const openProblems = probs.filter((p) => p.status !== "Resolved");
-        const matched = openProblems.map((problem) => ({
-          problem,
-          volunteers: matchVolunteers(problem, helpers, 5),
-        }));
-        setMatches(matched);
-      })
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
+    fetchMatches();
 
     const socket = io(API_BASE);
     socket.on("matched-volunteers", ({ problem, matched }) => {
@@ -401,7 +427,9 @@ export default function AIMatchPage() {
                           Recommended Volunteers — {vols.length} matched
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                          {(Array.isArray(vols) ? vols : []).map((v, vi) => {
+                          {vols.map((matchObj, vi) => {
+                            const v = matchObj.user;
+                            const score = matchObj.score;
                             const isMe = v._id?.toString() === (currentUser?._id || currentUser?.id)?.toString();
                             const isTop = vi === 0;
                             return (
@@ -433,45 +461,33 @@ export default function AIMatchPage() {
                                 >
                                   #{vi + 1}
                                 </div>
-
                                 {/* Info */}
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                   <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 6 }}>
                                     <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                       {v.name || v.email}
                                     </span>
-                                    {isMe && (
-                                      <span style={{ fontSize: 10, color: "#818cf8", fontWeight: 700, flexShrink: 0 }}>
-                                        (You)
-                                      </span>
-                                    )}
+                                    {isMe && <span style={{ fontSize: 10, color: "#818cf8", fontWeight: 700 }}>(You)</span>}
                                   </div>
                                   <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
-                                    {v.distKm != null && v.distKm < 999
-                                      ? `📍 ${v.distKm} km away`
-                                      : "Location unknown"}
+                                    {v.role} · {v.skills?.slice(0, 2).join(", ")}
                                   </div>
                                 </div>
-
-                                {/* Score & Action */}
-                                <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 140, flexShrink: 0 }}>
-                                  <div style={{ flex: 1 }}>
-                                    <div style={{ fontSize: 9, fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: 2 }}>Match Score</div>
-                                    <ScoreBar score={v.score} />
-                                  </div>
-                                  <button
-                                    onClick={() => {
-                                      toast.success(`Request sent to ${v.name || 'volunteer'}`);
-                                    }}
-                                    className="px-3 py-1.5 bg-indigo-600 text-white text-[10px] font-bold rounded-md hover:bg-indigo-700 transition"
-                                  >
-                                    Join
-                                  </button>
+                                {/* Score */}
+                                <div style={{ minWidth: 100 }}>
+                                  <div style={{ fontSize: 9, fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: 2 }}>Match Score</div>
+                                  <ScoreBar score={score} />
                                 </div>
                               </div>
                             );
                           })}
                         </div>
+                        <button
+                          onClick={() => autoAssign(problem._id)}
+                          className="w-full mt-4 py-3 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/20 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all"
+                        >
+                          ⚡ Execute AI Auto-Assignment
+                        </button>
                       </div>
                     ) : (
                       <div

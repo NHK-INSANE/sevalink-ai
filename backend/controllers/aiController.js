@@ -1,4 +1,5 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { matchVolunteers } = require("../services/aiMatcher");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -234,5 +235,40 @@ exports.matchUsersForProblem = async (req, res) => {
     res.json(matches.slice(0, 10));
   } catch (err) {
     res.status(500).json({ error: "Matching failed" });
+  }
+};
+
+exports.autoAssign = async (req, res) => {
+  try {
+    const Problem = require("../models/Problem");
+    const User = require("../models/User");
+    const { problemId } = req.params;
+
+    const problem = await Problem.findById(problemId);
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
+
+    const volunteers = await User.find({ role: "volunteer" });
+    const matched = matchVolunteers(problem, volunteers);
+
+    // Filter out _id for assignment
+    problem.assignedTo = matched.map(v => v._id);
+    problem.status = "In Progress";
+    await problem.save();
+
+    // Broadcast notification via Socket.IO
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("notification", {
+        message: `🤖 AI auto-assigned ${matched.length} responders to: ${problem.title}`,
+        type: "ai_assignment",
+        problemId: problem._id,
+        urgency: problem.urgency
+      });
+    }
+
+    res.json({ success: true, matched });
+  } catch (err) {
+    console.error("AutoAssign Error:", err);
+    res.status(500).json({ error: "Auto-assignment failed" });
   }
 };

@@ -68,6 +68,21 @@ export const NotificationProvider = ({ children }) => {
     socketRef.current = io(API_BASE);
     socketRef.current.emit("register-user", user._id || user.id);
 
+    socketRef.current.on("notification", (data) => {
+      toast(data.message, {
+        icon: data.type === "ai_assignment" ? "🤖" : "🔔",
+        duration: 5000,
+        style: { 
+          borderRadius: "12px", 
+          background: data.type === "ai_assignment" ? "#1e1b4b" : "#1e293b", 
+          color: "#fff",
+          border: data.type === "ai_assignment" ? "1px solid rgba(99, 102, 241, 0.2)" : "none"
+        },
+      });
+      // Optionally refresh notifications if needed
+      fetchNotifications();
+    });
+
     socketRef.current.on("new-notification", (notif) => {
       setNotifications(prev => [notif, ...prev]);
       setUnreadCount(prev => prev + 1);
