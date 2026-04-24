@@ -31,7 +31,7 @@ const STEPS = [
   { num: "04", icon: <CheckCircle2 className="w-8 h-8" />, title: "Track & Resolve",  desc: "All parties coordinate on a live map until the crisis is marked resolved." },
 ];
 
-const WORDS = ["NGOs", "Volunteers", "Workers", "Responders"];
+const WORDS = ["NGOs", "Volunteers", "Workers", "Reporters"];
 
 function TypingText() {
   const [index, setIndex] = useState(0);
@@ -141,8 +141,8 @@ export default function Landing() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-8 text-center">
             <Stat end={stats.problems  || 0} suffix="+" label="Active Crisis Reports" />
             <Stat end={stats.users     || 0} suffix=""  label="Registered Users" />
-            <Stat end={stats.citizens  || 0} suffix=""  label="Citizens" />
-            <Stat end={stats.responders|| 0} suffix=""  label="Volunteers & Workers" />
+            <Stat end={stats.citizens  || 0} suffix=""  label="Reporters" />
+            <Stat end={stats.responders|| 0} suffix=""  label="Field Force" />
             <Stat end={stats.ngos      || 0} suffix=""  label="Partner NGOs" />
           </div>
         </motion.div>

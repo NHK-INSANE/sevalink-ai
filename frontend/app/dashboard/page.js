@@ -37,11 +37,6 @@ export default function Dashboard() {
 
   useEffect(() => {
     const loggedUser = getUser();
-    if (!loggedUser) {
-      toast.error("Please login to access the dashboard");
-      window.location.href = "/login";
-      return;
-    }
     setUser(loggedUser);
   }, []);
 
@@ -208,7 +203,7 @@ export default function Dashboard() {
     return <VolunteerDashboard problems={safeProbs} userLoc={userLoc} />;
   };
 
-  if (loading || !user) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#0b0f17]">
         <Navbar />
@@ -216,11 +211,39 @@ export default function Dashboard() {
           <div className="animate-pulse space-y-8">
             <div className="h-10 bg-white/5 rounded-2xl w-64" />
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {[1,2,3,4].map(i => <SkeletonStats key={i} />)}
+              {[1, 2, 3, 4].map((i) => (
+                <SkeletonStats key={i} />
+              ))}
             </div>
             <div className="h-[400px] bg-white/5 rounded-2xl" />
           </div>
         </main>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition duration-300">
+        <Navbar />
+        <PageWrapper>
+          <main className="page-wrapper pt-[150px] pb-20 text-center">
+            <div className="max-w-2xl mx-auto card p-12 border-dashed border-2 border-white/10 bg-white/[0.02]">
+              <h1 className="text-4xl font-bold text-white mb-6">Restricted Access</h1>
+              <p className="text-gray-400 text-lg mb-10 leading-relaxed">
+                To view the real-time operational dashboard, live map markers, and AI-powered crisis matching, you must be part of the SevaLink network.
+              </p>
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <Link href="/login" className="btn-primary px-10 py-4 text-base font-bold shadow-xl shadow-indigo-500/20">
+                  Logging In
+                </Link>
+                <Link href="/register" className="btn-secondary px-10 py-4 text-base font-bold border-white/10 hover:bg-white/5 transition-all">
+                  Registering
+                </Link>
+              </div>
+            </div>
+          </main>
+        </PageWrapper>
       </div>
     );
   }

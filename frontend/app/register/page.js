@@ -14,10 +14,10 @@ const MapPicker = dynamic(() => import("../components/MapPicker"), { ssr: false 
 const ROLES = ["Reporter", "Volunteer", "NGO", "Worker"];
 
 const ROLE_INFO = {
-  Reporter: { icon: "👤", desc: "Report civic problems in your area" },
-  Volunteer: { icon: "🤝", desc: "Help solve problems with your skills" },
-  NGO: { icon: "🏢", desc: "Coordinate large-scale relief efforts" },
-  Worker: { icon: "🔧", desc: "On-ground support under an NGO" },
+  Reporter: { icon: "", desc: "Report civic problems in your area" },
+  Volunteer: { icon: "", desc: "Help solve problems with your skills" },
+  NGO: { icon: "", desc: "Coordinate large-scale relief efforts" },
+  Worker: { icon: "", desc: "On-ground support under an NGO" },
 };
 
 const SKILLS_LIST = [
@@ -322,7 +322,7 @@ export default function RegisterPage() {
             {form.role === "NGO" && (
               <div className="p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 space-y-3">
                 <p className="text-xs font-semibold text-indigo-300 mb-1">
-                  🏢 NGO Registration
+                  NGO Registration
                 </p>
                 <div>
                   <label className="block text-xs font-medium text-slate-400 mb-1.5">NGO Name *</label>
@@ -412,14 +412,14 @@ export default function RegisterPage() {
                   style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--primary-light)", fontSize: 12, fontWeight: 600, background: "none", border: "none", cursor: "pointer", transition: "color 0.2s ease" }}
                   className="hover:text-white"
                 >
-                  📍 Auto Detect GPS
+                  Auto Detect GPS
                 </button>
               </div>
               
               {/* Show Selected Location */}
               {location && (
                 <p style={{ fontSize: 12, color: "var(--primary-light)", marginTop: 8, textAlign: "center", fontWeight: 500 }}>
-                  📍 GPS Location: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+                  GPS Location: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
                 </p>
               )}
 
@@ -460,8 +460,8 @@ export default function RegisterPage() {
                   }`}
                 >
                   {form.role === "Volunteer"
-                    ? "🤝 Select your skills"
-                    : "🔧 Select your skills"}
+                    ? "Select your skills"
+                    : "Select your skills"}
                 </p>
 
                 {/* Checkbox grid */}
@@ -522,7 +522,7 @@ export default function RegisterPage() {
 
             {error && (
               <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs">
-                ⚠️ {error}
+                {error}
               </div>
             )}
 
