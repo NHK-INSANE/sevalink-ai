@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { getUser } from "../utils/auth";
 import { getProblems, getUsers, getStats } from "../utils/api";
 import { io } from "socket.io-client";
@@ -54,6 +55,7 @@ function Counter({ value }) {
 }
 
 export default function Dashboard() {
+  const router = useRouter();
   const [problems, setProblems] = useState([]);
   const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -172,7 +174,7 @@ export default function Dashboard() {
   }
 
   const sortedProblems = [...safeProblems].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  const recentProblems = sortedProblems.slice(0, 6);
+  const recentProblems = sortedProblems.slice(0, 3);
 
   const renderRoleSpecific = () => {
     const role = user?.role?.toLowerCase() || "volunteer";
@@ -203,17 +205,16 @@ export default function Dashboard() {
       <Navbar />
       
       <PageWrapper>
-        <main className="page-wrapper pt-[120px] pb-32">
+        <main className="page-wrapper pt-10 px-6 lg:px-10 space-y-8 pb-32">
           
           {/* ── HEADER ── */}
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-6 px-2">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-6 px-2 mt-4">
             <div>
               <h1 className="text-4xl font-bold tracking-tight mb-2 bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
                 Command Dashboard
               </h1>
               <div className="flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                <div className="flex items-center gap-1.5 font-bold">
                   System Live
                 </div>
                 <span className="w-px h-3 bg-white/10" />
@@ -239,9 +240,6 @@ export default function Dashboard() {
               className="mb-12 p-6 rounded-3xl bg-indigo-500/5 border border-indigo-500/10 flex flex-col md:flex-row items-center justify-between gap-4 backdrop-blur-xl"
             >
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                </div>
                 <p className="text-sm text-gray-300 font-medium">Viewing as a Guest. Some features like discussion and AI unit assignment are restricted.</p>
               </div>
               <div className="flex gap-3">
@@ -254,15 +252,14 @@ export default function Dashboard() {
           {/* ── STATS CARDS ── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {[
-              { label: "Active Reports", value: counts.total, icon: "📡" },
-              { label: "Total Helpers",  value: counts.volunteers, icon: "🤝" },
-              { label: "NGO Partners",   value: counts.ngos, icon: "🏢" },
-              { label: "Field Staff",    value: counts.workers, icon: "🛠️" },
+              { label: "Active Reports", value: counts.total },
+              { label: "Total Helpers",  value: counts.volunteers },
+              { label: "NGO Partners",   value: counts.ngos },
+              { label: "Field Staff",    value: counts.workers },
             ].map((s, i) => (
               <div key={i} className="card group hover:border-indigo-500/30 transition-all duration-300">
-                <div className="flex justify-between items-start mb-4">
+                <div className="mb-4">
                   <p className="text-[10px] font-bold tracking-widest text-gray-500 uppercase">{s.label}</p>
-                  <span className="text-lg grayscale group-hover:grayscale-0 transition-all">{s.icon}</span>
                 </div>
                 <p className="text-4xl font-bold text-white tracking-tight">
                   <Counter value={s.value} />
@@ -274,22 +271,50 @@ export default function Dashboard() {
           {/* ── ANALYTICS ── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
             {/* Operational Flow */}
-            <div className="card">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-8">Operational Flow</h3>
-              <div className="space-y-6">
-                {[
-                  { label: "Unassigned",  val: openCount,     dot: "bg-red-500",    color: "text-red-400" },
-                  { label: "In Progress", val: progressCount, dot: "bg-yellow-500", color: "text-yellow-400" },
-                  { label: "Resolved",    val: resolvedCount, dot: "bg-emerald-500", color: "text-emerald-400" },
-                ].map(r => (
-                  <div key={r.label} className="flex items-center justify-between group cursor-default">
-                    <div className="flex items-center gap-3">
-                      <span className={`w-1.5 h-1.5 rounded-full ${r.dot} shadow-[0_0_10px_rgba(255,255,255,0.1)] group-hover:scale-125 transition-transform`} />
-                      <span className="text-sm font-semibold text-gray-400 group-hover:text-white transition-colors">{r.label}</span>
-                    </div>
-                    <span className={`text-xl font-bold ${r.color}`}>{r.val}</span>
-                  </div>
-                ))}
+            <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+              <h3 className="mb-4 font-semibold text-white">Operational Flow</h3>
+
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Open</span>
+                  <span className="text-red-400 font-bold">{openCount}</span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-gray-400">In Progress</span>
+                  <span className="text-yellow-400 font-bold">{progressCount}</span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Resolved</span>
+                  <span className="text-green-400 font-bold">{resolvedCount}</span>
+                </div>
+              </div>
+
+              <hr className="my-4 border-white/10" />
+
+              <h4 className="mb-2 text-sm text-gray-500 font-semibold uppercase tracking-wider">Urgency Levels</h4>
+
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Critical</span>
+                  <span className="text-red-500 font-bold">{criticalCount}</span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-gray-400">High</span>
+                  <span className="text-orange-400 font-bold">{highCount}</span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Medium</span>
+                  <span className="text-yellow-400 font-bold">{mediumCount}</span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Low</span>
+                  <span className="text-green-400 font-bold">{lowCount}</span>
+                </div>
               </div>
             </div>
 
@@ -330,18 +355,13 @@ export default function Dashboard() {
                 <p className="text-sm text-gray-500 font-medium max-w-lg leading-relaxed">Real-time geospatial tracking of all reported crisis points and field activity across the sector.</p>
               </div>
               
-              <div className="flex flex-wrap items-center gap-5 bg-white/5 backdrop-blur-2xl px-5 py-2.5 rounded-2xl border border-white/10">
-                {[
-                  { label: "Critical", dot: "bg-red-500" },
-                  { label: "High",     dot: "bg-orange-500" },
-                  { label: "Medium",   dot: "bg-yellow-500" },
-                  { label: "Low",      dot: "bg-green-500" },
-                ].map(l => (
-                  <div key={l.label} className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${l.dot} shadow-[0_0_8px_rgba(255,255,255,0.1)]`} />
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{l.label}</span>
-                  </div>
-                ))}
+              <div className="flex justify-end mb-2">
+                <div className="flex gap-4 bg-white text-black px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                  <span className="text-red-500">Critical</span>
+                  <span className="text-orange-500">High</span>
+                  <span className="text-yellow-600">Medium</span>
+                  <span className="text-green-600">Low</span>
+                </div>
               </div>
             </div>
 
@@ -359,10 +379,13 @@ export default function Dashboard() {
                 <h2 className="text-2xl font-bold text-white tracking-tight mb-1">Recent Activity</h2>
                 <p className="text-sm text-gray-500 font-medium">Latest reports from the last 24 hours</p>
               </div>
-              <Link href="/problems" className="group flex items-center gap-2 text-indigo-400 text-sm font-bold">
-                View Archive 
+              <button 
+                onClick={() => router.push("/problems")}
+                className="group flex items-center gap-2 text-indigo-400 text-sm font-bold hover:underline"
+              >
+                View All Problems
                 <span className="group-hover:translate-x-1 transition-transform">→</span>
-              </Link>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
