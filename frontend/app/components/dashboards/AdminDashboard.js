@@ -1,15 +1,18 @@
 "use client";
 import { motion } from "framer-motion";
 import Counter from "../Counter";
-import dynamic from "next/dynamic";
+
 import ProblemCard from "../ProblemCard";
 
-const MapView = dynamic(() => import("../MapView"), { ssr: false });
 
-export default function AdminDashboard({ problems, usersList, lastUpdate }) {
-  const volunteersCount = usersList.filter(u => u.role?.toLowerCase() === "volunteer").length;
-  const ngosCount = usersList.filter(u => u.role?.toLowerCase() === "ngo").length;
-  const workersCount = usersList.filter(u => u.role?.toLowerCase() === "worker").length;
+
+export default function AdminDashboard({ problems = [], usersList = [], lastUpdate }) {
+  const safeProbs = Array.isArray(problems) ? problems : [];
+  const safeUsers = Array.isArray(usersList) ? usersList : [];
+
+  const volunteersCount = safeUsers.filter(u => u?.role?.toLowerCase() === "volunteer").length;
+  const ngosCount = safeUsers.filter(u => u?.role?.toLowerCase() === "ngo").length;
+  const workersCount = safeUsers.filter(u => u?.role?.toLowerCase() === "worker").length;
 
   return (
     <div className="space-y-6">

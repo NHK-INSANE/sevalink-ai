@@ -1,15 +1,16 @@
 "use client";
 import { motion } from "framer-motion";
 import Counter from "../Counter";
-import dynamic from "next/dynamic";
+
 import ProblemCard from "../ProblemCard";
 import Link from "next/link";
 
-const MapView = dynamic(() => import("../MapView"), { ssr: false });
 
-export default function NgoDashboard({ problems, usersList }) {
-  const openProblems = problems.filter(p => p.status === "Open");
-  const inProgress = problems.filter(p => p.status === "In Progress");
+
+export default function NgoDashboard({ problems = [], usersList = [] }) {
+  const safeProbs = Array.isArray(problems) ? problems : [];
+  const openProblems = safeProbs.filter(p => p?.status === "Open");
+  const inProgress = safeProbs.filter(p => p?.status === "In Progress");
 
   return (
     <div className="space-y-6">

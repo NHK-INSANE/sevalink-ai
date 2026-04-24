@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
-import dynamic from "next/dynamic";
+
 import ProblemCard from "../ProblemCard";
 import Link from "next/link";
 
@@ -23,23 +23,24 @@ const TargetIcon = () => (
   </svg>
 );
 
-const MapView = dynamic(() => import("../MapView"), { ssr: false });
 
-export default function VolunteerDashboard({ problems, userLoc }) {
+
+export default function VolunteerDashboard({ problems = [], userLoc }) {
+  const safeProbs = Array.isArray(problems) ? problems : [];
   const sorted = userLoc
-    ? [...problems].sort((a, b) => {
-        const aLat = a.location?.lat ?? a.latitude ?? 0;
-        const aLng = a.location?.lng ?? a.longitude ?? 0;
-        const bLat = b.location?.lat ?? b.latitude ?? 0;
-        const bLng = b.location?.lng ?? b.longitude ?? 0;
+    ? [...safeProbs].sort((a, b) => {
+        const aLat = a?.location?.lat ?? a?.latitude ?? 0;
+        const aLng = a?.location?.lng ?? a?.longitude ?? 0;
+        const bLat = b?.location?.lat ?? b?.latitude ?? 0;
+        const bLng = b?.location?.lng ?? b?.longitude ?? 0;
         if (!aLat || !bLat) return 0;
         const d1 = Math.hypot(aLat - userLoc.lat, aLng - userLoc.lng);
         const d2 = Math.hypot(bLat - userLoc.lat, bLng - userLoc.lng);
         return d1 - d2;
       })
-    : problems;
+    : safeProbs;
 
-  const openCount = problems.filter((p) => p.status === "Open").length;
+  const openCount = safeProbs.filter((p) => p?.status === "Open").length;
 
   return (
     <div className="space-y-8">
@@ -90,7 +91,7 @@ export default function VolunteerDashboard({ problems, userLoc }) {
         ) : (
           sorted.map((problem, i) => (
             <motion.div
-              key={problem.id ?? i}
+              key={problem?._id || problem?.id || i}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}

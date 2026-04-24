@@ -103,25 +103,28 @@ export default function Dashboard() {
     return () => socket.disconnect();
   }, []);
 
-  const openCount = problems.filter(p => p.status?.toLowerCase() === "open").length;
-  const resolvedCount = problems.filter(p => p.status?.toLowerCase() === "resolved").length;
-  const progressCount = problems.filter(p => p.status?.toLowerCase() === "in progress" || p.status?.toLowerCase() === "in-progress").length;
+  const safeProblems = Array.isArray(problems) ? problems : [];
+  const safeUsers = Array.isArray(usersList) ? usersList : [];
 
-  const volunteersCount = usersList.filter(u => u.role?.toLowerCase() === "volunteer").length;
-  const workersCount = usersList.filter(u => u.role?.toLowerCase() === "worker").length;
-  const ngosCount = usersList.filter(u => u.role?.toLowerCase() === "ngo").length;
+  const openCount = safeProblems.filter(p => p.status?.toLowerCase() === "open").length;
+  const resolvedCount = safeProblems.filter(p => p.status?.toLowerCase() === "resolved").length;
+  const progressCount = safeProblems.filter(p => p.status?.toLowerCase() === "in progress" || p.status?.toLowerCase() === "in-progress").length;
 
-  const criticalCount = problems.filter(p => p.urgency?.toLowerCase() === "critical").length;
-  const highCount = problems.filter(p => p.urgency?.toLowerCase() === "high").length;
-  const mediumCount = problems.filter(p => p.urgency?.toLowerCase() === "medium").length;
-  const lowCount = problems.filter(p => p.urgency?.toLowerCase() === "low").length;
+  const volunteersCount = safeUsers.filter(u => u.role?.toLowerCase() === "volunteer").length;
+  const workersCount = safeUsers.filter(u => u.role?.toLowerCase() === "worker").length;
+  const ngosCount = safeUsers.filter(u => u.role?.toLowerCase() === "ngo").length;
+
+  const criticalCount = safeProblems.filter(p => p.urgency?.toLowerCase() === "critical").length;
+  const highCount = safeProblems.filter(p => p.urgency?.toLowerCase() === "high").length;
+  const mediumCount = safeProblems.filter(p => p.urgency?.toLowerCase() === "medium").length;
+  const lowCount = safeProblems.filter(p => p.urgency?.toLowerCase() === "low").length;
 
   const categoryCount = {};
-  problems.forEach(p => {
+  safeProblems.forEach(p => {
     const cat = p.category || "Other";
     categoryCount[cat] = (categoryCount[cat] || 0) + 1;
   });
-  const totalProblems = problems.length || 1;
+  const totalProblems = safeProblems.length || 1;
   const categoryData = Object.keys(categoryCount).map(cat => ({
     name: cat,
     value: categoryCount[cat],
@@ -184,21 +187,22 @@ export default function Dashboard() {
   }
 
   const sortedProblems = sortNearest && userLoc
-    ? [...problems].sort((a, b) => {
+    ? [...safeProblems].sort((a, b) => {
         const d1 = getDistance(userLoc.lat, userLoc.lng, a.location?.lat, a.location?.lng);
         const d2 = getDistance(userLoc.lat, userLoc.lng, b.location?.lat, b.location?.lng);
         return d1 - d2;
       })
-    : problems;
+    : safeProblems;
 
   const renderRoleSpecific = () => {
     const role = user?.role?.toLowerCase();
-    if (role === "admin") return <AdminDashboard problems={problems} usersList={usersList} lastUpdate={lastUpdate} />;
-    if (role === "ngo") return <NgoDashboard problems={problems} usersList={usersList} />;
-    return <VolunteerDashboard problems={problems} userLoc={userLoc} />;
+    const safeProbs = Array.isArray(problems) ? problems : [];
+    if (role === "admin") return <AdminDashboard problems={safeProbs} usersList={Array.isArray(usersList) ? usersList : []} lastUpdate={lastUpdate} />;
+    if (role === "ngo") return <NgoDashboard problems={safeProbs} usersList={Array.isArray(usersList) ? usersList : []} />;
+    return <VolunteerDashboard problems={safeProbs} userLoc={userLoc} />;
   };
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="min-h-screen bg-[#0b0f17]">
         <Navbar />
@@ -337,7 +341,7 @@ export default function Dashboard() {
 
             <div className="card !p-0 overflow-hidden border border-white/10 shadow-2xl">
               <div className="h-[500px]">
-                <MapView problems={problems} type="problems" height="100%" zoom={6} center={[22.3, 87.3]} />
+                <MapView problems={safeProblems} type="problems" height="100%" zoom={6} center={[22.3, 87.3]} />
               </div>
             </div>
           </div>
