@@ -1,6 +1,27 @@
+"use client";
+import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import Navbar from "../components/Navbar";
+import ProblemCard from "../components/ProblemCard";
+import Counter from "../components/Counter";
+import PageWrapper from "../components/PageWrapper";
+import { getProblems, getUsers } from "../utils/api";
+import { getUser } from "../utils/auth";
+import { getUserLocation } from "../utils/location";
+import { SkeletonStats } from "../components/Skeleton";
+import toast from "react-hot-toast";
+import { io } from "socket.io-client";
+import Link from "next/link";
 import AdminDashboard from "../components/dashboards/AdminDashboard";
 import NgoDashboard from "../components/dashboards/NgoDashboard";
 import VolunteerDashboard from "../components/dashboards/VolunteerDashboard";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
+
+const MapView = dynamic(() => import("../components/MapView"), { 
+  ssr: false,
+  loading: () => <div className="h-full w-full bg-slate-900 animate-pulse rounded-xl" />
+});
 
 export default function Dashboard() {
   const [problems, setProblems] = useState([]);
@@ -158,7 +179,7 @@ export default function Dashboard() {
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon / 2) * dLon / 2;
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
   }
 
