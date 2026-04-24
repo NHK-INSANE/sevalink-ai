@@ -136,5 +136,15 @@ router.put("/update-profile", auth, async (req, res) => {
   }
 });
 
+// GET /api/users — Public list
+router.get("/", async (req, res) => {
+  try {
+    const users = await User.find().select("name role location ngoName ngoContact skill skills latitude longitude email phone address bio");
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
+});
+
 module.exports = router;
 

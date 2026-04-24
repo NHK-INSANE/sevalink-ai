@@ -132,3 +132,12 @@ export const getAISuggestion = async (text) => {
     body: JSON.stringify({ text }),
   });
 };
+
+// Get Global Stats
+export const getStats = async () => {
+  try {
+    return await apiRequest("/api/stats");
+  } catch (err) {
+    return { users: 0, problems: 0, citizens: 0, responders: 0, ngos: 0 };
+  }
+};

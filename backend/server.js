@@ -9,37 +9,17 @@ require("dotenv").config();
 
 const app = express();
 
-const corsOptions = {
-  origin: ["https://sevalink-ai.vercel.app", "http://localhost:3000", "http://localhost:3001"],
+// 1. CORS - PRODUCTION READY (Simplified for reliability)
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"],
   credentials: true
-};
+}));
 
 const multer = require("multer");
 const path = require("path");
 const upload = multer({ dest: "uploads/" });
-
-// 1. CORS - MUST BE FIRST
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  const allowedOrigins = ["https://sevalink-ai.vercel.app", "http://localhost:3000", "http://localhost:3001"];
-  
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  } else if (!origin) {
-    // Allow non-browser requests (like mobile or postman)
-    res.setHeader("Access-Control-Allow-Origin", "*");
-  }
-  
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-
-  // Handle preflight
-  if (req.method === "OPTIONS") {
-    return res.status(204).end();
-  }
-  next();
-});
 
 // 2. Security Middlewares
 app.use(helmet({
@@ -58,9 +38,8 @@ app.use("/api/", limiter);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["https://sevalink-ai.vercel.app", "http://localhost:3000", "http://localhost:3001"],
-    methods: ["GET", "POST"],
-    credentials: true
+    origin: "*",
+    methods: ["GET", "POST"]
   },
   pingTimeout: 60000,
   pingInterval: 25000,
@@ -135,16 +114,6 @@ const SOS = require("./models/SOS");
 const Notification = require("./models/Notification");
 
 const { auth, authorize } = require("./middleware/auth");
-
-// Public user list (safe fields only — no passwords/emails exposed fully)
-app.get("/api/users", async (req, res) => {
-  try {
-    const users = await User.find().select("name role location ngoName ngoContact skill skills latitude longitude email phone address bio");
-    res.json(users);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch users" });
-  }
-});
 
 // Routes
 const problemRoutes = require("./routes/problemRoutes");

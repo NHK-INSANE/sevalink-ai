@@ -5,7 +5,7 @@ import Navbar from "../components/Navbar";
 import ProblemCard from "../components/ProblemCard";
 import Counter from "../components/Counter";
 import PageWrapper from "../components/PageWrapper";
-import { getProblems, getUsers } from "../utils/api";
+import { getProblems, getUsers, getStats } from "../utils/api";
 import { getUser } from "../utils/auth";
 import { getUserLocation } from "../utils/location";
 import { SkeletonStats } from "../components/Skeleton";
@@ -39,43 +39,40 @@ export default function Dashboard() {
     setUser(getUser());
   }, []);
 
-  const fetchProblems = async () => {
+  const fetchDashboardData = async () => {
+    setLoading(true);
     try {
       setError(null);
-      const data = await getProblems();
-      console.log("📊 DASHBOARD DATA: Problems Fetched:", data.length);
-      const newCritical = data.filter((p) => p.urgency === "Critical").length;
-      if (prevCriticalRef.current > 0 && newCritical > prevCriticalRef.current) {
-        toast("🚨 New critical issue reported!", {
-          icon: "⚠️",
-          style: { background: "#1e1e2e", color: "#f87171", border: "1px solid #ef444440" },
-          duration: 5000,
-        });
-      }
-      prevCriticalRef.current = newCritical;
-      setProblems(data);
+      const [problemData, userData, statsData] = await Promise.all([
+        getProblems(),
+        getUsers(),
+        getStats()
+      ]);
+
+      console.log("📊 DASHBOARD DATA: Sync Complete");
+      
+      setProblems(problemData);
+      setUsersList(userData);
+      
+      // Update top counts with real stats from backend
+      setCounts({
+        total: statsData.problems || problemData.length,
+        volunteers: statsData.responders || userData.filter(u => u.role?.toLowerCase() === "volunteer").length,
+        workers: statsData.workers || userData.filter(u => u.role?.toLowerCase() === "worker").length,
+        ngos: statsData.ngos || userData.filter(u => u.role?.toLowerCase() === "ngo").length
+      });
+
       setLastUpdate(new Date().toLocaleTimeString());
     } catch (e) {
-      console.error("❌ FETCH ERROR:", e);
-      setError("Could not connect to backend.");
+      console.error("❌ DASHBOARD FETCH ERROR:", e);
+      setError("Sync failed. Checking connection...");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchUsers = async () => {
-    try {
-      const data = await getUsers();
-      console.log("👥 DASHBOARD DATA: Users Fetched:", data.length);
-      setUsersList(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   useEffect(() => {
-    fetchProblems();
-    fetchUsers();
+    fetchDashboardData();
     
     // 🌐 Socket.IO Real-time Logic
     const socket = io(API_BASE);
