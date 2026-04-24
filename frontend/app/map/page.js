@@ -10,6 +10,7 @@ import { getUser } from "../utils/auth";
 import { motion, AnimatePresence } from "framer-motion";
 import { socket } from "../../lib/socket";
 import toast from "react-hot-toast";
+import LiveLegend from "../components/LiveLegend";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
@@ -275,21 +276,8 @@ export default function MapPage() {
             <h3 className="text-lg font-bold text-white tracking-tight">Interactive Operations Hub</h3>
             
             {/* CLEAN LEGEND ABOVE MAP */}
-            <div className="flex flex-wrap items-center gap-4 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
-              <span className="text-[10px] font-black text-white/20 uppercase tracking-widest mr-2">Legend</span>
-              {[
-                { label: "Critical", dot: "bg-red-500",    count: problems.filter(p => p.urgency?.toLowerCase() === "critical").length },
-                { label: "High",     dot: "bg-orange-500", count: problems.filter(p => p.urgency?.toLowerCase() === "high").length     },
-                { label: "Medium",   dot: "bg-yellow-500", count: problems.filter(p => p.urgency?.toLowerCase() === "medium").length   },
-                { label: "Low",      dot: "bg-green-500",  count: problems.filter(p => p.urgency?.toLowerCase() === "low").length      },
-                { label: "NGOs",     dot: "bg-blue-500",   count: ngos.length },
-              ].map(l => (
-                <div key={l.label} className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${l.dot}`} />
-                  <span className="text-[10px] font-bold text-gray-400">{l.label}</span>
-                  <span className="text-[10px] font-black text-white/40 ml-0.5">{l.count}</span>
-                </div>
-              ))}
+            <div className="mb-3 flex justify-end">
+              <LiveLegend showCount={true} />
             </div>
           </div>
 

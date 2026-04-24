@@ -7,6 +7,8 @@ import { socket } from "../../lib/socket";
 import toast from "react-hot-toast";
 import { NotificationContext } from "../context/NotificationContext";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import { Bell, AlertTriangle } from "lucide-react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
@@ -37,8 +39,6 @@ export default function Navbar() {
     const currentUser = getUser();
     setUser(currentUser);
 
-    // SOS Alerts are global, keep them in Navbar for now but they could move to context too
-    
     socket.on("sos-alert", (data) => {
       try {
         const audio = new Audio("https://www.soundjay.com/buttons/beep-07a.mp3");
@@ -89,8 +89,14 @@ export default function Navbar() {
         {/* nav-left: Brand */}
         <div className="nav-left">
           <Link href="/" className="flex items-center gap-2 group">
-            <span className="font-extrabold text-xl tracking-tighter text-white">
-              SEVALINK <span className="text-indigo-400 font-black text-xs ml-1 uppercase tracking-widest">AI</span>
+            <Image 
+              src="/logo.png"
+              alt="SevaLink AI"
+              width={36}
+              height={36}
+            />
+            <span className="text-lg font-semibold tracking-wide text-white">
+              SEVALINK <span className="text-purple-400">AI</span>
             </span>
           </Link>
         </div>
@@ -117,24 +123,20 @@ export default function Navbar() {
 
         {/* nav-right: Actions */}
         <div className="nav-right">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             {user ? (
               <>
                 {/* Notification Bell */}
                 <div className="relative" onClick={(e) => e.stopPropagation()}>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                  <button 
                     onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); }}
-                    className="px-3 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:border-white/20 transition-all relative text-[10px] font-bold uppercase tracking-widest"
+                    className="relative p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-all"
                   >
-                    ALERTS
+                    <Bell size={20} />
                     {unreadCount > 0 && (
-                      <span className="ml-2 px-1.5 py-0.5 bg-red-500 text-white text-[8px] rounded-md animate-pulse">
-                        {unreadCount}
-                      </span>
+                      <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                     )}
-                  </motion.button>
+                  </button>
 
                   <AnimatePresence>
                     {notifOpen && (
@@ -180,6 +182,12 @@ export default function Navbar() {
                     )}
                   </AnimatePresence>
                 </div>
+
+                {/* SOS Button */}
+                <button className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-white flex items-center gap-2 text-xs font-bold transition-colors">
+                  <AlertTriangle size={16} />
+                  SOS
+                </button>
 
                 {/* Profile */}
                 <div className="relative" onClick={(e) => e.stopPropagation()}>

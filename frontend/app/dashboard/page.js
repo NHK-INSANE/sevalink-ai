@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getUserLocation } from "../utils/location";
 import { useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area } from "recharts";
+import LiveLegend from "../components/LiveLegend";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
@@ -310,61 +311,6 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {/* ── AI INSIGHTS & PREDICTION ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="glass-card hover-premium p-8 backdrop-blur-3xl"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <span className="text-[10px] font-black text-indigo-400 bg-indigo-400/10 px-3 py-1 rounded-full uppercase tracking-widest">AI Command Unit</span>
-                <h3 className="text-xl font-bold text-white tracking-tight">Strategic Insights</h3>
-              </div>
-
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Strategic Action</p>
-                  <p className="text-lg font-bold text-yellow-500 uppercase">Deploy Rapid-Response Medical Units</p>
-                  <p className="text-xs text-gray-400 leading-relaxed font-bold uppercase tracking-tight">AI suggests immediate dispatch of specialized teams based on report density.</p>
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Risk Prediction</p>
-                  <p className="text-lg font-bold text-red-500 uppercase">Critical Flood Risk Level: 88.4%</p>
-                  <p className="text-xs text-gray-400 leading-relaxed font-bold uppercase tracking-tight">Forecast indicates escalation likely within the next 12-18 hours.</p>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="glass-card hover-premium p-8 backdrop-blur-3xl"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <span className="text-[10px] font-black text-red-400 bg-red-400/10 px-3 py-1 rounded-full uppercase tracking-widest">Hotspot Prediction</span>
-                <h3 className="text-xl font-bold text-white tracking-tight">Sector Density</h3>
-              </div>
-
-              <div className="space-y-4">
-                {predictedHotspots.length === 0 ? (
-                  <p className="text-xs text-gray-600 italic">Insufficient geospatial data for prediction.</p>
-                ) : predictedHotspots.map(([coords, count], i) => (
-                  <div key={i} className="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5">
-                    <div>
-                      <p className="text-[10px] font-bold text-gray-500 uppercase">Zone Coordinates</p>
-                      <p className="text-sm font-black text-white">{coords}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] font-bold text-gray-500 uppercase">Incident Cluster</p>
-                      <p className="text-sm font-black text-indigo-400">{count} Active Reports</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
 
           {/* ── ANALYTICS ── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
@@ -468,25 +414,13 @@ export default function Dashboard() {
           </div>
 
           {/* ── LIVE MAP ── */}
-          <div className="space-y-6 mb-20 px-2">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-              <div>
-                <h2 className="text-2xl font-bold text-white tracking-tight mb-2">Live Operations Map</h2>
-                <p className="text-sm text-gray-500 font-medium max-w-lg leading-relaxed">Real-time geospatial tracking of all reported crisis points and field activity across the sector.</p>
-              </div>
-              
-              <div className="flex justify-end mb-2">
-                <div className="flex gap-4 bg-white text-black px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                  <span className="text-red-500">Critical</span>
-                  <span className="text-orange-500">High</span>
-                  <span className="text-yellow-600">Medium</span>
-                  <span className="text-green-600">Low</span>
-                </div>
-              </div>
+          <div className="space-y-4 mb-20 px-2">
+            <div className="mb-3 flex justify-end">
+              <LiveLegend showCount={false} />
             </div>
 
-            <div className="card !p-0 overflow-hidden border-white/10 shadow-2xl rounded-[32px] group">
-              <div className="h-[600px] grayscale-[0.2] group-hover:grayscale-0 transition-all duration-700">
+            <div className="rounded-xl overflow-hidden border border-white/10 shadow-2xl">
+              <div className="h-[500px]">
                 <MapView problems={safeProblems} type="problems" height="100%" zoom={6} center={[22.3, 87.3]} showHeatmap={true} />
               </div>
             </div>

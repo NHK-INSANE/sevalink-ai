@@ -113,7 +113,7 @@ export default function Landing() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/submit" className="btn-apple !px-8 !py-4 text-[13px] shadow-indigo-500/30">
-              REPORT CRISIS
+              Get Started →
             </Link>
             <Link href="/dashboard" className="btn-apple !bg-white/5 !text-gray-300 !border-white/10 shadow-none !px-8 !py-4 text-[13px]">
               VIEW DASHBOARD
@@ -165,12 +165,12 @@ export default function Landing() {
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight">The Neural Network for Good</h2>
             <p className="text-gray-400 max-w-2xl mx-auto">Advanced technology meet urgent humanitarian needs. A full operational stack for the next generation of crisis response.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
             {FEATURES.map((f, i) => (
               <motion.div
                 key={i}
                 whileHover={{ y: -5 }}
-                className="p-8 rounded-[2rem] bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all group"
+                className="p-6 rounded-xl bg-[#0f172a] border border-white/10 transition-all group"
               >
                 <div className="w-12 h-12 rounded-2xl mb-6 flex items-center justify-center group-hover:scale-110 transition-transform" style={{ backgroundColor: `${f.color}15`, border: `1px solid ${f.color}30` }}>
                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: f.color }} />
