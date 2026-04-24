@@ -47,7 +47,7 @@ export default function AdminDashboard({ problems, usersList, lastUpdate }) {
               {problems.slice(0, 5).map(p => (
                 <div key={p._id} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0 text-xs">
                   <span className="text-gray-300">New report: "{p.title}"</span>
-                  <span className="text-gray-500">{new Date(p.createdAt).toLocaleTimeString()}</span>
+                  <span className="text-gray-500">{p.createdAt ? new Date(p.createdAt).toLocaleTimeString() : "Recent"}</span>
                 </div>
               ))}
            </div>
