@@ -256,21 +256,9 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-4">
-              <button className="btn-apple !bg-red-600/10 !text-red-500 !border-red-500/20 shadow-none">
-                EMERGENCY ASSIGN
-              </button>
-              <button className="btn-apple !bg-indigo-600/10 !text-indigo-400 !border-indigo-500/20 shadow-none">
-                AI MATCHING
-              </button>
-              <button onClick={() => router.push("/map")} className="btn-apple !bg-emerald-600/10 !text-emerald-400 !border-emerald-500/20 shadow-none">
-                OPERATIONAL MAP
-              </button>
-              <button onClick={handleLocateAndSort} className="btn-apple !bg-white/5 !text-gray-400 !border-white/10 shadow-none">
-                {sortNearest ? "Reset Filter" : "Sort by Nearest"}
-              </button>
-              <Link href="/submit" className="btn-apple shadow-indigo-500/20">
-                Report Incident
+            <div className="flex justify-end">
+              <Link href="/submit" className="bg-purple-600 hover:bg-purple-700 px-6 py-2.5 rounded-lg text-white font-bold transition-all shadow-lg shadow-purple-500/20">
+                Report New Crisis
               </Link>
             </div>
           </div>
@@ -415,11 +403,23 @@ export default function Dashboard() {
 
           {/* ── LIVE MAP ── */}
           <div className="space-y-4 mb-20 px-2">
-            <div className="mb-3 flex justify-end">
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold text-white">Live Operations Map</h2>
+              <p className="text-sm text-gray-400">
+                Real-time visualization of crisis reports, responders, and NGO activity across regions.
+              </p>
+            </div>
+
+            <div className="mb-2">
               <LiveLegend showCount={false} />
             </div>
 
-            <div className="rounded-xl overflow-hidden border border-white/10 shadow-2xl">
+            <div className="relative rounded-xl overflow-hidden border border-white/10 shadow-2xl">
+              <div className="absolute top-4 right-4 flex gap-2 z-[1000]">
+                <button className="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg text-white text-sm font-bold shadow-md transition-colors flex items-center gap-2">
+                  🚨 SOS
+                </button>
+              </div>
               <div className="h-[500px]">
                 <MapView problems={safeProblems} type="problems" height="100%" zoom={6} center={[22.3, 87.3]} showHeatmap={true} />
               </div>

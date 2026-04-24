@@ -1,26 +1,28 @@
 export default function LiveLegend({ showCount = false }) {
   const data = [
-    { label: "Critical", color: "bg-red-500", count: 25 },
-    { label: "High", color: "bg-orange-400", count: 20 },
-    { label: "Medium", color: "bg-yellow-400", count: 40 },
-    { label: "Low", color: "bg-green-500", count: 40 },
-    { label: "NGOs", color: "bg-blue-500", count: 20 },
+    { label: "Critical", color: "text-red-500", count: 25 },
+    { label: "High", color: "text-orange-400", count: 20 },
+    { label: "Medium", color: "text-yellow-400", count: 40 },
+    { label: "Low", color: "text-green-500", count: 40 },
+    { label: "NGOs", color: "text-blue-500", count: 20 },
   ];
 
   return (
-    <div className="flex gap-4 items-center bg-white text-black px-4 py-2 rounded-lg shadow-md">
-      {data.map((item) => (
-        <div key={item.label} className="flex items-center gap-2 text-sm">
-          <span className={`w-3 h-3 rounded-full ${item.color}`} />
-          <span>{item.label}</span>
+    <div className="flex justify-between items-center mb-2 w-full">
+      <span className="text-sm text-green-400 flex items-center gap-1">
+        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+        Live
+      </span>
 
-          {showCount && (
-            <span className="text-gray-500 text-xs">
-              {item.count}
-            </span>
-          )}
-        </div>
-      ))}
+      <div className="bg-white text-black px-3 py-1.5 rounded-md text-[10px] font-bold flex gap-3 shadow-sm uppercase tracking-wider">
+        {data.map((item) => (
+          <div key={item.label} className="flex items-center gap-1.5">
+            <span className={`text-[8px] ${item.color}`}>●</span>
+            <span>{item.label}</span>
+            {showCount && <span className="text-gray-400 ml-0.5">{item.count}</span>}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

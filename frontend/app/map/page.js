@@ -184,9 +184,9 @@ export default function MapPage() {
         {/* ── PAGE HEADER ── */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white">Global Crisis Map</h1>
+            <h1 className="text-3xl font-extrabold tracking-tight text-white">Live Operations Map</h1>
             <p className="text-[#9CA3AF] text-[13px] mt-1 font-medium">
-              Real-time synchronization of crisis reports, volunteer assets, and NGO operations.
+              Real-time visualization of crisis reports, responders, and NGO activity across regions.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -197,15 +197,9 @@ export default function MapPage() {
             >
               {showHeatmap ? "Hide Heatmap" : "Crisis Heatmap"}
             </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={sendSOS}
-              disabled={sendingSOS}
-              className="btn-primary !bg-red-600 !text-xs !px-5 !py-2"
-              style={{ boxShadow: "0 0 16px rgba(220,38,38,0.35)" }}
-            >
-              {sendingSOS ? <div className="loader-small" /> : "Broadcast SOS"}
-            </motion.button>
+            <Link href="/submit" className="bg-purple-600 hover:bg-purple-700 px-5 py-2 rounded-lg text-white text-xs font-bold shadow-md transition-colors">
+              Report Incident
+            </Link>
           </div>
         </div>
 
@@ -272,16 +266,20 @@ export default function MapPage() {
 
         {/* ── MAP CARD ── */}
         <div className="space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
-            <h3 className="text-lg font-bold text-white tracking-tight">Interactive Operations Hub</h3>
-            
-            {/* CLEAN LEGEND ABOVE MAP */}
-            <div className="mb-3 flex justify-end">
-              <LiveLegend showCount={true} />
-            </div>
+          <div className="mb-2">
+            <LiveLegend showCount={true} />
           </div>
 
-          <div className="card !p-0 overflow-hidden border border-white/10 shadow-2xl">
+          <div className="relative card !p-0 overflow-hidden border border-white/10 shadow-2xl">
+            <div className="absolute top-4 right-4 flex gap-2 z-[1000]">
+              <button 
+                onClick={sendSOS}
+                disabled={sendingSOS}
+                className="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg text-white text-sm font-bold shadow-md transition-colors flex items-center gap-2"
+              >
+                {sendingSOS ? <div className="loader-small" /> : <>🚨 SOS</>}
+              </button>
+            </div>
             <div className="h-[68vh] w-full relative">
               <MapView
                 problems={problems}

@@ -7,10 +7,7 @@ import { socket } from "../../lib/socket";
 import toast from "react-hot-toast";
 import { NotificationContext } from "../context/NotificationContext";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
-import { Bell, AlertTriangle } from "lucide-react";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
+import { Bell, Link2, MapPin } from "lucide-react";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -89,12 +86,10 @@ export default function Navbar() {
         {/* nav-left: Brand */}
         <div className="nav-left">
           <Link href="/" className="flex items-center gap-2 group">
-            <Image 
-              src="/logo.png"
-              alt="SevaLink AI"
-              width={36}
-              height={36}
-            />
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 shadow-md">
+              <Link2 size={16} className="text-white" />
+              <MapPin size={14} className="text-white -ml-1" />
+            </div>
             <span className="text-lg font-semibold tracking-wide text-white">
               SEVALINK <span className="text-purple-400">AI</span>
             </span>
@@ -144,50 +139,35 @@ export default function Navbar() {
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute right-0 mt-3 w-80 bg-[#0B1220] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[10000]"
+                        className="absolute right-0 mt-3 w-72 bg-[#0f172a] border border-white/10 rounded-xl shadow-xl p-4 z-50 overflow-hidden"
                       >
-                        <div className="p-4 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
-                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Notifications</span>
-                          {unreadCount > 0 && (
-                            <button onClick={markAllAsRead} className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors">Mark all as read</button>
-                          )}
-                        </div>
+                        <p className="text-sm text-gray-400 mb-3 font-semibold">Notifications</p>
                         
-                        <div className="max-h-[320px] overflow-y-auto">
+                        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
                           {notifications.length === 0 ? (
-                            <div className="py-12 text-center flex flex-col items-center gap-2">
-                              <p className="text-xs text-gray-500 font-black uppercase tracking-widest">No Active Alerts</p>
-                            </div>
+                            <p className="text-xs text-gray-500 py-4 text-center">No active alerts</p>
                           ) : (
                             notifications.map((n) => (
                               <div 
                                 key={n._id} 
                                 onClick={() => markAsRead(n._id)}
-                                className={`p-4 border-b border-white/5 last:border-0 cursor-pointer transition-colors ${!n.isRead ? "bg-indigo-500/[0.03]" : "opacity-60"} hover:bg-white/5`}
+                                className={`p-3 rounded-lg bg-white/5 cursor-pointer hover:bg-white/10 transition-colors ${!n.isRead ? "border-l-2 border-purple-500" : "opacity-60"}`}
                               >
-                                <div className="flex items-start gap-3">
-                                  <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${!n.isRead ? "bg-indigo-500" : "bg-gray-700"}`} />
-                                  <div className="space-y-1">
-                                    <p className="text-[12px] text-gray-200 leading-relaxed font-medium">{n.message}</p>
-                                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-wider">
-                                      {new Date(n.createdAt).toLocaleDateString()} · {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </p>
-                                  </div>
-                                </div>
+                                <p className="text-[12px] text-gray-200 leading-tight mb-1">{n.message}</p>
+                                <p className="text-[9px] text-gray-500 font-bold uppercase">
+                                  {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </p>
                               </div>
                             ))
                           )}
                         </div>
+                        {unreadCount > 0 && (
+                          <button onClick={markAllAsRead} className="w-full mt-3 pt-3 border-t border-white/5 text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors uppercase tracking-widest text-center">Mark all as read</button>
+                        )}
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
-
-                {/* SOS Button */}
-                <button className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-white flex items-center gap-2 text-xs font-bold transition-colors">
-                  <AlertTriangle size={16} />
-                  SOS
-                </button>
 
                 {/* Profile */}
                 <div className="relative" onClick={(e) => e.stopPropagation()}>
