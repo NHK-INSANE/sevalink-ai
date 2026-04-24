@@ -107,49 +107,37 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
       {/* ── Footer: Chat (left) + Assign (right) ── */}
       <div className="flex items-center justify-between gap-2 pt-3 border-t border-white/5">
 
-        {/* Chat — 40px square, prominent */}
-        <button
-          onClick={() => {
-            if (!user) return toast.error("Please login to join the discussion");
-            setShowChat(true);
-          }}
-          title="Open Discussion"
-          className="flex items-center justify-center rounded-[8px] bg-white/5 hover:bg-purple-600/20 border border-white/10 hover:border-purple-500/30 transition-all"
-          style={{ width: 40, height: 40 }}
-        >
-          <svg className="w-[18px] h-[18px] text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-          </svg>
-        </button>
-
-        {/* Action Buttons Column */}
-        <div className="flex-1 flex flex-col gap-2">
+        <div className="flex-1 grid grid-cols-3 gap-2">
           <button
-            onClick={() => onStatusChange(problem._id, "In Progress")}
-            disabled={problem.status !== "Open"}
-            className="w-full py-2 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white border border-purple-500/30 text-[11px] font-semibold rounded-[8px] transition disabled:opacity-40"
+            onClick={() => {
+              if (!user) return toast.error("Please login to join the discussion");
+              setShowChat(true);
+            }}
+            className="flex flex-col items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition group/btn"
           >
-            Assign
+            <span className="text-sm mb-1 group-hover/btn:scale-110 transition-transform">💬</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-gray-400 group-hover/btn:text-white">Chat</span>
           </button>
           
-          <div className="flex gap-2">
-            <button
-              onClick={() => window.location.href = `/ai-match?id=${problem._id}`}
-              className="flex-1 py-1.5 bg-indigo-600/10 text-indigo-400 hover:bg-indigo-600/20 border border-indigo-500/20 text-[10px] font-bold rounded-md transition"
-            >
-              🤖 AI Match
-            </button>
-            <button
-              onClick={() => {
-                if (!user) return toast.error("Please login to create a team");
-                setShowChat(true);
-                // We'll set a timeout or use a state to switch to teams tab
-              }}
-              className="flex-1 py-1.5 bg-emerald-600/10 text-emerald-400 hover:bg-emerald-600/20 border border-emerald-500/20 text-[10px] font-bold rounded-md transition"
-            >
-              👥 Team
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              if (!user) return toast.error("Please login to form a unit");
+              setShowChat(true);
+              // Switch to teams tab logic could go here
+            }}
+            className="flex flex-col items-center justify-center py-2 bg-white/5 hover:bg-emerald-600/10 border border-white/10 hover:border-emerald-500/20 rounded-xl transition group/btn"
+          >
+            <span className="text-sm mb-1 group-hover/btn:scale-110 transition-transform">👥</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-gray-400 group-hover/btn:text-emerald-400">Units</span>
+          </button>
+
+          <button
+            onClick={() => window.location.href = `/ai-match?id=${problem._id}`}
+            className="flex flex-col items-center justify-center py-2 bg-white/5 hover:bg-indigo-600/10 border border-white/10 hover:border-indigo-500/20 rounded-xl transition group/btn"
+          >
+            <span className="text-sm mb-1 group-hover/btn:scale-110 transition-transform">🤖</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-gray-400 group-hover/btn:text-indigo-400">Match</span>
+          </button>
         </div>
       </div>
     </div>

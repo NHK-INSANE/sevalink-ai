@@ -14,7 +14,7 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
   const [typingUsers, setTypingUsers] = useState({});
   const [teams, setTeams] = useState([]);
   const [showTeamForm, setShowTeamForm] = useState(false);
-  const [newTeam, setNewTeam] = useState({ name: "", objective: "", requiredSkills: "", slots: 5 });
+  const [newTeam, setNewTeam] = useState({ name: "", objective: "", requiredSkills: "", maxMembers: 5 });
   const [activeTab, setActiveTab] = useState("chat"); // "chat" or "teams"
   const scrollRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -96,7 +96,7 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
       if (data && data._id) {
         setTeams(prev => [...(Array.isArray(prev) ? prev : []), data]);
         setShowTeamForm(false);
-        setNewTeam({ name: "", objective: "", requiredSkills: "", slots: 5 });
+        setNewTeam({ name: "", objective: "", requiredSkills: "", maxMembers: 5 });
         toast.success("Team formed successfully!");
       } else {
         throw new Error(data.error || "Failed to form team");
@@ -270,7 +270,6 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
           </button>
         )}
       </div>
-      </div>
 
       {/* Content Area */}
       <div className="flex-1 overflow-y-auto" ref={scrollRef}>
@@ -364,8 +363,8 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
                       className="bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white"
                     />
                     <input 
-                      type="number" placeholder="Slots" 
-                      value={newTeam.slots} onChange={(e) => setNewTeam({...newTeam, slots: parseInt(e.target.value) || 1})}
+                      type="number" placeholder="Max Members" 
+                      value={newTeam.maxMembers} onChange={(e) => setNewTeam({...newTeam, maxMembers: parseInt(e.target.value) || 1})}
                       className="bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white"
                     />
                   </div>

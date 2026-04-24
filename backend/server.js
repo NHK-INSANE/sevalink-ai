@@ -14,6 +14,10 @@ const corsOptions = {
   credentials: true
 };
 
+const multer = require("multer");
+const path = require("path");
+const upload = multer({ dest: "uploads/" });
+
 // 1. CORS - MUST BE FIRST
 app.use((req, res, next) => {
   const origin = req.headers.origin;
@@ -60,6 +64,7 @@ const io = new Server(server, {
 app.set("io", io);
 
 app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Real-time Socket Mapping
 const userSockets = new Map(); // userId -> socketId
@@ -148,6 +153,12 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api", statsRoutes);
+
+// Media Upload Route
+app.post("/api/upload", auth, upload.single("file"), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+  res.json({ url: `${process.env.API_URL || ""}/uploads/${req.file.filename}` });
+});
 
 // Rate limiter for SOS
 const sosLimiter = rateLimit({

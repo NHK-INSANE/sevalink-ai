@@ -16,4 +16,12 @@ router.post("/urgency", auth, aiLimiter, getUrgency);
 // POST /api/ai/suggest
 router.post("/suggest", auth, aiLimiter, suggestDescription);
 
+const { matchProblemsForUser, matchUsersForProblem } = require("../controllers/aiController");
+
+// GET /api/ai/match/problems/:userId
+router.get("/match/problems/:userId", auth, matchProblemsForUser);
+
+// GET /api/ai/match/users/:problemId
+router.get("/match/users/:problemId", auth, matchUsersForProblem);
+
 module.exports = router;

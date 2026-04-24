@@ -7,7 +7,7 @@ console.log("teamRoutes: auth middleware type:", typeof auth);
 // Get teams for a problem
 router.get("/problem/:problemId", async (req, res) => {
   try {
-    const teams = await Team.find({ problemId: req.params.problemId });
+    const teams = await Team.find({ problemId: req.params.problemId }).populate("members.userId", "name role");
     res.json(teams);
   } catch (err) {
     res.status(500).json({ error: "Server error" });
@@ -17,15 +17,16 @@ router.get("/problem/:problemId", async (req, res) => {
 // Create a team
 router.post("/", auth, async (req, res) => {
   try {
-    const { name, objective, problemId, requiredSkills, slots } = req.body;
+    const { name, objective, problemId, requiredSkills, maxMembers } = req.body;
     const team = new Team({
       name,
       objective,
       problemId,
-      createdBy: req.user.id,
+      leader: req.user.id,
       members: [{ userId: req.user.id, role: "Leader" }],
       requiredSkills: Array.isArray(requiredSkills) ? requiredSkills : (requiredSkills ? requiredSkills.split(",").map(s => s.trim()) : []),
-      slots: slots || 5
+      maxMembers: maxMembers || 5,
+      status: "open"
     });
     await team.save();
     res.status(201).json(team);
@@ -43,13 +44,18 @@ router.post("/:teamId/join", auth, async (req, res) => {
     const isMember = team.members.some(m => m.userId.toString() === req.user.id);
     if (isMember) return res.status(400).json({ error: "Already a member" });
 
-    if (team.members.length >= (team.slots || 5)) {
+    if (team.members.length >= (team.maxMembers || 5)) {
       return res.status(400).json({ error: "Team is full" });
     }
 
     team.members.push({ userId: req.user.id });
+    if (team.members.length >= (team.maxMembers || 5)) {
+      team.status = "full";
+    }
+    
     await team.save();
-    res.json(team);
+    const updatedTeam = await Team.findById(team._id).populate("members.userId", "name role");
+    res.json(updatedTeam);
   } catch (err) {
     res.status(500).json({ error: "Failed to join team" });
   }

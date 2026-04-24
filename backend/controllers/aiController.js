@@ -147,3 +147,92 @@ Professional Version:
     });
   }
 };
+const getDistance = (lat1, lon1, lat2, lon2) => {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return 9999;
+  const R = 6371;
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
+const calculateMatch = (user, problem) => {
+  // Skill match
+  const userSkills = Array.isArray(user.skills) ? user.skills : (user.skills ? [user.skills] : []);
+  const reqSkills = Array.isArray(problem.requiredSkills) ? problem.requiredSkills : (problem.requiredSkill ? [problem.requiredSkill] : []);
+  
+  if (reqSkills.length === 0) return 0.5; // base match if no skills required
+
+  const matchSkills = reqSkills.filter(skill =>
+    userSkills.some(s => s.toLowerCase().includes(skill.toLowerCase()))
+  );
+
+  const skillScore = matchSkills.length / reqSkills.length;
+
+  // Distance score
+  const distance = getDistance(
+    user.location?.lat,
+    user.location?.lng,
+    problem.location?.lat,
+    problem.location?.lng
+  );
+
+  const distanceScore = distance < 10 ? 1 : distance < 50 ? 0.5 : 0.2;
+
+  // Urgency score
+  const urgencyMap = { "Critical": 1, "High": 0.8, "Medium": 0.5, "Low": 0.2 };
+  const urgencyScore = urgencyMap[problem.urgency] || 0.5;
+
+  // Final Score
+  return Math.round((skillScore * 0.5 + distanceScore * 0.3 + urgencyScore * 0.2) * 100);
+};
+
+exports.matchProblemsForUser = async (req, res) => {
+  try {
+    const User = require("../models/User");
+    const Problem = require("../models/Problem");
+    
+    const user = await User.findById(req.params.userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    
+    const problems = await Problem.find({ status: "Open" });
+
+    const matches = problems.map(p => ({
+      problem: p,
+      score: calculateMatch(user, p)
+    }));
+
+    matches.sort((a, b) => b.score - a.score);
+
+    res.json(matches.slice(0, 10));
+  } catch (err) {
+    res.status(500).json({ error: "Matching failed" });
+  }
+};
+
+exports.matchUsersForProblem = async (req, res) => {
+  try {
+    const User = require("../models/User");
+    const Problem = require("../models/Problem");
+    
+    const problem = await Problem.findById(req.params.problemId);
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
+    
+    const users = await User.find({ role: { $in: ["volunteer", "worker"] } });
+
+    const matches = users.map(u => ({
+      user: u,
+      score: calculateMatch(u, problem)
+    }));
+
+    matches.sort((a, b) => b.score - a.score);
+
+    res.json(matches.slice(0, 10));
+  } catch (err) {
+    res.status(500).json({ error: "Matching failed" });
+  }
+};

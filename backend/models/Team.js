@@ -15,7 +15,7 @@ const teamSchema = new mongoose.Schema({
     ref: "Problem",
     required: true,
   },
-  createdBy: {
+  leader: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
@@ -28,9 +28,14 @@ const teamSchema = new mongoose.Schema({
     }
   ],
   requiredSkills: [String],
-  slots: {
+  maxMembers: {
     type: Number,
     default: 5
+  },
+  status: {
+    type: String,
+    enum: ["open", "closed", "full"],
+    default: "open"
   },
   createdAt: {
     type: Date,
