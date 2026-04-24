@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { socket } from "../lib/socket";
+import { socket } from "../../lib/socket";
 import toast from "react-hot-toast";
 
 export default function ProblemCard({ problem, user: propUser }) {
