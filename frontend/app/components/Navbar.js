@@ -189,13 +189,25 @@ export default function Navbar() {
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute right-0 mt-3 w-48 bg-[#0B1220] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[10000]"
+                        className="absolute right-0 mt-3 w-56 bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[10000] p-2"
                       >
-                        <Link href="/profile" className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-gray-300 hover:bg-white/5 hover:text-white transition-all border-b border-white/5">
+                        <div className="px-3 py-3 mb-2 border-b border-white/5">
+                           <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Signed in as</p>
+                           <p className="text-xs font-bold text-white truncate">{user.name || user.email}</p>
+                        </div>
+
+                        <Link href="/profile" className="flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-gray-300 hover:bg-white/5 hover:text-white rounded-xl transition-all">
+                          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-gray-400">
+                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                          </div>
                           My Profile
                         </Link>
-                        <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold text-red-400 hover:bg-red-500/10 transition-all">
-                          Sign Out
+                        
+                        <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-red-400 hover:bg-red-500/10 rounded-xl transition-all">
+                          <div className="w-8 h-8 rounded-lg bg-red-500/5 flex items-center justify-center">
+                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                          </div>
+                          Logout
                         </button>
                       </motion.div>
                     )}

@@ -14,13 +14,13 @@ const messageSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  content: {
+  text: {
     type: String,
     default: "",
   },
   type: {
     type: String,
-    enum: ["text", "image", "audio"],
+    enum: ["text", "image", "audio", "ops"],
     default: "text",
   },
   mediaUrl: {

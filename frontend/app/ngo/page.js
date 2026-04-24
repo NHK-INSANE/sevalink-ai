@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Navbar from "../components/Navbar";
 import PageWrapper from "../components/PageWrapper";
 import { getUsers } from "../utils/api";
@@ -7,10 +7,12 @@ import { SkeletonCard } from "../components/Skeleton";
 import { getUserLocation } from "../utils/location";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
-export default function NGOPage() {
+function NGOContent() {
+  const router = useRouter();
   const [ngos, setNgos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userLoc, setUserLoc] = useState(null);
@@ -100,11 +102,47 @@ export default function NGOPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(`Request for ${requestType === 'lead' ? 'leadership' : 'joining'} sent to ${selectedNgo.ngoName || selectedNgo.name}`);
+        toast.success(`Request sent to ${selectedNgo.ngoName || selectedNgo.name}`);
         setShowRequestModal(false);
+        router.push("/problems");
       } else toast.error(data.error || "Request failed");
     } catch (err) { toast.error("Connection failed"); }
     finally { setIsSubmitting(false); }
+  };
+
+  const submitConnectRequest = async () => {
+    if (!user) return toast.error("Please login to connect");
+    if (!connectReason.trim()) return toast.error("Please provide a reason");
+    
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE.replace("/api", "")}/api/connect`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          fromUser: user._id || user.id,
+          toUser: selectedNgo._id,
+          fromName: user.name,
+          message: connectReason
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Request sent to ${selectedNgo.ngoName || selectedNgo.name}`);
+        setShowConnectModal(false);
+        setConnectReason("");
+      } else {
+        toast.error(data.error || "Failed to send request");
+      }
+    } catch (err) {
+      toast.error("Connection failed");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -114,7 +152,6 @@ export default function NGOPage() {
         <div className="page-wrapper pt-28 pb-20">
           <main className="flex flex-col gap-[32px]">
           
-          {/* ── Header ── */}
           <div className="flex flex-col md:flex-row justify-between items-end gap-6">
             <div className="space-y-1.5">
               <h1 className="text-3xl font-extrabold tracking-tight text-white">Registered NGOs</h1>
@@ -136,7 +173,6 @@ export default function NGOPage() {
             </div>
           </div>
 
-          {/* ── Grid ── */}
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
@@ -196,79 +232,56 @@ export default function NGOPage() {
         </div>
       </PageWrapper>
 
-      {/* ── Connect Modal ── */}
       <AnimatePresence>
         {showConnectModal && (
           <div className="fixed inset-0 z-[20000] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowConnectModal(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0, y: 20 }} 
-              animate={{ scale: 1, opacity: 1, y: 0 }} 
-              exit={{ scale: 0.9, opacity: 0, y: 20 }} 
-              className="bg-[#0B1220] p-6 rounded-2xl w-full max-w-md border border-white/10 shadow-2xl relative z-10"
-            >
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="bg-[#0B1220] p-6 rounded-2xl w-full max-w-md border border-white/10 shadow-2xl relative z-10">
               <h2 className="text-xl font-extrabold text-white mb-2">Connect with {selectedNgo?.ngoName || selectedNgo?.name}</h2>
-              <p className="text-gray-400 text-sm mb-6">Briefly explain why you want to coordinate with this organization.</p>
-              <textarea placeholder="Reason for connection..." value={connectReason} onChange={(e) => setConnectReason(e.target.value)} className="w-full h-32 bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 outline-none focus:border-purple-500 transition-all mb-6 resize-none" />
+              <textarea placeholder="Reason..." value={connectReason} onChange={(e) => setConnectReason(e.target.value)} className="w-full h-32 bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white outline-none focus:border-purple-500 transition-all mb-6 resize-none" />
               <div className="flex gap-3">
-                <button onClick={() => setShowConnectModal(false)} className="flex-1 py-3 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-colors">Cancel</button>
-                <button 
-                  onClick={submitConnectRequest} 
-                  disabled={isSubmitting}
-                  className="flex-[2] py-3 rounded-xl text-xs font-bold text-white shadow-lg shadow-indigo-500/20 disabled:opacity-50 bg-gradient-to-r from-purple-600 to-indigo-600" 
-                >
-                  {isSubmitting ? "Sending..." : "Send Request"}
-                </button>
+                <button onClick={() => setShowConnectModal(false)} className="flex-1 py-3 text-xs font-bold text-gray-400">Cancel</button>
+                <button onClick={submitConnectRequest} disabled={isSubmitting} className="flex-[2] py-3 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 shadow-lg shadow-indigo-500/20 disabled:opacity-50">{isSubmitting ? "Sending..." : "Send Request"}</button>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
-      {/* ── Request Modal ── */}
       <AnimatePresence>
         {showRequestModal && (
           <div className="fixed inset-0 z-[20000] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowRequestModal(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0, y: 20 }} 
-              animate={{ scale: 1, opacity: 1, y: 0 }} 
-              exit={{ scale: 0.9, opacity: 0, y: 20 }} 
-              className="bg-[#0B1220] p-7 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl relative z-10"
-            >
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="bg-[#0B1220] p-7 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl relative z-10">
               <div className="text-center mb-6">
                 <h2 className="text-2xl font-black text-white mb-1 uppercase tracking-tighter">{requestType === 'lead' ? 'Leadership' : 'Mission'} Request</h2>
                 <p className="text-gray-500 text-[11px] font-bold uppercase tracking-widest">To: {selectedNgo?.ngoName || selectedNgo?.name}</p>
               </div>
-
               <div className="space-y-4 mb-8">
                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Select Target Problem</label>
-                <select 
-                  value={selectedProbId}
-                  onChange={(e) => setSelectedProbId(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white outline-none focus:border-purple-500 transition-all appearance-none shadow-inner"
-                >
-                  <option value="">-- Choose Problem --</option>
+                <select value={selectedProbId} onChange={(e) => setSelectedProbId(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white outline-none focus:border-purple-500 transition-all appearance-none">
+                  <option value="" className="bg-[#0B1220]">-- Choose Problem --</option>
                   {problems.filter(p => p.status !== "Resolved").map(p => (
                     <option key={p._id} value={p._id} className="bg-[#0B1220]">{p.title}</option>
                   ))}
                 </select>
               </div>
-              
               <div className="flex gap-3">
-                <button onClick={() => setShowRequestModal(false)} className="flex-1 py-3.5 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-colors">Cancel</button>
-                <button 
-                  onClick={submitJoinRequest} 
-                  disabled={isSubmitting}
-                  className="flex-[2] py-3.5 rounded-xl text-xs font-black uppercase tracking-widest text-white shadow-xl shadow-purple-500/20 bg-gradient-to-r from-purple-600 to-indigo-600"
-                >
-                  {isSubmitting ? "Submitting..." : "Send Request"}
-                </button>
+                <button onClick={() => setShowRequestModal(false)} className="flex-1 py-3.5 text-xs font-bold text-gray-400">Cancel</button>
+                <button onClick={submitJoinRequest} disabled={isSubmitting} className="flex-[2] py-3.5 rounded-xl text-xs font-black uppercase text-white bg-gradient-to-r from-purple-600 to-indigo-600 shadow-xl shadow-purple-500/20">{isSubmitting ? "Submitting..." : "Send Request"}</button>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function NGOPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0B1220] flex items-center justify-center text-white font-black uppercase tracking-[0.4em]">Syncing Global Grid...</div>}>
+      <NGOContent />
+    </Suspense>
   );
 }

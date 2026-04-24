@@ -415,8 +415,15 @@ export default function Dashboard() {
             </div>
 
             <div className="relative rounded-xl overflow-hidden border border-white/10 shadow-2xl">
-              <div className="absolute top-4 right-4 flex gap-2 z-[1000]">
-                <button className="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg text-white text-sm font-bold shadow-md transition-colors flex items-center gap-2">
+            <div className="relative rounded-xl overflow-hidden border border-white/10 shadow-2xl">
+              <div className="absolute top-4 right-4 flex gap-3 z-[1000]">
+                <button 
+                  onClick={handleLocateAndSort}
+                  className="bg-white/10 hover:bg-white/20 backdrop-blur-md px-4 py-2 rounded-lg text-white text-[10px] font-black uppercase tracking-widest border border-white/10 shadow-lg transition-all"
+                >
+                  {sortNearest ? "Show All" : "Locate Me"}
+                </button>
+                <button className="bg-red-600 hover:bg-red-700 px-5 py-2 rounded-lg text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-red-500/20 transition-all flex items-center justify-center gap-2">
                   🚨 SOS
                 </button>
               </div>

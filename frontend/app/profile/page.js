@@ -256,7 +256,7 @@ export default function ProfilePage() {
                     </motion.button>
                   </Link>
                   <motion.button whileTap={{ scale: 0.95 }} onClick={handleLogout} className="btn-secondary !text-red-500 !border-red-500/20 hover:!bg-red-500/10 !py-5 !text-xs !uppercase !tracking-widest">
-                    Sign Out
+                    Logout
                   </motion.button>
                 </div>
               </>

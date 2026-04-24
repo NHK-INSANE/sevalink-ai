@@ -1,11 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Navbar from "../components/Navbar";
 import PageWrapper from "../components/PageWrapper";
 import { getUsers } from "../utils/api";
 import { getUserLocation } from "../utils/location";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSearchParams, useRouter } from "next/navigation";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
@@ -14,8 +15,12 @@ const ROLE_FILTERS = [
   { key: "volunteer", label: "Volunteers"  },
   { key: "worker",    label: "Workers"     },
 ];
+function VolunteersContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const addMemberTo = searchParams.get("addMemberTo");
+  const [targetProblem, setTargetProblem] = useState(null);
 
-export default function VolunteersPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterRole, setFilterRole] = useState("all");
@@ -31,6 +36,15 @@ export default function VolunteersPage() {
     const u = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("seva_user")) : null;
     setUser(u);
   }, []);
+
+  useEffect(() => {
+    if (addMemberTo) {
+      fetch(`${API_BASE}/api/problems`).then(res => res.json()).then(data => {
+        const prob = data.find(p => p._id === addMemberTo);
+        setTargetProblem(prob);
+      });
+    }
+  }, [addMemberTo]);
 
   const handleLocate = async () => {
     try {
@@ -89,6 +103,24 @@ export default function VolunteersPage() {
   const handleOpenAssign = (u) => {
     setSelectedUser(u);
     setShowAssignModal(true);
+  };
+
+  const handleAddToMission = async (targetUserId) => {
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/api/problems/${addMemberTo}/members`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ memberId: targetUserId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Successfully added to the mission team");
+        router.push("/problems");
+      } else toast.error(data.error || "Failed to add member");
+    } catch (err) { toast.error("Connection error"); }
+    finally { setIsSubmitting(false); }
   };
 
   const submitAssignment = async () => {
@@ -166,6 +198,26 @@ export default function VolunteersPage() {
         <div className="page-wrapper pt-28 pb-20">
           <main className="flex flex-col gap-[32px]">
           
+          {/* ── Selection Banner ── */}
+          {addMemberTo && targetProblem && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-5 rounded-2xl bg-purple-600/10 border border-purple-500/30 flex items-center justify-between shadow-2xl"
+            >
+              <div className="flex items-center gap-4">
+                 <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white">
+                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="16" x2="22" y1="11" y2="11"/></svg>
+                 </div>
+                 <div>
+                   <h2 className="text-sm font-black uppercase text-white tracking-widest">Recruitment Mode</h2>
+                   <p className="text-[11px] text-gray-400 font-bold uppercase tracking-tight">Adding members to: <span className="text-purple-400">{targetProblem.title}</span></p>
+                 </div>
+              </div>
+              <button onClick={() => router.push("/problems")} className="text-[10px] font-black uppercase text-gray-500 hover:text-white tracking-widest transition-colors">Cancel</button>
+            </motion.div>
+          )}
+
           {/* ── Header ── */}
           <div className="flex flex-col md:flex-row justify-between items-end gap-6">
             <div className="space-y-1.5">
@@ -220,6 +272,7 @@ export default function VolunteersPage() {
                 const rawSkills = Array.isArray(u.skills) ? u.skills : (u.skills ? [u.skills] : []);
                 const skills = Array.from(new Set([...rawSkills, u.skill].filter(Boolean)));
                 const isVol = u.role?.toLowerCase() === "volunteer";
+                const isWorker = u.role?.toLowerCase() === "worker";
 
                 return (
                   <div key={u._id} className="card card-hover-effect !p-6 flex flex-col gap-0">
@@ -239,10 +292,6 @@ export default function VolunteersPage() {
                         <span className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider">Phone</span>
                         <span className="text-gray-300">{u.phone || "Not listed"}</span>
                       </div>
-                      <div className="flex justify-between items-center text-[13px]">
-                        <span className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider">Loc</span>
-                        <span className="text-gray-300 truncate max-w-[120px]">{u.address || "Unknown"}</span>
-                      </div>
                     </div>
 
                     {skills.length > 0 && (
@@ -254,20 +303,32 @@ export default function VolunteersPage() {
                     )}
 
                     <div className="flex flex-col gap-2 mt-auto">
-                      <button 
-                        onClick={() => handleConnect(u)}
-                        className="w-full py-2.5 rounded-xl text-xs font-bold text-white transition-all shadow-lg shadow-indigo-500/20"
-                        style={{ background: isVol ? "linear-gradient(to right, #059669, #10b981)" : "linear-gradient(to right, #7c3aed, #6366f1)" }}
-                      >
-                        Connect
-                      </button>
-                      {canAssign(u.role) && (
+                      {addMemberTo ? (
                         <button 
-                          onClick={() => handleOpenAssign(u)}
-                          className="w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-white bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
+                          onClick={() => handleAddToMission(u._id)}
+                          disabled={isSubmitting || (user?.role?.toLowerCase() === 'volunteer' && isWorker)}
+                          className="w-full py-3 rounded-xl text-[11px] font-black uppercase tracking-widest text-white shadow-xl shadow-purple-500/20 bg-gradient-to-r from-purple-600 to-indigo-600 disabled:opacity-30"
                         >
-                          Assign to Mission
+                          {isSubmitting ? "Adding..." : "Add to Team"}
                         </button>
+                      ) : (
+                        <>
+                          <button 
+                            onClick={() => handleConnect(u)}
+                            className="w-full py-2.5 rounded-xl text-xs font-bold text-white transition-all shadow-lg shadow-indigo-500/20"
+                            style={{ background: isVol ? "linear-gradient(to right, #059669, #10b981)" : "linear-gradient(to right, #7c3aed, #6366f1)" }}
+                          >
+                            Connect
+                          </button>
+                          {canAssign(u.role) && (
+                            <button 
+                              onClick={() => handleOpenAssign(u)}
+                              className="w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-white bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
+                            >
+                              Assign to Mission
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -353,6 +414,13 @@ export default function VolunteersPage() {
           </div>
         )}
       </AnimatePresence>
-    </div>
+  );
+}
+
+export default function VolunteersPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0B1220] flex items-center justify-center text-white">Initializing Neural Network...</div>}>
+      <VolunteersContent />
+    </Suspense>
   );
 }

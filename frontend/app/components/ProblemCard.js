@@ -2,15 +2,16 @@
 import { useState, useEffect } from "react";
 import { socket } from "../../lib/socket";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export default function ProblemCard({ problem: initialProblem, user: propUser }) {
+  const router = useRouter();
   const [problem, setProblem] = useState(initialProblem);
   const [activeTab, setActiveTab] = useState(null);
   const [team, setTeam] = useState([]);
   const [messages, setMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [user, setUser] = useState(propUser || null);
-  const [newMemberId, setNewMemberId] = useState("");
 
   useEffect(() => {
     if (!user && typeof window !== "undefined") {
@@ -49,6 +50,19 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
     }
   };
 
+  const loadHistory = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/problems/${problem._id}/history`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (Array.isArray(data)) setMessages(data);
+    } catch (err) {
+      console.error("Failed to load history");
+    }
+  };
+
   const handleAssign = async () => {
     if (!user) return toast.error("Please login to assign yourself");
     try {
@@ -80,34 +94,48 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
     } catch (err) { toast.error("Failed to update status"); }
   };
 
-  const addMember = async () => {
-    if (!newMemberId.trim()) return;
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete this report?")) return;
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/problems/${problem._id}/members`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ memberId: newMemberId }),
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/problems/${problem._id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
       });
-      const data = await res.json();
-      if (data.success) {
-        toast.success("Member added to team");
-        setNewMemberId("");
-        loadTeam();
-      } else toast.error(data.error || "Failed to add member");
+      if (res.ok) {
+        toast.success("Report deleted successfully");
+        window.location.reload();
+      } else {
+        const d = await res.json();
+        toast.error(d.message || "Delete failed");
+      }
     } catch (err) { toast.error("Connection error"); }
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!chatInput.trim() || !user) return;
-    socket.emit("send_message", { problemId: problem._id, text: chatInput, senderName: user.name || "User" });
+    const msgData = { problemId: problem._id, text: chatInput, senderName: user.name || "User", time: new Date() };
+    
+    // Save to DB
+    try {
+      const token = localStorage.getItem("token");
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/problems/${problem._id}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify(msgData)
+      });
+    } catch (err) {}
+
+    // Emit socket
+    socket.emit("send_message", msgData);
     setChatInput("");
   };
 
   const isLeader = problem.leader?._id === user?._id || problem.leader === user?._id;
+  const isOwner = problem.createdBy === user?._id || (user?.id && problem.createdBy === user.id);
 
   return (
-    <div className="bg-[#0B1220] p-6 rounded-2xl border border-white/10 hover:border-purple-500/30 transition-all shadow-xl flex flex-col gap-5">
+    <div className="bg-[#0B1220] p-6 rounded-2xl border border-white/10 hover:border-purple-500/30 transition-all shadow-xl flex flex-col gap-5 relative">
       
       {/* ── HEADER ── */}
       <div className="flex justify-between items-start">
@@ -120,12 +148,19 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
             <span className="text-[9px] text-purple-400 font-bold uppercase tracking-widest">{problem.category}</span>
           </div>
         </div>
-        <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-          problem.status?.toLowerCase() === 'resolved' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
-          problem.status?.toLowerCase() === 'in progress' ? "bg-blue-500/10 text-blue-400 border-blue-500/20" :
-          "bg-white/5 text-gray-400 border-white/10"
-        }`}>
-          {problem.status}
+        <div className="flex flex-col items-end gap-2">
+          <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+            problem.status?.toLowerCase() === 'resolved' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
+            problem.status?.toLowerCase() === 'in progress' ? "bg-blue-500/10 text-blue-400 border-blue-500/20" :
+            "bg-white/5 text-gray-400 border-white/10"
+          }`}>
+            {problem.status}
+          </div>
+          {isOwner && (
+            <button onClick={handleDelete} className="text-[8px] font-black uppercase text-red-500/60 hover:text-red-500 tracking-[0.2em] transition-colors">
+              [ Delete Report ]
+            </button>
+          )}
         </div>
       </div>
 
@@ -143,7 +178,7 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
       <div className="grid grid-cols-4 gap-2">
         {[
           { id: "team", label: "Team", onClick: loadTeam },
-          { id: "chat", label: "Chat" },
+          { id: "chat", label: "Chat", onClick: loadHistory },
           { id: "aiAssign", label: "AI Assign" },
           { id: "aiMatch", label: "AI Match" },
         ].map(tab => (
@@ -171,16 +206,16 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
                    onChange={(e) => handleStatusChange(e.target.value)}
                    className="bg-[#0B1220] border border-white/10 text-[9px] font-bold uppercase text-purple-400 px-2 py-1 rounded outline-none"
                  >
-                   <option value="Open">Open</option>
-                   <option value="In Progress">In Progress</option>
-                   <option value="Resolved">Resolved</option>
+                   <option value="Open" className="bg-[#0B1220]">Open</option>
+                   <option value="In Progress" className="bg-[#0B1220]">In Progress</option>
+                   <option value="Resolved" className="bg-[#0B1220]">Resolved</option>
                  </select>
                )}
             </div>
 
             <div className="space-y-2 mb-4 max-h-32 overflow-y-auto pr-1 custom-scrollbar">
-              {team.length === 0 ? (
-                <p className="text-[11px] text-gray-600 italic">No responders in unit.</p>
+              {(team || []).length === 0 ? (
+                <p className="text-[11px] text-gray-600 italic py-4 text-center">No unit members declared yet.</p>
               ) : team.map((m) => (
                 <div key={m._id} className="flex items-center gap-3 bg-white/5 p-2 rounded-lg">
                   <div className={`w-2 h-2 rounded-full ${problem.leader?._id === m._id || problem.leader === m._id ? "bg-purple-500" : "bg-emerald-500"}`} />
@@ -193,15 +228,13 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
             </div>
 
             {isLeader && (
-              <div className="flex gap-2 pt-3 border-t border-white/5">
-                <input 
-                  type="text" 
-                  value={newMemberId} 
-                  onChange={(e) => setNewMemberId(e.target.value)}
-                  placeholder="Responder ID..." 
-                  className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-[10px] text-white outline-none focus:border-purple-500"
-                />
-                <button onClick={addMember} className="bg-purple-600 px-3 py-1.5 rounded-lg text-[9px] font-black text-white uppercase">Add</button>
+              <div className="pt-3 border-t border-white/5">
+                <button 
+                  onClick={() => router.push(`/volunteers?addMemberTo=${problem._id}`)}
+                  className="w-full py-2 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all"
+                >
+                  + Recruit Unit Member
+                </button>
               </div>
             )}
           </div>

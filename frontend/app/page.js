@@ -111,19 +111,19 @@ export default function Landing() {
             Real-time tracking, intelligent matching, and life-saving speed.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/submit" className="btn-apple !px-8 !py-4 text-[13px] shadow-indigo-500/30">
+          <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6">
+            <Link href="/submit" className="px-10 py-4 rounded-xl bg-purple-600 text-white font-bold text-[13px] shadow-xl shadow-purple-500/20 hover:bg-purple-500 transition-all">
               Get Started →
             </Link>
-            <Link href="/dashboard" className="btn-apple !bg-white/5 !text-gray-300 !border-white/10 shadow-none !px-8 !py-4 text-[13px]">
+            <Link href="/dashboard" className="px-10 py-4 rounded-xl bg-white/5 text-gray-300 font-bold text-[13px] border border-white/10 hover:bg-white/10 transition-all">
               VIEW DASHBOARD
             </Link>
           </div>
         </motion.div>
 
         {/* Quick Stats */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="container mt-24 pt-12 border-t border-white/5 relative z-10">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="container mt-16 pt-16 border-t border-white/5 relative z-10">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-10">
             <Stat end={stats.problems} label="Live Incidents" />
             <Stat end={stats.responders} label="Active Helpers" />
             <Stat end={stats.ngos} label="NGO Partners" />

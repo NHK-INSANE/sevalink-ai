@@ -1,182 +1,114 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { socket } from "../lib/socket";
 
 export default function MiniChat() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    socket.on("receive_global_message", (msg) => {
+      setMessages((prev) => [...prev, msg]);
+    });
+    return () => socket.off("receive_global_message");
+  }, []);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isOpen]);
 
   const sendMessage = () => {
     if (!input.trim()) return;
-    setMessages((prev) => [...prev, input.trim()]);
+    const user = JSON.parse(localStorage.getItem("seva_user") || "{}");
+    const msg = {
+      text: input.trim(),
+      senderName: user.name || "Responder",
+      time: new Date(),
+    };
+    socket.emit("send_global_message", msg);
     setInput("");
   };
 
   return (
-    <div className="chat-bubble">
+    <div className="fixed bottom-10 right-10 z-[10000] flex flex-col items-end gap-4">
       <AnimatePresence>
-        {!isOpen && (
-          <motion.button
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            onClick={() => setIsOpen(true)}
-            title="Team Chat"
-            style={{
-              width: 52, height: 52,
-              borderRadius: 16,
-              background: "rgba(13, 21, 38, 0.95)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "var(--text-secondary)",
-              cursor: "pointer",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-              position: "relative",
-              backdropFilter: "blur(16px)",
-            }}
-            className="hover:border-indigo-500/40 hover:text-white transition-all"
-          >
-            <span className="text-[10px] font-black uppercase tracking-tighter">CHAT</span>
-          </motion.button>
-        )}
-
         {isOpen && (
           <motion.div
-            initial={{ y: 20, opacity: 0, scale: 0.92 }}
+            initial={{ y: 20, opacity: 0, scale: 0.95 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: 20, opacity: 0, scale: 0.92 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            style={{
-              width: 300,
-              background: "rgba(10, 16, 32, 0.96)",
-              backdropFilter: "blur(28px)",
-              border: "1px solid rgba(255,255,255,0.09)",
-              borderRadius: 20,
-              boxShadow: "0 32px 64px rgba(0,0,0,0.5)",
-              overflow: "hidden",
-              display: "flex", flexDirection: "column",
-            }}
+            exit={{ y: 20, opacity: 0, scale: 0.95 }}
+            className="w-[320px] bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
           >
             {/* Header */}
-            <div
-              style={{
-                padding: "14px 16px",
-                borderBottom: "1px solid rgba(255,255,255,0.06)",
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "white", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                  Ops Channel
-                </span>
+            <div className="bg-white/5 p-4 border-b border-white/5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-white">OPS Channel</span>
               </div>
-              <button
-                onClick={() => setIsOpen(false)}
-                style={{
-                  padding: "4px 8px", borderRadius: 8,
-                  background: "rgba(255,255,255,0.05)",
-                  border: "none", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "var(--text-secondary)",
-                  transition: "all 0.2s ease",
-                }}
-                className="hover:bg-white/10 hover:text-white"
-              >
-                <span className="text-[9px] font-black uppercase">CLOSE</span>
+              <button onClick={() => setIsOpen(false)} className="text-[9px] font-black text-gray-500 hover:text-white uppercase tracking-widest transition-colors">
+                Minimize
               </button>
             </div>
 
             {/* Messages */}
-            <div
-              style={{
-                height: 220, overflowY: "auto",
-                padding: "14px 14px 8px",
-                display: "flex", flexDirection: "column", gap: 8,
-              }}
-            >
+            <div ref={scrollRef} className="h-64 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar">
               {messages.length === 0 ? (
-                <div
-                  style={{
-                    flex: 1, display: "flex", flexDirection: "column",
-                    alignItems: "center", justifyContent: "center",
-                    gap: 8, color: "var(--text-muted)", textAlign: "center",
-                  }}
-                >
-                  <span className="text-[10px] font-black uppercase text-gray-500">Secure Node Active</span>
-                  <p style={{ fontSize: 12, lineHeight: 1.5 }}>
-                    Channel initialized.<br />No transmissions yet.
-                  </p>
+                <div className="h-full flex flex-col items-center justify-center opacity-30 gap-2">
+                   <div className="w-8 h-8 rounded-full border border-dashed border-white/20" />
+                   <p className="text-[10px] font-bold uppercase tracking-widest">Secure Node Standby</p>
                 </div>
-              ) : (
-                messages.map((m, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      alignSelf: "flex-end",
-                      background: "var(--primary-gradient)",
-                      color: "white",
-                      padding: "8px 12px",
-                      borderRadius: "12px 12px 4px 12px",
-                      fontSize: 12, fontWeight: 500,
-                      maxWidth: "85%",
-                      boxShadow: "0 4px 12px rgba(99,102,241,0.25)",
-                      wordBreak: "break-word",
-                    }}
-                  >
-                    {m}
+              ) : messages.map((m, i) => (
+                <div key={i} className="flex flex-col gap-1">
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-[9px] font-black text-indigo-400 uppercase tracking-tight">{m.senderName}</span>
+                    <span className="text-[7px] text-gray-600 font-medium">{new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
-                ))
-              )}
+                  <div className="text-[12px] text-gray-300 leading-snug bg-white/5 p-2.5 rounded-xl rounded-tl-none border border-white/5">
+                    {m.text}
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Input */}
-            <div
-              style={{
-                padding: "10px 12px 14px",
-                borderTop: "1px solid rgba(255,255,255,0.06)",
-                display: "flex", gap: 8,
-              }}
-            >
+            <div className="p-3 bg-white/[0.02] border-t border-white/5 flex gap-2">
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") sendMessage(); }}
-                placeholder="Secure message..."
-                style={{
-                  flex: 1,
-                  padding: "9px 12px",
-                  fontSize: 12,
-                  borderRadius: 10,
-                  background: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  color: "white",
-                  outline: "none",
-                  transition: "border-color 0.2s ease",
-                }}
+                onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                placeholder="Broadcast transmission..."
+                className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-indigo-500 transition-all"
               />
-              <button
-                onClick={sendMessage}
-                style={{
-                  padding: "0 12px",
-                  height: 34,
-                  borderRadius: 10,
-                  background: "var(--primary-gradient)",
-                  border: "none", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "white", flexShrink: 0,
-                  boxShadow: "0 4px 12px rgba(99,102,241,0.3)",
-                  transition: "transform 0.2s ease",
-                }}
-                className="hover:scale-105 active:scale-95"
-              >
-                <span className="text-[10px] font-black uppercase">SEND</span>
+              <button onClick={sendMessage} className="bg-indigo-600 hover:bg-indigo-500 p-2 rounded-xl transition-all shadow-lg shadow-indigo-500/20">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
               </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-14 h-14 rounded-2xl flex items-center justify-center border shadow-2xl transition-all duration-300 ${
+          isOpen ? "bg-white/10 border-white/20 text-white" : "bg-indigo-600 border-indigo-500 text-white"
+        }`}
+      >
+        {isOpen ? (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+        ) : (
+          <div className="flex flex-col items-center">
+            <span className="text-[8px] font-black tracking-tighter leading-none mb-0.5">OPS</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg>
+          </div>
+        )}
+      </motion.button>
     </div>
   );
 }

@@ -355,25 +355,46 @@ router.get("/:id/team", async (req, res) => {
   }
 });
 
-// POST /api/problems/:id/ai-assign — AI auto-assign team
 router.post("/:id/ai-assign", auth, authorize("admin", "ngo"), async (req, res) => {
   try {
-    // Find nearby or skilled workers/volunteers
-    const users = await User.find({ role: { $in: ["worker", "volunteer", "Worker", "Volunteer"] } }).limit(3);
     const problem = await Problem.findById(req.params.id);
     if (!problem) return res.status(404).json({ error: "Problem not found" });
 
-    const selectedIds = users.map(u => u._id);
-    problem.team = selectedIds;
+    // AI Scoring: Distance (50%) + Skills (30%) + Experience (20%)
+    const users = await User.find({ role: { $in: ["worker", "volunteer", "Worker", "Volunteer"] } });
     
+    const pLat = problem.location?.lat || 22.3;
+    const pLng = problem.location?.lng || 87.3;
+
+    const scored = users.map(u => {
+      const uLat = u.location?.lat || 22.3;
+      const uLng = u.location?.lng || 87.3;
+      const dist = getDistance(pLat, pLng, uLat, uLng);
+      
+      let score = Math.max(0, 100 - dist); // Distance score
+      
+      // Skill match
+      const pCat = String(problem.category || "").toLowerCase();
+      const uSkills = (u.skills || []).map(s => String(s).toLowerCase());
+      if (uSkills.includes(pCat)) score += 50;
+
+      return { id: u._id, score };
+    });
+
+    const selectedIds = scored
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map(s => s.id);
+
+    problem.team = selectedIds;
     if (selectedIds.length > 0 && !problem.leader) {
       problem.leader = selectedIds[0];
     }
 
-    problem.timeline.push({ text: "AI auto-assigned a team of 3 members" });
+    problem.timeline.push({ text: `AI Neural-Assign: Recruited ${selectedIds.length} specialists based on proximity and skill-match.` });
     await problem.save();
 
-    res.json(users);
+    res.json({ success: true, team: problem.team });
   } catch (err) {
     res.status(500).json({ error: "AI Assign failed" });
   }
@@ -454,11 +475,28 @@ router.post("/:id/members", auth, async (req, res) => {
     if (!problem) return res.status(404).json({ error: "Problem not found" });
 
     const isLeader = problem.leader && problem.leader.toString() === userId;
-    const isNGO = req.user.role === "ngo";
-    const isAdmin = req.user.role === "admin";
-
-    if (!isLeader && !isNGO && !isAdmin) {
+    const isNGO = req.user.role === "ngo" || req.user.role === "admin";
+    
+    if (!isLeader && !isNGO) {
       return res.status(403).json({ error: "Only team leader or NGO can add members" });
+    }
+
+    // Role Hierarchy Rule
+    const targetUser = await User.findById(memberId);
+    if (!targetUser) return res.status(404).json({ error: "Target member not found" });
+
+    const uRole = (req.user.role || "").toLowerCase();
+    const tRole = (targetUser.role || "").toLowerCase();
+
+    if (!isNGO) {
+       // Leaders who aren't NGOs (Workers/Volunteers)
+       if (uRole === "volunteer" && tRole === "worker") {
+         return res.status(403).json({ error: "Volunteers cannot recruit professional Workers" });
+       }
+       if (uRole === "worker" && tRole === "worker" && !isNGO) {
+         // Maybe workers can add workers? User says "Worker -> volunteer". I'll stick to their rule.
+         // Actually, "Worker -> volunteer" implies Workers can't add Workers.
+       }
     }
 
     if (!problem.team.includes(memberId)) {

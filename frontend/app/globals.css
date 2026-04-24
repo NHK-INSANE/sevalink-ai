@@ -262,9 +262,9 @@ a {
 /* Chat bubble: fixed bottom-right, well inside margins */
 .chat-bubble {
   position: fixed;
-  bottom: 28px;
-  right: 28px;
-  z-index: var(--z-fab);
+  bottom: 40px;
+  right: 40px;
+  z-index: 100000;
 }
 
 /* FAB (add report button): above chat but not overlapping content */
