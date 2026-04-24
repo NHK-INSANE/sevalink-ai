@@ -77,30 +77,6 @@ export default function VolunteerDashboard({ problems = [], userLoc }) {
         </div>
       </div>
 
-      {/* Problems Feed */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 text-gray-400">
-          <TargetIcon />
-          <h4 className="text-sm font-semibold uppercase tracking-widest">
-            {userLoc ? "Nearest First" : "All Open Issues"}
-          </h4>
-        </div>
-
-        {sorted.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center py-10">No problems found in your area.</p>
-        ) : (
-          sorted.map((problem, i) => (
-            <motion.div
-              key={problem?._id || problem?.id || i}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-            >
-              <ProblemCard problem={problem} />
-            </motion.div>
-          ))
-        )}
-      </div>
     </div>
   );
 }
