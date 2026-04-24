@@ -27,11 +27,11 @@ app.use(helmet({
   contentSecurityPolicy: false, // Disable CSP for now to avoid blocking
 }));
 
-// 3. Rate Limiting
+// 3. Rate Limiting (Increased for dashboard stability)
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
-  message: "Too many requests from this IP, please try again after 15 minutes"
+  windowMs: 15 * 60 * 1000, 
+  max: 500,
+  message: "Too many requests. Please slow down."
 });
 app.use("/api/", limiter);
 

@@ -136,8 +136,11 @@ export const getAISuggestion = async (text) => {
 // Get Global Stats
 export const getStats = async () => {
   try {
-    return await apiRequest("/api/stats");
+    const data = await apiRequest("/api/stats");
+    console.log("📊 API STATS RECEIVED:", data);
+    return data;
   } catch (err) {
+    console.error("📊 API STATS ERROR:", err);
     return { users: 0, problems: 0, citizens: 0, responders: 0, ngos: 0 };
   }
 };

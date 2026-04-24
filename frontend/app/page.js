@@ -73,7 +73,9 @@ export default function Landing() {
   const [stats, setStats] = useState({ users: 0, problems: 0, citizens: 0, responders: 0, ngos: 0 });
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/stats`).then(r => r.json()).then(d => setStats(d)).catch(() => {});
+    import("./utils/api").then(api => {
+      api.getStats().then(d => setStats(d)).catch(() => {});
+    });
   }, []);
 
   return (

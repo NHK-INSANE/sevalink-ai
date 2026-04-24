@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 export default function ProblemCard({ problem, onStatusChange, onDelete }) {
   const [user, setUser] = useState(null);
   const [showChat, setShowChat] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     setUser(getUser());
@@ -42,7 +43,7 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
 
       {/* ── Row 1: Urgency badge (left) + Status select (right) ── */}
       <div className="flex justify-between items-center mb-4">
-        <span className={`badge ${urgencyBadges[problem.urgency] || "badge-medium"} text-[10px] px-1.5 py-0.5 rounded`}>
+        <span className={`badge ${urgencyBadges[problem.urgency] || "badge-medium"} text-[10px] px-1.5 py-0.5 rounded uppercase font-black tracking-widest`}>
           {problem.urgency}
         </span>
 
@@ -59,8 +60,8 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
       </div>
 
       {/* ── Date ── */}
-      <div className="text-[10px] text-[#6B7280] mb-2">
-        {new Date(problem.createdAt).toLocaleDateString()}
+      <div className="text-[10px] text-[#6B7280] mb-2 uppercase tracking-tight">
+        Date: {new Date(problem.createdAt).toLocaleDateString()}
       </div>
 
       {/* ── Title ── */}
@@ -68,13 +69,21 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
         {problem.title}
       </h3>
 
-      {/* ── Description ── */}
-      <p className="desc text-[12px] text-[#9CA3AF] leading-[1.5] mb-4 line-clamp-2">
-        {problem.description}
-      </p>
+      {/* ── Expandable Description ── */}
+      <div 
+        onClick={() => setExpanded(!expanded)} 
+        className="cursor-pointer group/desc"
+      >
+        <p className={`desc text-[12px] text-[#9CA3AF] leading-[1.5] mb-2 transition-all duration-300 ${expanded ? "" : "line-clamp-2"}`}>
+          {problem.description}
+        </p>
+        {!expanded && problem.description?.length > 80 && (
+          <span className="text-[9px] font-bold text-purple-500/60 uppercase tracking-widest hover:text-purple-400 mb-4 block">Read full description</span>
+        )}
+      </div>
 
       {/* ── Meta: Category + Skills ── */}
-      <div className="problem-meta">
+      <div className="problem-meta mt-2">
         {Array.isArray(problem.category) ? (
           problem.category.map(cat => (
             <span key={cat} className="category-badge">{cat}</span>
@@ -97,11 +106,9 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
       </div>
 
       {/* ── Location ── */}
-      <div className="flex items-center gap-1.5 text-[11px] text-[#6B7280] mb-5">
-        <svg className="w-3.5 h-3.5 opacity-50 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-        </svg>
-        <span className="truncate font-medium">{problem.location?.address || problem.locationName || "Location undisclosed"}</span>
+      <div className="flex items-center gap-1.5 text-[11px] text-[#6B7280] mb-5 font-bold uppercase tracking-tight">
+        <span>Loc:</span>
+        <span className="truncate">{problem.location?.address || problem.locationName || "Area Undisclosed"}</span>
       </div>
 
       {/* ── Footer: Chat (left) + Assign (right) ── */}
@@ -115,20 +122,17 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
             }}
             className="flex flex-col items-center justify-center py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition group/btn"
           >
-            <span className="text-sm mb-1 group-hover/btn:scale-110 transition-transform">💬</span>
-            <span className="text-[8px] font-bold uppercase tracking-widest text-gray-400 group-hover/btn:text-white">Chat</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-gray-400 group-hover/btn:text-white">Discussion</span>
           </button>
           
           <button
             onClick={() => {
               if (!user) return toast.error("Please login to form a unit");
               setShowChat(true);
-              // Switch to teams tab logic could go here
             }}
             className="flex flex-col items-center justify-center py-2 bg-white/5 hover:bg-emerald-600/10 border border-white/10 hover:border-emerald-500/20 rounded-xl transition group/btn"
           >
-            <span className="text-sm mb-1 group-hover/btn:scale-110 transition-transform">👥</span>
-            <span className="text-[8px] font-bold uppercase tracking-widest text-gray-400 group-hover/btn:text-emerald-400">Units</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-gray-400 group-hover/btn:text-emerald-400">Team Unit</span>
           </button>
 
           <button
@@ -149,7 +153,6 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
             }}
             className="flex flex-col items-center justify-center py-2 bg-white/5 hover:bg-yellow-600/10 border border-white/10 hover:border-yellow-500/20 rounded-xl transition group/btn"
           >
-            <span className="text-sm mb-1 group-hover/btn:scale-110 transition-transform">⚡</span>
             <span className="text-[8px] font-bold uppercase tracking-widest text-gray-400 group-hover/btn:text-yellow-400">AI Assign</span>
           </button>
 
@@ -157,8 +160,7 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
             onClick={() => window.location.href = `/ai-match?id=${problem._id}`}
             className="flex flex-col items-center justify-center py-2 bg-white/5 hover:bg-indigo-600/10 border border-white/10 hover:border-indigo-500/20 rounded-xl transition group/btn"
           >
-            <span className="text-sm mb-1 group-hover/btn:scale-110 transition-transform">🤖</span>
-            <span className="text-[8px] font-bold uppercase tracking-widest text-gray-400 group-hover/btn:text-indigo-400">Match</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-gray-400 group-hover/btn:text-indigo-400">Match Logic</span>
           </button>
         </div>
       </div>

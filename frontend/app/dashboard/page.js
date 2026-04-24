@@ -77,7 +77,7 @@ export default function Dashboard() {
     // 🌐 Socket.IO Real-time Logic
     const socket = io(API_BASE);
     
-    socket.on("connect", () => console.log("Connected to SevaLink Real-time Engine ⚡"));
+    socket.on("connect", () => console.log("Connected to SevaLink Real-time Engine [Active]"));
     
     socket.on("new-problem", (newProb) => {
       setProblems(prev => {
@@ -88,7 +88,7 @@ export default function Dashboard() {
     });
 
     socket.on("emergency-alert", (prob) => {
-      toast.error(`🚨 EMERGENCY: ${prob.title}`, {
+      toast.error(`ALERT: ${prob.title}`, {
         duration: 8000,
         position: "top-center",
         style: {
@@ -128,7 +128,7 @@ export default function Dashboard() {
     percent: ((categoryCount[cat] / totalProblems) * 100).toFixed(1)
   })).sort((a, b) => b.value - a.value);
 
-  // 🔢 Live Counter Animation Logic
+  // Live Counter Animation Logic
   useEffect(() => {
     const target = {
       total: problems.length,
@@ -166,7 +166,7 @@ export default function Dashboard() {
       const loc = await getUserLocation();
       setUserLoc(loc);
       setSortNearest(true);
-      toast.success("Sorting by distance");
+      toast.success("Sorting by distance active");
     } catch (err) {
       toast.error("Location permission required");
     }
@@ -236,7 +236,7 @@ export default function Dashboard() {
 
             <div className="flex gap-3">
               <button onClick={handleLocateAndSort} className="btn-apple !text-xs !px-5 !py-2.5">
-                📍 {sortNearest ? "Reset Sort" : "Sort by Nearest"}
+                Loc: {sortNearest ? "Reset Sort" : "Sort by Nearest"}
               </button>
               <Link href="/submit" className="btn-primary !text-xs !px-5 !py-2.5">Report Crisis</Link>
             </div>
@@ -262,7 +262,7 @@ export default function Dashboard() {
           {/* Analytics Section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
             <div className="card">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-8">📈 Operational Flow</h3>
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-8">Operational Flow</h3>
               <div className="space-y-6">
                 {[
                   { label: "Unassigned Reports", val: openCount,     dot: "bg-red-400",     color: "text-red-400" },
@@ -281,7 +281,7 @@ export default function Dashboard() {
             </div>
 
             <div className="card lg:col-span-2">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-8">📊 Incident Categories</h3>
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-8">Incident Categories</h3>
               <div className="space-y-5">
                 {categoryData.length === 0 ? (
                    <p className="text-xs text-gray-600 text-center py-10 italic">No data available</p>
@@ -346,10 +346,10 @@ export default function Dashboard() {
           <div className="space-y-8">
             <div className="flex items-center justify-between px-2">
               <h2 className="text-xl font-bold text-white tracking-tight">
-                {sortNearest ? "📍 Nearest Solutions" : "🕒 Recent Activity"}
+                {sortNearest ? "Nearest Solutions" : "Recent Activity"}
               </h2>
               <Link href="/problems" className="text-indigo-400 text-sm font-bold hover:text-indigo-300 transition-colors flex items-center gap-1">
-                Full Database <span className="text-lg">→</span>
+                Full Database
               </Link>
             </div>
 
