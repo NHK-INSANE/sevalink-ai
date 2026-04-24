@@ -10,7 +10,8 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    setUser(getUser());
+    const u = getUser();
+    if (u) setUser(u);
   }, []);
 
   const handleStatusChange = async (newStatus) => {

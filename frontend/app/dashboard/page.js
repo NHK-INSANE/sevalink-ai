@@ -1,20 +1,19 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
-import Navbar from "../components/Navbar";
-import ProblemCard from "../components/ProblemCard";
-import Counter from "../components/Counter";
-import PageWrapper from "../components/PageWrapper";
-import { getProblems, getUsers, getStats } from "../utils/api";
-import { getUser } from "../utils/auth";
-import { getUserLocation } from "../utils/location";
-import { SkeletonStats } from "../components/Skeleton";
-import toast from "react-hot-toast";
-import { io } from "socket.io-client";
 import Link from "next/link";
+import { getUser } from "../utils/auth";
+import { getProblems, getUsers, getStats } from "../utils/api";
+import { io } from "socket.io-client";
+import toast from "react-hot-toast";
+import Navbar from "../components/Navbar";
+import PageWrapper from "../components/PageWrapper";
+import ProblemCard from "../components/ProblemCard";
+import VolunteerDashboard from "../components/dashboards/VolunteerDashboard";
 import AdminDashboard from "../components/dashboards/AdminDashboard";
 import NgoDashboard from "../components/dashboards/NgoDashboard";
-import VolunteerDashboard from "../components/dashboards/VolunteerDashboard";
+import { motion } from "framer-motion";
+import { getUserLocation } from "../utils/location";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
@@ -23,81 +22,93 @@ const MapView = dynamic(() => import("../components/MapView"), {
   loading: () => <div className="h-full w-full bg-slate-900 animate-pulse rounded-xl" />
 });
 
+function SkeletonStats() {
+  return (
+    <div className="card h-28 flex flex-col justify-center gap-3">
+      <div className="h-2 w-16 bg-white/5 rounded-full" />
+      <div className="h-8 w-24 bg-white/5 rounded-lg" />
+    </div>
+  );
+}
+
+function Counter({ value }) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    let start = 0;
+    const end = parseInt(value);
+    if (start === end) return;
+    let totalDuration = 1000;
+    let increment = end / (totalDuration / 16);
+    let timer = setInterval(() => {
+      start += increment;
+      if (start >= end) {
+        setCount(end);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(start));
+      }
+    }, 16);
+    return () => clearInterval(timer);
+  }, [value]);
+  return <>{count}</>;
+}
+
 export default function Dashboard() {
   const [problems, setProblems] = useState([]);
   const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userLoc, setUserLoc] = useState(null);
   const [sortNearest, setSortNearest] = useState(false);
-  const [error, setError] = useState(null);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState({ role: "volunteer", name: "Guest" });
   const [lastUpdate, setLastUpdate] = useState(null);
   const [counts, setCounts] = useState({ total: 0, volunteers: 0, workers: 0, ngos: 0 });
-  const prevCriticalRef = useRef(0);
-
-  useEffect(() => {
-    const loggedUser = getUser();
-    setUser(loggedUser);
-  }, []);
 
   const fetchDashboardData = async () => {
-    setLoading(true);
     try {
-      setError(null);
       const [problemData, userData, statsData] = await Promise.all([
         getProblems(),
         getUsers(),
         getStats()
       ]);
 
-      console.log("📊 DASHBOARD DATA: Sync Complete");
+      setProblems(Array.isArray(problemData) ? problemData : []);
+      setUsersList(Array.isArray(userData) ? userData : []);
       
-      setProblems(problemData);
-      setUsersList(userData);
-      
-      // Update top counts with real stats from backend
+      const pCount = Array.isArray(problemData) ? problemData.length : 0;
+      const uList = Array.isArray(userData) ? userData : [];
+
       setCounts({
-        total: statsData.problems || problemData.length,
-        volunteers: statsData.responders || userData.filter(u => u.role?.toLowerCase() === "volunteer").length,
-        workers: statsData.workers || userData.filter(u => u.role?.toLowerCase() === "worker").length,
-        ngos: statsData.ngos || userData.filter(u => u.role?.toLowerCase() === "ngo").length
+        total: statsData?.problems || pCount,
+        volunteers: statsData?.responders || uList.filter(u => u?.role?.toLowerCase() === "volunteer").length,
+        workers: statsData?.workers || uList.filter(u => u?.role?.toLowerCase() === "worker").length,
+        ngos: statsData?.ngos || uList.filter(u => u?.role?.toLowerCase() === "ngo").length
       });
 
       setLastUpdate(new Date().toLocaleTimeString());
     } catch (e) {
       console.error("❌ DASHBOARD FETCH ERROR:", e);
-      setError("Sync failed. Checking connection...");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    // Single initialization
+    const loggedUser = getUser();
+    if (loggedUser) {
+      setUser(loggedUser);
+    } else {
+      setUser({ role: "guest", name: "Guest" });
+    }
+    
     fetchDashboardData();
     
-    // 🌐 Socket.IO Real-time Logic
     const socket = io(API_BASE);
-    
-    socket.on("connect", () => console.log("Connected to SevaLink Real-time Engine [Active]"));
-    
     socket.on("new-problem", (newProb) => {
+      if (!newProb?._id) return;
       setProblems(prev => {
         if (prev.find(p => p._id === newProb._id)) return prev;
         return [newProb, ...prev];
-      });
-      setLastUpdate(new Date().toLocaleTimeString());
-    });
-
-    socket.on("emergency-alert", (prob) => {
-      toast.error(`ALERT: ${prob.title}`, {
-        duration: 8000,
-        position: "top-center",
-        style: {
-          background: "#ef4444",
-          color: "#fff",
-          fontWeight: "bold",
-          border: "2px solid #fff"
-        }
       });
     });
 
@@ -107,22 +118,22 @@ export default function Dashboard() {
   const safeProblems = Array.isArray(problems) ? problems : [];
   const safeUsers = Array.isArray(usersList) ? usersList : [];
 
-  const openCount = safeProblems.filter(p => p.status?.toLowerCase() === "open").length;
-  const resolvedCount = safeProblems.filter(p => p.status?.toLowerCase() === "resolved").length;
-  const progressCount = safeProblems.filter(p => p.status?.toLowerCase() === "in progress" || p.status?.toLowerCase() === "in-progress").length;
+  const openCount = safeProblems.filter(p => p?.status?.toLowerCase() === "open").length;
+  const resolvedCount = safeProblems.filter(p => p?.status?.toLowerCase() === "resolved").length;
+  const progressCount = safeProblems.filter(p => p?.status?.toLowerCase() === "in progress" || p?.status?.toLowerCase() === "in-progress").length;
 
-  const volunteersCount = safeUsers.filter(u => u.role?.toLowerCase() === "volunteer").length;
-  const workersCount = safeUsers.filter(u => u.role?.toLowerCase() === "worker").length;
-  const ngosCount = safeUsers.filter(u => u.role?.toLowerCase() === "ngo").length;
+  const volunteersCount = safeUsers.filter(u => u?.role?.toLowerCase() === "volunteer").length;
+  const workersCount = safeUsers.filter(u => u?.role?.toLowerCase() === "worker").length;
+  const ngosCount = safeUsers.filter(u => u?.role?.toLowerCase() === "ngo").length;
 
-  const criticalCount = safeProblems.filter(p => p.urgency?.toLowerCase() === "critical").length;
-  const highCount = safeProblems.filter(p => p.urgency?.toLowerCase() === "high").length;
-  const mediumCount = safeProblems.filter(p => p.urgency?.toLowerCase() === "medium").length;
-  const lowCount = safeProblems.filter(p => p.urgency?.toLowerCase() === "low").length;
+  const criticalCount = safeProblems.filter(p => p?.urgency?.toLowerCase() === "critical").length;
+  const highCount = safeProblems.filter(p => p?.urgency?.toLowerCase() === "high").length;
+  const mediumCount = safeProblems.filter(p => p?.urgency?.toLowerCase() === "medium").length;
+  const lowCount = safeProblems.filter(p => p?.urgency?.toLowerCase() === "low").length;
 
   const categoryCount = {};
   safeProblems.forEach(p => {
-    const cat = p.category || "Other";
+    const cat = p?.category || "Other";
     categoryCount[cat] = (categoryCount[cat] || 0) + 1;
   });
   const totalProblems = safeProblems.length || 1;
@@ -132,35 +143,6 @@ export default function Dashboard() {
     percent: ((categoryCount[cat] / totalProblems) * 100).toFixed(1)
   })).sort((a, b) => b.value - a.value);
 
-  // Live Counter Animation Logic
-  useEffect(() => {
-    const target = {
-      total: problems.length,
-      volunteers: volunteersCount,
-      workers: workersCount,
-      ngos: ngosCount
-    };
-    
-    const interval = setInterval(() => {
-      setCounts(prev => {
-        const next = { ...prev };
-        let changed = false;
-        Object.keys(target).forEach(k => {
-          if (prev[k] < target[k]) {
-            next[k] = Math.min(prev[k] + Math.ceil(target[k] / 20), target[k]);
-            changed = true;
-          } else if (prev[k] > target[k]) {
-            next[k] = target[k];
-            changed = true;
-          }
-        });
-        if (!changed) clearInterval(interval);
-        return next;
-      });
-    }, 50);
-    return () => clearInterval(interval);
-  }, [problems.length, volunteersCount, workersCount, ngosCount]);
-
   const handleLocateAndSort = async () => {
     if (sortNearest) {
       setSortNearest(false);
@@ -168,9 +150,11 @@ export default function Dashboard() {
     }
     try {
       const loc = await getUserLocation();
-      setUserLoc(loc);
-      setSortNearest(true);
-      toast.success("Sorting by distance active");
+      if (loc) {
+        setUserLoc(loc);
+        setSortNearest(true);
+        toast.success("Sorting by distance active");
+      }
     } catch (err) {
       toast.error("Location permission required");
     }
@@ -196,10 +180,10 @@ export default function Dashboard() {
     : safeProblems;
 
   const renderRoleSpecific = () => {
-    const role = user?.role?.toLowerCase();
+    const role = user?.role?.toLowerCase() || "volunteer";
     const safeProbs = Array.isArray(problems) ? problems : [];
-    if (role === "admin") return <AdminDashboard problems={safeProbs} usersList={Array.isArray(usersList) ? usersList : []} lastUpdate={lastUpdate} />;
-    if (role === "ngo") return <NgoDashboard problems={safeProbs} usersList={Array.isArray(usersList) ? usersList : []} />;
+    if (role === "admin") return <AdminDashboard problems={safeProbs} usersList={safeUsers} lastUpdate={lastUpdate} />;
+    if (role === "ngo") return <NgoDashboard problems={safeProbs} usersList={safeUsers} />;
     return <VolunteerDashboard problems={safeProbs} userLoc={userLoc} />;
   };
 
@@ -222,7 +206,6 @@ export default function Dashboard() {
     );
   }
 
-
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition duration-300">
       <Navbar />
@@ -230,7 +213,6 @@ export default function Dashboard() {
       <PageWrapper>
         <main className="page-wrapper pt-[120px] pb-20">
           
-          {/* Header */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-6">
             <div>
               <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">Command Dashboard</h1>
@@ -238,7 +220,7 @@ export default function Dashboard() {
                 <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
                 Operational Status: <span className="text-gray-300">Active</span>
                 <span className="mx-2 opacity-20">|</span>
-                Role: <span className="text-indigo-400 uppercase text-[10px] font-bold tracking-widest">{user?.role || "Volunteer"}</span>
+                Role: <span className="text-indigo-400 uppercase text-[10px] font-bold tracking-widest">{user?.role || "Guest Observer"}</span>
               </p>
             </div>
 
@@ -250,7 +232,16 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Stats Grid */}
+          {!getUser() && (
+            <div className="mb-12 p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 flex items-center justify-between">
+              <p className="text-xs text-indigo-300/80 font-medium">Viewing as a Guest. Some features like discussion and assignment are restricted to registered personnel.</p>
+              <div className="flex gap-4">
+                <Link href="/login" className="text-xs font-bold text-indigo-400 hover:underline">Login</Link>
+                <Link href="/register" className="text-xs font-bold text-indigo-400 hover:underline">Register</Link>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-12">
             {[
               { label: "Total Reports",   value: counts.total      },
@@ -267,7 +258,6 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {/* Analytics Section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
             <div className="card">
               <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-8">Operational Flow</h3>
@@ -300,10 +290,9 @@ export default function Dashboard() {
                       <span className="text-[10px] font-bold text-indigo-400">{c.percent}%</span>
                     </div>
                     <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${c.percent}%` }}
-                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500" 
+                      <div 
+                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-out" 
+                        style={{ width: `${c.percent}%` }}
                       />
                     </div>
                   </div>
@@ -312,12 +301,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* ROLE SPECIFIC EXTENSIONS */}
           <div className="mb-16">
             {renderRoleSpecific()}
           </div>
 
-          {/* Map Section */}
           <div className="space-y-4 mb-16">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
               <div>
@@ -325,7 +312,6 @@ export default function Dashboard() {
                 <p className="text-xs text-gray-500 mt-1">Real-time visualization of all active crisis markers</p>
               </div>
               
-              {/* CLEAN LEGEND ABOVE MAP */}
               <div className="flex flex-wrap items-center gap-4 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
                 <span className="text-[10px] font-black text-white/20 uppercase tracking-widest mr-2">Legend</span>
                 {[
@@ -350,7 +336,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Recent Reports */}
           <div className="space-y-8">
             <div className="flex items-center justify-between px-2">
               <h2 className="text-xl font-bold text-white tracking-tight">
