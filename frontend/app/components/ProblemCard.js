@@ -3,12 +3,14 @@ import { useState, useEffect } from "react";
 import { socket } from "../../lib/socket";
 import toast from "react-hot-toast";
 
-export default function ProblemCard({ problem, user: propUser }) {
+export default function ProblemCard({ problem: initialProblem, user: propUser }) {
+  const [problem, setProblem] = useState(initialProblem);
   const [activeTab, setActiveTab] = useState(null);
   const [team, setTeam] = useState([]);
   const [messages, setMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [user, setUser] = useState(propUser || null);
+  const [newMemberId, setNewMemberId] = useState("");
 
   useEffect(() => {
     if (!user && typeof window !== "undefined") {
@@ -17,48 +19,26 @@ export default function ProblemCard({ problem, user: propUser }) {
     }
   }, [propUser]);
 
-  // JOIN SOCKET ROOM
+  // Real-time updates for THIS problem
   useEffect(() => {
     if (problem._id) {
       socket.emit("join_problem", problem._id);
 
-      const handleMessage = (msg) => {
-        setMessages((prev) => [...prev, msg]);
+      const handleMsg = (msg) => setMessages((prev) => [...prev, msg]);
+      const handleUpdate = (updated) => {
+        if (updated._id === problem._id) setProblem(updated);
       };
 
-      socket.on("receive_message", handleMessage);
+      socket.on("receive_message", handleMsg);
+      socket.on("problem-updated", handleUpdate);
 
-      return () => socket.off("receive_message", handleMessage);
+      return () => {
+        socket.off("receive_message", handleMsg);
+        socket.off("problem-updated", handleUpdate);
+      };
     }
   }, [problem._id]);
 
-  // 🔥 ASSIGN YOURSELF
-  const handleAssign = async () => {
-    if (!user) return toast.error("Please login to assign yourself");
-    
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/problems/${problem._id}/assign`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ userId: user._id || user.id }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success("Assigned to problem");
-        loadTeam();
-      } else {
-        toast.error(data.error || "Assignment failed");
-      }
-    } catch (err) {
-      toast.error("Error assigning yourself");
-    }
-  };
-
-  // 🔥 LOAD TEAM
   const loadTeam = async () => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/problems/${problem._id}/team`);
@@ -69,45 +49,100 @@ export default function ProblemCard({ problem, user: propUser }) {
     }
   };
 
+  const handleAssign = async () => {
+    if (!user) return toast.error("Please login to assign yourself");
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/problems/${problem._id}/assign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ userId: user._id || user.id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Successfully assigned yourself to this mission");
+        loadTeam();
+      } else toast.error(data.error || "Assignment failed");
+    } catch (err) { toast.error("Connection error"); }
+  };
+
+  const handleStatusChange = async (newStatus) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/problems/${problem._id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const data = await res.json();
+      if (data.error) toast.error(data.error);
+      else toast.success(`Status updated to ${newStatus}`);
+    } catch (err) { toast.error("Failed to update status"); }
+  };
+
+  const addMember = async () => {
+    if (!newMemberId.trim()) return;
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/problems/${problem._id}/members`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ memberId: newMemberId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Member added to team");
+        setNewMemberId("");
+        loadTeam();
+      } else toast.error(data.error || "Failed to add member");
+    } catch (err) { toast.error("Connection error"); }
+  };
+
   const handleSendMessage = () => {
-    if (!chatInput.trim()) return;
-    if (!user) return toast.error("Login to chat");
-    
-    socket.emit("send_message", { 
-      problemId: problem._id, 
-      text: chatInput,
-      senderName: user.name || "User"
-    });
+    if (!chatInput.trim() || !user) return;
+    socket.emit("send_message", { problemId: problem._id, text: chatInput, senderName: user.name || "User" });
     setChatInput("");
   };
 
+  const isLeader = problem.leader?._id === user?._id || problem.leader === user?._id;
+
   return (
-    <div className="bg-[#0B1220] p-5 rounded-xl border border-white/10 hover:border-purple-500/30 transition-all group">
+    <div className="bg-[#0B1220] p-6 rounded-2xl border border-white/10 hover:border-purple-500/30 transition-all shadow-xl flex flex-col gap-5">
       
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-[15px] font-bold text-white mb-1 group-hover:text-purple-400 transition-colors">{problem.title}</h3>
-          <p className="text-[11px] text-gray-500 uppercase font-black tracking-widest">{problem.urgency} · {problem.category}</p>
+      {/* ── HEADER ── */}
+      <div className="flex justify-between items-start">
+        <div className="space-y-1">
+          <h3 className="text-base font-bold text-white tracking-tight leading-snug">{problem.title}</h3>
+          <div className="flex items-center gap-2">
+            <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border border-white/10 text-gray-500`}>
+              {problem.urgency}
+            </span>
+            <span className="text-[9px] text-purple-400 font-bold uppercase tracking-widest">{problem.category}</span>
+          </div>
         </div>
-        <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${problem.status === "Open" ? "text-emerald-400 border-emerald-400/20" : "text-yellow-400 border-yellow-400/20"} uppercase`}>
+        <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+          problem.status?.toLowerCase() === 'resolved' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
+          problem.status?.toLowerCase() === 'in progress' ? "bg-blue-500/10 text-blue-400 border-blue-500/20" :
+          "bg-white/5 text-gray-400 border-white/10"
+        }`}>
           {problem.status}
-        </span>
+        </div>
       </div>
 
-      <p className="text-[12px] text-gray-400 mb-5 line-clamp-2">{problem.description}</p>
+      <p className="text-[13px] text-gray-400 leading-relaxed line-clamp-2">{problem.description}</p>
 
-      {/* 🔥 ASSIGN BUTTON */}
+      {/* ── 🔥 PRIMARY ASSIGN BUTTON ── */}
       <button
         onClick={handleAssign}
-        className="w-full mb-4 bg-purple-600 hover:bg-purple-700 py-2.5 rounded-lg text-white text-xs font-bold transition-all shadow-lg shadow-purple-500/10"
+        className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-purple-500/20 transition-all active:scale-[0.98]"
       >
         Assign Yourself
       </button>
 
-      {/* 🔥 ACTIONS TABS */}
-      <div className="flex gap-1.5 flex-wrap mb-4">
+      {/* ── TABS SELECTOR ── */}
+      <div className="grid grid-cols-4 gap-2">
         {[
-          { id: "team", label: "Team", onClick: () => loadTeam() },
+          { id: "team", label: "Team", onClick: loadTeam },
           { id: "chat", label: "Chat" },
           { id: "aiAssign", label: "AI Assign" },
           { id: "aiMatch", label: "AI Match" },
@@ -115,49 +150,80 @@ export default function ProblemCard({ problem, user: propUser }) {
           <button 
             key={tab.id}
             onClick={() => { setActiveTab(activeTab === tab.id ? null : tab.id); if(tab.onClick) tab.onClick(); }}
-            className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all border ${activeTab === tab.id ? "bg-white/10 text-white border-white/20" : "bg-white/5 text-gray-500 border-transparent hover:text-gray-300"}`}
+            className={`py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border ${
+              activeTab === tab.id ? "bg-white/10 text-white border-white/20 shadow-inner" : "bg-white/5 text-gray-500 border-transparent hover:bg-white/10 hover:text-gray-300"
+            }`}
           >
             {tab.label}
           </button>
         ))}
       </div>
 
-      {/* 🔥 TABS CONTENT */}
-      <div className="overflow-hidden transition-all">
+      {/* ── TAB CONTENT ── */}
+      <div className="min-h-0">
         {activeTab === "team" && (
-          <div className="bg-white/5 p-4 rounded-lg border border-white/10 animate-in fade-in slide-in-from-top-2 duration-300">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-3">Unit Personnel</h3>
-            <div className="space-y-2 mb-3">
+          <div className="bg-black/30 p-4 rounded-xl border border-white/10 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex justify-between items-center mb-4">
+               <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500">Unit Personnel</h3>
+               {isLeader && (
+                 <select 
+                   value={problem.status}
+                   onChange={(e) => handleStatusChange(e.target.value)}
+                   className="bg-[#0B1220] border border-white/10 text-[9px] font-bold uppercase text-purple-400 px-2 py-1 rounded outline-none"
+                 >
+                   <option value="Open">Open</option>
+                   <option value="In Progress">In Progress</option>
+                   <option value="Resolved">Resolved</option>
+                 </select>
+               )}
+            </div>
+
+            <div className="space-y-2 mb-4 max-h-32 overflow-y-auto pr-1 custom-scrollbar">
               {team.length === 0 ? (
-                <p className="text-[11px] text-gray-600 italic">No members assigned yet.</p>
+                <p className="text-[11px] text-gray-600 italic">No responders in unit.</p>
               ) : team.map((m) => (
-                <div key={m._id} className="flex items-center gap-2 text-[12px] text-gray-300">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  <span>{m.name}</span>
-                  <span className="text-[9px] text-gray-600 font-bold uppercase ml-auto">{m.role}</span>
+                <div key={m._id} className="flex items-center gap-3 bg-white/5 p-2 rounded-lg">
+                  <div className={`w-2 h-2 rounded-full ${problem.leader?._id === m._id || problem.leader === m._id ? "bg-purple-500" : "bg-emerald-500"}`} />
+                  <span className="text-[12px] text-gray-300 font-medium">{m.name}</span>
+                  { (problem.leader?._id === m._id || problem.leader === m._id) && (
+                    <span className="text-[8px] font-black text-purple-400 uppercase tracking-widest ml-auto border border-purple-500/30 px-1.5 py-0.5 rounded">Leader</span>
+                  )}
                 </div>
               ))}
             </div>
-            <div className="pt-2 border-t border-white/5">
-              <p className="text-[10px] text-purple-400 font-bold uppercase tracking-widest">
-                Leader: {problem.leader?.name || "Pending..."}
-              </p>
-            </div>
+
+            {isLeader && (
+              <div className="flex gap-2 pt-3 border-t border-white/5">
+                <input 
+                  type="text" 
+                  value={newMemberId} 
+                  onChange={(e) => setNewMemberId(e.target.value)}
+                  placeholder="Responder ID..." 
+                  className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-[10px] text-white outline-none focus:border-purple-500"
+                />
+                <button onClick={addMember} className="bg-purple-600 px-3 py-1.5 rounded-lg text-[9px] font-black text-white uppercase">Add</button>
+              </div>
+            )}
           </div>
         )}
 
         {activeTab === "chat" && (
-          <div className="bg-white/5 p-4 rounded-lg border border-white/10 animate-in fade-in slide-in-from-top-2 duration-300">
-            <div className="h-40 overflow-y-auto space-y-3 mb-3 pr-2 custom-scrollbar">
+          <div className="bg-black/30 p-4 rounded-xl border border-white/10 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="h-44 overflow-y-auto space-y-3 mb-4 pr-2 custom-scrollbar">
               {messages.length === 0 ? (
-                <p className="text-[11px] text-gray-600 italic text-center py-8">Start the coordination...</p>
+                <div className="h-full flex flex-col items-center justify-center opacity-30 gap-2">
+                   <div className="w-8 h-8 rounded-full border border-dashed border-white/20" />
+                   <p className="text-[10px] font-bold uppercase tracking-widest">Awaiting Transmission</p>
+                </div>
               ) : messages.map((m, i) => (
-                <div key={i} className="flex flex-col gap-1">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black text-purple-400 uppercase">{m.senderName}</span>
-                    <span className="text-[8px] text-gray-600">{new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                <div key={i} className="flex flex-col gap-1.5">
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-[10px] font-black text-purple-400 uppercase tracking-tight">{m.senderName}</span>
+                    <span className="text-[8px] text-gray-600 font-medium">{new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
-                  <p className="text-[12px] text-gray-300 leading-tight bg-white/5 p-2 rounded-lg">{m.text}</p>
+                  <div className="text-[12px] text-gray-300 leading-snug bg-white/5 p-2.5 rounded-xl rounded-tl-none border border-white/5 shadow-sm">
+                    {m.text}
+                  </div>
                 </div>
               ))}
             </div>
@@ -167,22 +233,25 @@ export default function ProblemCard({ problem, user: propUser }) {
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="Type message..."
-                className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-purple-500"
+                placeholder="Secure channel message..."
+                className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-purple-500 transition-all shadow-inner"
               />
               <button 
                 onClick={handleSendMessage}
-                className="bg-purple-600 px-3 py-1.5 rounded-lg text-[10px] font-bold text-white"
+                className="bg-purple-600 hover:bg-purple-500 p-2.5 rounded-xl transition-colors shadow-lg shadow-purple-500/10"
               >
-                SEND
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
               </button>
             </div>
           </div>
         )}
 
         {activeTab === "aiAssign" && (
-          <div className="bg-white/5 p-4 rounded-lg border border-white/10 text-center animate-in fade-in slide-in-from-top-2 duration-300">
-            <p className="text-[11px] text-gray-400 mb-3">AI will analyze nearby responders and auto-assign the best 3-member unit.</p>
+          <div className="bg-black/30 p-5 rounded-xl border border-white/10 text-center animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3 border border-white/10">
+               <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
+            </div>
+            <p className="text-[11px] text-gray-400 mb-4 font-medium leading-relaxed">Neural analysis identifies top-tier responders and initiates auto-assignment protocols for a optimized 3-member unit.</p>
             <button
               onClick={async () => {
                 const token = localStorage.getItem("token");
@@ -192,37 +261,34 @@ export default function ProblemCard({ problem, user: propUser }) {
                 });
                 const data = await res.json();
                 if (Array.isArray(data)) {
-                  toast.success(`AI assigned ${data.length} members`);
+                  toast.success(`AI assigned ${data.length} mission specialists`);
                   loadTeam();
-                } else {
-                  toast.error("AI Assign failed");
-                }
+                } else toast.error("Neural assignment failed");
               }}
-              className="w-full bg-white/10 hover:bg-white/20 border border-white/10 py-2 rounded-lg text-[10px] font-black text-white uppercase tracking-widest transition-all"
+              className="w-full bg-white/10 hover:bg-white/20 border border-white/10 py-2.5 rounded-xl text-[10px] font-black text-white uppercase tracking-widest transition-all"
             >
-              Execute AI Protocol
+              Initialize Auto-Assign
             </button>
           </div>
         )}
 
         {activeTab === "aiMatch" && (
-          <div className="bg-white/5 p-4 rounded-lg border border-white/10 animate-in fade-in slide-in-from-top-2 duration-300">
-            <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-3 text-center">Top Candidates</p>
-            <button
-              onClick={async () => {
-                const token = localStorage.getItem("token");
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/problems/${problem._id}/ai-match`, {
-                  headers: { "Authorization": `Bearer ${token}` }
-                });
-                const data = await res.json();
-                toast.success("Matching profiles synchronized");
-                setActiveTab(null); // Close or show results
-                window.location.href = `/ai-match?id=${problem._id}`;
-              }}
-              className="w-full bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 py-2 rounded-lg text-[10px] font-black text-indigo-400 uppercase tracking-widest transition-all"
-            >
-              Analyze Best Matches
-            </button>
+          <div className="bg-black/30 p-5 rounded-xl border border-white/10 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="text-center space-y-4">
+              <div className="inline-block px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[9px] font-black uppercase tracking-widest">
+                Optimization Engine
+              </div>
+              <p className="text-[11px] text-gray-400 font-medium">Evaluate cross-network profiles for skill-alignment and tactical compatibility.</p>
+              <button
+                onClick={async () => {
+                  toast.success("Synchronizing profile analytics...");
+                  window.location.href = `/ai-match?id=${problem._id}`;
+                }}
+                className="w-full bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 py-2.5 rounded-xl text-[10px] font-black text-indigo-400 uppercase tracking-widest transition-all"
+              >
+                Perform AI Analysis
+              </button>
+            </div>
           </div>
         )}
       </div>

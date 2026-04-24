@@ -180,7 +180,7 @@ router.patch("/:id/status", auth, async (req, res) => {
   }
 });
 
-// PATCH /api/problems/:id/assign — Assign a volunteer
+// PATCH /api/problems/:id/assign — Assign a volunteer (Role Hierarchy Enforced)
 router.patch("/:id/assign", auth, authorize("ngo", "worker", "admin"), async (req, res) => {
   try {
     const { volunteerId, volunteerName } = req.body;
@@ -188,41 +188,53 @@ router.patch("/:id/assign", auth, authorize("ngo", "worker", "admin"), async (re
     
     if (!volunteerId) return res.status(400).json({ error: "volunteerId is required" });
 
-    const helper = await User.findById(volunteerId);
+    const target = await User.findById(volunteerId);
     const assigner = await User.findById(assignedBy);
 
-    if (!helper || !assigner) return res.status(404).json({ error: "User not found" });
+    if (!target || !assigner) return res.status(404).json({ error: "User not found" });
 
-    if (assigner.role?.toLowerCase() === "ngo" && helper.role?.toLowerCase() === "worker") {
-      if (helper.ngoId?.toString() !== assigner._id.toString()) {
-        return res.status(403).json({ error: "Unauthorized: This worker belongs to another NGO." });
-      }
+    const aRole = assigner.role.toLowerCase();
+    const tRole = target.role.toLowerCase();
+
+    // ❌ Logic: Volunteers can never assign Workers
+    if (aRole === "volunteer" && tRole === "worker") {
+      return res.status(403).json({ error: "Unauthorized: Volunteers cannot assign Workers." });
     }
 
-    if (assigner.role?.toLowerCase() === "worker" && helper.role?.toLowerCase() !== "volunteer") {
-      return res.status(403).json({ error: "Unauthorized: Workers can only assign volunteers." });
+    // ❌ Logic: Workers can only assign Volunteers (unless admin/ngo)
+    if (aRole === "worker" && tRole !== "volunteer") {
+      return res.status(403).json({ error: "Unauthorized: Workers can only assign Volunteers." });
     }
 
-    const problem = await Problem.findByIdAndUpdate(
-      req.params.id,
-      {
-        assignedTo: volunteerId,
-        status: "In Progress",
-        $push: { timeline: { text: `Assigned to ${helper.role}: ${volunteerName} (by ${assigner.role})` } }
-      },
-      { new: true }
-    );
-
-    if (problem) {
-      const notification = new Notification({
-        userId: volunteerId,
-        text: `You were assigned to problem: ${problem.title}`,
-        type: "task",
-      });
-      await notification.save();
-      const io = req.app.get("io");
-      if (io) io.emit("problem-updated", problem);
+    // ❌ Logic: Workers belonging to different NGOs
+    if (aRole === "ngo" && tRole === "worker") {
+       if (target.ngoId && target.ngoId.toString() !== assigner._id.toString()) {
+         return res.status(403).json({ error: "Unauthorized: This worker belongs to another NGO." });
+       }
     }
+
+    const problem = await Problem.findById(req.params.id);
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
+
+    if (!problem.team.includes(volunteerId)) {
+      problem.team.push(volunteerId);
+    }
+    
+    problem.assignedTo = volunteerId; // legacy support
+    problem.status = "In Progress";
+    problem.timeline.push({ text: `Assigned ${tRole} ${target.name} to the team (by ${aRole})` });
+    
+    await problem.save();
+
+    const notification = new Notification({
+      userId: volunteerId,
+      text: `You were assigned to problem: ${problem.title}`,
+      type: "task",
+    });
+    await notification.save();
+
+    const io = req.app.get("io");
+    if (io) io.emit("problem-updated", problem);
 
     res.json(problem);
   } catch (err) {
@@ -408,6 +420,55 @@ router.patch("/:id/status", auth, async (req, res) => {
     res.json(problem);
   } catch (err) {
     res.status(500).json({ error: "Failed to update status" });
+  }
+});
+
+// PATCH /api/problems/:id/leader — Assign Leader (NGO/Admin only)
+router.patch("/:id/leader", auth, authorize("ngo", "admin"), async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const problem = await Problem.findById(req.params.id);
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
+
+    problem.leader = userId;
+    if (!problem.team.includes(userId)) {
+      problem.team.push(userId);
+    }
+    
+    problem.timeline.push({ text: `New team leader assigned: ${userId}` });
+    await problem.save();
+    
+    res.json({ success: true, problem });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to assign leader" });
+  }
+});
+
+// POST /api/problems/:id/members — Add members (Leader/NGO only)
+router.post("/:id/members", auth, async (req, res) => {
+  try {
+    const { memberId } = req.body;
+    const userId = req.user.id.toString();
+    
+    const problem = await Problem.findById(req.params.id);
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
+
+    const isLeader = problem.leader && problem.leader.toString() === userId;
+    const isNGO = req.user.role === "ngo";
+    const isAdmin = req.user.role === "admin";
+
+    if (!isLeader && !isNGO && !isAdmin) {
+      return res.status(403).json({ error: "Only team leader or NGO can add members" });
+    }
+
+    if (!problem.team.includes(memberId)) {
+      problem.team.push(memberId);
+      await problem.save();
+    }
+    
+    res.json({ success: true, team: problem.team });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to add member" });
   }
 });
 

@@ -73,9 +73,45 @@ export default function VolunteersPage() {
     return (a.name || "").toLowerCase().localeCompare((b.name || "").toLowerCase());
   });
 
+  const [problems, setProblems] = useState([]);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedProbId, setSelectedProbId] = useState("");
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/problems`).then(res => res.json()).then(setProblems);
+  }, []);
+
   const handleConnect = (user) => {
     setSelectedUser(user);
     setShowConnectModal(true);
+  };
+
+  const handleOpenAssign = (u) => {
+    setSelectedUser(u);
+    setShowAssignModal(true);
+  };
+
+  const submitAssignment = async () => {
+    if (!selectedProbId) return toast.error("Please select a problem");
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/api/problems/${selectedProbId}/assign`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ 
+          volunteerId: selectedUser._id,
+          volunteerName: selectedUser.name
+        })
+      });
+      const data = await res.json();
+      if (data.error) toast.error(data.error);
+      else {
+        toast.success(`${selectedUser.name} assigned to mission`);
+        setShowAssignModal(false);
+      }
+    } catch (err) { toast.error("Assignment failed"); }
+    finally { setIsSubmitting(false); }
   };
 
   const submitConnectRequest = async () => {
@@ -113,6 +149,16 @@ export default function VolunteersPage() {
     }
   };
 
+  const canAssign = (targetRole) => {
+    if (!user) return false;
+    const uRole = user.role?.toLowerCase();
+    const tRole = targetRole?.toLowerCase();
+    if (uRole === "admin" || uRole === "ngo") return true;
+    if (uRole === "worker" && tRole === "volunteer") return true;
+    if (uRole === "volunteer" && tRole === "volunteer") return true;
+    return false;
+  };
+
   return (
     <div className="min-h-screen bg-[var(--bg-main)]">
       <Navbar />
@@ -134,10 +180,10 @@ export default function VolunteersPage() {
                   if (e.target.value === "nearest" && !userLoc) handleLocate();
                   else setSortBy(e.target.value);
                 }}
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs font-semibold text-gray-300 outline-none hover:border-purple-500/50 transition cursor-pointer"
+                className="bg-[#0B1220] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-semibold text-gray-300 outline-none hover:border-purple-500/50 transition cursor-pointer"
               >
-                <option value="name" className="bg-[#0f172a]">Sort by Name</option>
-                <option value="nearest" className="bg-[#0f172a]">Sort by Nearest</option>
+                <option value="name" className="bg-[#0B1220]">Sort by Name</option>
+                <option value="nearest" className="bg-[#0B1220]">Sort by Nearest</option>
               </select>
             </div>
           </div>
@@ -207,13 +253,23 @@ export default function VolunteersPage() {
                       </div>
                     )}
 
-                    <button 
-                      onClick={() => handleConnect(u)}
-                      className="w-full py-2.5 rounded-xl text-xs font-bold text-white transition-all shadow-lg shadow-indigo-500/20 mt-auto"
-                      style={{ background: isVol ? "linear-gradient(to right, #059669, #10b981)" : "linear-gradient(to right, #7c3aed, #6366f1)" }}
-                    >
-                      Connect
-                    </button>
+                    <div className="flex flex-col gap-2 mt-auto">
+                      <button 
+                        onClick={() => handleConnect(u)}
+                        className="w-full py-2.5 rounded-xl text-xs font-bold text-white transition-all shadow-lg shadow-indigo-500/20"
+                        style={{ background: isVol ? "linear-gradient(to right, #059669, #10b981)" : "linear-gradient(to right, #7c3aed, #6366f1)" }}
+                      >
+                        Connect
+                      </button>
+                      {canAssign(u.role) && (
+                        <button 
+                          onClick={() => handleOpenAssign(u)}
+                          className="w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-white bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
+                        >
+                          Assign to Mission
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -227,14 +283,7 @@ export default function VolunteersPage() {
       <AnimatePresence>
         {showConnectModal && (
           <div className="fixed inset-0 z-[20000] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
-              onClick={() => setShowConnectModal(false)} 
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
-            />
-            
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowConnectModal(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
             <motion.div 
               initial={{ scale: 0.9, opacity: 0, y: 20 }} 
               animate={{ scale: 1, opacity: 1, y: 0 }} 
@@ -242,28 +291,62 @@ export default function VolunteersPage() {
               className="bg-[#0B1220] p-6 rounded-2xl w-full max-w-md border border-white/10 shadow-2xl relative z-10"
             >
               <h2 className="text-xl font-extrabold text-white mb-2">Connect with {selectedUser?.name}</h2>
-              <p className="text-gray-400 text-[13px] mb-6">Briefly explain why you want to coordinate with this helper.</p>
-              
-              <textarea 
-                placeholder="Reason for connection..." 
-                value={connectReason} 
-                onChange={(e) => setConnectReason(e.target.value)} 
-                className="w-full h-32 bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 outline-none focus:border-purple-500 transition-all mb-6 resize-none" 
-              />
-              
+              <p className="text-gray-400 text-sm mb-6">Briefly explain why you want to coordinate with this helper.</p>
+              <textarea placeholder="Reason for connection..." value={connectReason} onChange={(e) => setConnectReason(e.target.value)} className="w-full h-32 bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 outline-none focus:border-purple-500 transition-all mb-6 resize-none" />
               <div className="flex gap-3">
-                <button 
-                  onClick={() => setShowConnectModal(false)} 
-                  className="flex-1 py-3 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-colors"
-                >
-                  Cancel
-                </button>
+                <button onClick={() => setShowConnectModal(false)} className="flex-1 py-3 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-colors">Cancel</button>
                 <button 
                   onClick={submitConnectRequest} 
                   disabled={isSubmitting}
-                  className="flex-[2] py-3 rounded-xl text-xs font-bold text-white shadow-lg shadow-purple-500/20 disabled:opacity-50 bg-gradient-to-r from-purple-600 to-indigo-600" 
+                  className="flex-[2] py-3 rounded-xl text-xs font-bold text-white shadow-lg shadow-indigo-500/20 disabled:opacity-50" 
+                  style={{ background: "linear-gradient(to right, #7c3aed, #6366f1)" }}
                 >
                   {isSubmitting ? "Sending..." : "Send Request"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Assign Modal ── */}
+      <AnimatePresence>
+        {showAssignModal && (
+          <div className="fixed inset-0 z-[20000] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowAssignModal(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }} 
+              animate={{ scale: 1, opacity: 1, y: 0 }} 
+              exit={{ scale: 0.9, opacity: 0, y: 20 }} 
+              className="bg-[#0B1220] p-7 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl relative z-10"
+            >
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-black text-white mb-1 uppercase tracking-tighter">Mission Deployment</h2>
+                <p className="text-gray-500 text-[11px] font-bold uppercase tracking-widest">Assigning {selectedUser?.name} to Active Crisis</p>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Select Active Incident</label>
+                <select 
+                  value={selectedProbId}
+                  onChange={(e) => setSelectedProbId(e.target.value)}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white outline-none focus:border-purple-500 transition-all appearance-none"
+                >
+                  <option value="">-- Choose Problem --</option>
+                  {problems.filter(p => p.status !== "Resolved").map(p => (
+                    <option key={p._id} value={p._id} className="bg-[#0B1220]">{p.title}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="flex gap-3">
+                <button onClick={() => setShowAssignModal(false)} className="flex-1 py-3.5 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-colors">Abort</button>
+                <button 
+                  onClick={submitAssignment} 
+                  disabled={isSubmitting}
+                  className="flex-[2] py-3.5 rounded-xl text-xs font-black uppercase tracking-widest text-white shadow-xl shadow-purple-500/20 bg-gradient-to-r from-purple-600 to-indigo-600"
+                >
+                  {isSubmitting ? "Deploying..." : "Assign & Deploy"}
                 </button>
               </div>
             </motion.div>

@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema({
   ngoName: { type: String, default: "" },
   ngoContact: { type: String, default: "" },
   ngoLink: { type: String, default: "" },
+  ngoId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   bio: { type: String, default: "" },
   notifications: [
     {
