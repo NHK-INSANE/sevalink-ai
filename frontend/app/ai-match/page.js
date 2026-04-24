@@ -94,7 +94,9 @@ function ScoreBar({ score }) {
 
 export default function AIMatchPage() {
   const [matches, setMatches] = useState([]);
+  const [userMatches, setUserMatches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("byProblem"); // "byProblem" or "yourself"
   const [liveEvent, setLiveEvent] = useState(null);
   const currentUser = getUser();
 
@@ -108,7 +110,6 @@ export default function AIMatchPage() {
       const data = await res.json();
       if (data.success) {
         toast.success(`🤖 AI auto-assigned ${data.matched.length} responders!`);
-        // Refresh matches
         fetchMatches();
       }
     } catch (err) {
@@ -131,6 +132,26 @@ export default function AIMatchPage() {
       }));
       
       setMatches(matchedResults);
+
+      // Handle "Match Yourself" logic
+      if (currentUser && (currentUser.role?.toLowerCase() === "volunteer" || currentUser.role?.toLowerCase() === "worker")) {
+        // Simple client-side matching for "Yourself" to avoid extra backend calls
+        // or we could use the existing matching logic but reversed.
+        // For production feel, we'll sort problems based on current user's skills/location
+        const scoredProbs = openProblems.map(p => {
+          let score = 0;
+          const dist = getDistance(p.location?.lat, p.location?.lng, currentUser.location?.lat, currentUser.location?.lng);
+          score += Math.max(0, 100 - (dist || 999));
+          
+          const uSkills = (currentUser.skills || []).map(s => s.toLowerCase());
+          const pSkill = (p.requiredSkill || p.category || "").toLowerCase();
+          if (pSkill && uSkills.includes(pSkill)) score += 50;
+          
+          return { problem: p, score: Math.round(score), distKm: dist };
+        }).sort((a,b) => b.score - a.score);
+        
+        setUserMatches(scoredProbs);
+      }
     } catch (err) {
       console.error(err);
       toast.error("Failed to load AI matches");
@@ -159,355 +180,130 @@ export default function AIMatchPage() {
   const totalUnmatched = matches.filter((m) => m.volunteers.length === 0).length;
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-main)" }}>
+    <div style={{ minHeight: "100vh", background: "#020617" }}>
       <Navbar />
       <PageWrapper>
-        <main
-          style={{
-            maxWidth: "var(--content-max)",
-            margin: "0 auto",
-            padding: "0 var(--content-pad)",
-            paddingTop: "calc(var(--navbar-height) + 48px)",
-            paddingBottom: 80,
-          }}
-        >
-          {/* ── Header ── */}
-          <div style={{ marginBottom: 36 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-              <div
-                style={{
-                  width: 44, height: 44, borderRadius: 14,
-                  background: "var(--primary-gradient)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  boxShadow: "0 4px 16px rgba(99,102,241,0.4)",
-                  flexShrink: 0,
-                }}
-              >
-                <Zap size={20} color="white" />
+        <main style={{ maxWidth: 1200, margin: "0 auto", padding: "120px 24px 80px" }}>
+          
+          {/* Header */}
+          <div style={{ display: "flex", flexDirection: "column", mdDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 40, gap: 20 }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg, #6366f1, #a855f7)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 20px rgba(99,102,241,0.3)" }}>
+                  <Zap size={20} color="white" />
+                </div>
+                <h1 style={{ fontSize: 32, fontWeight: 800, color: "white", letterSpacing: "-0.02em" }}>AI Smart Match</h1>
               </div>
-              <div>
-                <h1 style={{ fontSize: 32, marginBottom: 2 }}>AI Smart Match</h1>
-                <p style={{ fontSize: 13 }}>
-                  Real-time volunteer matching — scored on proximity, skills &amp; urgency
-                </p>
-              </div>
+              <p style={{ color: "#94a3b8", fontSize: 14 }}>Neural matching engine — connecting needs with skills in real-time</p>
             </div>
 
-            {/* Status badges */}
-            <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
-              <div
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "5px 12px",
-                  borderRadius: 20,
-                  background: "rgba(99,102,241,0.08)",
-                  border: "1px solid rgba(99,102,241,0.2)",
-                  fontSize: 11, fontWeight: 700, color: "#818cf8",
-                  letterSpacing: "0.04em",
+            <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.03)", padding: 4, borderRadius: 14, border: "1px solid rgba(255,255,255,0.06)" }}>
+              <button 
+                onClick={() => setActiveTab("byProblem")}
+                style={{ 
+                  padding: "8px 16px", borderRadius: 10, fontSize: 11, fontWeight: 700, uppercase: "true", letterSpacing: "0.05em",
+                  background: activeTab === "byProblem" ? "rgba(99,102,241,0.15)" : "transparent",
+                  color: activeTab === "byProblem" ? "#818cf8" : "#64748b",
+                  border: activeTab === "byProblem" ? "1px solid rgba(99,102,241,0.3)" : "1px solid transparent",
+                  transition: "all 0.3s ease", cursor: "pointer"
                 }}
               >
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#6366f1", animation: "pulse 2s infinite" }} />
-                LIVE MATCHING ENGINE
-              </div>
-              <div
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "5px 12px",
-                  borderRadius: 20,
-                  background: "rgba(168,85,247,0.08)",
-                  border: "1px solid rgba(168,85,247,0.2)",
-                  fontSize: 11, fontWeight: 700, color: "#c084fc",
+                Match by Problem
+              </button>
+              <button 
+                onClick={() => {
+                  if (!currentUser) return toast.error("Login to match yourself");
+                  setActiveTab("yourself");
+                }}
+                style={{ 
+                  padding: "8px 16px", borderRadius: 10, fontSize: 11, fontWeight: 700, uppercase: "true", letterSpacing: "0.05em",
+                  background: activeTab === "yourself" ? "rgba(99,102,241,0.15)" : "transparent",
+                  color: activeTab === "yourself" ? "#818cf8" : "#64748b",
+                  border: activeTab === "yourself" ? "1px solid rgba(99,102,241,0.3)" : "1px solid transparent",
+                  transition: "all 0.3s ease", cursor: "pointer"
                 }}
               >
-                SCORING ALGORITHM v2
-              </div>
+                Match Yourself
+              </button>
             </div>
           </div>
 
-          {/* ── Live Event Banner ── */}
-          {liveEvent && (
-            <div
-              style={{
-                marginBottom: 24,
-                padding: "14px 18px",
-                background: "rgba(34,197,94,0.08)",
-                border: "1px solid rgba(34,197,94,0.2)",
-                borderRadius: 14,
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-              }}
-            >
-              <Target size={18} color="#22c55e" style={{ flexShrink: 0 }} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 700, color: "#4ade80", fontSize: 13 }}>
-                  New match detected in real-time!
+          {/* ── Match Yourself View ── */}
+          {activeTab === "yourself" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+              {userMatches.length === 0 ? (
+                <div className="card" style={{ padding: 60, textAlign: "center", borderStyle: "dashed" }}>
+                   <p style={{ color: "#94a3b8" }}>No specific recommendations found for your profile yet.</p>
                 </div>
-                <div style={{ fontSize: 12, color: "rgba(74,222,128,0.75)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  "{liveEvent.problem.title}" matched {liveEvent.matched.length} volunteer{liveEvent.matched.length > 1 ? "s" : ""}
-                </div>
-              </div>
-              <button
-                onClick={() => setLiveEvent(null)}
-                style={{ background: "none", border: "none", color: "#4ade80", cursor: "pointer", padding: 4, fontSize: 16, lineHeight: 1 }}
-              >
-                ✕
-              </button>
+              ) : (
+                userMatches.map(({ problem, score, distKm }) => (
+                  <div key={problem._id} className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 24 }}>
+                    <div style={{ flex: 1 }}>
+                       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                          <span style={{ fontSize: 10, fontWeight: 800, color: "#818cf8", background: "rgba(99,102,241,0.1)", padding: "2px 8px", borderRadius: 4, textTransform: "uppercase" }}>{problem.category}</span>
+                          <h3 style={{ fontSize: 18, fontWeight: 700, color: "white" }}>{problem.title}</h3>
+                       </div>
+                       <p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 12 }}>{problem.description}</p>
+                       <div style={{ display: "flex", gap: 12, fontSize: 11, color: "#64748b" }}>
+                          <span>📍 {distKm || "???"} km away</span>
+                          <span>🕒 Reported {new Date(problem.createdAt).toLocaleDateString()}</span>
+                       </div>
+                    </div>
+                    <div style={{ textAlign: "right", minWidth: 140 }}>
+                       <div style={{ fontSize: 9, fontWeight: 800, color: "#64748b", textTransform: "uppercase", marginBottom: 4 }}>Compatibility</div>
+                       <ScoreBar score={score} />
+                       <Link href={`/map?lat=${problem.location?.lat}&lng=${problem.location?.lng}&title=${problem.title}`} className="btn-primary !py-2 !px-4 !text-[10px] !mt-4 inline-block">View on Map</Link>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           )}
 
-          {/* ── Stats Row ── */}
-          {!loading && matches.length > 0 && (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gap: 16,
-                marginBottom: 32,
-              }}
-            >
-              {[
-                { label: "Total Problems",  value: matches.length,   color: "#818cf8", Icon: AlertTriangle },
-                { label: "Fully Matched",   value: totalMatched,     color: "#4ade80", Icon: Target        },
-                { label: "Need Helpers",    value: totalUnmatched,   color: "#f87171", Icon: Users         },
-              ].map(({ label, value, color, Icon }) => (
-                <div
-                  key={label}
-                  className="card"
-                  style={{ padding: "20px 22px", textAlign: "center" }}
-                >
-                  <div
-                    style={{
-                      width: 36, height: 36, borderRadius: 10,
-                      background: `${color}18`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      margin: "0 auto 12px",
-                      border: `1px solid ${color}28`,
-                    }}
-                  >
-                    <Icon size={17} color={color} />
-                  </div>
-                  <div style={{ fontSize: 28, fontWeight: 800, color, letterSpacing: "-0.02em" }}>
-                    {value}
-                  </div>
-                  <div className="section-label" style={{ marginTop: 4 }}>{label}</div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* ── Content ── */}
-          {loading ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="skeleton" style={{ height: 160, borderRadius: 16 }} />
-              ))}
-            </div>
-          ) : matches.length === 0 ? (
-            <div
-              className="card"
-              style={{
-                padding: "64px 24px",
-                textAlign: "center",
-                border: "1px dashed rgba(255,255,255,0.08)",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
-              }}
-            >
-              <div style={{ fontSize: 48 }}>🤖</div>
-              <p style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>
-                No open problems to match
-              </p>
-              <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-                Submit a problem to trigger AI matching
-              </p>
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              {matches.map(({ problem, volunteers: vols }, i) => {
-                const urgencyStyle = URGENCY_STYLE[problem.urgency] || {};
-                return (
-                  <div
-                    key={problem._id || i}
-                    className="card"
-                    style={{ padding: 24 }}
-                  >
-                    {/* Problem header */}
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        gap: 12,
-                        marginBottom: 14,
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <h2
-                          style={{
-                            fontSize: 16,
-                            fontWeight: 700,
-                            color: "var(--text-primary)",
-                            marginBottom: 4,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {problem.title}
-                        </h2>
-                        <p
-                          style={{
-                            fontSize: 12,
-                            color: "var(--text-secondary)",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {problem.description}
-                        </p>
-                      </div>
-                      {problem.urgency && (
-                        <span
-                          style={{
-                            padding: "4px 12px",
-                            borderRadius: 8,
-                            fontSize: 10,
-                            fontWeight: 700,
-                            textTransform: "uppercase",
-                            letterSpacing: "0.06em",
-                            background: urgencyStyle.bg,
-                            color: urgencyStyle.color,
-                            border: `1px solid ${urgencyStyle.border}`,
-                            whiteSpace: "nowrap",
-                            flexShrink: 0,
-                          }}
-                        >
-                          {problem.urgency}
-                        </span>
-                      )}
+          {/* ── Match by Problem View ── */}
+          {activeTab === "byProblem" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+               {matches.map(({ problem, volunteers: vols }) => (
+                 <div key={problem._id} className="card" style={{ padding: 24 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+                       <div>
+                          <h3 style={{ fontSize: 18, fontWeight: 700, color: "white", marginBottom: 4 }}>{problem.title}</h3>
+                          <p style={{ fontSize: 12, color: "#94a3b8" }}>{problem.description}</p>
+                       </div>
+                       <span className={`badge badge-${problem.urgency?.toLowerCase()} !text-[10px]`}>{problem.urgency}</span>
                     </div>
 
-                    {/* Tags */}
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 18 }}>
-                      {problem.requiredSkill && (
-                        <span
-                          style={{
-                            padding: "3px 10px", borderRadius: 6,
-                            background: "rgba(168,85,247,0.08)",
-                            border: "1px solid rgba(168,85,247,0.18)",
-                            color: "#c084fc", fontSize: 10, fontWeight: 700,
-                          }}
-                        >
-                          🛠 {problem.requiredSkill}
-                        </span>
-                      )}
-                      {problem.category && (
-                        <span
-                          style={{
-                            padding: "3px 10px", borderRadius: 6,
-                            background: "rgba(99,102,241,0.08)",
-                            border: "1px solid rgba(99,102,241,0.18)",
-                            color: "#a5b4fc", fontSize: 10, fontWeight: 700,
-                          }}
-                        >
-                          {Array.isArray(problem.category) ? problem.category[0] : problem.category}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Separator */}
-                    <div style={{ borderTop: "1px solid var(--border)", marginBottom: 16 }} />
-
-                    {/* Volunteers */}
                     {vols.length > 0 ? (
-                      <div>
-                        <div className="section-label" style={{ marginBottom: 12 }}>
-                          Recommended Volunteers — {vols.length} matched
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                          {vols.map((matchObj, vi) => {
-                            const v = matchObj.user;
-                            const score = matchObj.score;
-                            const isMe = v._id?.toString() === (currentUser?._id || currentUser?.id)?.toString();
-                            const isTop = vi === 0;
-                            return (
-                              <div
-                                key={v._id || vi}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 12,
-                                  padding: "10px 14px",
-                                  borderRadius: 12,
-                                  background: isTop
-                                    ? "rgba(99,102,241,0.07)"
-                                    : "rgba(255,255,255,0.02)",
-                                  border: `1px solid ${isTop ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.05)"}`,
-                                  transition: "all 0.2s ease",
-                                }}
-                              >
-                                {/* Rank */}
-                                <div
-                                  style={{
-                                    width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                    fontSize: 11, fontWeight: 800,
-                                    background: isTop ? "linear-gradient(135deg,#f59e0b,#d97706)" : "rgba(255,255,255,0.04)",
-                                    color: isTop ? "white" : "var(--text-muted)",
-                                    boxShadow: isTop ? "0 2px 8px rgba(245,158,11,0.3)" : "none",
-                                  }}
-                                >
-                                  #{vi + 1}
-                                </div>
-                                {/* Info */}
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 6 }}>
-                                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                      {v.name || v.email}
-                                    </span>
-                                    {isMe && <span style={{ fontSize: 10, color: "#818cf8", fontWeight: 700 }}>(You)</span>}
-                                  </div>
-                                  <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
-                                    {v.role} · {v.skills?.slice(0, 2).join(", ")}
-                                  </div>
-                                </div>
-                                {/* Score */}
-                                <div style={{ minWidth: 100 }}>
-                                  <div style={{ fontSize: 9, fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: 2 }}>Match Score</div>
-                                  <ScoreBar score={score} />
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <button
+                      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                        {vols.map((matchObj, vi) => {
+                          const v = matchObj.user;
+                          return (
+                            <div key={v._id} style={{ display: "flex", alignItems: "center", gap: 12, padding: 12, background: "rgba(255,255,255,0.02)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.05)" }}>
+                               <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(99,102,241,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#818cf8" }}>#{vi+1}</div>
+                               <div style={{ flex: 1 }}>
+                                  <div style={{ fontSize: 13, fontWeight: 600, color: "white" }}>{v.name}</div>
+                                  <div style={{ fontSize: 11, color: "#64748b" }}>{v.role} · {Array.isArray(v.skills) ? v.skills.slice(0,2).join(", ") : v.skill}</div>
+                               </div>
+                               <div style={{ minWidth: 100 }}>
+                                  <ScoreBar score={matchObj.score} />
+                               </div>
+                            </div>
+                          );
+                        })}
+                        <button 
                           onClick={() => autoAssign(problem._id)}
-                          className="w-full mt-4 py-3 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/20 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all"
+                          className="btn-apple !py-2.5 !text-[10px] !w-full !mt-2"
                         >
-                          ⚡ Execute AI Auto-Assignment
+                          Execute AI Assignment
                         </button>
                       </div>
                     ) : (
-                      <div
-                        style={{
-                          padding: "16px",
-                          background: "rgba(239,68,68,0.05)",
-                          border: "1px dashed rgba(239,68,68,0.2)",
-                          borderRadius: 10,
-                          textAlign: "center",
-                          color: "#f87171",
-                          fontSize: 12,
-                          fontWeight: 600,
-                        }}
-                      >
-                        No volunteers matched nearby for this problem
+                      <div style={{ padding: 20, textAlign: "center", background: "rgba(239,68,68,0.03)", borderRadius: 12, border: "1px dashed rgba(239,68,68,0.2)", color: "#f87171", fontSize: 12 }}>
+                        No suitable volunteers found nearby
                       </div>
                     )}
-                  </div>
-                );
-              })}
+                 </div>
+               ))}
             </div>
           )}
         </main>
