@@ -36,7 +36,13 @@ export default function Dashboard() {
   const prevCriticalRef = useRef(0);
 
   useEffect(() => {
-    setUser(getUser());
+    const loggedUser = getUser();
+    if (!loggedUser) {
+      toast.error("Please login to access the dashboard");
+      window.location.href = "/login";
+      return;
+    }
+    setUser(loggedUser);
   }, []);
 
   const fetchDashboardData = async () => {

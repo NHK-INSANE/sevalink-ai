@@ -11,9 +11,13 @@ export async function apiRequest(endpoint, options = {}) {
       token = localStorage.getItem("token");
     }
 
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
     const res = await fetch(`${BASE_URL}${endpoint}`, {
       cache: "no-store",
       ...options,
+      signal: controller.signal,
       headers: {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -22,6 +26,7 @@ export async function apiRequest(endpoint, options = {}) {
     });
 
     const text = await res.text();
+    clearTimeout(id);
 
     // ❌ If HTML comes → backend error
     if (text.startsWith("<!DOCTYPE") || text.startsWith("<html")) {
@@ -48,6 +53,9 @@ export async function apiRequest(endpoint, options = {}) {
     return data;
   } catch (err) {
     console.error("API ERROR:", err.message);
+    if (err.name === "AbortError") {
+      throw new Error("Request timed out. The server is taking too long to respond.");
+    }
     if (err.message === "Failed to fetch") {
       throw new Error("Server not reachable. Please try again.");
     }
