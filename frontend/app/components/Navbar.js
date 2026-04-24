@@ -96,7 +96,7 @@ export default function Navbar() {
                 <Link2 size={15} />
               </div>
             </div>
-            <span className="font-extrabold text-lg tracking-tight text-white">
+            <span className="font-extrabold text-lg tracking-tight text-white hidden sm:inline-block">
               SevaLink <span className="text-indigo-400 font-medium text-sm ml-1 uppercase tracking-widest">AI</span>
             </span>
           </Link>
@@ -228,34 +228,48 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* Mobile Menu */}
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white">
+            {/* Mobile Menu Toggle */}
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+              className="lg:hidden w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white bg-white/5 rounded-xl border border-white/10"
+            >
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Nav */}
+      {/* Mobile Drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="lg:hidden border-t border-white/5 bg-[#080c1a] overflow-hidden"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="lg:hidden fixed top-[var(--navbar-height)] left-0 w-full bg-[#080c1a]/95 backdrop-blur-xl border-b border-white/10 z-[999]"
           >
-            <div className="px-6 py-4 flex flex-col gap-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="py-3 text-sm font-bold text-gray-400 hover:text-white"
-                >
-                  {link.label}
-                </Link>
-              ))}
+            <div className="px-6 py-8 flex flex-col gap-4">
+              {navLinks.map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`text-lg font-bold transition-all ${
+                      isActive ? "text-indigo-400" : "text-gray-400 hover:text-white"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+              {!user && (
+                <div className="pt-4 border-t border-white/5 flex flex-col gap-3">
+                  <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="text-center py-3 text-gray-400 font-bold">Login</Link>
+                  <Link href="/register" onClick={() => setMobileMenuOpen(false)} className="btn-primary py-3 rounded-xl">Get Started</Link>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

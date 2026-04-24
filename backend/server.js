@@ -57,11 +57,20 @@ app.use("/api/", limiter);
 
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: corsOptions
+  cors: {
+    origin: ["https://sevalink-ai.vercel.app", "http://localhost:3000", "http://localhost:3001"],
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  connectTimeout: 45000,
+  transports: ["websocket", "polling"]
 });
 
 // Attach io to app for use in routes
 app.set("io", io);
+global.io = io; // Make accessible globally for notification emitters
 
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

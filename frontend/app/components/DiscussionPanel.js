@@ -63,6 +63,15 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
         return next;
       });
     });
+    socketRef.current.on("teamUpdated", (updatedTeam) => {
+      setTeams(prev => {
+        const safePrev = Array.isArray(prev) ? prev : [];
+        if (safePrev.find(t => t._id === updatedTeam._id)) {
+          return safePrev.map(t => t._id === updatedTeam._id ? updatedTeam : t);
+        }
+        return [...safePrev, updatedTeam];
+      });
+    });
 
     // Fetch Teams
     fetch(`${API_BASE}/api/teams/problem/${problemId}`, {
@@ -116,6 +125,20 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
       setTeams(prev => (Array.isArray(prev) ? prev : []).map(t => t._id === teamId ? data : t));
       toast.success("Joined the team!");
     } catch (err) { toast.error(err.message || "Failed to join"); }
+  };
+
+  const handleLeaveTeam = async (teamId) => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_BASE}/api/teams/${teamId}/leave`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setTeams(prev => (Array.isArray(prev) ? prev : []).map(t => t._id === teamId ? data : t));
+      toast.success("Left the team");
+    } catch (err) { toast.error(err.message || "Failed to leave"); }
   };
 
   useEffect(() => {
@@ -388,13 +411,22 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
                       <span className="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded uppercase">{t.members.length} Members</span>
                     </div>
                     <p className="text-xs text-gray-400 mb-4 line-clamp-2">{t.objective}</p>
-                    <button 
-                      onClick={() => handleJoinTeam(t._id)}
-                      disabled={t.members.some(m => (m.userId?._id || m.userId) === currentUserId)}
-                      className="w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all disabled:opacity-40"
-                    >
-                      {t.members.some(m => (m.userId?._id || m.userId) === currentUserId) ? "Member" : "Join Unit"}
-                    </button>
+                    {t.members.some(m => (m.userId?._id || m.userId) === currentUserId) ? (
+                      <button 
+                        onClick={() => handleLeaveTeam(t._id)}
+                        className="w-full py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg text-[10px] font-bold text-red-400 uppercase tracking-widest transition-all"
+                      >
+                        Leave Unit
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => handleJoinTeam(t._id)}
+                        disabled={t.members.length >= t.maxMembers}
+                        className="w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all disabled:opacity-40"
+                      >
+                        {t.members.length >= t.maxMembers ? "Unit Full" : "Join Unit"}
+                      </button>
+                    )}
                   </div>
                 ))
               )}

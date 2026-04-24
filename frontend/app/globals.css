@@ -4,121 +4,57 @@
    DESIGN TOKEN SYSTEM
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 :root {
-  /* ── Backgrounds ── */
-  --bg-main:   #020617;
-  --bg-card:   #0b1220;
-  --bg-hover:  #111827;
-  --bg-surface: #0d1526;
+  /* ── Deep Premium Dark Palette ── */
+  --bg: #0b0f17;
+  --card: rgba(17, 24, 39, 0.7);
+  --surface: #111827;
+  --border: #1f2937;
+  --border-hover: #374151;
 
-  /* ── Borders ── */
-  --border:        rgba(255, 255, 255, 0.07);
-  --border-hover:  rgba(255, 255, 255, 0.14);
+  /* ── Refined Typography ── */
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
 
-  /* ── Text ── */
-  --text-primary:   #e2e8f0;
-  --text-secondary: #94a3b8;
-  --text-muted:     #64748b;
-
-  /* ── Brand ── */
-  --primary:       #6366f1;
-  --primary-light: #818cf8;
-  --primary-glow:  rgba(99, 102, 241, 0.35);
+  /* ── Brand & Accents ── */
+  --accent: #6366f1;
+  --accent-glow: rgba(99, 102, 241, 0.15);
   --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
 
-  /* ── Status ── */
-  --critical: #ef4444;
-  --high:     #f97316;
-  --medium:   #eab308;
-  --low:      #22c55e;
-
-  /* ── Glass System ── */
-  --glass:          rgba(255, 255, 255, 0.025);
-  --glass-border:   rgba(255, 255, 255, 0.07);
-  --glass-strong:   rgba(10, 15, 30, 0.75);
-
-  /* ── Spacing Scale ── */
-  --space-xs:  4px;
-  --space-sm:  8px;
-  --space-md:  16px;
-  --space-lg:  24px;
-  --space-xl:  40px;
-  --space-2xl: 64px;
-
-  /* ── Layout ── */
-  --navbar-height: 68px;
-  --content-max:   1280px;
-  --content-pad:   clamp(16px, 4vw, 40px);
-
-  /* ── Z-Index System (strict) ── */
-  --z-base:    1;
-  --z-content: 10;
-  --z-fab:     30;
-  --z-modal:   40;
-  --z-navbar:  50;
-  --z-overlay: 60;
-  --z-toast:   70;
-
-  /* ── Radius ── */
-  --radius-sm:  4px;
-  --radius-md:  6px;
-  --radius-lg:  8px;
-  --radius-xl:  12px;
-  --radius-2xl: 16px;
-
-  /* ── Shadow ── */
-  --shadow-card:    0 4px 24px rgba(0, 0, 0, 0.35);
-  --shadow-elevated: 0 16px 48px rgba(0, 0, 0, 0.5);
-  --shadow-glow:    0 0 24px rgba(99, 102, 241, 0.25);
-
-  /* ── Legacy aliases ── */
-  --bg:   var(--bg-main);
-  --card: var(--bg-card);
-  --text: var(--text-primary);
-  --muted: var(--text-secondary);
+  /* ── Spacing System ── */
+  --space-unit: 4px;
+  --navbar-height: 72px;
+  --content-max: 1200px;
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    RESET & BASE
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-*, *::before, *::after {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
 body {
-  background: radial-gradient(circle at 20% 20%, rgba(124,58,237,0.25), transparent),
-              radial-gradient(circle at 80% 30%, rgba(59,130,246,0.2), transparent),
-              #0b0f1a;
-  background-attachment: fixed;
+  background: var(--bg);
   color: var(--text-primary);
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
-  font-size: 14px;
-  line-height: 1.6;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  min-height: 100vh;
+  line-height: 1.6;
 }
 
-/* ── Typography System ── */
 h1 {
-  font-size: clamp(28px, 4vw, 42px);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.2;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
   color: var(--text-primary);
 }
 
 h2 {
-  font-size: clamp(20px, 2.5vw, 28px);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   color: var(--text-primary);
+}
+
+p {
+  font-size: 14px;
+  color: var(--text-secondary);
 }
 
 h3 {
@@ -195,120 +131,79 @@ a {
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   CARD COMPONENT (Unified)
+   CARD COMPONENT (Apple/Stripe Style)
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .card {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.02);
-  transition: transform 0.2s ease, border-color 0.2s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.dashboard-grid {
+  background: var(--card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
   padding: 24px;
-}
-
-.report-card {
-  margin: 0;
-  padding: 20px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.02);
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), border-color 0.2s ease;
   position: relative;
-}
-
-.report-card .title {
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.4;
-  margin-bottom: 6px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-.report-card .desc {
-  font-size: 12px;
-  color: #9CA3AF;
-  line-height: 1.4;
-  margin-bottom: 10px;
 }
 
 .card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(124, 58, 237, 0.4);
-}
-
-/* Glass alias */
-.glass {
-  background: var(--glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-}
-
-.glass-strong {
-  background: var(--glass-strong);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+  border-color: var(--border-hover);
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   BUTTON SYSTEM (Unified)
+   LAYOUT CONTAINERS
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.btn-primary,
-.btn-glow {
-  background: var(--primary);
-  border-radius: var(--radius-md);
-  padding: 8px 20px;
-  font-size: 14px;
-  font-weight: 500;
+.page-wrapper {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+@media (max-width: 768px) {
+  .page-wrapper {
+    padding: 0 20px;
+  }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   BUTTON SYSTEM
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.btn-primary {
+  background: var(--accent);
   color: white;
-  border: none;
+  padding: 10px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
+  transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
-  transition: background 0.2s ease;
 }
 
-.btn-primary:hover,
-.btn-glow:hover {
-  background: var(--primary-light);
-}
-
-.btn-primary:active,
-.btn-glow:active {
-  transform: translateY(0);
+.btn-primary:hover {
+  background: #4f46e5;
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
 }
 
 .btn-secondary {
-  background: transparent;
-  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
-  border-radius: var(--radius-md);
-  padding: 8px 20px;
+  padding: 10px 24px;
+  border-radius: 12px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
+  border: 1px solid var(--border);
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--border-hover);
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -536,14 +431,23 @@ option {
   gap: 16px;
   align-items: center;
   white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+@media (min-width: 1024px) {
+  .map-legend {
+    left: 24px;
+    transform: translateX(0);
+  }
 }
 
 @media (max-width: 768px) {
   .map-legend {
-    width: 90%;
+    width: 92%;
     overflow-x: auto;
     gap: 12px;
     padding: 8px 12px;
+    justify-content: flex-start;
   }
 }
 
@@ -911,4 +815,16 @@ option {
 
 .card:hover {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(99, 102, 241, 0.05);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SPACING SYSTEM
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.section-pad { padding-top: 80px; padding-bottom: 80px; }
+.mt-premium { margin-top: 40px; }
+.gap-premium { gap: 24px; }
+
+@media (max-width: 768px) {
+  .section-pad { padding-top: 40px; padding-bottom: 40px; }
+  .mt-premium { margin-top: 24px; }
 }

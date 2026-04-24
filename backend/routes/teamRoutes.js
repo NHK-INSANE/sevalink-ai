@@ -1,64 +1,23 @@
 const express = require("express");
 const router = express.Router();
-const Team = require("../models/Team");
 const { auth } = require("../middleware/auth");
-console.log("teamRoutes: auth middleware type:", typeof auth);
-
-// Get teams for a problem
-router.get("/problem/:problemId", async (req, res) => {
-  try {
-    const teams = await Team.find({ problemId: req.params.problemId }).populate("members.userId", "name role");
-    res.json(teams);
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
-  }
-});
+const { 
+  createTeam, 
+  joinTeam, 
+  leaveTeam, 
+  getTeamsForProblem 
+} = require("../controllers/teamController");
 
 // Create a team
-router.post("/", auth, async (req, res) => {
-  try {
-    const { name, objective, problemId, requiredSkills, maxMembers } = req.body;
-    const team = new Team({
-      name,
-      objective,
-      problemId,
-      leader: req.user.id,
-      members: [{ userId: req.user.id, role: "Leader" }],
-      requiredSkills: Array.isArray(requiredSkills) ? requiredSkills : (requiredSkills ? requiredSkills.split(",").map(s => s.trim()) : []),
-      maxMembers: maxMembers || 5,
-      status: "open"
-    });
-    await team.save();
-    res.status(201).json(team);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to create team" });
-  }
-});
+router.post("/", auth, createTeam);
+
+// Get teams for a problem
+router.get("/problem/:problemId", getTeamsForProblem);
 
 // Join a team
-router.post("/:teamId/join", auth, async (req, res) => {
-  try {
-    const team = await Team.findById(req.params.teamId);
-    if (!team) return res.status(404).json({ error: "Team not found" });
-    
-    const isMember = team.members.some(m => m.userId.toString() === req.user.id);
-    if (isMember) return res.status(400).json({ error: "Already a member" });
+router.post("/:id/join", auth, joinTeam);
 
-    if (team.members.length >= (team.maxMembers || 5)) {
-      return res.status(400).json({ error: "Team is full" });
-    }
-
-    team.members.push({ userId: req.user.id });
-    if (team.members.length >= (team.maxMembers || 5)) {
-      team.status = "full";
-    }
-    
-    await team.save();
-    const updatedTeam = await Team.findById(team._id).populate("members.userId", "name role");
-    res.json(updatedTeam);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to join team" });
-  }
-});
+// Leave a team
+router.post("/:id/leave", auth, leaveTeam);
 
 module.exports = router;
