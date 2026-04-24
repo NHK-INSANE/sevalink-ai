@@ -250,35 +250,23 @@ export default function MapView({
       className="rounded-xl overflow-hidden shadow-md border border-gray-200 bg-white">
 
       {/* ── Floating Legend with live counts ── */}
-      <div style={{
-        position: "absolute", top: 80, left: 16, zIndex: 1000,
-        background: "rgba(255,255,255,0.97)",
-        backdropFilter: "blur(8px)",
-        padding: "14px 16px",
-        borderRadius: "14px",
-        border: "1px solid #e5e7eb",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
-        minWidth: "150px",
-      }}>
-        <div style={{ fontSize: "9px", fontWeight: "700", color: "#9ca3af", letterSpacing: "0.1em", marginBottom: "10px", textTransform: "uppercase" }}>
-          Live Legend
+      <div className="map-legend">
+        <div style={{ fontSize: "9px", fontWeight: "900", color: "#9ca3af", letterSpacing: "0.1em", textTransform: "uppercase", marginRight: 8 }}>
+          LIVE
         </div>
 
         {counts.sos > 0 && (
-          <>
-            <LegendRow color="#dc2626" label="🚨 SOS Active" count={counts.sos} />
-            <div style={{ borderTop: "1px solid #f3f4f6", margin: "6px 0" }} />
-          </>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#dc2626", animation: "pulse 1s infinite" }} />
+            <span style={{ fontSize: "11px", fontWeight: "700", color: "#ef4444" }}>{counts.sos} SOS</span>
+          </div>
         )}
 
         <LegendRow color="#ef4444" label="Critical"   count={counts.critical} />
         <LegendRow color="#f97316" label="High"       count={counts.high} />
         <LegendRow color="#eab308" label="Medium"     count={counts.medium} />
         <LegendRow color="#22c55e" label="Low"        count={counts.low} />
-
-        <div style={{ borderTop: "1px solid #f3f4f6", margin: "6px 0" }} />
-
-        <LegendRow color="#3b82f6" label="Partner NGOs" count={counts.ngos} />
+        <LegendRow color="#3b82f6" label="NGOs" count={counts.ngos} />
       </div>
 
       <MapContainer

@@ -67,6 +67,7 @@ export default function Navbar() {
     { href: "/volunteers", label: "Helpers"  },
     { href: "/ngo",       label: "NGOs"      },
     { href: "/map",       label: "Map"       },
+    { href: "/ai-match",  label: "AI Match"  },
   ];
 
   return (

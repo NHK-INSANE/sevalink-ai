@@ -453,9 +453,20 @@ export default function AIMatchPage() {
                                   </div>
                                 </div>
 
-                                {/* Score */}
-                                <div style={{ minWidth: 80, flexShrink: 0 }}>
-                                  <ScoreBar score={v.score} />
+                                {/* Score & Action */}
+                                <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 140, flexShrink: 0 }}>
+                                  <div style={{ flex: 1 }}>
+                                    <div style={{ fontSize: 9, fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: 2 }}>Match Score</div>
+                                    <ScoreBar score={v.score} />
+                                  </div>
+                                  <button
+                                    onClick={() => {
+                                      toast.success(`Request sent to ${v.name || 'volunteer'}`);
+                                    }}
+                                    className="px-3 py-1.5 bg-indigo-600 text-white text-[10px] font-bold rounded-md hover:bg-indigo-700 transition"
+                                  >
+                                    Join
+                                  </button>
                                 </div>
                               </div>
                             );

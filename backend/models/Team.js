@@ -27,6 +27,11 @@ const teamSchema = new mongoose.Schema({
       joinedAt: { type: Date, default: Date.now }
     }
   ],
+  requiredSkills: [String],
+  slots: {
+    type: Number,
+    default: 5
+  },
   createdAt: {
     type: Date,
     default: Date.now,

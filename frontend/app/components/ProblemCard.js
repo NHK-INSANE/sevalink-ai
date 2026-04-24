@@ -122,14 +122,35 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
           </svg>
         </button>
 
-        {/* Assign */}
-        <button
-          onClick={() => onStatusChange(problem._id, "In Progress")}
-          disabled={problem.status !== "Open"}
-          className="flex-1 py-2 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white border border-purple-500/30 text-[11px] font-semibold rounded-[8px] transition disabled:opacity-40"
-        >
-          Assign
-        </button>
+        {/* Action Buttons Column */}
+        <div className="flex-1 flex flex-col gap-2">
+          <button
+            onClick={() => onStatusChange(problem._id, "In Progress")}
+            disabled={problem.status !== "Open"}
+            className="w-full py-2 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white border border-purple-500/30 text-[11px] font-semibold rounded-[8px] transition disabled:opacity-40"
+          >
+            Assign
+          </button>
+          
+          <div className="flex gap-2">
+            <button
+              onClick={() => window.location.href = `/ai-match?id=${problem._id}`}
+              className="flex-1 py-1.5 bg-indigo-600/10 text-indigo-400 hover:bg-indigo-600/20 border border-indigo-500/20 text-[10px] font-bold rounded-md transition"
+            >
+              🤖 AI Match
+            </button>
+            <button
+              onClick={() => {
+                if (!user) return toast.error("Please login to create a team");
+                setShowChat(true);
+                // We'll set a timeout or use a state to switch to teams tab
+              }}
+              className="flex-1 py-1.5 bg-emerald-600/10 text-emerald-400 hover:bg-emerald-600/20 border border-emerald-500/20 text-[10px] font-bold rounded-md transition"
+            >
+              👥 Team
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 

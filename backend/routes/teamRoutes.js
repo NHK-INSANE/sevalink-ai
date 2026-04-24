@@ -17,13 +17,15 @@ router.get("/problem/:problemId", async (req, res) => {
 // Create a team
 router.post("/", auth, async (req, res) => {
   try {
-    const { name, objective, problemId } = req.body;
+    const { name, objective, problemId, requiredSkills, slots } = req.body;
     const team = new Team({
       name,
       objective,
       problemId,
       createdBy: req.user.id,
-      members: [{ userId: req.user.id, role: "Leader" }]
+      members: [{ userId: req.user.id, role: "Leader" }],
+      requiredSkills: Array.isArray(requiredSkills) ? requiredSkills : (requiredSkills ? requiredSkills.split(",").map(s => s.trim()) : []),
+      slots: slots || 5
     });
     await team.save();
     res.status(201).json(team);
@@ -40,6 +42,10 @@ router.post("/:teamId/join", auth, async (req, res) => {
     
     const isMember = team.members.some(m => m.userId.toString() === req.user.id);
     if (isMember) return res.status(400).json({ error: "Already a member" });
+
+    if (team.members.length >= (team.slots || 5)) {
+      return res.status(400).json({ error: "Team is full" });
+    }
 
     team.members.push({ userId: req.user.id });
     await team.save();

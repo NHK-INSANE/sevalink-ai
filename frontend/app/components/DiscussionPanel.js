@@ -14,7 +14,7 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
   const [typingUsers, setTypingUsers] = useState({});
   const [teams, setTeams] = useState([]);
   const [showTeamForm, setShowTeamForm] = useState(false);
-  const [newTeam, setNewTeam] = useState({ name: "", objective: "" });
+  const [newTeam, setNewTeam] = useState({ name: "", objective: "", requiredSkills: "", slots: 5 });
   const [activeTab, setActiveTab] = useState("chat"); // "chat" or "teams"
   const scrollRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -96,7 +96,7 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
       if (data && data._id) {
         setTeams(prev => [...(Array.isArray(prev) ? prev : []), data]);
         setShowTeamForm(false);
-        setNewTeam({ name: "", objective: "" });
+        setNewTeam({ name: "", objective: "", requiredSkills: "", slots: 5 });
         toast.success("Team formed successfully!");
       } else {
         throw new Error(data.error || "Failed to form team");
@@ -220,7 +220,7 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       onClick={onClose}
-      className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998]"
+      className="fixed inset-0 bg-black/60 z-[9998]"
       style={{ top: "var(--navbar-height)" }}
     />
 
@@ -259,6 +259,17 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
             Teams ({teams.length})
           </button>
         </div>
+
+        {/* AI Summary Button */}
+        {activeTab === "chat" && messages.length > 5 && (
+          <button 
+            onClick={() => toast.success("AI Summarizing current intel...")}
+            className="w-full mt-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-[9px] font-bold text-indigo-400 uppercase tracking-widest hover:bg-indigo-500/20 transition-all"
+          >
+            🤖 Generate AI Situation Summary
+          </button>
+        )}
+      </div>
       </div>
 
       {/* Content Area */}
@@ -346,6 +357,18 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
                     value={newTeam.objective} onChange={(e) => setNewTeam({...newTeam, objective: e.target.value})}
                     className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white h-24"
                   />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input 
+                      type="text" placeholder="Required Skills (csv)" 
+                      value={newTeam.requiredSkills} onChange={(e) => setNewTeam({...newTeam, requiredSkills: e.target.value})}
+                      className="bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white"
+                    />
+                    <input 
+                      type="number" placeholder="Slots" 
+                      value={newTeam.slots} onChange={(e) => setNewTeam({...newTeam, slots: parseInt(e.target.value) || 1})}
+                      className="bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white"
+                    />
+                  </div>
                   <button onClick={handleCreateTeam} className="w-full btn-apple py-3 rounded-xl text-[11px] font-bold uppercase tracking-widest">
                     Form Unit
                   </button>

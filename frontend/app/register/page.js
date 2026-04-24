@@ -69,6 +69,13 @@ export default function RegisterPage() {
       }
     }
 
+    // Password Validation
+    const passRegex = /^(?=.*[0-9]{1,})(?=.*[!@#$%^&*]).{8,}$/;
+    if (!passRegex.test(form.password)) {
+      setError("Password must be 8+ chars with at least 1 number and 1 special char.");
+      return;
+    }
+
     const data = form.role === "NGO" 
       ? {
           role: "ngo",
@@ -387,12 +394,16 @@ export default function RegisterPage() {
             {/* Location — manual + map pin */}
             <div className="pt-2">
               <div className="space-y-3">
-                <input
-                  placeholder="Enter your address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className={INPUT_CLS}
-                />
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Address *</label>
+                  <input
+                    placeholder="Enter your street address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className={INPUT_CLS}
+                    required
+                  />
+                </div>
                 
                 <button
                   type="button"
