@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useContext } from "react";
 import { getUser, logout } from "../utils/auth";
-import { io } from "socket.io-client";
+import { socket } from "../../lib/socket";
 import toast from "react-hot-toast";
 import { NotificationContext } from "../context/NotificationContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -38,7 +38,7 @@ export default function Navbar() {
     setUser(currentUser);
 
     // SOS Alerts are global, keep them in Navbar for now but they could move to context too
-    const socket = io(API_BASE);
+    
     socket.on("sos-alert", (data) => {
       try {
         const audio = new Audio("https://www.soundjay.com/buttons/beep-07a.mp3");
@@ -52,7 +52,9 @@ export default function Navbar() {
       });
     });
 
-    return () => socket.disconnect();
+    return () => {
+      socket.off("sos-alert");
+    };
   }, []);
 
   const handleLogout = () => {

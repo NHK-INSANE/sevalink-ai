@@ -1,154 +1,57 @@
-// constants
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
+import { api } from "../../lib/api";
 
-console.log("🌐 API DEBUG: Initialized BASE_URL =", BASE_URL);
-
-// 🔒 Safe fetch wrapper
+// 🔒 Legacy wrapper for existing imports
 export async function apiRequest(endpoint, options = {}) {
+  const method = (options.method || "GET").toLowerCase();
+  const body = options.body ? JSON.parse(options.body) : null;
+  
   try {
-    let token = null;
-    if (typeof window !== "undefined") {
-      token = localStorage.getItem("token");
+    if (method === "get") return await api.get(endpoint);
+    if (method === "post") return await api.post(endpoint, body);
+    if (method === "put") return await api.put(endpoint, body);
+    if (method === "patch") {
+       // lib/api doesn't have patch, we'll use a fetch directly or extend it
+       const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
+       const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+       const res = await fetch(`${BASE_URL}${endpoint}`, {
+         method: "PATCH",
+         headers: { 
+           "Content-Type": "application/json",
+           ...(token ? { Authorization: `Bearer ${token}` } : {})
+         },
+         body: options.body
+       });
+       return await res.json();
     }
-
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), 10000); // 10s timeout
-
-    const res = await fetch(`${BASE_URL}${endpoint}`, {
-      cache: "no-store",
-      ...options,
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...options.headers,
-      },
-    });
-
-    const text = await res.text();
-    clearTimeout(id);
-
-    // ❌ If HTML comes → backend error
-    if (text.startsWith("<!DOCTYPE") || text.startsWith("<html")) {
-      throw new Error("Server error (HTML returned). Backend might be down.");
-    }
-
-    if (!text) {
-      if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
-      return {};
-    }
-
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
-      console.error("JSON Parse Error. Raw text:", text);
-      throw new Error("Invalid response from server.");
-    }
-
-    if (!res.ok) {
-      throw new Error(data.message || data.error || `API Error ${res.status}`);
-    }
-
-    return data;
+    if (method === "delete") return await api.delete(endpoint);
   } catch (err) {
-    console.error("API ERROR:", err.message);
-    if (err.name === "AbortError") {
-      throw new Error("Request timed out. The server is taking too long to respond.");
-    }
-    if (err.message === "Failed to fetch") {
-      throw new Error("Server not reachable. Please try again.");
-    }
+    console.error(`apiRequest error (${endpoint}):`, err);
     throw err;
   }
 }
 
-// Get all problems
-export const getProblems = async () => {
-  try {
-    return await apiRequest("/api/problems");
-  } catch (err) {
-    return []; // Return empty array to keep UI functional
-  }
-};
+export const getProblems = () => api.get("/api/problems").catch(() => []);
+export const getUsers = () => api.get("/api/users").catch(() => []);
+export const getStats = () => api.get("/api/stats").catch(() => ({ users: 0, problems: 0, citizens: 0, responders: 0, ngos: 0 }));
 
-// Create problem
-export const createProblem = async (data) => {
-  return await apiRequest("/api/problems", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-};
+export const createProblem = (data) => api.post("/api/problems", data);
+export const registerUser = (data) => api.post("/api/users/register", data);
+export const loginUser = (data) => api.post("/api/users/login", data);
 
-// Get AI urgency
-export const getUrgency = async (description) => {
-  try {
-    return await apiRequest("/api/ai/urgency", {
-      method: "POST",
-      body: JSON.stringify({ description }),
-    });
-  } catch (err) {
-    return { urgency: "Low", score: 0 };
-  }
-};
-
-// Update problem status
-export const updateProblemStatus = async (id, status) => {
-  return await apiRequest(`/api/problems/${id}/status`, {
+export const updateProblemStatus = (id, status) => {
+  const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  return fetch(`${BASE_URL}/api/problems/${id}/status`, {
     method: "PATCH",
-    body: JSON.stringify({ status }),
-  });
+    headers: { 
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
+    body: JSON.stringify({ status })
+  }).then(res => res.json());
 };
 
-// Register new user
-export const registerUser = async (data) => {
-  return await apiRequest("/api/users/register", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-};
+export const deleteProblem = (id, userId) => api.delete(`/api/problems/${id}`);
 
-// Login user
-export const loginUser = async (data) => {
-  return await apiRequest("/api/users/login", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-};
-
-// Get all users (filtered by role in components)
-export const getUsers = async () => {
-  try {
-    return await apiRequest("/api/users");
-  } catch (err) {
-    return [];
-  }
-};
-
-// Delete problem (Owner only)
-export const deleteProblem = async (id, userId) => {
-  return await apiRequest(`/api/problems/${id}`, {
-    method: "DELETE",
-    body: JSON.stringify({ userId }),
-  });
-};
-
-// AI Suggest description
-export const getAISuggestion = async (text) => {
-  return await apiRequest("/api/ai/suggest", {
-    method: "POST",
-    body: JSON.stringify({ text }),
-  });
-};
-
-// Get Global Stats
-export const getStats = async () => {
-  try {
-    const data = await apiRequest("/api/stats");
-    console.log("📊 API STATS RECEIVED:", data);
-    return data;
-  } catch (err) {
-    console.error("📊 API STATS ERROR:", err);
-    return { users: 0, problems: 0, citizens: 0, responders: 0, ngos: 0 };
-  }
-};
+export const getUrgency = (description) => api.post("/api/ai/urgency", { description }).catch(() => ({ urgency: "Low", score: 0 }));
+export const getAISuggestion = (text) => api.post("/api/ai/suggest", { text });

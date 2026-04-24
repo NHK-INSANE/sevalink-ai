@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getUser } from "../utils/auth";
 import { getProblems, getUsers, getStats } from "../utils/api";
-import { io } from "socket.io-client";
+import { socket } from "../../lib/socket";
 import toast from "react-hot-toast";
 import Navbar from "../components/Navbar";
 import PageWrapper from "../components/PageWrapper";
@@ -107,7 +107,7 @@ export default function Dashboard() {
     
     fetchDashboardData();
     
-    const socket = io(API_BASE);
+    
     socket.on("new-problem", (newProb) => {
       if (!newProb?._id) return;
       toast.success(`NEW CRISIS DETECTED: ${newProb.title || "Unknown Incident"}`, {
@@ -123,7 +123,6 @@ export default function Dashboard() {
 
     return () => {
       socket.off("new-problem");
-      socket.disconnect();
     };
   }, []);
 
@@ -257,19 +256,19 @@ export default function Dashboard() {
             </div>
 
             <div className="flex flex-wrap gap-4">
-              <button className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[11px] font-bold rounded-xl border border-red-500/20 transition-all">
+              <button className="btn-apple !bg-red-600/10 !text-red-500 !border-red-500/20 shadow-none">
                 EMERGENCY ASSIGN
               </button>
-              <button className="px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-500 text-[11px] font-bold rounded-xl border border-indigo-500/20 transition-all">
+              <button className="btn-apple !bg-indigo-600/10 !text-indigo-400 !border-indigo-500/20 shadow-none">
                 AI MATCHING
               </button>
-              <button onClick={() => router.push("/map")} className="px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 text-[11px] font-bold rounded-xl border border-emerald-500/20 transition-all">
+              <button onClick={() => router.push("/map")} className="btn-apple !bg-emerald-600/10 !text-emerald-400 !border-emerald-500/20 shadow-none">
                 OPERATIONAL MAP
               </button>
-              <button onClick={handleLocateAndSort} className="btn-secondary !text-[11px] !px-6 !py-3 !rounded-xl border-white/5 bg-white/5 hover:bg-white/10">
+              <button onClick={handleLocateAndSort} className="btn-apple !bg-white/5 !text-gray-400 !border-white/10 shadow-none">
                 {sortNearest ? "Reset Filter" : "Sort by Nearest"}
               </button>
-              <Link href="/submit" className="btn-primary !text-[11px] !px-6 !py-3 !rounded-xl shadow-lg shadow-indigo-500/20">
+              <Link href="/submit" className="btn-apple shadow-indigo-500/20">
                 Report Incident
               </Link>
             </div>
@@ -300,7 +299,7 @@ export default function Dashboard() {
               { label: "NGO Partners",   value: counts.ngos },
               { label: "Field Staff",    value: counts.workers },
             ].map((s, i) => (
-              <div key={i} className="card group hover:border-indigo-500/30 transition-all duration-300">
+              <div key={i} className="glass-card hover-premium p-8">
                 <div className="mb-4">
                   <p className="text-[10px] font-bold tracking-widest text-gray-500 uppercase">{s.label}</p>
                 </div>
@@ -316,7 +315,7 @@ export default function Dashboard() {
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-gradient-to-r from-indigo-600/10 to-purple-600/10 border border-white/5 rounded-[32px] p-8 backdrop-blur-3xl shadow-2xl"
+              className="glass-card hover-premium p-8 backdrop-blur-3xl"
             >
               <div className="flex items-center gap-3 mb-6">
                 <span className="text-[10px] font-black text-indigo-400 bg-indigo-400/10 px-3 py-1 rounded-full uppercase tracking-widest">AI Command Unit</span>
@@ -341,7 +340,7 @@ export default function Dashboard() {
             <motion.div 
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-black/40 border border-white/5 rounded-[32px] p-8 backdrop-blur-3xl"
+              className="glass-card hover-premium p-8 backdrop-blur-3xl"
             >
               <div className="flex items-center gap-3 mb-6">
                 <span className="text-[10px] font-black text-red-400 bg-red-400/10 px-3 py-1 rounded-full uppercase tracking-widest">Hotspot Prediction</span>
@@ -370,7 +369,7 @@ export default function Dashboard() {
           {/* ── ANALYTICS ── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
             {/* Operational Flow */}
-            <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+            <div className="glass-card p-6 border border-white/10">
               <h3 className="mb-4 font-semibold text-white">Operational Flow</h3>
 
               <div className="space-y-2 text-sm">
@@ -505,7 +504,6 @@ export default function Dashboard() {
                 className="group flex items-center gap-2 text-indigo-400 text-sm font-bold hover:underline"
               >
                 View All Problems
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
               </button>
             </div>
 

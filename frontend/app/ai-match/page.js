@@ -6,8 +6,6 @@ import { getProblems, getUsers } from "../utils/api";
 import { getUser } from "../utils/auth";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
-import { Zap, Target, Users, AlertTriangle } from "lucide-react";
-
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
 function getDistance(lat1, lon1, lat2, lon2) {
@@ -109,7 +107,7 @@ export default function AIMatchPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(`🤖 AI auto-assigned ${data.matched.length} responders!`);
+        toast.success(`AI auto-assigned ${data.assigned.length} responders!`);
         fetchMatches();
       }
     } catch (err) {
@@ -170,7 +168,7 @@ export default function AIMatchPage() {
         return [{ problem, volunteers: matched }, ...prev];
       });
       setLiveEvent({ problem, matched });
-      toast.success(`🎯 New match: "${problem.title}"`);
+      toast.success(`New match: "${problem.title}"`);
     });
 
     return () => socket.disconnect();

@@ -539,14 +539,14 @@ export default function RegisterPage() {
                   Creating account…
                 </>
               ) : (
-                "Create Account →"
+                "CREATE ACCOUNT"
               )}
             </button>
           </form>
 
           <p style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "var(--text-muted)" }}>
             Already have an account?{" "}
-            <Link href="/login" style={{ color: "var(--primary-light)", fontWeight: 600 }}>Sign in →</Link>
+            <Link href="/login" style={{ color: "var(--primary-light)", fontWeight: 600 }}>SIGN IN</Link>
           </p>
         </div>
       </div>

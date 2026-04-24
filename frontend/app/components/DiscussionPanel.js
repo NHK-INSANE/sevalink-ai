@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { io } from "socket.io-client";
+import { socket } from "../../lib/socket";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 
@@ -38,13 +38,12 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
         setLoading(false);
       });
 
-    socketRef.current = io(API_BASE);
     if (user) {
-      socketRef.current.emit("register-user", currentUserId);
+      socket.emit("register-user", currentUserId);
     }
-    socketRef.current.emit("join-discussion", problemId);
+    socket.emit("join-discussion", problemId);
 
-    socketRef.current.on("new-discussion-message", (msg) => {
+    socket.on("new-discussion-message", (msg) => {
       setMessages(prev => {
         const safePrev = Array.isArray(prev) ? prev : [];
         const filtered = safePrev.filter(m => m.tempId !== msg.tempId);
@@ -52,18 +51,18 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
       });
     });
 
-    socketRef.current.on("user-typing", ({ userName, userId }) => {
+    socket.on("user-typing", ({ userName, userId }) => {
       setTypingUsers(prev => ({ ...prev, [userId]: userName }));
     });
 
-    socketRef.current.on("user-stop-typing", ({ userId }) => {
+    socket.on("user-stop-typing", ({ userId }) => {
       setTypingUsers(prev => {
         const next = { ...prev };
         delete next[userId];
         return next;
       });
     });
-    socketRef.current.on("teamUpdated", (updatedTeam) => {
+    socket.on("teamUpdated", (updatedTeam) => {
       setTeams(prev => {
         const safePrev = Array.isArray(prev) ? prev : [];
         if (safePrev.find(t => t._id === updatedTeam._id)) {
@@ -85,7 +84,11 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
       });
 
     return () => {
-      if (socketRef.current) socketRef.current.disconnect();
+      socket.off("new-discussion-message");
+      socket.off("user-typing");
+      socket.off("user-stop-typing");
+      socket.off("teamUpdated");
+      socket.emit("leave-discussion", problemId);
     };
   }, [problemId, user, currentUserId]);
 

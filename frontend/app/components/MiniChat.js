@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Send } from "lucide-react";
 
 export default function MiniChat() {
   const [messages, setMessages] = useState([]);
@@ -15,7 +14,6 @@ export default function MiniChat() {
   };
 
   return (
-    /* chat-bubble class sets: fixed, bottom-28px, right-28px, z-fab */
     <div className="chat-bubble">
       <AnimatePresence>
         {!isOpen && (
@@ -40,16 +38,7 @@ export default function MiniChat() {
             }}
             className="hover:border-indigo-500/40 hover:text-white transition-all"
           >
-            <MessageCircle size={20} />
-            <span
-              style={{
-                position: "absolute", top: 10, right: 10,
-                width: 8, height: 8, borderRadius: "50%",
-                background: "#22c55e",
-                border: "2px solid var(--bg-main)",
-                boxShadow: "0 0 6px rgba(34,197,94,0.6)",
-              }}
-            />
+            <span className="text-[10px] font-black uppercase tracking-tighter">CHAT</span>
           </motion.button>
         )}
 
@@ -79,14 +68,6 @@ export default function MiniChat() {
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span
-                  style={{
-                    width: 8, height: 8, borderRadius: "50%",
-                    background: "#22c55e",
-                    boxShadow: "0 0 6px rgba(34,197,94,0.6)",
-                    animation: "pulse 2s infinite",
-                  }}
-                />
                 <span style={{ fontSize: 12, fontWeight: 700, color: "white", letterSpacing: "0.06em", textTransform: "uppercase" }}>
                   Ops Channel
                 </span>
@@ -94,7 +75,7 @@ export default function MiniChat() {
               <button
                 onClick={() => setIsOpen(false)}
                 style={{
-                  width: 26, height: 26, borderRadius: 8,
+                  padding: "4px 8px", borderRadius: 8,
                   background: "rgba(255,255,255,0.05)",
                   border: "none", cursor: "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center",
@@ -103,7 +84,7 @@ export default function MiniChat() {
                 }}
                 className="hover:bg-white/10 hover:text-white"
               >
-                <X size={13} />
+                <span className="text-[9px] font-black uppercase">CLOSE</span>
               </button>
             </div>
 
@@ -123,9 +104,9 @@ export default function MiniChat() {
                     gap: 8, color: "var(--text-muted)", textAlign: "center",
                   }}
                 >
-                  <span style={{ fontSize: 28 }}>📡</span>
+                  <span className="text-[10px] font-black uppercase text-gray-500">Secure Node Active</span>
                   <p style={{ fontSize: 12, lineHeight: 1.5 }}>
-                    Secure channel active.<br />No messages yet.
+                    Channel initialized.<br />No transmissions yet.
                   </p>
                 </div>
               ) : (
@@ -178,7 +159,8 @@ export default function MiniChat() {
               <button
                 onClick={sendMessage}
                 style={{
-                  width: 34, height: 34,
+                  padding: "0 12px",
+                  height: 34,
                   borderRadius: 10,
                   background: "var(--primary-gradient)",
                   border: "none", cursor: "pointer",
@@ -189,7 +171,7 @@ export default function MiniChat() {
                 }}
                 className="hover:scale-105 active:scale-95"
               >
-                <Send size={13} />
+                <span className="text-[10px] font-black uppercase">SEND</span>
               </button>
             </div>
           </motion.div>

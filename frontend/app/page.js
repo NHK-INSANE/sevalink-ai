@@ -7,28 +7,26 @@ import CountUp from "react-countup";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
-import { MapPin, Brain, Zap, Map, Radio, Users, Clock, EyeOff, UserX, AlertCircle, CheckCircle2 } from "lucide-react";
-
 const FEATURES = [
-  { icon: <MapPin className="w-5 h-5" />, title: "Report & Locate",       desc: "Submit crisis reports with precise GPS coordinates and photo evidence in seconds.",     color: "#6366f1" },
-  { icon: <Brain className="w-5 h-5" />, title: "AI Classification",     desc: "Neural engine instantly classifies urgency level and predicts required resources.",       color: "#a855f7" },
-  { icon: <Zap className="w-5 h-5" />, title: "Smart Matching",        desc: "Proprietary algorithm matches nearest volunteers with the right skills to each crisis.", color: "#3b82f6" },
-  { icon: <Map className="w-5 h-5" />, title: "Live Operations Map",  desc: "Real-time geospatial view of all active incidents, volunteers, and NGO assets.",         color: "#22c55e" },
-  { icon: <Radio className="w-5 h-5" />, title: "SOS Broadcast",        desc: "One-tap emergency broadcast alerts all nearby responders simultaneously.",               color: "#ef4444" },
-  { icon: <Users className="w-5 h-5" />, title: "NGO Coordination",     desc: "Seamless multi-organization collaboration with shared dashboards and assignments.",       color: "#f59e0b" },
+  { title: "REPORT & LOCATE",       desc: "Submit crisis reports with precise GPS coordinates and photo evidence in seconds.",     color: "#6366f1" },
+  { title: "AI CLASSIFICATION",     desc: "Neural engine instantly classifies urgency level and predicts required resources.",       color: "#a855f7" },
+  { title: "SMART MATCHING",        desc: "Proprietary algorithm matches nearest volunteers with the right skills to each crisis.", color: "#3b82f6" },
+  { title: "LIVE OPERATIONS MAP",  desc: "Real-time geospatial view of all active incidents, volunteers, and NGO assets.",         color: "#22c55e" },
+  { title: "SOS BROADCAST",        desc: "One-tap emergency broadcast alerts all nearby responders simultaneously.",               color: "#ef4444" },
+  { title: "NGO COORDINATION",     desc: "Seamless multi-organization collaboration with shared dashboards and assignments.",       color: "#f59e0b" },
 ];
 
 const PROBLEMS = [
-  { icon: <Clock className="w-5 h-5" />, title: "Coordination Lag",  text: "Traditional disaster response loses critical hours to phone calls and paperwork.", accent: "#ef4444" },
-  { icon: <EyeOff className="w-5 h-5" />, title: "No Visibility",     text: "Field teams operate blind — no real-time view of who needs what, and where.",     accent: "#f97316" },
-  { icon: <UserX className="w-5 h-5" />, title: "Skill Mismatch",   text: "Aid reaches the wrong people. Medical teams at flood zones, engineers at medical camps.", accent: "#eab308" },
+  { title: "COORDINATION LAG",  text: "Traditional disaster response loses critical hours to phone calls and paperwork.", accent: "#ef4444" },
+  { title: "NO VISIBILITY",     text: "Field teams operate blind — no real-time view of who needs what, and where.",     accent: "#f97316" },
+  { title: "SKILL MISMATCH",   text: "Aid reaches the wrong people. Medical teams at flood zones, engineers at medical camps.", accent: "#eab308" },
 ];
 
 const STEPS = [
-  { num: "01", icon: <AlertCircle className="w-8 h-8" />, title: "Report the Crisis", desc: "Any citizen submits a problem with location, photo, and description. Takes 30 seconds." },
-  { num: "02", icon: <Brain className="w-8 h-8" />, title: "AI Analyzes",       desc: "Our model classifies urgency, category, and required resources automatically." },
-  { num: "03", icon: <Zap className="w-8 h-8" />, title: "Match & Deploy",   desc: "Nearest qualified volunteers and NGOs are notified and dispatched instantly." },
-  { num: "04", icon: <CheckCircle2 className="w-8 h-8" />, title: "Track & Resolve",  desc: "All parties coordinate on a live map until the crisis is marked resolved." },
+  { num: "01", title: "REPORT THE CRISIS", desc: "Any citizen submits a problem with location, photo, and description. Takes 30 seconds." },
+  { num: "02", title: "AI ANALYZES",       desc: "Our model classifies urgency, category, and required resources automatically." },
+  { num: "03", title: "MATCH & DEPLOY",   desc: "Nearest qualified volunteers and NGOs are notified and dispatched instantly." },
+  { num: "04", title: "TRACK & RESOLVE",  desc: "All parties coordinate on a live map until the crisis is marked resolved." },
 ];
 
 const WORDS = ["NGOs", "Volunteers", "Workers", "Reporters"];
@@ -79,7 +77,7 @@ export default function Landing() {
   }, []);
 
   return (
-    <div className="min-h-screen text-gray-200 bg-[#020617]">
+    <div className="min-h-screen text-gray-200 bg-[#0b0f1a]">
       <Navbar />
 
       {/* ── HERO ── */}
@@ -100,50 +98,37 @@ export default function Landing() {
             transition={{ delay: 0.15, duration: 0.4 }}
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[11px] font-semibold uppercase tracking-widest mb-6"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-            AI-Powered Crisis Response
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+            Live Intelligence Network
           </motion.div>
 
-          <h1 className="text-4xl md:text-6xl font-bold leading-tight text-white mb-5">
-            Connecting <TypingText /><br />
-            <span className="text-gray-300 font-semibold">Where It Matters Most</span>
+          <h1 className="text-4xl md:text-7xl font-bold text-white mb-6 tracking-tight leading-[1.05]">
+            Bridging the gap between <br />
+            Crises and <TypingText />
           </h1>
-
-          <p className="text-gray-400 text-lg max-w-2xl mx-auto text-center mb-9">
-            Real-time crisis coordination powered by AI — from reporting to response,
-            all in one unified platform.
+          <p className="text-gray-400 text-lg md:text-xl mb-10 leading-relaxed max-w-2xl mx-auto">
+            The world's first AI-driven coordination layer for disaster response. 
+            Real-time tracking, intelligent matching, and life-saving speed.
           </p>
 
-          <div className="flex justify-center gap-4 flex-wrap">
-            <Link href="/register">
-              <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} className="btn-primary px-7 py-3 text-sm font-semibold shadow-lg shadow-purple-500/20">
-                Get Started →
-              </motion.button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/submit" className="btn-apple !px-8 !py-4 text-[13px] shadow-indigo-500/30">
+              REPORT CRISIS
             </Link>
-            <Link href="/dashboard">
-              <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} className="btn-secondary px-7 py-3 text-sm">
-                View Dashboard
-              </motion.button>
+            <Link href="/dashboard" className="btn-apple !bg-white/5 !text-gray-300 !border-white/10 shadow-none !px-8 !py-4 text-[13px]">
+              VIEW DASHBOARD
             </Link>
           </div>
         </motion.div>
-      </section>
 
-      {/* ── STATS ── */}
-      <section className="section border-y border-white/10 bg-white/[0.015]">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="container"
-        >
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-8 text-center">
-            <Stat end={stats.problems  || 0} suffix="+" label="Active Crisis Reports" />
-            <Stat end={stats.users     || 0} suffix=""  label="Registered Users" />
-            <Stat end={stats.citizens  || 0} suffix=""  label="Reporters" />
-            <Stat end={stats.responders|| 0} suffix=""  label="Field Force" />
-            <Stat end={stats.ngos      || 0} suffix=""  label="Partner NGOs" />
+        {/* Quick Stats */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="container mt-24 pt-12 border-t border-white/5 relative z-10">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+            <Stat end={stats.problems} label="Live Incidents" />
+            <Stat end={stats.responders} label="Active Helpers" />
+            <Stat end={stats.ngos} label="NGO Partners" />
+            <Stat end={stats.citizens} label="Citizen Reporters" />
+            <Stat end={99} suffix="%" label="AI Precision" />
           </div>
         </motion.div>
       </section>
@@ -161,62 +146,59 @@ export default function Landing() {
           </div>
           <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {PROBLEMS.map((p, i) => (
-              <motion.div
-                key={i} variants={fadeUp}
-                whileHover={{ y: -5 }}
-                className="card flex flex-col items-center justify-center text-center h-full"
-              >
-                <h3 className="text-base font-bold text-white mb-2">{p.title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{p.text}</p>
+              <motion.div key={i} variants={fadeUp} className="glass-card hover-premium p-8 text-left">
+                <div className="w-10 h-10 rounded-xl mb-6 flex items-center justify-center" style={{ backgroundColor: `${p.accent}20`, border: `1px solid ${p.accent}30` }}>
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: p.accent }} />
+                </div>
+                <h3 className="text-lg font-bold text-white mb-3 tracking-tight">{p.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{p.text}</p>
               </motion.div>
             ))}
           </motion.div>
         </motion.div>
       </section>
 
-      {/* ── FEATURES ── */}
-      <section className="section bg-white/[0.015] border-y border-white/10">
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }} className="container">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Everything You Need to Respond</h2>
-            <p className="text-gray-400 max-w-xl mx-auto">
-              A complete AI-powered coordination platform — from crisis report to field deployment.
-            </p>
+      {/* ── FEATURES GRID ── */}
+      <section className="section bg-white/[0.01] border-y border-white/5">
+        <div className="container">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight">The Neural Network for Good</h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">Advanced technology meet urgent humanitarian needs. A full operational stack for the next generation of crisis response.</p>
           </div>
-          <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURES.map((f, i) => (
-              <motion.div key={i} variants={fadeUp} whileHover={{ y: -5 }} className="card group cursor-default flex flex-col items-center justify-center text-center h-full">
-                <h3 className="text-base font-bold text-white mb-2">{f.title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{f.desc}</p>
+              <motion.div
+                key={i}
+                whileHover={{ y: -5 }}
+                className="p-8 rounded-[2rem] bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all group"
+              >
+                <div className="w-12 h-12 rounded-2xl mb-6 flex items-center justify-center group-hover:scale-110 transition-transform" style={{ backgroundColor: `${f.color}15`, border: `1px solid ${f.color}30` }}>
+                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: f.color }} />
+                </div>
+                <h3 className="text-lg font-bold text-white mb-3 tracking-tight">{f.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
               </motion.div>
             ))}
-          </motion.div>
-        </motion.div>
-      </section>
-
-      {/* ── HOW IT WORKS ── */}
-      <section className="section">
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} viewport={{ once: true }} className="container">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">How SevaLink Works</h2>
-            <p className="text-gray-400">Four steps from crisis to resolution.</p>
           </div>
-          <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
-            {STEPS.map((s, i) => (
-              <motion.div key={i} variants={fadeUp} whileHover={{ y: -5 }} className="card group cursor-default flex flex-col items-center justify-center text-center h-full">
-                <h3 className="text-sm font-bold text-white mb-2">{s.title}</h3>
-                <p className="text-gray-400 text-xs leading-relaxed">{s.desc}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </motion.div>
+        </div>
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="border-t border-white/10 py-10">
-        <div className="container flex flex-col items-center gap-2">
-          <span className="font-bold text-base text-white">SevaLink<span className="text-purple-400"> AI</span></span>
-          <p className="text-xs text-gray-500">© 2026 SevaLink AI · Built for impact</p>
+      <footer className="py-20 border-t border-white/5 bg-black/40">
+        <div className="container text-center">
+          <div className="text-2xl font-black text-white mb-8 tracking-tighter">
+            SEVALINK<span className="text-purple-500">AI</span>
+          </div>
+          <p className="text-gray-500 text-sm max-w-md mx-auto mb-10 leading-relaxed">
+            The mission is simple: Save lives through intelligence. 
+            Join the network and help us build the future of humanitarian logistics.
+          </p>
+          <div className="flex justify-center gap-8 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">
+            <a href="#" className="hover:text-white transition">Platform</a>
+            <a href="#" className="hover:text-white transition">Network</a>
+            <a href="#" className="hover:text-white transition">Protocol</a>
+            <a href="#" className="hover:text-white transition">Open Source</a>
+          </div>
         </div>
       </footer>
     </div>

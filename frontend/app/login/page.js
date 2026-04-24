@@ -4,7 +4,6 @@ import { login } from "../utils/auth";
 import { loginUser } from "../utils/api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, MapPin, Link2, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
   const [form, setForm] = useState({ identifier: "", password: "" });
@@ -53,28 +52,8 @@ export default function LoginPage() {
       <div style={{ width: "100%", maxWidth: 420 }}>
         {/* Brand */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{ display: "inline-flex", gap: 6, marginBottom: 16, alignItems: "center" }}>
-            <div
-              style={{
-                width: 36, height: 36, borderRadius: 11,
-                background: "linear-gradient(135deg,#6366f1,#4f46e5)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "white", boxShadow: "0 4px 16px rgba(99,102,241,0.4)",
-              }}
-            >
-              <MapPin size={18} />
-            </div>
-            <div
-              style={{
-                width: 36, height: 36, borderRadius: 11,
-                background: "linear-gradient(135deg,#a855f7,#9333ea)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "white", boxShadow: "0 4px 16px rgba(168,85,247,0.4)",
-                marginLeft: -10,
-              }}
-            >
-              <Link2 size={18} />
-            </div>
+          <div style={{ textAlign: "center", marginBottom: 32 }}>
+            <h2 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-4">SEVALINK AI</h2>
           </div>
           <h1
             style={{
@@ -194,7 +173,7 @@ export default function LoginPage() {
                   }}
                   className="hover:text-white"
                 >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  <span className="text-[10px] font-black uppercase">{showPassword ? "HIDE" : "SHOW"}</span>
                 </button>
               </div>
             </div>
@@ -212,7 +191,7 @@ export default function LoginPage() {
                   fontSize: 13,
                 }}
               >
-                <AlertCircle size={14} style={{ flexShrink: 0 }} />
+                <span className="text-[10px] font-black uppercase mr-2">Error:</span>
                 {error}
               </div>
             )}
@@ -235,7 +214,7 @@ export default function LoginPage() {
                   Signing in…
                 </>
               ) : (
-                "Sign In →"
+                "SIGN IN"
               )}
             </button>
           </form>
@@ -244,7 +223,7 @@ export default function LoginPage() {
           <p style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "var(--text-muted)" }}>
             No account?{" "}
             <Link href="/register" style={{ color: "var(--primary-light)", fontWeight: 600, transition: "color 0.2s" }}>
-              Create one →
+              CREATE ONE
             </Link>
           </p>
         </div>

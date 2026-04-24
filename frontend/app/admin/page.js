@@ -5,7 +5,7 @@ import PageWrapper from "../components/PageWrapper";
 import { getProblems, getUsers, apiRequest } from "../utils/api";
 import { getUser } from "../utils/auth";
 import { useRouter } from "next/navigation";
-import { io } from "socket.io-client";
+import { socket } from "../../lib/socket";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
@@ -67,11 +67,15 @@ export default function AdminPage() {
     load();
 
     // Real-time updates
-    const socket = io(API_BASE);
+    
     socket.on("new-problem",    p  => setProblems(prev => prev.find(x => x._id === p._id) ? prev : [p, ...prev]));
     socket.on("sos-alert",      sos => setSosList(prev => [sos, ...prev]));
     socket.on("problem-updated", p  => setProblems(prev => prev.map(x => x._id === p._id ? p : x)));
-    return () => socket.disconnect();
+    return () => {
+      socket.off("new-problem");
+      socket.off("sos-alert");
+      socket.off("problem-updated");
+    };
   }, [isAdmin]);
 
   // ── SOS broadcast ─────────────────────────────────────────────────────────
@@ -143,7 +147,7 @@ export default function AdminPage() {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <Navbar />
         <div className="flex flex-col items-center justify-center h-[calc(100vh-80px)] gap-4">
-          <div className="text-6xl">🔒</div>
+          <div className="text-sm font-black text-red-500 uppercase tracking-widest">Access Restricted</div>
           <h1 className="text-2xl font-bold text-gray-700">Admin Access Only</h1>
           <p className="text-gray-400 text-sm">
             Your account role is <span className="font-semibold text-gray-600">{currentUser?.role || "unknown"}</span>.
@@ -158,11 +162,11 @@ export default function AdminPage() {
   }
 
   const TABS = [
-    { id: "overview",  label: "Overview",   icon: "📊" },
-    { id: "problems",  label: "Problems",   icon: "📋" },
-    { id: "helpers",   label: "Helpers",    icon: "🤝" },
-    { id: "sos",       label: `SOS (${sosList.length})`, icon: "🚨" },
-    { id: "map",       label: "Live Map",   icon: "🗺️" },
+    { id: "overview",  label: "Overview" },
+    { id: "problems",  label: "Problems" },
+    { id: "helpers",   label: "Helpers"  },
+    { id: "sos",       label: `SOS (${sosList.length})` },
+    { id: "map",       label: "Live Map" },
   ];
 
   return (
@@ -174,7 +178,7 @@ export default function AdminPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-6">
           <div className="animate-in slide-in-from-left-4 duration-500">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 text-red-500 rounded-full text-[10px] font-bold uppercase tracking-widest mb-3 border border-red-500/20">
-              🛡️ Admin System
+              ADMIN SYSTEM
             </div>
             <h1 className="text-2xl sm:text-4xl font-bold tracking-tight">Control Center</h1>
             <p className="text-[var(--muted)] text-sm mt-1">
@@ -186,8 +190,7 @@ export default function AdminPage() {
             disabled={sendingSOS}
             className="flex items-center justify-center gap-2 bg-red-600 text-white px-6 py-4 rounded-2xl font-bold text-sm shadow-xl shadow-red-500/20 hover:opacity-90 active:scale-95 transition disabled:opacity-50"
           >
-            <span className={sendingSOS ? "animate-spin" : "animate-pulse"}>🚨</span>
-            {sendingSOS ? "Broadcasting..." : "Broadcast Global SOS"}
+            {sendingSOS ? "Broadcasting..." : "BROADCAST GLOBAL SOS"}
           </button>
         </div>
 
@@ -220,7 +223,7 @@ export default function AdminPage() {
                     : "text-[var(--muted)] hover:text-[var(--text)]"
                 }`}
               >
-                <span>{t.icon}</span> {t.label}
+                {t.label}
               </button>
             ))}
           </div>
@@ -309,7 +312,7 @@ export default function AdminPage() {
                 <div key={h._id} className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center text-xl shrink-0">
-                      {h.role?.toLowerCase() === "volunteer" ? "🤝" : "🔧"}
+                      {h.role?.toLowerCase() === "volunteer" ? "VOL" : "WKR"}
                     </div>
                     <div className="min-w-0">
                       <div className="font-bold text-sm truncate">{h.name}</div>
@@ -317,8 +320,8 @@ export default function AdminPage() {
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <div className="text-[10px] text-[var(--muted)] truncate">📧 {h.email}</div>
-                    <div className="text-[10px] text-[var(--muted)]">🛠 {(h.skills?.length > 0 ? h.skills.join(", ") : h.skill) || "General"}</div>
+                    <div className="text-[10px] text-[var(--muted)] truncate">EMAIL: {h.email}</div>
+                    <div className="text-[10px] text-[var(--muted)]">SKILLS: {(h.skills?.length > 0 ? h.skills.join(", ") : h.skill) || "General"}</div>
                   </div>
                 </div>
               ))}
@@ -335,7 +338,7 @@ export default function AdminPage() {
               ) : (
                 sosList.map((s, i) => (
                   <div key={i} className="bg-red-500/5 border border-red-500/20 rounded-2xl p-5 flex items-start gap-4">
-                    <span className="text-2xl animate-pulse">🚨</span>
+                    <span className="text-[10px] font-black text-red-500 uppercase tracking-widest bg-red-500/10 px-2 py-1 rounded">SOS</span>
                     <div className="min-w-0">
                       <div className="font-bold text-red-500 text-sm">{s.message}</div>
                       <div className="text-[10px] text-red-500/70 mt-1 uppercase font-bold tracking-widest">
@@ -361,7 +364,7 @@ export default function AdminPage() {
         {assignModal && (
           <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-[var(--card)] border border-[var(--border)] rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl">
-              <h2 className="text-xl font-bold tracking-tight mb-2">🎯 Force Assign Helper</h2>
+              <h2 className="text-xl font-bold tracking-tight mb-2">FORCE ASSIGN HELPER</h2>
               <p className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-widest mb-6 truncate">Problem: {assignModal.title}</p>
               
               <label className="block text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest mb-2">Select Helper</label>

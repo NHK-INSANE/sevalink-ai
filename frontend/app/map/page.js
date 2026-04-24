@@ -8,7 +8,7 @@ import { getProblems, getUsers, apiRequest } from "../utils/api";
 import { SkeletonMap } from "../components/Skeleton";
 import { getUser } from "../utils/auth";
 import { motion, AnimatePresence } from "framer-motion";
-import { io } from "socket.io-client";
+import { socket } from "../../lib/socket";
 import toast from "react-hot-toast";
 
 const API_BASE =
@@ -26,7 +26,7 @@ const MapView = dynamic(() => import("../components/MapView"), {
     >
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
         <span className="loader" />
-        <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>Initializing Map…</span>
+        <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>MAP NODE SYNCING...</span>
       </div>
     </div>
   ),
@@ -70,8 +70,7 @@ export default function MapPage() {
     fetchData();
 
     // ── Socket.IO ─────────────────────────────────────────────────────────
-    const socket = io(API_BASE);
-
+    
     socket.on("new-problem", (newProb) => {
       setProblems(prev => {
         if (prev.find(p => p._id === newProb._id)) return prev;
@@ -101,7 +100,7 @@ export default function MapPage() {
       }, 5 * 60 * 1000);
 
       // Toast too
-      toast.error(`🚨 SOS: ${data.message} — from ${data.senderName || "Unknown"}`, {
+      toast.error(`SOS: ${data.message} — from ${data.senderName || "Unknown"}`, {
         duration: 8000,
         position: "top-center",
         style: {
@@ -118,15 +117,19 @@ export default function MapPage() {
 
     socket.on("assigned", ({ helperId, problemTitle }) => {
       if (user && (user._id === helperId || user.id === helperId)) {
-        toast(`✅ You've been assigned: "${problemTitle}"`, {
-          icon: "📋",
+        toast(`SUCCESS: You've been assigned: "${problemTitle}"`, {
           duration: 6000,
           style: { background: "#1e3a8a", color: "#bfdbfe", fontWeight: "600" },
         });
       }
     });
 
-    return () => socket.disconnect();
+    return () => {
+      socket.off("new-problem");
+      socket.off("problem-updated");
+      socket.off("sos-alert");
+      socket.off("assigned");
+    };
   }, []);
 
   // ── Send SOS ──────────────────────────────────────────────────────────────
@@ -147,7 +150,7 @@ export default function MapPage() {
           senderName: user?.name || "Anonymous",
         }),
       });
-      toast.success("🚨 SOS sent to all connected users!");
+      toast.success("SOS sent to all connected users!");
     } catch {
       toast.error("Could not send SOS — enable location access");
     } finally {
@@ -214,19 +217,19 @@ export default function MapPage() {
               exit={{ opacity: 0, y: -12 }}
               className="mb-6 flex items-center gap-4 bg-red-600/90 backdrop-blur-xl text-white px-5 py-4 rounded-xl shadow-2xl border border-red-400/30"
             >
-              <span className="text-xl animate-bounce">🚨</span>
+              <span className="text-xs font-black uppercase tracking-widest text-white px-2 py-1 bg-red-700 rounded-lg">SOS ALERT</span>
               <div className="flex-1">
                 <div className="font-bold text-sm uppercase tracking-tight">SOS Emergency Detected</div>
                 <div className="text-red-100 text-xs mt-0.5">
                   "{sosAlert.message}" — <span className="font-bold">{sosAlert.senderName || "Unknown"}</span>
                 </div>
               </div>
-              <button onClick={() => setSosAlert(null)} className="w-7 h-7 bg-black/10 hover:bg-black/25 rounded-lg flex items-center justify-center text-xs transition-colors">✕</button>
+              <button onClick={() => setSosAlert(null)} className="px-3 py-1 bg-black/10 hover:bg-black/25 rounded-lg flex items-center justify-center text-[10px] font-black transition-colors uppercase">CLOSE</button>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* ── STATS ROW (above map) ── */}
+        {/* STATS ROW (above map) */}
         <div className="stats-grid">
           {[
             { label: "Active Reports",    val: problems.length,                                                               color: "text-red-400",     dot: "bg-red-500"     },
@@ -261,8 +264,7 @@ export default function MapPage() {
 
           {/* Live indicator + counts */}
           <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[11px] font-semibold text-emerald-400">Live</span>
+            <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-widest">Live Link</span>
             <span className="text-[11px] text-gray-600 ml-1">{problems.length} incidents · {ngos.length} NGOs</span>
           </div>
         </div>

@@ -34,10 +34,12 @@ export default function RootLayout({ children }) {
                 boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
               },
               success: {
-                iconTheme: { primary: "#22c55e", secondary: "#1e1e2e" },
+                icon: null,
+                style: { borderLeft: "4px solid #22c55e" }
               },
               error: {
-                iconTheme: { primary: "#ef4444", secondary: "#1e1e2e" },
+                icon: null,
+                style: { borderLeft: "4px solid #ef4444" }
               },
             }}
           />

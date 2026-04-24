@@ -27,7 +27,7 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
 
   return (
     <>
-    <div className="report-card relative group">
+    <div className="glass-card hover-premium p-6 relative group">
 
       {/* ── Delete button (owner only, on hover) ── */}
       {user && user._id === problem.createdBy && (

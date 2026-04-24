@@ -8,7 +8,7 @@ import PageWrapper from "../components/PageWrapper";
 import { SkeletonCard } from "../components/Skeleton";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
-import { io } from "socket.io-client";
+import { socket } from "../../lib/socket";
 import Link from "next/link";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
@@ -33,7 +33,6 @@ export default function ProblemsPage() {
 
   useEffect(() => {
     fetchProblems();
-    const socket = io(API_BASE);
     socket.on("new-problem", (newProb) => {
       setProblems(prev => {
         if (prev.find(p => p._id === newProb._id)) return prev;
@@ -43,7 +42,10 @@ export default function ProblemsPage() {
     socket.on("problem-updated", (updatedProb) => {
       setProblems(prev => prev.map(p => p._id === updatedProb._id ? updatedProb : p));
     });
-    return () => socket.disconnect();
+    return () => {
+      socket.off("new-problem");
+      socket.off("problem-updated");
+    };
   }, []);
 
   const handleStatusChange = async (id, status) => {
@@ -109,14 +111,17 @@ export default function ProblemsPage() {
       <Navbar />
       <PageWrapper>
         <div className="page-wrapper pt-28 pb-20">
-          <main className="flex flex-col gap-[32px]">
+          <main className="flex flex-col space-y-8">
           
           {/* ── HEADER SECTION ── */}
-          <div className="flex flex-col gap-1.5">
-            <h1 className="text-3xl font-extrabold tracking-tight text-white">Crisis Problems</h1>
-            <p className="text-[var(--text-secondary)] text-sm font-medium">
-              {loading ? "Synchronizing logs..." : `Accessing ${filtered.length} active event records`}
-            </p>
+          <div className="flex flex-col md:flex-row justify-between items-end gap-6">
+            <div className="space-y-1.5">
+              <h1 className="text-3xl font-extrabold tracking-tight text-white">Incident Archive</h1>
+              <p className="text-[var(--text-secondary)] text-sm font-medium">Full repository of civic disruptions and resolution status.</p>
+            </div>
+            <Link href="/submit" className="btn-apple">
+              NEW REPORT
+            </Link>
           </div>
 
           {/* ── TOP BAR (Search + Actions) ── */}
@@ -135,76 +140,54 @@ export default function ProblemsPage() {
                   if (e.target.value === "nearest" && !userLoc) handleLocate();
                   else setSortBy(e.target.value);
                 }}
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs font-semibold text-gray-300 outline-none hover:border-purple-500/50 transition cursor-pointer h-10"
+                className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs font-semibold text-gray-300 outline-none hover:border-purple-500/50 transition cursor-pointer"
               >
-                <option value="newest" className="bg-[#0f172a]">Sort by Newest</option>
-                <option value="urgency" className="bg-[#0f172a]">Sort by Urgency</option>
-                <option value="category" className="bg-[#0f172a]">Sort by Category</option>
-                <option value="nearest" className="bg-[#0f172a]">Sort by Nearest</option>
-              </select>
-
-              <Link href="/submit" className="flex-1 md:flex-none">
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  className="btn-apple !text-xs !px-6 w-full h-10 rounded-xl"
-                >
-                  + Report New
-                </motion.button>
-              </Link>
-            </div>
-          </div>
-
-          {/* ── FILTER CARD ── */}
-          <div className="p-5 rounded-2xl bg-[#0f172a] border border-white/5 flex flex-col md:flex-row gap-6">
-            <div className="flex-1 flex flex-col gap-2">
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">Urgency Level</label>
-              <select
-                value={filterUrgency}
-                onChange={(e) => setFilterUrgency(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg bg-[#0B1220] border border-white/10 focus:border-purple-500 transition outline-none text-sm text-white"
-              >
-                <option value="All">All Levels</option>
-                <option value="Critical">Critical Only</option>
-                <option value="High">High Priority</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low Priority</option>
-              </select>
-            </div>
-            <div className="flex-1 flex flex-col gap-2">
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">Status</label>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg bg-[#0B1220] border border-white/10 focus:border-purple-500 transition outline-none text-sm text-white"
-              >
-                <option value="All">All Statuses</option>
-                <option value="Open">Open</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Resolved">Resolved</option>
+                <option value="newest" className="bg-[#0f172a]">Newest First</option>
+                <option value="nearest" className="bg-[#0f172a]">Nearest</option>
+                <option value="urgency" className="bg-[#0f172a]">By Urgency</option>
+                <option value="category" className="bg-[#0f172a]">By Category</option>
               </select>
             </div>
           </div>
 
-          {/* ── PROBLEMS GRID ── */}
-          {loading && problems.length === 0 ? (
+          {/* ── FILTERS ── */}
+          <div className="flex flex-wrap gap-2">
+            {["All", "Critical", "High", "Medium", "Low"].map((u) => (
+              <button
+                key={u}
+                onClick={() => setFilterUrgency(u)}
+                className={`px-4 py-1.5 rounded-xl text-[10px] font-bold transition-all border ${
+                  filterUrgency === u 
+                    ? "bg-indigo-600/20 text-white border-indigo-500/50" 
+                    : "bg-white/5 text-gray-400 border-white/5 hover:bg-white/10"
+                }`}
+              >
+                {u}
+              </button>
+            ))}
+          </div>
+
+          {/* ── CONTENT ── */}
+          {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
             </div>
+          ) : filtered.length === 0 ? (
+            <div className="py-20 text-center glass-card">
+              <p className="text-white font-semibold">No problems found</p>
+            </div>
           ) : (
-            <>
-              {filtered.length === 0 ? (
-                <div className="py-20 text-center border border-dashed border-white/10 rounded-3xl">
-                  <p className="text-white font-semibold">No matching records found</p>
-                  <button onClick={() => { setSearch(""); setFilterUrgency("All"); setFilterStatus("All"); }} className="text-purple-400 text-sm mt-2 hover:underline">Clear all filters</button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filtered.map((p) => (
-                    <ProblemCard key={p._id} problem={p} onStatusChange={handleStatusChange} onDelete={handleDelete} />
-                  ))}
-                </div>
-              )}
-            </>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filtered.map((p) => (
+                <ProblemCard 
+                  key={p._id} 
+                  problem={p} 
+                  onStatusChange={handleStatusChange} 
+                  onDelete={handleDelete}
+                  showActions={true} 
+                />
+              ))}
+            </div>
           )}
           </main>
         </div>

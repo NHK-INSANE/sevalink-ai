@@ -34,8 +34,8 @@ export function SkeletonMap() {
     <div className="w-full h-full bg-white/5 animate-pulse rounded-[2rem] flex items-center justify-center relative overflow-hidden border border-white/5">
       <div className="absolute inset-0 animate-shimmer"></div>
       <div className="text-white/20 text-sm font-bold uppercase tracking-[0.2em] flex flex-col items-center gap-4 z-10">
-        <div className="text-4xl filter grayscale opacity-50">🗺️</div>
-        <span>Initializing Satellite Link...</span>
+        <div className="text-4xl filter grayscale opacity-50"></div>
+        <span>NODE SYNCING...</span>
       </div>
     </div>
   );
@@ -61,7 +61,7 @@ export function Loader() {
   return (
     <div className="flex flex-col items-center justify-center py-20 gap-4">
       <div className="loader"></div>
-      <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.3em] animate-pulse">Syncing Data</p>
+      <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>MAP NODE SYNCING...</span>
     </div>
   );
 }

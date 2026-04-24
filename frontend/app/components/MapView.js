@@ -8,11 +8,11 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 // Fix Leaflet Icon Bug
-delete L.Icon.Default.prototype._getIconUrl;
+// Default Leaflet icon override to prevent image loads
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconRetinaUrl: null,
+  iconUrl: null,
+  shadowUrl: null,
 });
 
 // Inject keyframe animation once
@@ -172,9 +172,9 @@ function LocateMeButton() {
     navigator.geolocation.getCurrentPosition((pos) => {
       const { latitude, longitude } = pos.coords;
       map.flyTo([latitude, longitude], 14, { duration: 1.5 });
-      L.marker([latitude, longitude])
+      L.marker([latitude, longitude], { icon: makePulseIcon("#3b82f6", "rgba(59,130,246,0.7)", 14) })
         .addTo(map)
-        .bindPopup("📍 You are here")
+        .bindPopup("YOU")
         .openPopup();
     });
   }
@@ -228,10 +228,11 @@ export default function MapView({
         zoom={zoom}
         style={{ height: "100%", width: "100%" }}
         scrollWheelZoom={true}
+        attributionControl={false}
       >
         {/* Always light OSM tiles — dark mode does NOT affect map */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution=""
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
@@ -253,7 +254,16 @@ export default function MapView({
           />
         )}
 
-        <MarkerClusterGroup chunkedLoading>
+        <MarkerClusterGroup 
+          chunkedLoading
+          iconCreateFunction={(cluster) => {
+            return new L.DivIcon({
+              html: `<div style="background: rgba(99,102,241,0.9); color: white; border-radius: 12px; width: 32px; height: 32px; display: flex; items-center; justify-center; font-size: 10px; font-weight: 900; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(4px);">${cluster.getChildCount()}</div>`,
+              className: "",
+              iconSize: L.point(32, 32)
+            });
+          }}
+        >
 
           {/* 🚨 SOS Markers */}
           {sosMarkers.map((s, i) => (

@@ -170,6 +170,9 @@ router.patch("/:id/status", auth, async (req, res) => {
     problem.timeline.push({ text: timelineUpdate });
     await problem.save();
 
+    const io = req.app.get("io");
+    if (io) io.emit("problem-updated", problem);
+
     res.json(problem);
   } catch (err) {
     res.status(500).json({ error: "Failed to update status." });
