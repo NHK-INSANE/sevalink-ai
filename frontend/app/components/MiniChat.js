@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { socket } from "../lib/socket";
+import { socket } from "../../lib/socket";
 
 export default function MiniChat() {
   const [messages, setMessages] = useState([]);

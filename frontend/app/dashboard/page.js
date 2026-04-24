@@ -415,7 +415,6 @@ export default function Dashboard() {
             </div>
 
             <div className="relative rounded-xl overflow-hidden border border-white/10 shadow-2xl">
-            <div className="relative rounded-xl overflow-hidden border border-white/10 shadow-2xl">
               <div className="absolute top-4 right-4 flex gap-3 z-[1000]">
                 <button 
                   onClick={handleLocateAndSort}
