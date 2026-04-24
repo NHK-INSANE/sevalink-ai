@@ -98,6 +98,16 @@ io.on("connection", (socket) => {
     socket.to(problemId).emit("user-stop-typing", { userId: socket.id });
   });
 
+  // 🔥 NEW CHAT LOGIC
+  socket.on("join_problem", (id) => {
+    socket.join(id);
+    console.log(`💬 Joined problem room: ${id}`);
+  });
+
+  socket.on("send_message", ({ problemId, text, senderName }) => {
+    io.to(problemId).emit("receive_message", { text, senderName, time: new Date() });
+  });
+
   socket.on("disconnect", () => {
     for (const [uid, sid] of userSockets.entries()) {
       if (sid === socket.id) {

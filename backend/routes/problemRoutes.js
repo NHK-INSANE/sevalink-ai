@@ -306,13 +306,107 @@ router.post("/:id/messages", auth, async (req, res) => {
   }
 });
 
-// GET /api/problems/latest — Get latest 5 problems
-router.get("/latest", async (req, res) => {
+// POST /api/problems/:id/assign — Assign yourself
+router.post("/:id/assign", auth, async (req, res) => {
   try {
-    const latest = await Problem.find().sort({ createdAt: -1 }).limit(5);
-    res.json(latest);
+    const userId = req.user.id;
+    const problem = await Problem.findById(req.params.id);
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
+
+    if (!problem.team.includes(userId)) {
+      problem.team.push(userId);
+      problem.timeline.push({ text: `${req.user.name || "A user"} joined the team` });
+      
+      // If no leader assigned yet, the first joiner becomes leader (optional logic, but let's keep it simple)
+      if (!problem.leader) {
+        problem.leader = userId;
+      }
+      
+      await problem.save();
+    }
+
+    res.json({ success: true, problem });
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch latest problems" });
+    res.status(500).json({ error: "Failed to assign yourself" });
+  }
+});
+
+// GET /api/problems/:id/team — Get team members
+router.get("/:id/team", async (req, res) => {
+  try {
+    const problem = await Problem.findById(req.params.id).populate("team leader", "name email role phone");
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
+    res.json(problem.team);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch team" });
+  }
+});
+
+// POST /api/problems/:id/ai-assign — AI auto-assign team
+router.post("/:id/ai-assign", auth, authorize("admin", "ngo"), async (req, res) => {
+  try {
+    // Find nearby or skilled workers/volunteers
+    const users = await User.find({ role: { $in: ["worker", "volunteer", "Worker", "Volunteer"] } }).limit(3);
+    const problem = await Problem.findById(req.params.id);
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
+
+    const selectedIds = users.map(u => u._id);
+    problem.team = selectedIds;
+    
+    if (selectedIds.length > 0 && !problem.leader) {
+      problem.leader = selectedIds[0];
+    }
+
+    problem.timeline.push({ text: "AI auto-assigned a team of 3 members" });
+    await problem.save();
+
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: "AI Assign failed" });
+  }
+});
+
+// GET /api/problems/:id/ai-match — Get best matches
+router.get("/:id/ai-match", auth, async (req, res) => {
+  try {
+    const problem = await Problem.findById(req.params.id);
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
+
+    const matches = await matchVolunteers(problem, 5);
+    res.json(matches);
+  } catch (err) {
+    res.status(500).json({ error: "AI Match failed" });
+  }
+});
+
+// OVERRIDE PATCH status to enforce leader control
+router.patch("/:id/status", auth, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const userId = req.user.id.toString();
+
+    const problem = await Problem.findById(req.params.id);
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
+
+    // Enforce Leader Control: Only leader or admin or creator can update status
+    const isLeader = problem.leader && problem.leader.toString() === userId;
+    const isCreator = problem.createdBy === userId;
+    const isAdmin = req.user.role === "admin";
+
+    if (!isLeader && !isCreator && !isAdmin) {
+      return res.status(403).json({ error: "Only the team leader or admin can update status" });
+    }
+
+    problem.status = status;
+    problem.timeline.push({ text: `Status updated to ${status} by ${req.user.name}` });
+    await problem.save();
+
+    const io = req.app.get("io");
+    if (io) io.emit("problem-updated", problem);
+
+    res.json(problem);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update status" });
   }
 });
 

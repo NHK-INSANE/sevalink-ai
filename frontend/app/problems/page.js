@@ -140,12 +140,12 @@ export default function ProblemsPage() {
                   if (e.target.value === "nearest" && !userLoc) handleLocate();
                   else setSortBy(e.target.value);
                 }}
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs font-semibold text-gray-300 outline-none hover:border-purple-500/50 transition cursor-pointer"
+                className="bg-[#0B1220] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-semibold text-gray-300 outline-none hover:border-purple-500/50 transition cursor-pointer appearance-none shadow-lg"
               >
-                <option value="newest" className="bg-[#0f172a]">Newest First</option>
-                <option value="nearest" className="bg-[#0f172a]">Nearest</option>
-                <option value="urgency" className="bg-[#0f172a]">By Urgency</option>
-                <option value="category" className="bg-[#0f172a]">By Category</option>
+                <option value="newest" className="bg-[#0B1220]">Newest First</option>
+                <option value="nearest" className="bg-[#0B1220]">Nearest</option>
+                <option value="urgency" className="bg-[#0B1220]">By Urgency</option>
+                <option value="category" className="bg-[#0B1220]">By Category</option>
               </select>
             </div>
           </div>

@@ -94,7 +94,7 @@ export default function AIMatchPage() {
   const [matches, setMatches] = useState([]);
   const [userMatches, setUserMatches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("byProblem"); // "byProblem" or "yourself"
+  const [activeTab, setActiveTab] = useState("yourself"); // "byProblem" or "yourself"
   const [liveEvent, setLiveEvent] = useState(null);
   const currentUser = getUser();
 

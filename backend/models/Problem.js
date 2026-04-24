@@ -42,13 +42,15 @@ const problemSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["Open", "In Progress", "Resolved"],
+    enum: ["Open", "In Progress", "Resolved", "open", "in-progress", "resolved"],
     default: "Open",
   },
   assignedTo: {
     type: String,
     default: null,
   },
+  team: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  leader: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   timeline: [
     {
       text: { type: String, required: true },

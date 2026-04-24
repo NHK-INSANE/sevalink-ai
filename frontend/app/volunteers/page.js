@@ -227,23 +227,41 @@ export default function VolunteersPage() {
       <AnimatePresence>
         {showConnectModal && (
           <div className="fixed inset-0 z-[20000] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowConnectModal(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setShowConnectModal(false)} 
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+            />
+            
             <motion.div 
               initial={{ scale: 0.9, opacity: 0, y: 20 }} 
               animate={{ scale: 1, opacity: 1, y: 0 }} 
               exit={{ scale: 0.9, opacity: 0, y: 20 }} 
-              className="connect-modal-box"
+              className="bg-[#0B1220] p-6 rounded-2xl w-full max-w-md border border-white/10 shadow-2xl relative z-10"
             >
               <h2 className="text-xl font-extrabold text-white mb-2">Connect with {selectedUser?.name}</h2>
-              <p className="text-gray-400 text-sm mb-6">Briefly explain why you want to coordinate with this helper.</p>
-              <textarea placeholder="Reason for connection..." value={connectReason} onChange={(e) => setConnectReason(e.target.value)} className="w-full h-32 bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 outline-none focus:border-purple-500 transition-all mb-6 resize-none" />
+              <p className="text-gray-400 text-[13px] mb-6">Briefly explain why you want to coordinate with this helper.</p>
+              
+              <textarea 
+                placeholder="Reason for connection..." 
+                value={connectReason} 
+                onChange={(e) => setConnectReason(e.target.value)} 
+                className="w-full h-32 bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-gray-600 outline-none focus:border-purple-500 transition-all mb-6 resize-none" 
+              />
+              
               <div className="flex gap-3">
-                <button onClick={() => setShowConnectModal(false)} className="flex-1 py-3 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-colors">Cancel</button>
+                <button 
+                  onClick={() => setShowConnectModal(false)} 
+                  className="flex-1 py-3 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
                 <button 
                   onClick={submitConnectRequest} 
                   disabled={isSubmitting}
-                  className="flex-[2] py-3 rounded-xl text-xs font-bold text-white shadow-lg shadow-indigo-500/20 disabled:opacity-50" 
-                  style={{ background: "linear-gradient(to right, #7c3aed, #6366f1)" }}
+                  className="flex-[2] py-3 rounded-xl text-xs font-bold text-white shadow-lg shadow-purple-500/20 disabled:opacity-50 bg-gradient-to-r from-purple-600 to-indigo-600" 
                 >
                   {isSubmitting ? "Sending..." : "Send Request"}
                 </button>
