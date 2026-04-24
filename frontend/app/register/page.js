@@ -11,10 +11,10 @@ const MapPicker = dynamic(() => import("../components/MapPicker"), { ssr: false 
 
 
 
-const ROLES = ["User", "Volunteer", "NGO", "Worker"];
+const ROLES = ["Reporter", "Volunteer", "NGO", "Worker"];
 
 const ROLE_INFO = {
-  User: { icon: "👤", desc: "Report civic problems in your area" },
+  Reporter: { icon: "👤", desc: "Report civic problems in your area" },
   Volunteer: { icon: "🤝", desc: "Help solve problems with your skills" },
   NGO: { icon: "🏢", desc: "Coordinate large-scale relief efforts" },
   Worker: { icon: "🔧", desc: "On-ground support under an NGO" },
@@ -36,7 +36,7 @@ const SKILLS_LIST = [
 const INPUT_CLS = "auth-input";
 
 export default function RegisterPage() {
-  const [form, setForm] = useState({ role: "User" });
+  const [form, setForm] = useState({ role: "Reporter" });
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [location, setLocation] = useState(null);
   const [address, setAddress] = useState("");
@@ -69,10 +69,10 @@ export default function RegisterPage() {
       }
     }
 
-    // Password Validation
-    const passRegex = /^(?=.*[0-9]{1,})(?=.*[!@#$%^&*]).{8,}$/;
+    // Strong Password Validation
+    const passRegex = /^(?=.*[!@#$%^&*])(?=.*\d{4,}).{6,}$/;
     if (!passRegex.test(form.password)) {
-      setError("Password must be 8+ chars with at least 1 number and 1 special char.");
+      setError("Password must be 6+ chars with 4+ numbers and 1 special char.");
       return;
     }
 
@@ -89,7 +89,7 @@ export default function RegisterPage() {
           location: location ? { lat: location.lat, lng: location.lng } : null,
         }
       : {
-          role: form.role.toLowerCase(),
+          role: form.role === "Reporter" ? "user" : form.role.toLowerCase(),
           name: form.name,
           username: form.username,
           email: form.email,

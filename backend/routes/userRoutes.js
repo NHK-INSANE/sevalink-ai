@@ -11,10 +11,17 @@ router.post("/register", validate(userSchema), async (req, res) => {
   try {
     const { email, username } = req.body;
 
-    // Prevent duplicate emails or usernames
-    const existing = await User.findOne({ $or: [{ email }, { username }] });
+    // Prevent duplicate emails, usernames, or phone numbers
+    const existing = await User.findOne({ 
+      $or: [{ email }, { username }, { phone: req.body.phone }] 
+    });
     if (existing) {
-      return res.status(409).json({ error: "Email or username already registered" });
+      let field = "Email or username";
+      if (existing.phone === req.body.phone) field = "Phone number";
+      else if (existing.email === email) field = "Email";
+      else if (existing.username === username) field = "Username";
+      
+      return res.status(409).json({ error: `${field} already registered` });
     }
 
     const user = new User(req.body);

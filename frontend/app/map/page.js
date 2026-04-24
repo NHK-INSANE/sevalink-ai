@@ -268,21 +268,43 @@ export default function MapPage() {
         </div>
 
         {/* ── MAP CARD ── */}
-        <div className="card !p-0 overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)" }}>
+        <div className="space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
+            <h3 className="text-lg font-bold text-white tracking-tight">Interactive Operations Hub</h3>
+            
+            {/* CLEAN LEGEND ABOVE MAP */}
+            <div className="flex flex-wrap items-center gap-4 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+              <span className="text-[10px] font-black text-white/20 uppercase tracking-widest mr-2">Legend</span>
+              {[
+                { label: "Critical", dot: "bg-red-500",    count: problems.filter(p => p.urgency?.toLowerCase() === "critical").length },
+                { label: "High",     dot: "bg-orange-500", count: problems.filter(p => p.urgency?.toLowerCase() === "high").length     },
+                { label: "Medium",   dot: "bg-yellow-500", count: problems.filter(p => p.urgency?.toLowerCase() === "medium").length   },
+                { label: "Low",      dot: "bg-green-500",  count: problems.filter(p => p.urgency?.toLowerCase() === "low").length      },
+                { label: "NGOs",     dot: "bg-blue-500",   count: ngos.length },
+              ].map(l => (
+                <div key={l.label} className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${l.dot}`} />
+                  <span className="text-[10px] font-bold text-gray-400">{l.label}</span>
+                  <span className="text-[10px] font-black text-white/40 ml-0.5">{l.count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-          {/* Map itself */}
-          <div className="h-[68vh] w-full relative">
-            <MapView
-              problems={problems}
-              ngos={ngos}
-              helpers={helpers}
-              sosMarkers={sosMarkers}
-              type={type}
-              height="100%"
-              zoom={6}
-              zoomToUser={true}
-              showHeatmap={showHeatmap}
-            />
+          <div className="card !p-0 overflow-hidden border border-white/10 shadow-2xl">
+            <div className="h-[68vh] w-full relative">
+              <MapView
+                problems={problems}
+                ngos={ngos}
+                helpers={helpers}
+                sosMarkers={sosMarkers}
+                type={type}
+                height="100%"
+                zoom={6}
+                zoomToUser={true}
+                showHeatmap={showHeatmap}
+              />
+            </div>
           </div>
         </div>
       </main>

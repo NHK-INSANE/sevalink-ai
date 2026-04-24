@@ -219,55 +219,9 @@ export default function MapView({
   zoomToUser = false,
   showHeatmap = false,
 }) {
-  // Live counts for legend
-  const counts = {
-    critical: problems.filter(p => p.urgency?.toLowerCase() === "critical").length,
-    high:     problems.filter(p => p.urgency?.toLowerCase() === "high").length,
-    medium:   problems.filter(p => p.urgency?.toLowerCase() === "medium").length,
-    low:      problems.filter(p => p.urgency?.toLowerCase() === "low").length,
-    ngos:     ngos.length,
-    sos:      sosMarkers.length,
-  };
-
-  const LegendRow = ({ color, label, count }) => (
-    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-      <span style={{
-        width: 10, height: 10, borderRadius: "50%",
-        background: color, display: "inline-block", flexShrink: 0
-      }} />
-      <span style={{ fontSize: "11px", color: "#4b5563", fontWeight: 500, flex: 1 }}>{label}</span>
-      {count !== undefined && (
-        <span style={{
-          fontSize: "10px", fontWeight: "700", color: "#6b7280",
-          background: "#f3f4f6", borderRadius: "8px", padding: "1px 6px"
-        }}>{count}</span>
-      )}
-    </div>
-  );
-
   return (
     <div style={{ height, width: "100%", position: "relative" }}
       className="rounded-xl overflow-hidden shadow-md border border-gray-200 bg-white">
-
-      {/* ── Floating Legend with live counts ── */}
-      <div className="map-legend">
-        <div style={{ fontSize: "9px", fontWeight: "900", color: "#9ca3af", letterSpacing: "0.1em", textTransform: "uppercase", marginRight: 8 }}>
-          LIVE
-        </div>
-
-        {counts.sos > 0 && (
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#dc2626", animation: "pulse 1s infinite" }} />
-            <span style={{ fontSize: "11px", fontWeight: "700", color: "#ef4444" }}>{counts.sos} SOS</span>
-          </div>
-        )}
-
-        <LegendRow color="#ef4444" label="Critical"   count={counts.critical} />
-        <LegendRow color="#f97316" label="High"       count={counts.high} />
-        <LegendRow color="#eab308" label="Medium"     count={counts.medium} />
-        <LegendRow color="#22c55e" label="Low"        count={counts.low} />
-        <LegendRow color="#3b82f6" label="NGOs" count={counts.ngos} />
-      </div>
 
       <MapContainer
         center={center}

@@ -43,6 +43,7 @@ export default function Dashboard() {
     try {
       setError(null);
       const data = await getProblems();
+      console.log("📊 DASHBOARD DATA: Problems Fetched:", data.length);
       const newCritical = data.filter((p) => p.urgency === "Critical").length;
       if (prevCriticalRef.current > 0 && newCritical > prevCriticalRef.current) {
         toast("🚨 New critical issue reported!", {
@@ -55,6 +56,7 @@ export default function Dashboard() {
       setProblems(data);
       setLastUpdate(new Date().toLocaleTimeString());
     } catch (e) {
+      console.error("❌ FETCH ERROR:", e);
       setError("Could not connect to backend.");
     } finally {
       setLoading(false);
@@ -64,6 +66,7 @@ export default function Dashboard() {
   const fetchUsers = async () => {
     try {
       const data = await getUsers();
+      console.log("👥 DASHBOARD DATA: Users Fetched:", data.length);
       setUsersList(data);
     } catch (err) {
       console.error(err);
@@ -205,7 +208,7 @@ export default function Dashboard() {
         <main className="page-wrapper pt-[120px]">
           <div className="animate-pulse space-y-8">
             <div className="h-10 bg-white/5 rounded-2xl w-64" />
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {[1,2,3,4].map(i => <SkeletonStats key={i} />)}
             </div>
             <div className="h-[400px] bg-white/5 rounded-2xl" />
@@ -235,59 +238,69 @@ export default function Dashboard() {
             </div>
 
             <div className="flex gap-3">
-              <button onClick={handleLocateAndSort} className="btn-secondary !text-xs">
+              <button onClick={handleLocateAndSort} className="btn-apple !text-xs !px-5 !py-2.5">
                 📍 {sortNearest ? "Reset Sort" : "Sort by Nearest"}
               </button>
-              <Link href="/submit" className="btn-primary !text-xs">Report Crisis</Link>
+              <Link href="/submit" className="btn-primary !text-xs !px-5 !py-2.5">Report Crisis</Link>
             </div>
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-12">
             {[
-              { label: "Total Problems",  value: counts.total      },
-              { label: "Volunteers",      value: counts.volunteers  },
-              { label: "Field Workers",   value: counts.workers     },
+              { label: "Total Reports",   value: counts.total      },
+              { label: "Active Helpers",  value: counts.volunteers  },
+              { label: "Field Personnel", value: counts.workers     },
               { label: "Partner NGOs",    value: counts.ngos        },
             ].map((s, i) => (
-              <div key={i} className="card">
-                <p className="text-[11px] tracking-widest text-gray-500 mb-2 uppercase">{s.label}</p>
-                <p className="text-2xl font-bold text-white leading-none"><Counter value={s.value} /></p>
+              <div key={i} className="card group hover:border-indigo-500/30 transition-all duration-300">
+                <p className="text-[10px] font-bold tracking-[0.2em] text-gray-500 mb-3 uppercase">{s.label}</p>
+                <p className="text-3xl font-bold text-white leading-none group-hover:text-indigo-400 transition-colors">
+                  <Counter value={s.value} />
+                </p>
               </div>
             ))}
           </div>
 
           {/* Analytics Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
             <div className="card">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-6">📈 Problem Flow</h3>
-              <div className="space-y-4">
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-8">📈 Operational Flow</h3>
+              <div className="space-y-6">
                 {[
-                  { label: "Open Issues", val: openCount,     dot: "bg-red-400"    },
-                  { label: "In Progress", val: progressCount, dot: "bg-yellow-400" },
-                  { label: "Resolved",    val: resolvedCount, dot: "bg-green-400"  },
+                  { label: "Unassigned Reports", val: openCount,     dot: "bg-red-400",     color: "text-red-400" },
+                  { label: "In Progress",        val: progressCount, dot: "bg-yellow-400",  color: "text-yellow-400" },
+                  { label: "Resolved Cases",     val: resolvedCount, dot: "bg-emerald-400", color: "text-emerald-400" },
                 ].map(r => (
-                  <div key={r.label} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-1.5 h-1.5 rounded-full ${r.dot}`} />
-                      <span className="text-sm text-gray-300">{r.label}</span>
+                  <div key={r.label} className="flex items-center justify-between py-1">
+                    <div className="flex items-center gap-3">
+                      <span className={`w-2 h-2 rounded-full ${r.dot} shadow-[0_0_8px_rgba(255,255,255,0.2)]`} />
+                      <span className="text-sm font-medium text-gray-300">{r.label}</span>
                     </div>
-                    <span className="text-sm font-bold text-white">{r.val}</span>
+                    <span className={`text-lg font-bold ${r.color}`}>{r.val}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             <div className="card lg:col-span-2">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-6">📊 Categories</h3>
-              <div className="space-y-3">
-                {categoryData.slice(0, 5).map(c => (
-                  <div key={c.name} className="flex items-center gap-4 py-1.5 border-b border-white/5 last:border-0">
-                    <span className="text-xs text-gray-400 w-24 truncate">{c.name}</span>
-                    <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-indigo-500" style={{ width: `${c.percent}%` }} />
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-8">📊 Incident Categories</h3>
+              <div className="space-y-5">
+                {categoryData.length === 0 ? (
+                   <p className="text-xs text-gray-600 text-center py-10 italic">No data available</p>
+                ) : categoryData.slice(0, 5).map(c => (
+                  <div key={c.name} className="space-y-2">
+                    <div className="flex justify-between items-end">
+                      <span className="text-xs font-bold text-gray-400 truncate">{c.name}</span>
+                      <span className="text-[10px] font-bold text-indigo-400">{c.percent}%</span>
                     </div>
-                    <span className="text-[10px] font-bold text-indigo-400">{c.percent}%</span>
+                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${c.percent}%` }}
+                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500" 
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -295,21 +308,40 @@ export default function Dashboard() {
           </div>
 
           {/* ROLE SPECIFIC EXTENSIONS */}
-          <div className="mb-12">
+          <div className="mb-16">
             {renderRoleSpecific()}
           </div>
 
           {/* Map Section */}
-          <div className="card p-0 overflow-hidden mb-12">
-            <div className="px-6 py-4 border-b border-white/5 bg-white/[0.02] flex justify-between items-center">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400">Live Operation Map</h3>
-              <span className="flex items-center gap-1.5 text-[10px] text-green-400 font-bold uppercase tracking-widest">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                Live Sync Active
-              </span>
+          <div className="space-y-4 mb-16">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
+              <div>
+                <h3 className="text-lg font-bold text-white tracking-tight">Live Operations Map</h3>
+                <p className="text-xs text-gray-500 mt-1">Real-time visualization of all active crisis markers</p>
+              </div>
+              
+              {/* CLEAN LEGEND ABOVE MAP */}
+              <div className="flex flex-wrap items-center gap-4 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                <span className="text-[10px] font-black text-white/20 uppercase tracking-widest mr-2">Legend</span>
+                {[
+                  { label: "Critical", dot: "bg-red-500",    count: criticalCount },
+                  { label: "High",     dot: "bg-orange-500", count: highCount     },
+                  { label: "Medium",   dot: "bg-yellow-500", count: mediumCount   },
+                  { label: "Low",      dot: "bg-green-500",  count: lowCount      },
+                ].map(l => (
+                  <div key={l.label} className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${l.dot}`} />
+                    <span className="text-[10px] font-bold text-gray-400">{l.label}</span>
+                    <span className="text-[10px] font-black text-white/40 ml-0.5">{l.count}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="h-[450px]">
-              <MapView problems={problems} type="problems" height="100%" zoom={6} center={[22.3, 87.3]} />
+
+            <div className="card !p-0 overflow-hidden border border-white/10 shadow-2xl">
+              <div className="h-[500px]">
+                <MapView problems={problems} type="problems" height="100%" zoom={6} center={[22.3, 87.3]} />
+              </div>
             </div>
           </div>
 
@@ -317,15 +349,21 @@ export default function Dashboard() {
           <div className="space-y-8">
             <div className="flex items-center justify-between px-2">
               <h2 className="text-xl font-bold text-white tracking-tight">
-                {sortNearest ? "Nearest Solutions" : "Recent Reports"}
+                {sortNearest ? "📍 Nearest Solutions" : "🕒 Recent Activity"}
               </h2>
-              <Link href="/problems" className="text-indigo-400 text-sm font-bold hover:text-indigo-300 transition-colors">View All →</Link>
+              <Link href="/problems" className="text-indigo-400 text-sm font-bold hover:text-indigo-300 transition-colors flex items-center gap-1">
+                Full Database <span className="text-lg">→</span>
+              </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sortedProblems.slice(0, 6).map((p) => (
-                <ProblemCard key={p._id} problem={p} />
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {sortedProblems.length === 0 ? (
+                <div className="col-span-full py-20 text-center text-gray-600 italic">No reports found in this sector.</div>
+              ) : (
+                sortedProblems.slice(0, 6).map((p) => (
+                  <ProblemCard key={p._id} problem={p} />
+                ))
+              )}
             </div>
           </div>
         </main>
