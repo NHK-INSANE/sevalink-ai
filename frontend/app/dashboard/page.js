@@ -13,8 +13,10 @@ import ProblemCard from "../components/ProblemCard";
 import VolunteerDashboard from "../components/dashboards/VolunteerDashboard";
 import AdminDashboard from "../components/dashboards/AdminDashboard";
 import NgoDashboard from "../components/dashboards/NgoDashboard";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { getUserLocation } from "../utils/location";
+import { useMemo } from "react";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area } from "recharts";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
@@ -108,17 +110,25 @@ export default function Dashboard() {
     const socket = io(API_BASE);
     socket.on("new-problem", (newProb) => {
       if (!newProb?._id) return;
+      toast.success(`NEW CRISIS DETECTED: ${newProb.title || "Unknown Incident"}`, {
+        duration: 5000,
+        position: "top-right",
+        style: { background: "#0f172a", color: "#fff", border: "1px solid #ef4444" }
+      });
       setProblems(prev => {
         if (prev.find(p => p._id === newProb._id)) return prev;
         return [newProb, ...prev];
       });
     });
 
-    return () => socket.disconnect();
+    return () => {
+      socket.off("new-problem");
+      socket.disconnect();
+    };
   }, []);
 
-  const safeProblems = Array.isArray(problems) ? problems : [];
-  const safeUsers = Array.isArray(usersList) ? usersList : [];
+  const safeProblems = useMemo(() => Array.isArray(problems) ? problems : [], [problems]);
+  const safeUsers = useMemo(() => Array.isArray(usersList) ? usersList : [], [usersList]);
 
   const openCount = safeProblems.filter(p => p?.status?.toLowerCase() === "open").length;
   const resolvedCount = safeProblems.filter(p => p?.status?.toLowerCase() === "resolved").length;
@@ -139,11 +149,22 @@ export default function Dashboard() {
     categoryCount[cat] = (categoryCount[cat] || 0) + 1;
   });
   const totalProblems = safeProblems.length || 1;
-  const categoryData = Object.keys(categoryCount).map(cat => ({
+  const categoryData = useMemo(() => Object.keys(categoryCount).map(cat => ({
     name: cat,
     value: categoryCount[cat],
     percent: ((categoryCount[cat] / totalProblems) * 100).toFixed(1)
-  })).sort((a, b) => b.value - a.value);
+  })).sort((a, b) => b.value - a.value), [categoryCount, totalProblems]);
+
+  // Dummy data for trend chart
+  const trendData = [
+    { day: "Mon", cases: 12 },
+    { day: "Tue", cases: 18 },
+    { day: "Wed", cases: 10 },
+    { day: "Thu", cases: 25 },
+    { day: "Fri", cases: 30 },
+    { day: "Sat", cases: 22 },
+    { day: "Sun", cases: openCount },
+  ];
 
   const handleLocateAndSort = async () => {
     if (sortNearest) {
@@ -222,7 +243,16 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
+              <button className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[11px] font-bold rounded-xl border border-red-500/20 transition-all">
+                EMERGENCY ASSIGN
+              </button>
+              <button className="px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-500 text-[11px] font-bold rounded-xl border border-indigo-500/20 transition-all">
+                AI MATCHING
+              </button>
+              <button onClick={() => router.push("/map")} className="px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 text-[11px] font-bold rounded-xl border border-emerald-500/20 transition-all">
+                OPERATIONAL MAP
+              </button>
               <button onClick={handleLocateAndSort} className="btn-secondary !text-[11px] !px-6 !py-3 !rounded-xl border-white/5 bg-white/5 hover:bg-white/10">
                 {sortNearest ? "Reset Filter" : "Sort by Nearest"}
               </button>
@@ -267,6 +297,38 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
+
+          {/* ── AI INSIGHTS PANEL ── */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gradient-to-r from-indigo-600/10 to-purple-600/10 border border-white/5 rounded-[32px] p-8 mb-12 backdrop-blur-3xl shadow-2xl"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <span className="text-[10px] font-black text-indigo-400 bg-indigo-400/10 px-3 py-1 rounded-full uppercase tracking-widest">AI Command Unit</span>
+              <h3 className="text-xl font-bold text-white tracking-tight">Predictive Insights</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Target Hotspot</p>
+                <p className="text-lg font-bold text-white">Sundarbans Delta Region</p>
+                <p className="text-xs text-gray-400 leading-relaxed">High report density detected within 5km radius of coastal infrastructure.</p>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Strategic Action</p>
+                <p className="text-lg font-bold text-yellow-500">Deploy Rapid-Response Medical Units</p>
+                <p className="text-xs text-gray-400 leading-relaxed">Priority level: High. AI suggests immediate dispatch of specialized teams.</p>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Risk Prediction</p>
+                <p className="text-lg font-bold text-red-500">Critical Flood Risk (88.4%)</p>
+                <p className="text-xs text-gray-400 leading-relaxed">Forecast indicates escalation likely within the next 12-18 hours.</p>
+              </div>
+            </div>
+          </motion.div>
 
           {/* ── ANALYTICS ── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
@@ -319,18 +381,18 @@ export default function Dashboard() {
             </div>
 
             {/* Categories */}
-            <div className="card lg:col-span-2">
+            <div className="card lg:col-span-1">
               <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-8">Incident Categories</h3>
               <div className="space-y-5">
                 {categoryData.length === 0 ? (
                    <p className="text-xs text-gray-600 text-center py-10 italic">Awaiting data...</p>
-                ) : categoryData.slice(0, 5).map(c => (
+                ) : categoryData.slice(0, 4).map(c => (
                   <div key={c.name} className="space-y-2 group">
                     <div className="flex justify-between items-end">
                       <span className="text-xs font-bold text-gray-400 group-hover:text-gray-200 transition-colors truncate">{c.name}</span>
                       <span className="text-[10px] font-black text-indigo-400">{c.percent}%</span>
                     </div>
-                    <div className="h-2 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-out" 
                         style={{ width: `${c.percent}%` }}
@@ -338,6 +400,28 @@ export default function Dashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Incident Trend Chart */}
+            <div className="card lg:col-span-1">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-8">Incident Trend (Last 7 Days)</h3>
+              <div className="h-[240px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={trendData}>
+                    <defs>
+                      <linearGradient id="colorCases" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <Tooltip 
+                      contentStyle={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", fontSize: "10px" }}
+                    />
+                    <Area type="monotone" dataKey="cases" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorCases)" />
+                    <XAxis dataKey="day" stroke="#4b5563" fontSize={10} axisLine={false} tickLine={false} />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             </div>
           </div>
