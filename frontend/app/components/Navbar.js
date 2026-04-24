@@ -5,7 +5,6 @@ import { useEffect, useState, useContext } from "react";
 import { getUser, logout } from "../utils/auth";
 import { io } from "socket.io-client";
 import toast from "react-hot-toast";
-import { MapPin, Link2, Bell, ChevronDown, Menu, X, Trash2, CheckCircle } from "lucide-react";
 import { NotificationContext } from "../context/NotificationContext";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -46,7 +45,7 @@ export default function Navbar() {
         audio.play().catch(() => {});
       } catch (err) {}
 
-      toast.error(`🚨 SOS: ${data.message}`, {
+      toast.error(`SOS: ${data.message}`, {
         duration: 8000,
         position: "top-center",
         style: { background: "#dc2626", color: "#fff", fontWeight: "bold", borderRadius: "12px" },
@@ -87,17 +86,9 @@ export default function Navbar() {
         
         {/* nav-left: Brand */}
         <div className="nav-left">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="flex -space-x-1.5">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition-transform">
-                <MapPin size={15} />
-              </div>
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white shadow-lg shadow-purple-500/20 group-hover:scale-110 transition-transform delay-75">
-                <Link2 size={15} />
-              </div>
-            </div>
-            <span className="font-extrabold text-lg tracking-tight text-white hidden sm:inline-block">
-              SevaLink <span className="text-indigo-400 font-medium text-sm ml-1 uppercase tracking-widest">AI</span>
+          <Link href="/" className="flex items-center gap-2 group">
+            <span className="font-extrabold text-xl tracking-tighter text-white">
+              SEVALINK <span className="text-indigo-400 font-black text-xs ml-1 uppercase tracking-widest">AI</span>
             </span>
           </Link>
         </div>
@@ -133,11 +124,13 @@ export default function Navbar() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); }}
-                    className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:border-white/20 transition-all relative"
+                    className="px-3 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:border-white/20 transition-all relative text-[10px] font-bold uppercase tracking-widest"
                   >
-                    <Bell size={18} />
+                    ALERTS
                     {unreadCount > 0 && (
-                      <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-[#080c1a] animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                      <span className="ml-2 px-1.5 py-0.5 bg-red-500 text-white text-[8px] rounded-md animate-pulse">
+                        {unreadCount}
+                      </span>
                     )}
                   </motion.button>
 
@@ -159,8 +152,7 @@ export default function Navbar() {
                         <div className="max-h-[320px] overflow-y-auto">
                           {notifications.length === 0 ? (
                             <div className="py-12 text-center flex flex-col items-center gap-2">
-                              <Bell size={24} className="text-gray-700" />
-                              <p className="text-xs text-gray-500 font-medium">All clear! No alerts</p>
+                              <p className="text-xs text-gray-500 font-black uppercase tracking-widest">No Active Alerts</p>
                             </div>
                           ) : (
                             notifications.map((n) => (
@@ -195,11 +187,10 @@ export default function Navbar() {
                     onClick={() => { setProfileOpen(!profileOpen); setNotifOpen(false); }}
                     className="flex items-center gap-2.5 p-1.5 pr-3 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-indigo-500/20">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-black text-xs">
                       {user.name?.[0]?.toUpperCase() || "U"}
                     </div>
-                    <span className="text-xs font-bold text-gray-200 hidden sm:block">{user.name?.split(" ")[0] || "User"}</span>
-                    <ChevronDown size={14} className={`text-gray-500 transition-transform ${profileOpen ? "rotate-180" : ""}`} />
+                    <span className="text-[10px] font-bold text-gray-200 uppercase tracking-widest hidden sm:block">{user.name?.split(" ")[0] || "User"}</span>
                   </motion.button>
 
                   <AnimatePresence>
@@ -231,9 +222,9 @@ export default function Navbar() {
             {/* Mobile Menu Toggle */}
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-              className="lg:hidden w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white bg-white/5 rounded-xl border border-white/10"
+              className="lg:hidden px-3 h-10 flex items-center justify-center text-gray-400 hover:text-white bg-white/5 rounded-xl border border-white/10 text-[10px] font-bold uppercase tracking-widest"
             >
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              {mobileMenuOpen ? "CLOSE" : "MENU"}
             </button>
           </div>
         </div>

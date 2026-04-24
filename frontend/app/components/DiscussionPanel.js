@@ -258,12 +258,11 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-white truncate text-lg tracking-tight">{problemTitle || "Coordination Channel"}</h3>
             <div className="flex items-center gap-2 mt-1">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-bold">Secure Node</span>
+              <span className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-bold underline decoration-emerald-500/50">Secure Node</span>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-gray-500 hover:text-white rounded-xl transition">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+          <button onClick={onClose} className="px-3 py-1 text-gray-500 hover:text-white rounded-xl transition text-[10px] font-black tracking-widest uppercase">
+            CLOSE
           </button>
         </div>
 
@@ -289,7 +288,7 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
             onClick={() => toast.success("AI Summarizing current intel...")}
             className="w-full mt-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-[9px] font-bold text-indigo-400 uppercase tracking-widest hover:bg-indigo-500/20 transition-all"
           >
-            🤖 Generate AI Situation Summary
+            GENERATE AI SITUATION SUMMARY
           </button>
         )}
       </div>
@@ -324,8 +323,8 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
                         {m.type === "image" && <img src={m.mediaUrl} className="rounded-xl mt-2" alt="Shared intelligence" />}
                         {m.type === "audio" && (
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" /></svg>
+                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-[8px] font-black uppercase">
+                              PLAY
                             </div>
                             <audio src={m.mediaUrl} controls className="h-8 w-40 opacity-50" />
                           </div>
@@ -449,24 +448,24 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
               whileTap={{ scale: 0.9 }} onClick={() => sendMessage()} disabled={!input.trim()}
               className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20 disabled:opacity-20 transition-opacity"
             >
-              <svg className="w-4 h-4 rotate-90" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
+              <span className="text-[10px] font-black uppercase">SEND</span>
             </motion.button>
           </div>
           
           <div className="flex items-center justify-between px-1">
             <div className="flex gap-1.5">
-              <label className="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-lg cursor-pointer text-gray-500 hover:text-white transition-all border border-white/5" title="Intelligence Image">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              <label className="px-3 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-lg cursor-pointer text-gray-500 hover:text-white transition-all border border-white/5 text-[9px] font-black uppercase tracking-widest" title="Intelligence Image">
+                IMG
                 <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
               </label>
               
               <motion.button 
                 whileTap={{ scale: 0.9 }}
                 onMouseDown={startRecording} onMouseUp={stopRecording} onMouseLeave={stopRecording}
-                className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all border border-white/5 ${isRecording ? "bg-red-500 text-white animate-pulse border-red-400" : "bg-white/5 text-gray-500 hover:bg-white/10 hover:text-white"}`}
+                className={`px-3 h-9 flex items-center justify-center rounded-lg transition-all border border-white/5 text-[9px] font-black uppercase tracking-widest ${isRecording ? "bg-red-500 text-white animate-pulse border-red-400" : "bg-white/5 text-gray-500 hover:bg-white/10 hover:text-white"}`}
                 title="Voice Protocol"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                VOICE
               </motion.button>
             </div>
             

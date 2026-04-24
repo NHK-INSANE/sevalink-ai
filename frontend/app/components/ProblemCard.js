@@ -33,12 +33,10 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
       {user && user._id === problem.createdBy && (
         <button
           onClick={() => onDelete(problem._id)}
-          className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 p-1 hover:bg-red-500/10 rounded z-10"
+          className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 p-1 hover:bg-red-500/10 rounded z-10 text-[9px] font-black tracking-widest uppercase"
           title="Delete"
         >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
+          DELETE
         </button>
       )}
 
@@ -146,7 +144,7 @@ export default function ProblemCard({ problem, onStatusChange, onDelete }) {
               });
               const data = await res.json();
               if (data.success) {
-                toast.success(`AI assigned ${data.matched.length} responders!`);
+                toast.success(`AI assigned ${data.assigned.length} responders!`);
                 if (onStatusChange) onStatusChange(problem._id, "In Progress");
               } else {
                 toast.error(data.error || "Auto-assignment failed");

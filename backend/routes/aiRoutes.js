@@ -1,30 +1,44 @@
 const express = require("express");
 const router = express.Router();
-const { getUrgency, suggestDescription } = require("../controllers/aiController");
-const { auth } = require("../middleware/auth");
-const rateLimit = require("express-rate-limit");
+const Problem = require("../models/Problem");
+const User = require("../models/User");
+const { autoAssign } = require("../services/aiAssignService");
 
-const aiLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 20, // limit each IP to 20 AI requests per hour
-  message: "Too many AI requests from this IP, please try again after an hour"
+/**
+ * @route POST /api/ai/auto-assign/:problemId
+ * @desc Automatically assign responders to a specific problem using the AI scoring engine
+ */
+router.post("/auto-assign/:problemId", async (req, res) => {
+  try {
+    const problem = await Problem.findById(req.params.problemId);
+    if (!problem) return res.status(404).json({ message: "Problem not found" });
+
+    // Find active responders (volunteers or field workers)
+    const users = await User.find({ 
+      role: { $in: ["volunteer", "worker", "responder"] } 
+    });
+
+    const assignmentResults = await autoAssign(problem, users);
+    const assignedUserIds = assignmentResults.map(a => a.user._id);
+
+    // Update the problem with assigned responders
+    problem.assignedTo = assignedUserIds;
+    problem.status = "In Progress";
+    await problem.save();
+
+    res.json({
+      success: true,
+      problemId: problem._id,
+      assigned: assignmentResults.map(a => ({
+        id: a.user._id,
+        name: a.user.name,
+        score: a.score
+      }))
+    });
+  } catch (error) {
+    console.error("AI Auto-Assign Error:", error);
+    res.status(500).json({ message: "Assignment failed", error: error.message });
+  }
 });
-
-// POST /api/ai/urgency
-router.post("/urgency", auth, aiLimiter, getUrgency);
-
-// POST /api/ai/suggest
-router.post("/suggest", auth, aiLimiter, suggestDescription);
-
-const { matchProblemsForUser, matchUsersForProblem, autoAssign } = require("../controllers/aiController");
-
-// GET /api/ai/match/problems/:userId
-router.get("/match/problems/:userId", auth, matchProblemsForUser);
-
-// GET /api/ai/match/users/:problemId
-router.get("/match/users/:problemId", auth, matchUsersForProblem);
-
-// POST /api/ai/auto-assign/:problemId
-router.post("/auto-assign/:problemId", auth, autoAssign);
 
 module.exports = router;

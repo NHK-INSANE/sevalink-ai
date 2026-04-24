@@ -90,7 +90,7 @@ const sosIcon = new L.DivIcon({
       animation: sosPulse 1s ease-in-out infinite;
       display: flex; align-items: center; justify-content: center;
       font-size: 10px; color: white; font-weight: 900;
-    ">!</div>
+    ">SOS</div>
   </div>`,
   iconSize:    [28, 28],
   iconAnchor:  [14, 14],
@@ -133,7 +133,7 @@ function LiveTracking() {
 
   return (
     <Marker position={userLocation} icon={makePulseIcon("#3b82f6", "rgba(59,130,246,0.7)", 14)}>
-      <Popup>📍 You are here</Popup>
+      <Popup>You are here</Popup>
     </Marker>
   );
 }
@@ -154,7 +154,7 @@ function FocusProblem() {
           setTimeout(() => {
             L.popup({ closeButton: true })
               .setLatLng(target)
-              .setContent(`<div style="font-weight:bold;font-size:13px;padding:4px;">📍 ${title}</div>`)
+              .setContent(`<div style="font-weight:bold;font-size:13px;padding:4px;">${title}</div>`)
               .openOn(map);
           }, 1500);
         }
@@ -197,7 +197,7 @@ function LocateMeButton() {
           color: "#374151",
         }}
       >
-        📍 Locate Me
+        Locate Me
       </button>
     </div>
   );
@@ -262,7 +262,7 @@ export default function MapView({
                 <Popup>
                   <div style={{ minWidth: 180, fontFamily: "system-ui, sans-serif" }}>
                     <div style={{ color: "#dc2626", fontWeight: "700", fontSize: "13px", marginBottom: 4 }}>
-                      🚨 SOS EMERGENCY
+                      SOS EMERGENCY
                     </div>
                     <div style={{ fontSize: "12px", color: "#374151", marginBottom: 4 }}>
                       {s.message}
@@ -297,7 +297,7 @@ export default function MapView({
                       </div>
                       <p style={{ fontSize: "11px", color: "#6b7280", marginBottom: 6, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.description}</p>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: "10px", color: "#9ca3af" }}>📂 {Array.isArray(p.category) ? p.category.join(", ") : (p.category || "General")}</span>
+                        <span style={{ fontSize: "10px", color: "#9ca3af" }}>{Array.isArray(p.category) ? p.category.join(", ") : (p.category || "General")}</span>
                         {p.status && (
                           <span style={{
                             fontSize: "10px", fontWeight: "700", padding: "1px 6px", borderRadius: 4,
@@ -322,7 +322,7 @@ export default function MapView({
                 <Popup>
                   <div style={{ minWidth: 160, fontFamily: "system-ui, sans-serif" }}>
                     <div style={{ fontWeight: "700", fontSize: "13px", color: "#111827", marginBottom: 4 }}>
-                      🏢 {n.ngoName || n.name}
+                      {n.ngoName || n.name}
                     </div>
                     <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: 6 }}>{n.ngoContact || n.email}</div>
                     <span style={{ fontSize: "10px", fontWeight: "700", color: "#15803d", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "2px 8px", borderRadius: "20px" }}>NGO PARTNER</span>
