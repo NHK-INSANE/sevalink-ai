@@ -95,8 +95,8 @@ router.post("/", auth, validate(problemSchema), async (req, res) => {
         topMatches.map(m => {
           const notification = new Notification({
             userId: m._id,
-            text: notifText,
-            type: "alert",
+            message: notifText,
+            type: "assigned",
           });
           return notification.save();
         })
@@ -236,8 +236,8 @@ router.patch("/:id/assign", auth, authorize("ngo", "worker", "admin"), async (re
 
     const notification = new Notification({
       userId: volunteerId,
-      text: `You were assigned to problem: ${problem.title}`,
-      type: "task",
+      message: `You were assigned to problem: ${problem.title}`,
+      type: "assigned",
     });
     await notification.save();
 
