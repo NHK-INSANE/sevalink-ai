@@ -64,23 +64,52 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
   };
 
   const handleAssign = async () => {
-    if (!user) return toast.error("Please login to assign yourself");
+    if (!user) return toast.error("Please login to participate");
+    
+    // If NGO, they can join or lead. If volunteer, they join a waiting list.
+    const isNGO = user.role?.toLowerCase() === "ngo" || user.role?.toLowerCase() === "admin";
+    
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/problems/${problem._id}/assign`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/requests`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ userId: user._id || user.id }),
+        body: JSON.stringify({ 
+          problemId: problem._id,
+          ngoId: problem.leader || problem.createdBy, // Target the creator/leader
+          type: "join"
+        }),
       });
       const data = await res.json();
       if (data.success) {
-        toast.success("Successfully assigned yourself to this mission");
-        loadTeam();
-      } else toast.error(data.error || "Assignment failed");
+        toast.success("Request sent to the mission waiting list");
+      } else toast.error(data.error || "Request failed");
+    } catch (err) { toast.error("Connection error"); }
+  };
+
+  const handleRequestLead = async () => {
+    if (!user) return toast.error("Please login first");
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/requests`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ 
+          problemId: problem._id,
+          ngoId: problem.createdBy,
+          type: "lead"
+        }),
+      });
+      const data = await res.json();
+      if (data.success) toast.success("Leadership request transmitted to HQ");
+      else toast.error(data.error || "Request failed");
     } catch (err) { toast.error("Connection error"); }
   };
 
   const handleStatusChange = async (newStatus) => {
+    const isNGO = user?.role?.toLowerCase() === "ngo" || user?.role?.toLowerCase() === "admin";
+    if (!isNGO && !isLeader) return toast.error("Only mission leaders or NGOs can change status");
+    
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/problems/${problem._id}/status`, {
@@ -220,12 +249,22 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
       </div>
 
       {/* ── 🔥 PRIMARY ASSIGN BUTTON ── */}
-      <button
-        onClick={handleAssign}
-        className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-purple-500/20 transition-all active:scale-[0.98]"
-      >
-        Assign Yourself
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={handleAssign}
+          className="flex-1 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-purple-500/20 transition-all active:scale-[0.98]"
+        >
+          Assign
+        </button>
+        {(user?.role?.toLowerCase() === 'ngo' || user?.role?.toLowerCase() === 'worker') && !isLeader && (
+           <button
+             onClick={handleRequestLead}
+             className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase text-purple-400 hover:bg-white/10 transition-all"
+           >
+             Request Lead
+           </button>
+        )}
+      </div>
 
       {/* ── TABS SELECTOR ── */}
       <div className="grid grid-cols-4 gap-2">

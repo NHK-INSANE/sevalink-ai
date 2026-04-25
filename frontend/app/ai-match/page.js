@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Navbar from "../components/Navbar";
 import PageWrapper from "../components/PageWrapper";
 import { getProblems, getUsers } from "../utils/api";
@@ -90,11 +91,14 @@ function ScoreBar({ score }) {
   );
 }
 
-export default function AIMatchPage() {
+function AIMatchContent() {
+  const searchParams = useSearchParams();
+  const targetId = searchParams.get("id");
+
   const [matches, setMatches] = useState([]);
   const [userMatches, setUserMatches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("yourself"); // "byProblem" or "yourself"
+  const [activeTab, setActiveTab] = useState(targetId ? "byProblem" : "yourself"); // Default to byProblem if ID is present
   const [liveEvent, setLiveEvent] = useState(null);
   const currentUser = getUser();
 
@@ -119,7 +123,15 @@ export default function AIMatchPage() {
     setLoading(true);
     try {
       const probs = await getProblems();
-      const openProblems = probs.filter((p) => p.status === "Open");
+      let openProblems = probs.filter((p) => p.status === "Open");
+      
+      // If targeting a specific problem, put it at the top or isolate it
+      if (targetId) {
+        const target = probs.find(p => p._id === targetId || p.problemId === targetId);
+        if (target) {
+          openProblems = [target, ...openProblems.filter(p => p._id !== target._id)];
+        }
+      }
       
       const matchedResults = await Promise.all(openProblems.map(async (p) => {
         try {

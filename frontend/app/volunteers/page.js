@@ -285,9 +285,19 @@ function VolunteersContent() {
                       <div className="flex-1">
                         <h3 className="text-lg font-black text-white tracking-tight leading-none group-hover:text-indigo-400 transition-colors">{u.name || "Unnamed Helper"}</h3>
                         <div className="flex items-center gap-2 mt-2">
-                           <span className="text-[10px] font-mono text-indigo-400/80 bg-indigo-400/5 px-2 py-0.5 rounded border border-indigo-400/10 uppercase tracking-widest">
-                             {u.displayId || u.customId || (isVol ? "VOL-PENDING" : "WKR-PENDING")}
-                           </span>
+                           <div 
+                             className="flex items-center gap-1.5 group/id cursor-pointer" 
+                             onClick={() => {
+                               const idText = u.displayId || u.customId || (isVol ? "VOL-PENDING" : "WKR-PENDING");
+                               navigator.clipboard.writeText(idText);
+                               toast.success("ID copied to clipboard");
+                             }}
+                           >
+                             <span className="text-[10px] font-mono text-indigo-400/80 bg-indigo-400/5 px-2 py-0.5 rounded border border-indigo-400/10 uppercase tracking-widest group-hover/id:border-indigo-400/30 transition-all">
+                               {u.displayId || u.customId || (isVol ? "VOL-PENDING" : "WKR-PENDING")}
+                             </span>
+                             <svg className="opacity-40 group-hover/id:opacity-100 transition-opacity text-indigo-400" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                           </div>
                            <span className={`text-[9px] font-bold ${isVol ? "text-emerald-500/80" : "text-blue-500/80"} uppercase tracking-tighter`}>{isVol ? "Active Volunteer" : "Field Specialist"}</span>
                         </div>
                       </div>
@@ -327,21 +337,21 @@ function VolunteersContent() {
                         </button>
                       ) : (
                         <>
-                          <button 
-                            onClick={() => handleConnect(u)}
-                            className="w-full py-2.5 rounded-xl text-xs font-bold text-white transition-all shadow-lg shadow-indigo-500/20"
-                            style={{ background: isVol ? "linear-gradient(to right, #059669, #10b981)" : "linear-gradient(to right, #7c3aed, #6366f1)" }}
-                          >
-                            Connect
-                          </button>
                           {canAssign(u.role) && (
                             <button 
                               onClick={() => handleOpenAssign(u)}
-                              className="w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-white bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
+                              className="w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white bg-indigo-600/20 border border-indigo-500/20 hover:bg-indigo-600/30 transition-all shadow-lg shadow-indigo-500/10 mb-1"
                             >
                               Assign to Mission
                             </button>
                           )}
+                          <button 
+                            onClick={() => handleConnect(u)}
+                            className="w-full py-2.5 rounded-xl text-xs font-bold text-white transition-all shadow-lg shadow-indigo-500/20"
+                            style={{ background: isVol ? "linear-gradient(to right, #059669, #10b981)" : "linear-gradient(to right, #4b5563, #374151)" }}
+                          >
+                            Connect
+                          </button>
                         </>
                       )}
                     </div>
@@ -414,16 +424,16 @@ function VolunteersContent() {
                     ))}
                   </select>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-[10px] font-bold text-gray-500 uppercase tracking-widest">OR ID:</div>
+                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-[10px] font-bold text-gray-600 uppercase tracking-widest">ENTER ID:</div>
                     <input 
                       type="text" 
                       placeholder="PRB-XXXXXX"
                       onChange={(e) => {
                         const val = e.target.value.toUpperCase();
-                        const found = problems.find(p => p.problemId === val);
+                        const found = problems.find(p => p.problemId === val || p.displayId === val);
                         if (found) setSelectedProbId(found._id);
                       }}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl p-4 pl-16 text-sm text-white outline-none focus:border-purple-500 transition-all"
+                      className="w-full bg-black/40 border border-white/10 rounded-xl p-4 pl-24 text-sm text-white outline-none focus:border-purple-500 transition-all"
                     />
                   </div>
                 </div>

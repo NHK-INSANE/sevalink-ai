@@ -194,9 +194,19 @@ function NGOContent() {
                     <div className="flex-1">
                       <h3 className="text-lg font-black text-white tracking-tight leading-none group-hover:text-indigo-400 transition-colors">{ngo.ngoName || ngo.name || "Unnamed NGO"}</h3>
                       <div className="flex items-center gap-2 mt-2">
-                        <span className="text-[10px] font-mono text-indigo-400/80 bg-indigo-400/5 px-2 py-0.5 rounded border border-indigo-400/10 uppercase tracking-widest">
-                          {ngo.displayId || ngo.customId || "NGO-PENDING"}
-                        </span>
+                        <div 
+                          className="flex items-center gap-1.5 group/id cursor-pointer" 
+                          onClick={() => {
+                            const idText = ngo.displayId || ngo.customId || "NGO-PENDING";
+                            navigator.clipboard.writeText(idText);
+                            toast.success("NGO ID copied to clipboard");
+                          }}
+                        >
+                          <span className="text-[10px] font-mono text-indigo-400/80 bg-indigo-400/5 px-2 py-0.5 rounded border border-indigo-400/10 uppercase tracking-widest group-hover/id:border-indigo-400/30 transition-all">
+                            {ngo.displayId || ngo.customId || "NGO-PENDING"}
+                          </span>
+                          <svg className="opacity-40 group-hover/id:opacity-100 transition-opacity text-indigo-400" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                        </div>
                         <span className="text-[9px] font-bold text-emerald-500/80 uppercase tracking-tighter">Verified Partner</span>
                       </div>
                     </div>
@@ -274,8 +284,8 @@ function NGOContent() {
                 <p className="text-gray-500 text-[11px] font-bold uppercase tracking-widest">To: {selectedNgo?.ngoName || selectedNgo?.name}</p>
               </div>
               <div className="space-y-4 mb-8">
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Target Problem (Select or Enter ID)</label>
                 <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Target Problem (Select or Enter ID)</label>
                   <select value={selectedProbId} onChange={(e) => setSelectedProbId(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white outline-none focus:border-purple-500 transition-all appearance-none">
                     <option value="" className="bg-[#0B1220]">-- Choose Problem --</option>
                     {problems.filter(p => p.status !== "Resolved").map(p => (
@@ -283,18 +293,27 @@ function NGOContent() {
                     ))}
                   </select>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-[10px] font-bold text-gray-500 uppercase tracking-widest">OR ID:</div>
+                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-[10px] font-bold text-gray-600 uppercase tracking-widest">ENTER ID:</div>
                     <input 
                       type="text" 
                       placeholder="PRB-XXXXXX"
                       onChange={(e) => {
                         const val = e.target.value.toUpperCase();
-                        const found = problems.find(p => p.problemId === val);
+                        const found = problems.find(p => p.problemId === val || p.displayId === val);
                         if (found) setSelectedProbId(found._id);
                       }}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl p-4 pl-16 text-sm text-white outline-none focus:border-purple-500 transition-all"
+                      className="w-full bg-black/40 border border-white/10 rounded-xl p-4 pl-24 text-sm text-white outline-none focus:border-purple-500 transition-all"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                   <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Your Personnel Code (ID)</label>
+                   <input 
+                     type="text" 
+                     placeholder="VOL-XXXXXX / WKR-XXXXXX"
+                     className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white outline-none focus:border-purple-500 transition-all"
+                   />
                 </div>
               </div>
               <div className="flex gap-3">
