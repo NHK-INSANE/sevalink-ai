@@ -91,8 +91,9 @@ export default function Navbar() {
     { href: "/map",       label: "Map"       },
     { href: "/ai-match",  label: "AI Match"  },
     { href: "/chat",      label: "Messages"  },
-    { href: "/admin/simulate", label: "Simulate" },
   ];
+
+  const isAdmin = user?.role === "admin" || user?.role === "developer";
 
   return (
     <header
@@ -139,6 +140,16 @@ export default function Navbar() {
                 </Link>
               );
             })}
+            {isAdmin && (
+              <Link
+                href="/admin/simulate"
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  pathname === "/admin/simulate" ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/20" : "text-purple-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                Simulate
+              </Link>
+            )}
           </nav>
         </div>
 
@@ -297,6 +308,17 @@ export default function Navbar() {
                   </Link>
                 );
               })}
+              {isAdmin && (
+                <Link
+                  href="/admin/simulate"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`text-lg font-bold transition-all ${
+                    pathname === "/admin/simulate" ? "text-indigo-400" : "text-purple-400 hover:text-white"
+                  }`}
+                >
+                  Simulate (Admin)
+                </Link>
+              )}
               {user ? (
                 <div className="pt-4 border-t border-white/5 flex flex-col gap-3">
                   <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 py-3 text-gray-300 font-bold">
