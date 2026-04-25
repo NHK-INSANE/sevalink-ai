@@ -73,6 +73,17 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// GET /api/users/profile
+router.get("/profile", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) return res.status(404).json({ error: "User not found" });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch profile" });
+  }
+});
+
 // GET /api/users/:id/notifications
 router.get("/:id/notifications", auth, async (req, res) => {
   try {
@@ -112,7 +123,7 @@ router.patch("/:id/notifications/read", auth, async (req, res) => {
 // PUT /api/users/update-profile
 router.put("/update-profile", auth, async (req, res) => {
   try {
-    const { name, email, phone, address, location, bio, skill, skills } = req.body;
+    const { name, email, phone, address, location, bio, skill, skills, status } = req.body;
 
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: "User not found" });
@@ -124,6 +135,8 @@ router.put("/update-profile", auth, async (req, res) => {
     if (location) user.location = location;
     if (bio) user.bio = bio;
     if (skill) user.skill = skill;
+    if (skills) user.skills = skills;
+    if (status) user.status = status;
     if (skills) user.skills = skills;
 
     await user.save();

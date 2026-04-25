@@ -1,12 +1,12 @@
 "use client";
 import { NotificationProvider } from "./context/NotificationContext";
-import MiniChat from "./components/MiniChat";
+import OpsPanel from "./components/OpsPanel";
 
 export function Providers({ children }) {
   return (
     <NotificationProvider>
       {children}
-      <MiniChat />
+      <OpsPanel />
     </NotificationProvider>
   );
 }

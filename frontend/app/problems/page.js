@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import ProblemCard from "../components/ProblemCard";
-import { getProblems, updateProblemStatus, deleteProblem } from "../utils/api";
 import { getUserLocation } from "../utils/location";
 import PageWrapper from "../components/PageWrapper";
 import { SkeletonCard } from "../components/Skeleton";
@@ -10,9 +9,9 @@ import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { socket } from "../../lib/socket";
 import Link from "next/link";
+import axios from "axios";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
-const URGENCY_ORDER = { Critical: 0, High: 1, Medium: 2, Low: 3 };
 
 export default function ProblemsPage() {
   const [problems, setProblems] = useState([]);
@@ -20,196 +19,167 @@ export default function ProblemsPage() {
   const [search, setSearch] = useState("");
   const [filterUrgency, setFilterUrgency] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
-  const [sortBy, setSortBy] = useState("newest"); // Default to newest
+  const [sortBy, setSortBy] = useState("newest");
   const [userLoc, setUserLoc] = useState(null);
-  const [sortNearest, setSortNearest] = useState(false);
 
-  const fetchProblems = () => {
+  const fetchProblems = async () => {
     setLoading(true);
-    getProblems()
-      .then(setProblems)
-      .finally(() => setLoading(false));
+    try {
+      let url = `${API_BASE}/api/problems?`;
+      if (sortBy === "nearest" && userLoc) {
+        url += `lat=${userLoc.lat}&lng=${userLoc.lng}&sort=nearest&`;
+      } else {
+        url += `sort=${sortBy}&`;
+      }
+      
+      if (filterUrgency !== "All") url += `urgency=${filterUrgency}&`;
+      if (filterStatus !== "All") url += `status=${filterStatus}&`;
+
+      const res = await axios.get(url);
+      setProblems(res.data);
+    } catch (err) {
+      toast.error("Failed to load mission data.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchProblems();
+    
     socket.on("new-problem", (newProb) => {
-      setProblems(prev => {
-        if (prev.find(p => p._id === newProb._id)) return prev;
-        return [newProb, ...prev];
-      });
+      setProblems(prev => [newProb, ...prev]);
     });
-    socket.on("problem-updated", (updatedProb) => {
-      setProblems(prev => prev.map(p => p._id === updatedProb._id ? updatedProb : p));
+    
+    socket.on("problem-updated", (updated) => {
+      setProblems(prev => prev.map(p => p._id === updated._id ? updated : p));
     });
+
+    socket.on("problem-deleted", (deletedId) => {
+      setProblems(prev => prev.filter(p => p._id !== deletedId));
+    });
+
     return () => {
       socket.off("new-problem");
       socket.off("problem-updated");
+      socket.off("problem-deleted");
     };
-  }, []);
-
-  const handleStatusChange = async (id, status) => {
-    await updateProblemStatus(id, status);
-    setProblems((prev) => prev.map((p) => (p._id === id ? { ...p, status } : p)));
-  };
+  }, [sortBy, filterUrgency, filterStatus, userLoc]);
 
   const handleLocate = async () => {
     try {
       const loc = await getUserLocation();
       setUserLoc(loc);
       setSortBy("nearest");
-      toast.success("Sorting by proximity");
+      toast.success("GPS Proximity Lock: Active");
     } catch (err) {
-      toast.error("Could not get location");
+      toast.error("Geolocation signal lost.");
     }
   };
 
-  function getDistance(lat1, lon1, lat2, lon2) {
-    if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-  }
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this problem?")) return;
-    try {
-      await deleteProblem(id);
-      setProblems((prev) => prev.filter((p) => p._id !== id));
-      toast.success("Problem deleted successfully!");
-    } catch (err) { toast.error(err.message || "Failed to delete problem"); }
-  };
-
-  const filtered = problems
-    .filter((p) => {
-      if (filterUrgency !== "All" && p.urgency !== filterUrgency) return false;
-      if (filterStatus !== "All" && p.status !== filterStatus) return false;
-      if (search) {
-        const s = search.toLowerCase();
-        // Generate fallback ID to match what the user sees in the ProblemCard
-        const fallbackId = `PRB-${p._id?.slice(-8).toUpperCase()}`;
-        const currentId = (p.problemId || p.displayId || fallbackId).toLowerCase();
-        const idMatches = currentId.includes(s);
-        
-        // If it looks like an ID search (starts with prb-), ONLY show ID matches
-        if (s.startsWith("prb-")) return idMatches;
-
-        // Otherwise check title/desc/id
-        if (!idMatches && 
-            !p.title.toLowerCase().includes(s) && 
-            !p.description.toLowerCase().includes(s)
-        ) return false;
-      }
-      return true;
-    })
-    .sort((a, b) => {
-      if (sortBy === "nearest" && userLoc) {
-        const d1 = getDistance(userLoc.lat, userLoc.lng, a.location?.lat, a.location?.lng);
-        const d2 = getDistance(userLoc.lat, userLoc.lng, b.location?.lat, b.location?.lng);
-        return d1 - d2;
-      }
-      if (sortBy === "urgency") return (URGENCY_ORDER[a.urgency] ?? 9) - (URGENCY_ORDER[b.urgency] ?? 9);
-      if (sortBy === "category") {
-        const catA = (a.category && a.category[0]) || "General";
-        const catB = (b.category && b.category[0]) || "General";
-        return catA.localeCompare(catB);
-      }
-      return new Date(b.createdAt) - new Date(a.createdAt); // newest
-    });
+  const filtered = problems.filter((p) => {
+    if (search) {
+      const s = search.toLowerCase();
+      const pId = (p.problemId || "").toLowerCase();
+      return p.title.toLowerCase().includes(s) || pId.includes(s) || p.description.toLowerCase().includes(s);
+    }
+    return true;
+  });
 
   return (
-    <div className="min-h-screen bg-[var(--bg-main)]">
+    <div className="min-h-screen bg-[#080B14] text-white">
       <Navbar />
-      <PageWrapper>
-        <div className="page-wrapper pt-28 pb-20">
-          <main className="flex flex-col space-y-8">
+      <PageWrapper className="pt-28 pb-20 px-6">
+        <div className="max-w-7xl mx-auto space-y-10">
           
-          {/* ── HEADER SECTION ── */}
-          <div className="flex flex-col md:flex-row justify-between items-end gap-6">
-            <div className="space-y-1.5">
-              <h1 className="text-3xl font-extrabold tracking-tight text-white">Incident Archive</h1>
-              <p className="text-[var(--text-secondary)] text-sm font-medium">Full repository of civic disruptions and resolution status.</p>
+          {/* ── HEADER ── */}
+          <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-white/5 pb-8">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-black tracking-tighter uppercase">Crisis Archive</h1>
+              <p className="text-gray-500 text-sm font-bold uppercase tracking-widest">Autonomous Incident Repository & Response Grid</p>
             </div>
-            <Link href="/submit" className="btn-apple">
-              NEW REPORT
+            <Link href="/submit" className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-indigo-500/20 transition-all">
+              Initiate Report
             </Link>
           </div>
 
-          {/* ── TOP BAR (Search + Actions) ── */}
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <input
-              type="text"
-              placeholder="Search problems..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full md:max-w-md px-4 py-2.5 rounded-xl border border-white/10 bg-black/20 text-sm focus:border-purple-500 transition-all outline-none text-white"
-            />
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              <div className="relative group w-full md:w-48">
-                <select 
-                  value={sortBy} 
-                  onChange={(e) => {
-                    if (e.target.value === "nearest" && !userLoc) handleLocate();
-                    else setSortBy(e.target.value);
-                  }}
-                  className="w-full bg-[#0B1220] border border-white/10 rounded-xl pl-4 pr-10 py-3 text-[10px] font-black uppercase tracking-widest text-gray-300 outline-none hover:border-purple-500/50 transition cursor-pointer appearance-none shadow-xl"
-                >
-                  <option value="newest" className="bg-[#0B1220] text-white">Newest First</option>
-                  <option value="nearest" className="bg-[#0B1220] text-white">Nearest</option>
-                  <option value="urgency" className="bg-[#0B1220] text-white">By Urgency</option>
-                  <option value="category" className="bg-[#0B1220] text-white">By Category</option>
-                </select>
-                <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-500 group-hover:text-purple-400 transition-colors">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                </div>
+          {/* ── TOOLBAR ── */}
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                placeholder="Search by ID, Title or Description..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full bg-[#0f172a]/40 border border-white/10 rounded-[1.5rem] px-6 py-4 text-sm text-white focus:border-indigo-500 outline-none transition-all placeholder:text-gray-600"
+              />
+              <div className="absolute right-6 top-4 text-gray-700">🔍</div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Sort Dropdown */}
+              <select 
+                value={sortBy} 
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-[#0f172a] border border-white/10 rounded-xl px-4 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-indigo-500 transition-all cursor-pointer"
+              >
+                <option value="newest">Newest First</option>
+                <option value="nearest">Nearest First</option>
+                <option value="score">Priority Score</option>
+              </select>
+
+              {/* Urgency Filters */}
+              <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/5">
+                {["All", "Critical", "High", "Medium"].map(u => (
+                  <button
+                    key={u}
+                    onClick={() => setFilterUrgency(u)}
+                    className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterUrgency === u ? "bg-indigo-600 text-white" : "text-gray-500 hover:text-gray-300"}`}
+                  >
+                    {u}
+                  </button>
+                ))}
               </div>
+
+              {/* Status Filters */}
+              <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/5">
+                {["All", "Open", "In Progress", "Resolved"].map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setFilterStatus(s)}
+                    className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterStatus === s ? "bg-white/10 text-white" : "text-gray-500 hover:text-gray-300"}`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+
+              <button 
+                onClick={handleLocate}
+                className={`p-4 rounded-xl border transition-all ${userLoc ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-white/5 border-white/10 text-gray-400 hover:border-white/30"}`}
+                title="Locate Me"
+              >
+                📍
+              </button>
             </div>
           </div>
 
-          {/* ── FILTERS ── */}
-          <div className="flex flex-wrap gap-2">
-            {["All", "Critical", "High", "Medium", "Low"].map((u) => (
-              <button
-                key={u}
-                onClick={() => setFilterUrgency(u)}
-                className={`px-4 py-1.5 rounded-xl text-[10px] font-bold transition-all border ${
-                  filterUrgency === u 
-                    ? "bg-indigo-600/20 text-white border-indigo-500/50" 
-                    : "bg-white/5 text-gray-400 border-white/5 hover:bg-white/10"
-                }`}
-              >
-                {u}
-              </button>
-            ))}
-          </div>
-
-          {/* ── CONTENT ── */}
+          {/* ── GRID ── */}
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="py-20 text-center glass-card">
-              <p className="text-white font-semibold">No problems found</p>
+            <div className="py-32 text-center bg-[#0f172a]/20 border border-white/5 rounded-[3rem]">
+              <p className="text-gray-500 font-black uppercase tracking-widest text-xs">No active missions matching criteria</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filtered.map((p) => (
-                <ProblemCard 
-                  key={p._id} 
-                  problem={p} 
-                  onStatusChange={handleStatusChange} 
-                  onDelete={handleDelete}
-                  showActions={true} 
-                />
+                <ProblemCard key={p._id} problem={p} />
               ))}
             </div>
           )}
-          </main>
         </div>
       </PageWrapper>
     </div>

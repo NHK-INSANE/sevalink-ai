@@ -1,36 +1,21 @@
 const mongoose = require("mongoose");
 
 const messageSchema = new mongoose.Schema({
-  problemId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Problem",
-    required: true,
-  },
-  senderId: {
-    type: String,
-    required: true,
-  },
-  senderName: {
-    type: String,
-    required: true,
-  },
-  text: {
-    type: String,
-    default: "",
-  },
-  type: {
-    type: String,
-    enum: ["text", "image", "audio", "ops"],
-    default: "text",
-  },
-  mediaUrl: {
-    type: String, // Base64 or URL
-    default: null,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+  chatId: { type: mongoose.Schema.Types.ObjectId, ref: "Chat", required: true },
+  senderId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  message: { type: String, required: true },
+  type: { type: String, enum: ["text", "image", "video", "voice"], default: "text" },
+  mediaUrl: { type: String }, // Used if type is not text
+  createdAt: { type: Date, default: Date.now },
+  expiresAt: { type: Date, expires: 0 } // TTL index
+});
+
+// Set default expiry to 14 days from creation
+messageSchema.pre("save", function(next) {
+  if (!this.expiresAt) {
+    this.expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+  }
+  next();
 });
 
 module.exports = mongoose.model("Message", messageSchema);

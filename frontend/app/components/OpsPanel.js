@@ -5,27 +5,70 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function OpsPanel() {
   const [events, setEvents] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("alerts"); // alerts, chat, actions, ai
+  const [sosConfirm, setSosConfirm] = useState(false);
   const scrollRef = useRef(null);
+  const chatScrollRef = useRef(null);
 
   useEffect(() => {
     socket.emit("join_ops");
 
     socket.on("ops_event", (event) => {
       setEvents((prev) => [event, ...prev].slice(0, 50));
-      if (!isOpen) setIsOpen(true);
+    });
+
+    socket.on("receive_global_message", (msg) => {
+      setMessages((prev) => [...prev, msg]);
     });
 
     return () => {
-      // socket.off("ops_event"); // Keep connection but stop listening if needed
+      socket.off("ops_event");
+      socket.off("receive_global_message");
     };
-  }, [isOpen]);
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = 0;
     }
   }, [events]);
+
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }
+  }, [messages, activeTab]);
+
+  const sendMessage = () => {
+    if (!input.trim()) return;
+    const user = JSON.parse(localStorage.getItem("seva_user") || "{}");
+    const msg = {
+      text: input.trim(),
+      senderName: user.name || "Responder",
+      time: new Date(),
+    };
+    socket.emit("send_global_message", msg);
+    setInput("");
+  };
+
+  const sendSOS = () => {
+    const user = JSON.parse(localStorage.getItem("seva_user") || "{}");
+    socket.emit("sos_alert", {
+      senderName: user.name || "Anonymous",
+      location: "Current Dashboard Node",
+      timestamp: new Date()
+    });
+    setSosConfirm(false);
+    // Add a local event for feedback
+    setEvents(prev => [{
+      type: "SOS",
+      time: new Date(),
+      payload: { message: "CRITICAL: SOS Signal Transmitted to all units." }
+    }, ...prev]);
+  };
 
   const getEventStyles = (type) => {
     switch (type) {
@@ -51,123 +94,344 @@ export default function OpsPanel() {
     }
   };
 
+  const [broadcastMsg, setBroadcastMsg] = useState("");
+  const [showBroadcastInput, setShowBroadcastInput] = useState(false);
+
+  const sendBroadcast = () => {
+    if (!broadcastMsg.trim()) return;
+    socket.emit("broadcast_alert", { message: broadcastMsg });
+    setEvents(prev => [{
+      type: "SYSTEM",
+      time: new Date(),
+      payload: { message: `BROADCAST: ${broadcastMsg}` }
+    }, ...prev]);
+    setBroadcastMsg("");
+    setShowBroadcastInput(false);
+  };
+
+  const consultAI = (query) => {
+    // Local simulation for now, or could emit to backend
+    setEvents(prev => [{
+      type: "AI",
+      time: new Date(),
+      payload: { message: `🧠 ANALYZING: ${query}... Standby for tactical guidance.` }
+    }, ...prev]);
+    
+    setTimeout(() => {
+       setEvents(prev => [{
+        type: "AI",
+        time: new Date(),
+        payload: { message: `🤖 ADVISORY: Based on current data, prioritize high-urgency zones in the eastern sector. Deploy additional units to waterlogged areas.` }
+      }, ...prev]);
+    }, 2000);
+  };
+
+  const tabs = [
+    { id: "alerts", label: "Alerts", icon: "🔔" },
+    { id: "chat", label: "Chat", icon: "💬" },
+    { id: "actions", label: "Actions", icon: "⚡" },
+    { id: "ai", label: "AI", icon: "🤖" },
+  ];
+
   return (
     <>
-      {/* Toggle Button */}
-      <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-3">
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.95 }}
-              className="w-80 h-[450px] bg-[#0b0f1a]/95 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col"
-            >
-              <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <h2 className="text-xs font-black uppercase tracking-widest text-white">Live OPS Command</h2>
-                </div>
-                <button 
-                  onClick={() => setIsOpen(false)}
-                  className="text-gray-500 hover:text-white transition-colors"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                </button>
-              </div>
-
-              <div 
-                ref={scrollRef}
-                className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar"
-              >
-                {events.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center opacity-30">
-                    <div className="w-10 h-10 border-2 border-dashed border-white/20 rounded-full mb-2" />
-                    <p className="text-[10px] font-bold uppercase tracking-widest">Monitoring Frequencies...</p>
-                  </div>
-                ) : (
-                  events.map((e, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className={`p-3 rounded-xl border ${getEventStyles(e.type)} transition-all ${e.payload.isAutoReply ? "border-dashed border-white/40 ring-1 ring-white/10" : ""}`}
-                    >
-                      <div className="flex justify-between items-start mb-1">
-                        <span className="text-[9px] font-black uppercase tracking-widest opacity-80 flex items-center gap-1">
-                          {getEventIcon(e.type)} {e.type} {e.payload.isAutoReply && "(AUTO-REPLY)"}
-                        </span>
-                        <span className="text-[8px] font-mono opacity-50">
-                          {new Date(e.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                        </span>
-                      </div>
-                      <p className={`text-[11px] font-medium leading-relaxed ${e.payload.isAutoReply ? "italic opacity-90" : ""}`}>
-                        {typeof e.payload === 'string' ? e.payload : (e.payload.message || e.payload.title || (e.type === "NEAREST" ? `Found ${e.payload.nearby?.length} responders for: ${e.payload.crisisTitle}` : "New System Event"))}
-                      </p>
-                      
-                      {e.type === "NEAREST" && e.payload.nearby && (
-                        <div className="mt-2 space-y-1">
-                          {e.payload.nearby.map(n => (
-                            <div key={n._id} className="flex justify-between items-center bg-white/5 px-2 py-1 rounded text-[8px]">
-                              <span className="font-bold text-gray-300">{n.name} ({n.role})</span>
-                              <span className="text-yellow-500 font-mono">{n.distance}km</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {e.payload.suggestedResponders && (
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {e.payload.suggestedResponders.map(r => (
-                            <span key={r} className="text-[7px] font-black uppercase px-1.5 py-0.5 rounded bg-white/10 border border-white/5">
-                              {r}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      {e.payload.location && (
-                        <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between opacity-60">
-                          <div className="flex items-center gap-1.5">
-                            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                            <span className="text-[8px] font-mono">
-                              {e.payload.location.lat?.toFixed(3)}, {e.payload.location.lng?.toFixed(3)}
-                            </span>
-                          </div>
-                          {e.payload.isTracking && (
-                            <span className="text-[7px] font-black uppercase tracking-tighter text-emerald-400 flex items-center gap-1">
-                              <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-                              Live Tracking
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </motion.div>
-                  ))
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
+      {/* Floating Button */}
+      <div className="fixed bottom-6 right-6 z-[999]">
         <button
-          onClick={() => setIsOpen(!isOpen)}
-          className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl transition-all active:scale-95 ${
-            isOpen ? "bg-white text-black" : "bg-indigo-600 text-white hover:bg-indigo-500"
-          }`}
+          onClick={() => setIsOpen(true)}
+          className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-95 bg-purple-600 text-white hover:bg-purple-500 relative ${events.some(e => e.type === "CRISIS" || e.type === "SOS") ? "animate-pulse shadow-red-500/50" : "shadow-purple-500/50"}`}
         >
-          {isOpen ? (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-          ) : (
-            <div className="relative">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              {events.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-indigo-600 rounded-full" />
-              )}
-            </div>
+          <div className="flex flex-col items-center">
+             <span className="text-[10px] font-black tracking-widest leading-none mb-1">OPS</span>
+             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M2 12h20"/></svg>
+          </div>
+          {events.length > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-[#0B1120]">
+              {events.length > 9 ? "9+" : events.length}
+            </span>
           )}
         </button>
       </div>
+
+      {/* Side Panel */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1000]"
+            />
+
+            {/* Panel */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 w-[320px] h-full bg-[#0B1120] border-l border-white/10 shadow-2xl z-[1001] flex flex-col"
+            >
+              {/* Header */}
+              <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+                <div>
+                  <h2 className="text-sm font-black uppercase tracking-[0.2em] text-white">OPS Control</h2>
+                  <p className="text-[10px] text-purple-400 font-bold uppercase tracking-widest mt-1">Status: Active</p>
+                </div>
+                <button 
+                  onClick={() => setIsOpen(false)}
+                  className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-gray-500 hover:text-white transition-colors"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+              </div>
+
+              {/* Tabs */}
+              <div className="flex border-b border-white/10">
+                {tabs.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab.id ? "text-purple-400 border-b-2 border-purple-400 bg-purple-400/5" : "text-gray-500 hover:text-gray-300"}`}
+                  >
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-sm">{tab.icon}</span>
+                      {tab.label}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-hidden flex flex-col">
+                <AnimatePresence mode="wait">
+                  {activeTab === "alerts" && (
+                    <motion.div
+                      key="alerts"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar"
+                      ref={scrollRef}
+                    >
+                      {events.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center opacity-30 text-center p-8">
+                          <div className="w-12 h-12 border-2 border-dashed border-white/20 rounded-full mb-4 animate-spin-slow" />
+                          <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Monitoring Secure Frequencies...</p>
+                        </div>
+                      ) : (
+                        events.map((e, i) => (
+                          <div key={i} className={`p-4 rounded-xl border ${getEventStyles(e.type)} transition-all`}>
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
+                                {getEventIcon(e.type)} {e.type}
+                              </span>
+                              <span className="text-[8px] font-mono opacity-50">
+                                {new Date(e.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <p className="text-[11px] font-medium leading-relaxed">
+                              {typeof e.payload === 'string' ? e.payload : (e.payload.message || e.payload.title || "New System Event")}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </motion.div>
+                  )}
+
+                  {activeTab === "chat" && (
+                    <motion.div
+                      key="chat"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="flex-1 flex flex-col"
+                    >
+                      <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+                        {messages.length === 0 ? (
+                          <div className="h-full flex flex-col items-center justify-center opacity-30 text-center p-8">
+                            <div className="w-12 h-12 rounded-full border border-dashed border-white/20 mb-4" />
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Secure Node Standby</p>
+                          </div>
+                        ) : (
+                          messages.map((m, i) => (
+                            <div key={i} className="flex flex-col gap-1.5">
+                              <div className="flex justify-between items-baseline px-1">
+                                <span className="text-[9px] font-black text-purple-400 uppercase tracking-tight">{m.senderName}</span>
+                                <span className="text-[7px] text-gray-500 font-medium">{new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                              </div>
+                              <div className="text-[12px] text-gray-300 leading-snug bg-white/5 p-3 rounded-2xl rounded-tl-none border border-white/5">
+                                {m.text}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                      <div className="p-4 bg-white/[0.02] border-t border-white/10 flex gap-2">
+                        <input
+                          value={input}
+                          onChange={(e) => setInput(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                          placeholder="Broadcast transmission..."
+                          className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[12px] text-white outline-none focus:border-purple-500 transition-all placeholder:text-gray-600"
+                        />
+                        <button onClick={sendMessage} className="bg-purple-600 hover:bg-purple-500 w-12 h-12 flex items-center justify-center rounded-xl transition-all shadow-lg shadow-purple-500/20">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {activeTab === "actions" && (
+                    <motion.div
+                      key="actions"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="flex-1 p-6 space-y-6"
+                    >
+                      <div className="space-y-4">
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 px-1">Emergency Protocols</h3>
+                        
+                        {sosConfirm ? (
+                          <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 space-y-3">
+                            <p className="text-[11px] text-red-400 font-bold text-center">Are you sure? This will notify all responders.</p>
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={sendSOS}
+                                className="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                              >
+                                Confirm SOS
+                              </button>
+                              <button 
+                                onClick={() => setSosConfirm(false)}
+                                className="flex-1 bg-white/5 hover:bg-white/10 text-white py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button 
+                            onClick={() => setSosConfirm(true)}
+                            className="w-full bg-red-600/10 hover:bg-red-600/20 border border-red-600/20 text-red-500 p-4 rounded-2xl flex items-center justify-between group transition-all"
+                          >
+                            <div className="text-left">
+                              <span className="block text-[11px] font-black uppercase tracking-widest mb-1">Signal SOS</span>
+                              <span className="block text-[9px] opacity-60">Immediate priority broadcast</span>
+                            </div>
+                            <span className="text-2xl group-hover:scale-110 transition-transform">🆘</span>
+                          </button>
+                        )}
+
+                        {showBroadcastInput ? (
+                          <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4 space-y-3">
+                            <textarea
+                              value={broadcastMsg}
+                              onChange={(e) => setBroadcastMsg(e.target.value)}
+                              placeholder="Type broadcast message..."
+                              className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-[11px] text-white outline-none focus:border-orange-500 transition-all h-20 resize-none"
+                            />
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={sendBroadcast}
+                                className="flex-1 bg-orange-600 hover:bg-orange-500 text-white py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                              >
+                                Send Alert
+                              </button>
+                              <button 
+                                onClick={() => setShowBroadcastInput(false)}
+                                className="flex-1 bg-white/5 hover:bg-white/10 text-white py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button 
+                            onClick={() => setShowBroadcastInput(true)}
+                            className="w-full bg-orange-600/10 hover:bg-orange-600/20 border border-orange-600/20 text-orange-500 p-4 rounded-2xl flex items-center justify-between group transition-all"
+                          >
+                            <div className="text-left">
+                              <span className="block text-[11px] font-black uppercase tracking-widest mb-1">Broadcast Alert</span>
+                              <span className="block text-[9px] opacity-60">Regional emergency update</span>
+                            </div>
+                            <span className="text-2xl group-hover:scale-110 transition-transform">📢</span>
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="space-y-4">
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 px-1">Network Actions</h3>
+                        <button className="w-full bg-blue-600/10 hover:bg-blue-600/20 border border-blue-600/20 text-blue-500 p-4 rounded-2xl flex items-center justify-between group transition-all">
+                          <div className="text-left">
+                            <span className="block text-[11px] font-black uppercase tracking-widest mb-1">Mobilize Team</span>
+                            <span className="block text-[9px] opacity-60">Summon nearby responders</span>
+                          </div>
+                          <span className="text-2xl group-hover:scale-110 transition-transform">🚀</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {activeTab === "ai" && (
+                    <motion.div
+                      key="ai"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="flex-1 p-6 flex flex-col"
+                    >
+                      <div className="bg-purple-600/10 border border-purple-500/20 rounded-2xl p-6 text-center space-y-4 mb-6">
+                        <div className="w-16 h-16 bg-purple-600/20 rounded-full flex items-center justify-center mx-auto mb-2 border border-purple-500/30">
+                          <span className="text-3xl animate-pulse">🤖</span>
+                        </div>
+                        <h3 className="text-sm font-black uppercase tracking-widest text-white">AI Copilot</h3>
+                        <p className="text-[11px] text-gray-400 leading-relaxed">
+                          "I am monitoring all crisis nodes. Ask me for guidance or resource allocation strategies."
+                        </p>
+                      </div>
+
+                      <div className="space-y-3">
+                        <button 
+                          onClick={() => consultAI("What should I do right now?")}
+                          className="w-full bg-white/5 hover:bg-white/10 border border-white/10 p-3 rounded-xl text-left text-[11px] text-gray-300 font-medium transition-all flex items-center gap-3"
+                        >
+                          <span className="text-purple-400">⚡</span> "What should I do right now?"
+                        </button>
+                        <button 
+                          onClick={() => consultAI("Summarize active crises")}
+                          className="w-full bg-white/5 hover:bg-white/10 border border-white/10 p-3 rounded-xl text-left text-[11px] text-gray-300 font-medium transition-all flex items-center gap-3"
+                        >
+                          <span className="text-purple-400">⚡</span> "Summarize active crises"
+                        </button>
+                        <button 
+                          onClick={() => consultAI("Analyze resource gaps")}
+                          className="w-full bg-white/5 hover:bg-white/10 border border-white/10 p-3 rounded-xl text-left text-[11px] text-gray-300 font-medium transition-all flex items-center gap-3"
+                        >
+                          <span className="text-purple-400">⚡</span> "Analyze resource gaps"
+                        </button>
+                      </div>
+
+                      <div className="mt-auto pt-6 border-t border-white/10">
+                         <div className="relative">
+                            <input
+                              placeholder="Type to consult AI..."
+                              className="w-full bg-black/40 border border-purple-500/30 rounded-xl px-4 py-3 text-[12px] text-white outline-none focus:border-purple-500 transition-all placeholder:text-gray-600"
+                            />
+                            <div className="absolute right-3 top-3 text-[10px] font-black text-purple-500 animate-pulse">LIVE</div>
+                         </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
@@ -177,11 +441,18 @@ export default function OpsPanel() {
           background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.05);
           border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.1);
+        }
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+          animation: spin-slow 8s linear infinite;
         }
       `}</style>
     </>

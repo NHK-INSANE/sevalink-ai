@@ -28,6 +28,7 @@ const userSchema = new mongoose.Schema({
       date: { type: Date, default: Date.now },
     }
   ],
+  status: { type: String, enum: ["available", "busy"], default: "available" },
   customId: { type: String, unique: true },
 }, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
 

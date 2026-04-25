@@ -68,34 +68,17 @@ export const NotificationProvider = ({ children }) => {
     socketRef.current = io(API_BASE);
     socketRef.current.emit("register-user", user._id || user.id);
 
-    socketRef.current.on("sos-alert", (data) => {
-      setNotifications(prev => [{
-        _id: Date.now(),
-        type: "sos",
-        message: data.message || "🚨 EMERGENCY SOS BROADCAST",
-        createdAt: new Date()
-      }, ...prev]);
+    socketRef.current.on("new-notification", (notification) => {
+      setNotifications(prev => [notification, ...prev]);
       setUnreadCount(prev => prev + 1);
-    });
-
-    socketRef.current.on("dispatch_alert", (data) => {
-      setNotifications(prev => [{
-        _id: Date.now(),
-        type: "dispatch",
-        message: data.message || "📡 NEW MISSION ASSIGNMENT",
-        createdAt: new Date()
-      }, ...prev]);
-      setUnreadCount(prev => prev + 1);
-    });
-
-    socketRef.current.on("pre_alert", (data) => {
-      setNotifications(prev => [{
-        _id: Date.now(),
-        type: "prediction",
-        message: data.message,
-        createdAt: new Date()
-      }, ...prev]);
-      setUnreadCount(prev => prev + 1);
+      
+      // Optional: show a toast based on type
+      let icon = "🔔";
+      if (notification.type === "sos") icon = "🚨";
+      if (notification.type === "assignment") icon = "🟢";
+      if (notification.type === "request") icon = "🟡";
+      
+      toast.success(notification.message, { icon, style: { background: "#0f172a", color: "#fff", border: "1px solid rgba(255,255,255,0.1)" } });
     });
 
     return () => {

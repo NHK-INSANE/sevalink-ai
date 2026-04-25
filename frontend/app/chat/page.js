@@ -4,15 +4,16 @@ import Navbar from "../components/Navbar";
 import PageWrapper from "../components/PageWrapper";
 import { socket } from "../../lib/socket";
 import { getUser } from "../utils/auth";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { useRouter, useSearchParams } from "next/navigation";
+import axios from "axios";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
 export default function ChatPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0B1220]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#080B14] flex items-center justify-center text-white text-xs font-black uppercase tracking-widest animate-pulse">Initializing Comm-Link...</div>}>
       <ChatContent />
     </Suspense>
   );
@@ -21,64 +22,58 @@ export default function ChatPage() {
 function ChatContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const targetUserId = searchParams.get("id"); // This is the person we want to talk to
+  const targetUserId = searchParams.get("id");
   
   const [user, setUser] = useState(null);
-  const [conversations, setConversations] = useState([]);
+  const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("direct"); // direct | team
+  const [isTyping, setIsTyping] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
+  let typingTimeout = useRef(null);
 
   useEffect(() => {
-    const u = getUser();
+    const u = JSON.parse(localStorage.getItem("seva_user") || "null");
     if (!u) {
       router.push("/login");
       return;
     }
     setUser(u);
-    // Register socket
     socket.emit("register-user", u.id || u._id);
-    loadAll(u);
+    fetchChats(u);
   }, []);
 
-  const loadAll = async (currentUser) => {
+  const fetchChats = async (currentUser) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      
-      // 1. Fetch conversations
-      const convRes = await fetch(`${API_BASE}/api/chat`, {
+      const res = await axios.get(`${API_BASE}/api/chat`, {
         headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
       });
-      let convs = await convRes.json();
-      setConversations(convs);
+      setChats(res.data);
 
-      // 2. Handle deep link (targetUserId)
-      if (targetUserId) {
-        // Find if conversation already exists
-        let existing = convs.find(c => c.members.some(m => m._id === targetUserId));
-        
+      if (targetUserId && targetUserId !== (currentUser.id || currentUser._id)) {
+        let existing = res.data.find(c => c.type === "direct" && c.participants.some(p => p._id === targetUserId));
         if (existing) {
           setSelectedChat(existing);
+          setActiveTab("direct");
         } else {
-          // Create new conversation
-          const createRes = await fetch(`${API_BASE}/api/chat`, {
-            method: "POST",
-            headers: { 
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${encodeURIComponent(token)}` 
-            },
-            body: JSON.stringify({ receiverId: targetUserId })
+          const createRes = await axios.post(`${API_BASE}/api/chat/direct`, { targetUserId }, {
+            headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
           });
-          const newConv = await createRes.json();
-          setConversations(prev => [newConv, ...prev]);
-          setSelectedChat(newConv);
+          setChats(prev => [createRes.data, ...prev]);
+          setSelectedChat(createRes.data);
+          setActiveTab("direct");
         }
       }
     } catch (err) {
-      console.error("Load error", err);
+      toast.error("Failed to load comm channels.");
     } finally {
       setLoading(false);
     }
@@ -93,226 +88,175 @@ function ChatContent() {
   const fetchMessages = async (chatId) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE}/api/chat/${chatId}/messages`, {
+      const res = await axios.get(`${API_BASE}/api/chat/${chatId}/messages`, {
         headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
       });
-      const data = await res.json();
-      setMessages(data);
-      
-      // Mark as seen
-      fetch(`${API_BASE}/api/chat/${chatId}/seen`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
-      });
+      setMessages(res.data);
+      scrollToBottom();
     } catch (err) {
-      console.error("Fetch messages error", err);
+      toast.error("Transmission error.");
     }
   };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
   };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   useEffect(() => {
     if (!user) return;
 
     const handleMessage = (msg) => {
-      // If it's for current chat
-      if (selectedChat && msg.conversationId === selectedChat._id) {
+      if (selectedChat && msg.chatId === selectedChat._id) {
         setMessages(prev => {
           if (prev.some(m => m._id === msg._id)) return prev;
           return [...prev, msg];
         });
+        scrollToBottom();
       } else {
-        toast.success(`New message from ${msg.senderName || "Responder"}`, {
-          icon: '💬',
-          style: { background: '#1e293b', color: '#fff' }
-        });
+        toast.success(`Secure msg from ${msg.senderId?.name || "Responder"}`, { style: { background: '#1e293b', color: '#fff', fontSize: '12px' } });
       }
-      updateSidebar(msg);
+      // Update sidebar
+      setChats(prev => prev.map(c => c._id === msg.chatId ? { ...c, lastMessage: msg, updatedAt: new Date() } : c).sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt)));
     };
 
-    const handleOpsEvent = (event) => {
-      if (event.type === "MISSION") {
-        toast.error(`🚨 MISSION ALERT: ${event.payload.title}`, {
-          duration: 6000,
-          style: { background: '#ef4444', color: '#fff', fontWeight: 'bold' }
-        });
-        loadAll(user);
+    const handleTyping = ({ chatId, name }) => {
+      if (selectedChat && chatId === selectedChat._id) {
+        setIsTyping(name);
+        clearTimeout(typingTimeout.current);
+        typingTimeout.current = setTimeout(() => setIsTyping(false), 2000);
       }
     };
 
-    socket.on("chat_message", handleMessage);
-    socket.on("ops_event", handleOpsEvent);
+    socket.on("receive_message", handleMessage);
+    socket.on("user_typing", handleTyping);
+    
     return () => {
-      socket.off("chat_message", handleMessage);
-      socket.off("ops_event", handleOpsEvent);
+      socket.off("receive_message", handleMessage);
+      socket.off("user_typing", handleTyping);
     };
   }, [user, selectedChat]);
 
-  const updateSidebar = (msg) => {
-    setConversations(prev => {
-      const exists = prev.some(c => c._id === msg.conversationId);
-      if (!exists) {
-        loadAll(user);
-        return prev;
-      }
-      return prev.map(c => {
-        if (c._id === msg.conversationId) {
-          return { ...c, lastMessage: msg.text, updatedAt: new Date() };
-        }
-        return c;
-      }).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-    });
+  const handleTypingEvent = () => {
+    if (selectedChat) socket.emit("typing", { chatId: selectedChat._id, name: user.name });
   };
 
-  const sendMessage = async () => {
-    if (!inputText.trim() || !selectedChat) return;
-    const textToSend = inputText;
-    setInputText("");
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) return toast.error("File exceeds 10MB limit.");
 
-    const otherMember = getOtherMember(selectedChat);
-    const receiverId = otherMember._id;
-
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE}/api/chat/${selectedChat._id}/messages`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${encodeURIComponent(token)}`
-        },
-        body: JSON.stringify({ text: textToSend, receiverId })
+      const res = await axios.post(`${API_BASE}/api/upload`, formData, {
+        headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${encodeURIComponent(token)}` }
       });
-      const newMsg = await res.json();
-      
-      setMessages(prev => [...prev, newMsg]);
-      updateSidebar(newMsg);
-
-      const triggerWords = ["help", "injured", "arrived", "trapped", "critical", "blood", "fire", "smoke", "coordinates", "eta"];
-      if (triggerWords.some(word => textToSend.toLowerCase().includes(word))) {
-        triggerAICopilot([...messages, newMsg]);
-      }
+      sendMessage(res.data.url, file.type.startsWith("image/") ? "image" : file.type.startsWith("video/") ? "video" : "text");
     } catch (err) {
-      toast.error("Transmission failed");
+      toast.error("Media upload failed.");
+    } finally {
+      setUploading(false);
+      e.target.value = null; // reset
     }
   };
 
-  const triggerAICopilot = async (currentMessages) => {
-    try {
-      const reportContext = {
-        title: "Active Field Operation",
-        description: "Emergency responders coordinating in real-time.",
-        urgency: "High"
-      };
+  const sendMessage = async (content = inputText, type = "text") => {
+    if (!content.trim() && !uploading) return;
+    if (type === "text") setInputText("");
 
-      const res = await fetch(`${API_BASE}/api/ai/copilot`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: currentMessages,
-          report: reportContext
-        })
-      });
-      const data = await res.json();
+    const msgData = {
+      chatId: selectedChat._id,
+      senderId: user.id || user._id,
+      message: type === "text" ? content : "Media File",
+      type,
+      mediaUrl: type !== "text" ? content : null
+    };
 
-      if (data.reply) {
-        const aiMsg = {
-          _id: "ai-" + Date.now(),
-          senderId: "AI-COMMAND",
-          senderName: "AI COMMAND",
-          text: data.reply,
-          createdAt: new Date(),
-          isAI: true
-        };
-        setMessages(prev => [...prev, aiMsg]);
-        setTimeout(scrollToBottom, 100);
-      }
-    } catch (err) {
-      console.error("AI Copilot failed", err);
-    }
+    // Optimistic UI
+    const tempId = Date.now().toString();
+    setMessages(prev => [...prev, { ...msgData, _id: tempId, createdAt: new Date(), senderId: { _id: user.id || user._id, name: user.name } }]);
+    scrollToBottom();
+
+    socket.emit("send_message", msgData);
   };
 
-  const getOtherMember = (chat) => {
-    if (!chat || !chat.members) return { name: "System" };
-    return chat.members.find(m => m._id !== (user?.id || user?._id)) || chat.members[0] || { name: "Operator" };
+  const getOtherParticipant = (chat) => {
+    if (chat.type === "team") return { name: `MISSION: ${chat.problemId?.title || "Emergency Group"}` };
+    return chat.participants.find(p => p._id !== (user?.id || user?._id)) || { name: "Operator" };
   };
 
-  if (!user) return <div className="min-h-screen bg-[#0B1220]" />;
+  if (!user) return <div className="min-h-screen bg-[#080B14]" />;
+
+  const filteredChats = chats.filter(c => c.type === activeTab);
 
   return (
-    <div className="min-h-screen bg-[#0B1220] flex flex-col h-screen overflow-hidden">
+    <div className="min-h-screen bg-[#080B14] flex flex-col h-screen overflow-hidden text-white">
       <Navbar />
-      <PageWrapper className="flex-1 flex flex-col overflow-hidden pt-20 pb-4 px-4">
-        <div className="flex-1 flex max-w-[1600px] w-full mx-auto bg-[#0f172a]/30 border border-white/10 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
+      <PageWrapper className="flex-1 flex flex-col overflow-hidden pt-[100px] pb-6 px-6">
+        <div className="flex-1 flex max-w-[1400px] w-full mx-auto bg-[#0f172a]/40 border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl backdrop-blur-xl">
           
-          {/* ── SIDEBAR ── */}
-          <div className="w-full md:w-[350px] lg:w-[450px] flex flex-col border-r border-white/10 bg-[#0B1220]/40">
-            <div className="p-6 border-b border-white/10 bg-[#0f172a]/50 flex items-center justify-between">
-              <div className="space-y-1">
-                <h2 className="text-xl font-black text-white uppercase tracking-[0.2em]">Sec-Coms</h2>
-                <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                  Satellite Link: Active
-                </p>
+          {/* ── LEFT PANEL: CONVERSATIONS ── */}
+          <div className="w-full md:w-[350px] flex flex-col border-r border-white/5 bg-[#0f172a]/20">
+            <div className="p-6 border-b border-white/5 space-y-4">
+              <h2 className="text-xl font-black uppercase tracking-widest text-white">Secure Channels</h2>
+              <div className="flex bg-black/40 p-1 rounded-xl">
+                 <button 
+                  onClick={() => setActiveTab("direct")}
+                  className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${activeTab === "direct" ? "bg-indigo-600 shadow-md" : "text-gray-500 hover:text-gray-300"}`}
+                 >
+                    Direct Ops
+                 </button>
+                 <button 
+                  onClick={() => setActiveTab("team")}
+                  className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${activeTab === "team" ? "bg-purple-600 shadow-md" : "text-gray-500 hover:text-gray-300"}`}
+                 >
+                    Mission Units
+                 </button>
               </div>
             </div>
             
             <div className="flex-1 overflow-y-auto custom-scrollbar">
               {loading ? (
-                <div className="p-10 space-y-4">
-                  {[...Array(6)].map((_, i) => <div key={i} className="h-20 bg-white/5 rounded-2xl animate-pulse" />)}
+                <div className="p-6 space-y-3">
+                  {[...Array(5)].map((_, i) => <div key={i} className="h-16 bg-white/5 rounded-2xl animate-pulse" />)}
                 </div>
-              ) : conversations.length === 0 ? (
-                <div className="p-10 text-center">
-                  <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4 border border-dashed border-white/10">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-600"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                  </div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">No Secure Channels Open</p>
+              ) : filteredChats.length === 0 ? (
+                <div className="p-10 text-center text-[10px] font-black uppercase tracking-widest text-gray-600 border border-dashed border-white/5 m-6 rounded-2xl">
+                  No Active {activeTab === "direct" ? "Direct" : "Team"} Channels
                 </div>
               ) : (
-                conversations.map(c => {
-                  const other = getOtherMember(c);
+                filteredChats.map(c => {
+                  const other = getOtherParticipant(c);
                   const isSelected = selectedChat?._id === c._id;
-                  const isMission = c.members?.length > 2;
                   
                   return (
                     <div 
                       key={c._id}
                       onClick={() => setSelectedChat(c)}
-                      className={`group p-5 border-b border-white/5 cursor-pointer transition-all flex items-center gap-4 relative ${isSelected ? "bg-indigo-600/10" : "hover:bg-white/5"}`}
+                      className={`p-5 cursor-pointer transition-all flex items-center gap-4 border-b border-white/5 relative ${isSelected ? "bg-white/5" : "hover:bg-white/[0.02]"}`}
                     >
-                      {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.6)]" />}
+                      {isSelected && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-indigo-500 rounded-r-full" />}
                       
-                      <div className="relative">
-                        <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br border flex items-center justify-center text-white font-black text-xl shadow-lg ${isMission ? "from-red-600/40 to-orange-600/40 border-red-500/30" : "from-indigo-600/30 to-purple-600/30 border-white/10"}`}>
-                          {isMission ? "🚨" : (other.name?.charAt(0) || "U")}
-                        </div>
-                        <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-[#0B1220]" />
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-lg ${c.type === "team" ? "bg-gradient-to-br from-purple-600 to-indigo-600" : "bg-gradient-to-br from-gray-700 to-gray-900 border border-white/10"}`}>
+                        {c.type === "team" ? "🚨" : (other.name?.charAt(0) || "U")}
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start mb-1">
                           <span className={`font-bold text-sm truncate ${isSelected ? "text-white" : "text-gray-300"}`}>
-                            {isMission ? `MISSION: ${c.lastMessage?.includes("🚨") ? c.lastMessage.split(":")[1]?.trim() : "Emergency Group"}` : other.name}
+                            {other.name}
                           </span>
-                          <span className="text-[9px] text-gray-500 font-black uppercase whitespace-nowrap ml-2">
-                            {c.updatedAt ? new Date(c.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ""}
+                          <span className="text-[9px] text-gray-500 font-bold ml-2">
+                            {c.lastMessage?.createdAt ? new Date(c.lastMessage.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ""}
                           </span>
                         </div>
-                        <div className="text-[11px] text-gray-500 truncate font-medium flex items-center gap-1.5">
-                          {c.lastMessage || "Establish secure link..."}
+                        <div className="text-[11px] text-gray-500 truncate font-medium">
+                          {c.lastMessage?.message || "Channel Open..."}
                         </div>
-                        {isMission && (
-                          <div className="mt-1.5 flex gap-1">
-                            <span className="text-[7px] font-black uppercase px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">Active Mission</span>
-                            <span className="text-[7px] font-black uppercase px-1.5 py-0.5 rounded bg-white/5 text-gray-400 border border-white/10">{c.members.length} Responders</span>
-                          </div>
-                        )}
                       </div>
                     </div>
                   );
@@ -321,120 +265,118 @@ function ChatContent() {
             </div>
           </div>
 
-          {/* ── CHAT WINDOW ── */}
-          <div className="flex-1 flex flex-col bg-[#0B1220]/60 relative overflow-hidden">
+          {/* ── RIGHT PANEL: CHAT WINDOW ── */}
+          <div className="flex-1 flex flex-col relative bg-[#0B1220]/80">
             {selectedChat ? (
               <>
-                <div className="px-8 py-5 border-b border-white/10 bg-[#0f172a]/60 flex items-center justify-between backdrop-blur-2xl z-10">
+                <div className="px-8 py-5 border-b border-white/5 bg-[#0f172a]/80 backdrop-blur-md z-10 flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-black text-xl shadow-inner">
-                      {getOtherMember(selectedChat).name?.charAt(0) || "M"}
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-black text-xl">
+                      {getOtherParticipant(selectedChat).name?.charAt(0) || "M"}
                     </div>
                     <div>
                       <h3 className="text-lg font-black text-white tracking-tight flex items-center gap-2">
-                        {getOtherMember(selectedChat).name}
-                        {selectedChat.members?.length > 2 && <span className="text-[8px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full border border-red-500/20">MISSION GROUP</span>}
+                        {getOtherParticipant(selectedChat).name}
+                        {selectedChat.type === "team" && <span className="text-[8px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded border border-purple-500/20 uppercase">Mission Group</span>}
                       </h3>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.8)] animate-pulse" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400/80">Operational Frequency Secured</span>
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400/80">Secured Frequency</span>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <button className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all border border-white/5">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.28-2.28a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                    </button>
                   </div>
                 </div>
                 
-                <div className="flex-1 overflow-y-auto p-10 space-y-8 custom-scrollbar relative">
+                <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar relative">
                   {messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-center">
-                      <div className="w-20 h-20 rounded-3xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center mx-auto mb-6">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-indigo-400"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                      </div>
-                      <h4 className="text-lg font-black text-white uppercase tracking-[0.2em] mb-2">Comm-Link Verified</h4>
-                      <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest max-w-[200px] mx-auto leading-relaxed">Encrypted channel established. Maintain strict operational security.</p>
+                      <div className="w-16 h-16 rounded-3xl bg-indigo-600/10 flex items-center justify-center mx-auto mb-4 text-indigo-400 text-2xl">🔒</div>
+                      <h4 className="text-[11px] font-black text-white uppercase tracking-[0.2em] mb-2">End-to-End Encrypted</h4>
+                      <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest max-w-[250px] mx-auto leading-relaxed">Transmissions are secured via SevaLink neural protocols. Data retained for 14 days.</p>
                     </div>
                   ) : (
                     messages.map((m, idx) => {
-                      const isMe = m.senderId === (user.id || user._id);
-                      const isCommand = m.senderId === "AI-COMMAND";
+                      const isMe = m.senderId?._id === (user.id || user._id);
                       return (
                         <div key={m._id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                           <motion.div 
-                            initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-                            className={`max-w-[85%] md:max-w-[70%] shadow-2xl rounded-2xl px-6 py-4 ${
-                              isCommand ? "bg-red-600/90 text-white border border-red-400/30" :
-                              m.isAI ? "bg-indigo-600/20 text-indigo-100 border border-indigo-500/30" :
-                              isMe ? "bg-indigo-600 text-white rounded-tr-none" : "bg-[#1e293b] text-gray-200 rounded-tl-none border border-white/5"
+                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                            className={`max-w-[75%] px-5 py-3 rounded-2xl shadow-xl ${
+                              isMe ? "bg-indigo-600 text-white rounded-tr-sm" : "bg-[#1e293b] text-gray-200 rounded-tl-sm border border-white/5"
                             }`}
                           >
-                            {(m.isAI || isCommand) && (
-                              <div className="flex items-center gap-2 mb-2 border-b border-white/10 pb-1.5">
-                                <span className="text-[9px] font-black uppercase tracking-widest">{isCommand ? "COMMANDER OVERRIDE" : "AI COPILOT"}</span>
-                              </div>
+                            {!isMe && selectedChat.type === "team" && <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1.5">{m.senderId?.name || "Responder"}</p>}
+                            
+                            {m.type === "image" && m.mediaUrl ? (
+                              <img src={m.mediaUrl} alt="Transmission" className="w-full max-w-sm rounded-xl mb-2 border border-white/10" />
+                            ) : m.type === "video" && m.mediaUrl ? (
+                              <video src={m.mediaUrl} controls className="w-full max-w-sm rounded-xl mb-2 border border-white/10" />
+                            ) : (
+                              <p className="text-[13px] leading-relaxed font-medium">{m.message}</p>
                             )}
-                            {!isMe && !isCommand && !m.isAI && <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">{m.senderName || "Responder"}</p>}
-                            <p className="text-[15px] leading-relaxed font-medium">{m.text}</p>
-                            <div className="flex justify-end gap-2 mt-2 text-[8px] font-black opacity-40">
+                            
+                            <div className="flex justify-end items-center gap-1.5 mt-1.5 text-[8px] font-black opacity-50 uppercase tracking-widest">
                               {new Date(m.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                              {isMe && !m.isAI && <span>{m.seen ? "✓✓" : "✓"}</span>}
+                              {isMe && <span className="text-emerald-400">✓✓</span>}
                             </div>
                           </motion.div>
                         </div>
                       );
                     })
                   )}
+                  {isTyping && (
+                    <div className="flex justify-start">
+                      <div className="bg-[#1e293b] px-4 py-2.5 rounded-2xl rounded-tl-sm border border-white/5 text-[10px] font-bold text-gray-400 italic">
+                        {isTyping} is typing...
+                      </div>
+                    </div>
+                  )}
                   <div ref={messagesEndRef} />
                 </div>
-                
-                <div className="px-8 py-4 bg-[#0f172a]/60 border-t border-white/10 flex flex-wrap gap-2 z-10">
-                  {[
-                    { label: "📍 On Site", text: "Unit is on-site. Beginning assessment." },
-                    { label: "🚑 Med Needed", text: "Requesting medical backup. Casualty detected." },
-                    { label: "✅ Secured", text: "Zone secured. Situation under control." },
-                    { label: "🧠 Advise Me", text: "Requesting AI tactical overview of current context." },
-                  ].map(cmd => (
-                    <button 
-                      key={cmd.label}
-                      onClick={() => cmd.label === "🧠 Advise Me" ? triggerAICopilot(messages) : setInputText(cmd.text)}
-                      className="px-4 py-2 rounded-xl bg-indigo-600/5 border border-indigo-500/20 text-[9px] font-black uppercase tracking-widest text-indigo-300 hover:bg-indigo-600 hover:text-white transition-all active:scale-95"
-                    >
-                      {cmd.label}
-                    </button>
-                  ))}
-                </div>
 
-                <div className="p-8 bg-[#0f172a]/90 backdrop-blur-2xl border-t border-white/10 flex items-center gap-5 z-10">
+                <div className="p-6 bg-[#0f172a]/90 backdrop-blur-xl border-t border-white/5 flex items-center gap-4 z-10">
+                  <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*,video/*" className="hidden" />
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="w-12 h-12 rounded-[1.5rem] bg-white/5 hover:bg-white/10 text-gray-400 flex items-center justify-center transition-all disabled:opacity-30"
+                  >
+                    📎
+                  </button>
                   <input 
                     type="text"
                     value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
+                    onChange={(e) => { setInputText(e.target.value); handleTypingEvent(); }}
                     onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                    placeholder="Type secure tactical transmission..."
-                    className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-8 py-5 text-sm text-white placeholder-gray-600 outline-none focus:border-indigo-500/50 transition-all"
+                    placeholder={uploading ? "Uploading media..." : "Type secure message..."}
+                    disabled={uploading}
+                    className="flex-1 bg-black/40 border border-white/10 rounded-[1.5rem] px-6 py-4 text-sm text-white placeholder-gray-600 outline-none focus:border-indigo-500/50 transition-all shadow-inner"
                   />
                   <button 
-                    onClick={sendMessage}
-                    disabled={!inputText.trim()}
-                    className="w-16 h-16 rounded-[2rem] bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-500 disabled:opacity-20 transition-all active:scale-90"
+                    onClick={() => sendMessage()}
+                    disabled={(!inputText.trim() && !uploading)}
+                    className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-500 disabled:opacity-20 transition-all active:scale-90 shadow-lg shadow-indigo-500/20"
                   >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                    ➤
                   </button>
                 </div>
               </>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-10 relative">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-indigo-500/5 blur-[100px] rounded-full -z-10" />
-                <h3 className="text-2xl font-black text-white uppercase tracking-[0.5em] mb-4">Comm-Link Standby</h3>
-                <p className="text-gray-600 text-[10px] font-black uppercase tracking-[0.2em] max-w-[320px]">Initialize an encrypted operational frequency to begin.</p>
+                <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center text-3xl mb-4 border border-dashed border-white/10 opacity-50">📡</div>
+                <h3 className="text-xl font-black text-white uppercase tracking-[0.3em] mb-2">System Standby</h3>
+                <p className="text-gray-600 text-[10px] font-bold uppercase tracking-widest">Select a channel to transmit.</p>
               </div>
             )}
           </div>
         </div>
       </PageWrapper>
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+      `}</style>
     </div>
   );
 }

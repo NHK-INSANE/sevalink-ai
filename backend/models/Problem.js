@@ -42,15 +42,44 @@ const problemSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["Open", "In Progress", "Resolved", "open", "in-progress", "resolved"],
-    default: "Open",
+    enum: ["OPEN", "IN PROGRESS", "RESOLVED"],
+    default: "OPEN",
+    uppercase: true
   },
+  submittedByName: {
+    type: String,
+    default: "Anonymous"
+  },
+  isArchived: {
+    type: Boolean,
+    default: false
+  },
+  requests: [
+    {
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      userName: String,
+      role: String,
+      type: { type: String, enum: ["assign", "lead"], default: "assign" },
+      status: { type: String, enum: ["pending", "accepted", "rejected"], default: "pending" },
+      createdAt: { type: Date, default: Date.now }
+    }
+  ],
   assignedTo: {
     type: String,
     default: null,
   },
   team: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   leader: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  tasks: [
+    {
+      title: { type: String, required: true },
+      priority: { type: String, enum: ["CRITICAL", "HIGH", "MEDIUM", "LOW"], default: "MEDIUM" },
+      status: { type: String, enum: ["PENDING", "IN_PROGRESS", "COMPLETED"], default: "PENDING" },
+      assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+      assignedName: { type: String, default: null },
+      createdAt: { type: Date, default: Date.now }
+    }
+  ],
   timeline: [
     {
       text: { type: String, required: true },
@@ -83,5 +112,9 @@ problemSchema.virtual('displayId').get(function() {
   const hex = this._id.toString().slice(-8).toUpperCase();
   return `PRB-${hex}`;
 });
+
+// Performance Indexes
+problemSchema.index({ status: 1, isArchived: 1, urgency: 1 });
+problemSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model("Problem", problemSchema);

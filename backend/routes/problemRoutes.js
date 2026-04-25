@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 const Problem = require("../models/Problem");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
@@ -20,433 +21,287 @@ function getDistance(lat1, lon1, lat2, lon2) {
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
-// ── Smart AI Volunteer Matching ───────────────────────────────────────────────
-async function matchVolunteers(problem, topN = 5) {
-  try {
-    const users = await User.find({
-      role: { $in: ["Volunteer", "volunteer", "Worker", "worker"] }
-    }).select("-password");
-    if (users.length === 0) return [];
-
-    const urgencyBoost = { critical: 30, high: 20, medium: 10, low: 0 };
-
-    const scored = users.map(u => {
-      let score = 0;
-      const pLat = problem.location?.lat || problem.latitude || 22.3;
-      const pLng = problem.location?.lng || problem.longitude || 87.3;
-      const uLat = u.location?.lat || u.latitude || 22.3;
-      const uLng = u.location?.lng || u.longitude || 87.3;
-
-      const dist = getDistance(pLat, pLng, uLat, uLng);
-      const distScore = Math.max(0, 100 - dist);
-      score += distScore;
-
-      const uSkills = (u.skills || []).map(s => String(s).toLowerCase());
-      if (u.skill) uSkills.push(String(u.skill).toLowerCase());
-      
-      const pCat = Array.isArray(problem.category) ? problem.category[0] : problem.category;
-      const pSkill = String(pCat || "").toLowerCase();
-      
-      if (pSkill && uSkills.includes(pSkill)) score += 50;
-
-      const urgencyStr = String(problem.urgency || "").toLowerCase();
-      score += (urgencyBoost[urgencyStr] || 0);
-
-      return { user: u, score, distKm: Math.round(dist) };
-    });
-
-    return scored
-      .sort((a, b) => b.score - a.score)
-      .slice(0, topN)
-      .map(({ user, score, distKm }) => ({
-        _id:     user._id,
-        name:    user.name,
-        email:   user.email,
-        phone:   user.phone,
-        skills:  user.skills || [],
-        skill:   user.skill,
-        role:    user.role,
-        score:   Math.round(score),
-        distKm
-      }));
-  } catch (err) {
-    console.error("Match Error:", err);
-    return [];
-  }
-}
-
-// POST /api/problems — Create a new problem (AI DISPATCHER BRAIN)
-router.post("/", auth, validate(problemSchema), async (req, res) => {
-  try {
-    const problem = new Problem({
-      ...req.body,
-      createdBy: req.user.id.toString(),
-      timeline: [{ text: "🚨 Crisis reported to Neural Link" }]
-    });
-
-    // 1. AI Analysis (Simulated or using Gemini)
-    // We already have some logic, let's enhance the flow.
-    const topMatches = await matchVolunteers(problem, 3);
-    
-    if (topMatches.length > 0) {
-      const bestMatch = topMatches[0];
-      problem.assignedTo = bestMatch._id.toString();
-      problem.team = topMatches.map(m => m._id.toString());
-      problem.status = "In Progress";
-      problem.timeline.push({ text: `🧠 AI Dispatcher: Selected top ${topMatches.length} responders.` });
-
-      // 2. Auto-Create Conversation Room
-      const conversation = await Conversation.create({
-        members: [req.user.id, ...problem.team],
-        lastMessage: "🚨 Emergency Response Initialized"
-      });
-
-      // 3. Auto-Send AI Instruction Message
-      const aiSystemMessage = `
-🚨 EMERGENCY PROTOCOL INITIALIZED
-
-Type: ${problem.category || "General Incident"}
-Urgency: ${problem.urgency || "HIGH"}
-Location: [${(problem.location?.lat || 0).toFixed(4)}, ${(problem.location?.lng || 0).toFixed(4)}]
-
-INSTRUCTIONS FOR RESPONDERS:
-1. Proceed to coordinate via this secure channel.
-2. Confirm arrival at location.
-3. Status updates required every 15 minutes.
-
-TEAM: ${topMatches.map(m => m.name).join(", ")}
-`;
-
-      await ChatMessage.create({
-        conversationId: conversation._id,
-        senderId: "000000000000000000000000", // System ID
-        text: aiSystemMessage
-      });
-
-      // 4. Notify via Socket
-      const io = req.app.get("io");
-      if (io) {
-        // Dispatch alerts to helpers
-        topMatches.forEach(h => {
-          io.to(h._id.toString()).emit("dispatch_alert", {
-            message: "🚨 You have been assigned to a crisis",
-            reportId: problem._id,
-            conversationId: conversation._id
-          });
-          
-          // Send the message to their room too
-          io.to(h._id.toString()).emit("chat_message", {
-            conversationId: conversation._id,
-            senderId: "000000000000000000000000",
-            text: aiSystemMessage,
-            createdAt: new Date()
-          });
-        });
-
-        // Broadcast problem
-        io.emit("new-problem", problem);
-      }
-
-      await problem.save();
-      res.status(201).json({ problem, matched: topMatches, conversationId: conversation._id });
-    } else {
-      await problem.save();
-      const io = req.app.get("io");
-      if (io) io.emit("new-problem", problem);
-      res.status(201).json({ problem, matched: [] });
-    }
-
-  } catch (err) {
-    console.error("🔥 AI DISPATCHER ERROR:", err);
-    res.status(500).json({ error: "Autonomous dispatch failed", details: err.message });
-  }
-});
-
-// GET /api/problems — Get all problems
+// ── GET /api/problems — Get all problems with Smart Sorting & Filtering ──────
 router.get("/", async (req, res) => {
   try {
-    let problems = await Problem.find().lean();
-    
+    const { lat, lng, sort, urgency, status } = req.query;
+    let query = { isArchived: false };
+
+    if (urgency) query.urgency = urgency;
+    if (status) query.status = status.toUpperCase();
+
+    let problems = await Problem.find(query).lean();
+
+    // Calculate score and distance
     problems = problems.map(p => {
       const hoursElapsed = (Date.now() - new Date(p.createdAt).getTime()) / (1000 * 60 * 60);
       const dynamicBoost = Math.floor(hoursElapsed) * 5;
-      return { ...p, score: (p.score || 0) + dynamicBoost };
+      
+      let distance = 0;
+      if (lat && lng) {
+        distance = getDistance(parseFloat(lat), parseFloat(lng), p.location?.lat, p.location?.lng);
+      }
+
+      return { 
+        ...p, 
+        score: (p.score || 0) + dynamicBoost,
+        distance: distance
+      };
     });
-    
-    problems.sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    });
-    
+
+    // Sorting Logic
+    if (sort === "nearest" && lat && lng) {
+      problems.sort((a, b) => a.distance - b.distance);
+    } else if (sort === "newest") {
+      problems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } else {
+      // Default: AI Score + Recency
+      problems.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+    }
+
     res.json(problems);
   } catch (err) {
+    console.error("Fetch Problems Error:", err);
     res.status(500).json({ error: "Failed to fetch problems." });
   }
 });
 
-// PATCH /api/problems/:id/status — Update problem status
-router.patch("/:id/status", auth, async (req, res) => {
+// ── POST /api/problems — Create a new problem ─────────────────────────────────
+router.post("/", auth, validate(problemSchema), async (req, res) => {
   try {
-    const { status } = req.body;
-    let timelineUpdate = `Status updated to ${status}`;
-    if (status === "In Progress") timelineUpdate = "Work started";
-    if (status === "Resolved") timelineUpdate = "Problem resolved";
+    const user = await User.findById(req.user.id);
+    const { generateTasks, getPriority } = require("../engine/intelligence");
+    const aiTasks = generateTasks(req.body.description);
+    
+    const taskObjects = aiTasks.map(t => ({
+      title: t,
+      priority: getPriority(t),
+      status: "PENDING"
+    }));
 
-    const problem = await Problem.findById(req.params.id);
-    if (!problem) return res.status(404).json({ error: "Problem not found" });
+    const problem = new Problem({
+      ...req.body,
+      createdBy: req.user.id.toString(),
+      submittedByName: user ? user.name : "Anonymous",
+      tasks: taskObjects,
+      timeline: [{ text: "🚨 Crisis reported to Neural Link. AI Task generation complete." }]
+    });
 
-    // Only creator or admin can update status
-    if (problem.createdBy !== req.user.id.toString() && req.user.role !== "admin") {
-      return res.status(403).json({ error: "Unauthorized" });
-    }
-
-    problem.status = status;
-    problem.timeline.push({ text: timelineUpdate });
     await problem.save();
+    
+    // Create Team Chat for this problem
+    const Chat = require("../models/Chat");
+    await Chat.create({
+      type: "team",
+      problemId: problem._id,
+      participants: [req.user.id]
+    });
 
     const io = req.app.get("io");
-    if (io) io.emit("problem-updated", problem);
+    if (io) io.emit("new-problem", problem);
 
-    res.json(problem);
+    res.status(201).json(problem);
   } catch (err) {
-    res.status(500).json({ error: "Failed to update status." });
+    console.error("Create Problem Error:", err);
+    res.status(500).json({ error: "Failed to create problem" });
   }
 });
 
-// PATCH /api/problems/:id/assign — Assign a volunteer (Role Hierarchy Enforced)
-router.patch("/:id/assign", auth, authorize("ngo", "worker", "admin"), async (req, res) => {
+const rateLimit = require("express-rate-limit");
+const requestLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // 10 requests per minute
+  message: { error: "Too many tactical requests. Please slow down." }
+});
+
+// ── POST /api/problems/:id/request — Request to Assign or Lead ────────────────
+router.post("/:id/request", auth, requestLimiter, async (req, res) => {
   try {
-    const { volunteerId, volunteerName } = req.body;
-    const assignedBy = req.user.id;
-    
-    if (!volunteerId) return res.status(400).json({ error: "volunteerId is required" });
+    const { type } = req.body; // 'assign' or 'lead'
+    const userId = req.user.id;
+    const user = await User.findById(userId);
 
-    const target = await User.findById(volunteerId);
-    const assigner = await User.findById(assignedBy);
-
-    if (!target || !assigner) return res.status(404).json({ error: "User not found" });
-
-    const aRole = assigner.role.toLowerCase();
-    const tRole = target.role.toLowerCase();
-
-    // ❌ Logic: Volunteers can never assign Workers
-    if (aRole === "volunteer" && tRole === "worker") {
-      return res.status(403).json({ error: "Unauthorized: Volunteers cannot assign Workers." });
-    }
-
-    // ❌ Logic: Workers can only assign Volunteers (unless admin/ngo)
-    if (aRole === "worker" && tRole !== "volunteer") {
-      return res.status(403).json({ error: "Unauthorized: Workers can only assign Volunteers." });
-    }
-
-    // ❌ Logic: Workers belonging to different NGOs
-    if (aRole === "ngo" && tRole === "worker") {
-       if (target.ngoId && target.ngoId.toString() !== assigner._id.toString()) {
-         return res.status(403).json({ error: "Unauthorized: This worker belongs to another NGO." });
-       }
+    if (user.role === "user") {
+      return res.status(403).json({ error: "Standard users cannot join tactical teams." });
     }
 
     const problem = await Problem.findById(req.params.id);
     if (!problem) return res.status(404).json({ error: "Problem not found" });
 
-    if (!problem.team.includes(volunteerId)) {
-      problem.team.push(volunteerId);
+    // Check if already requested or member
+    const existing = problem.requests.find(r => r.userId.toString() === userId && r.status === "pending");
+    if (existing) return res.status(400).json({ error: "Request already pending." });
+
+    if (problem.team.includes(userId)) {
+      if (type === "assign") return res.status(400).json({ error: "Already a member of this team." });
+      if (problem.leader?.toString() === userId) return res.status(400).json({ error: "Already the leader of this team." });
     }
+
+    // Limit requests per user
+    const userPendingRequests = problem.requests.filter(r => r.userId.toString() === userId && r.status === "pending").length;
+    if (userPendingRequests >= 3) return res.status(400).json({ error: "Too many pending requests for this problem." });
+
+    problem.requests.push({
+      userId,
+      userName: user.name,
+      role: user.role,
+      type: type || "assign",
+      status: "pending"
+    });
+
+    await problem.save();
+    res.json({ success: true, message: "Tactical request transmitted." });
+  } catch (err) {
+    res.status(500).json({ error: "Request failed." });
+  }
+});
+
+// ── POST /api/problems/:id/request/respond — NGO Accept/Reject Request ────────
+router.post("/:id/request/respond", auth, authorize("ngo", "admin"), async (req, res) => {
+  try {
+    const { requestId, action } = req.body; // action: 'accept' or 'reject'
+    const problem = await Problem.findById(req.params.id);
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
+
+    const requestIndex = problem.requests.findIndex(r => r._id.toString() === requestId);
+    if (requestIndex === -1) return res.status(404).json({ error: "Request not found" });
+
+    const request = problem.requests[requestIndex];
+
+    if (action === "accept") {
+      request.status = "accepted";
+      
+      if (request.type === "lead") {
+        if (problem.leader) {
+          return res.status(400).json({ error: "Mission already has an assigned leader." });
+        }
+        problem.leader = request.userId;
+        if (!problem.team.includes(request.userId)) problem.team.push(request.userId);
+        problem.timeline.push({ text: `Team Leader Assigned: ${request.userName}` });
+      } else {
+        if (!problem.team.includes(request.userId)) problem.team.push(request.userId);
+        problem.timeline.push({ text: `Member Added: ${request.userName}` });
+      }
+      
+      problem.status = "IN PROGRESS";
+
+      // Notify User
+      const notification = new Notification({
+        userId: request.userId,
+        message: `Your request to ${request.type} for "${problem.title}" was ACCEPTED.`,
+        type: "success"
+      });
+      await notification.save();
+      
+      const io = req.app.get("io");
+      if (io) {
+        io.to(request.userId.toString()).emit("new-notification", notification);
+      }
+
+      // Add to Team Chat
+      const Chat = require("../models/Chat");
+      await Chat.updateOne(
+        { problemId: problem._id, type: "team" },
+        { $addToSet: { participants: request.userId } }
+      );
+
+    } else {
+      request.status = "rejected";
+    }
+
+    await problem.save();
     
-    problem.assignedTo = volunteerId; // legacy support
-    problem.status = "In Progress";
-    problem.timeline.push({ text: `Assigned ${tRole} ${target.name} to the team (by ${aRole})` });
-    
+    const io = req.app.get("io");
+    if (io) io.emit("problem-updated", problem);
+
+    res.json({ success: true, problem });
+  } catch (err) {
+    res.status(500).json({ error: "Response failed." });
+  }
+});
+
+// ── POST /api/problems/:id/make-leader — Change Team Leader ────────────────
+router.post("/:id/make-leader", auth, authorize("ngo", "admin"), async (req, res) => {
+  try {
+    const { newLeaderId } = req.body;
+    const problem = await Problem.findById(req.params.id);
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
+
+    // Validate new leader is actually a member
+    if (!problem.team.includes(newLeaderId)) {
+      return res.status(400).json({ error: "User must be a team member to become a leader." });
+    }
+
+    problem.leader = newLeaderId;
+    problem.timeline.push({ text: `Team Leader reassigned by Command` });
     await problem.save();
 
+    // Notification
     const notification = new Notification({
-      userId: volunteerId,
-      message: `You were assigned to problem: ${problem.title}`,
-      type: "assigned",
+      userId: newLeaderId,
+      message: `You have been assigned as the LEADER for mission: ${problem.title}`,
+      type: "assignment"
     });
     await notification.save();
 
     const io = req.app.get("io");
-    if (io) io.emit("problem-updated", problem);
-
-    res.json(problem);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to assign volunteer." });
-  }
-});
-
-// DELETE /api/problems/:id — Delete a problem
-router.delete("/:id", auth, async (req, res) => {
-  try {
-    const problem = await Problem.findById(req.params.id);
-    if (!problem) return res.status(404).json({ message: "Problem not found" });
-
-    if (problem.createdBy !== req.user.id.toString() && req.user.role !== "admin") {
-      return res.status(403).json({ message: "Unauthorized: Only the creator or admin can delete this." });
-    }
-
-    await problem.deleteOne();
-    res.json({ message: "Deleted successfully ✅" });
-  } catch (err) {
-    res.status(500).json({ error: "Failed to delete problem." });
-  }
-});
-
-// POST /api/problems/force-assign — Admin manual override
-router.post("/force-assign", auth, authorize("admin"), async (req, res) => {
-  try {
-    const { problemId, helperId, helperName } = req.body;
-    if (!problemId || !helperId) return res.status(400).json({ error: "problemId and helperId required" });
-
-    const problem = await Problem.findByIdAndUpdate(
-      problemId,
-      {
-        assignedTo: helperId,
-        status: "In Progress",
-        $push: { timeline: { text: `🛡️ Admin force-assigned ${helperName || "a helper"}` } }
-      },
-      { new: true }
-    );
-
-    if (!problem) return res.status(404).json({ error: "Problem not found" });
-
-    await User.findByIdAndUpdate(helperId, {
-      $push: { notifications: { text: `🚨 Admin assigned you to: "${problem.title}"`, type: "alert", date: new Date() } }
-    });
-
-    const io = req.app.get("io");
     if (io) {
-      io.emit("assigned", { problemId, helperId, problemTitle: problem.title });
+      io.to(newLeaderId.toString()).emit("new-notification", notification);
       io.emit("problem-updated", problem);
     }
 
-    res.json({ success: true, problem });
+    res.json({ success: true, message: "Leader updated successfully" });
   } catch (err) {
-    res.status(500).json({ error: "Force assign failed." });
+    res.status(500).json({ error: "Failed to update leader." });
   }
 });
 
-// GET /api/problems/:id/history — Get chat history
-router.get("/:id/history", auth, async (req, res) => {
+// ── POST /api/problems/:id/remove-member — Remove Member from Team ─────────
+router.post("/:id/remove-member", auth, authorize("ngo", "admin"), async (req, res) => {
   try {
-    const Message = require("../models/Message");
-    const messages = await Message.find({ problemId: req.params.id }).sort({ createdAt: 1 });
-    res.json(messages);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch history" });
-  }
-});
-
-// POST /api/problems/:id/messages — Save chat message
-router.post("/:id/messages", auth, async (req, res) => {
-  try {
-    const Message = require("../models/Message");
-    const msg = new Message({
-      ...req.body,
-      problemId: req.params.id
-    });
-    await msg.save();
-    res.status(201).json(msg);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to save message" });
-  }
-});
-
-// POST /api/problems/:id/assign — Assign yourself
-router.post("/:id/assign", auth, async (req, res) => {
-  try {
-    const userId = req.user.id;
+    const { memberId } = req.body;
     const problem = await Problem.findById(req.params.id);
     if (!problem) return res.status(404).json({ error: "Problem not found" });
 
-    if (!problem.team.includes(userId)) {
-      problem.team.push(userId);
-      problem.timeline.push({ text: `${req.user.name || "A user"} joined the team` });
-      
-      // If no leader assigned yet, the first joiner becomes leader (optional logic, but let's keep it simple)
-      if (!problem.leader) {
-        problem.leader = userId;
-      }
-      
-      await problem.save();
+    if (problem.leader?.toString() === memberId) {
+      return res.status(400).json({ error: "Cannot remove current leader. Assign a new leader first." });
     }
 
-    res.json({ success: true, problem });
-  } catch (err) {
-    res.status(500).json({ error: "Failed to assign yourself" });
-  }
-});
-
-// GET /api/problems/:id/team — Get team members
-router.get("/:id/team", async (req, res) => {
-  try {
-    const problem = await Problem.findById(req.params.id).populate("team leader", "name email role phone");
-    if (!problem) return res.status(404).json({ error: "Problem not found" });
-    res.json(problem.team);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch team" });
-  }
-});
-
-router.post("/:id/ai-assign", auth, authorize("admin", "ngo"), async (req, res) => {
-  try {
-    const problem = await Problem.findById(req.params.id);
-    if (!problem) return res.status(404).json({ error: "Problem not found" });
-
-    // AI Scoring: Distance (50%) + Skills (30%) + Experience (20%)
-    const users = await User.find({ role: { $in: ["worker", "volunteer", "Worker", "Volunteer"] } });
-    
-    const pLat = problem.location?.lat || 22.3;
-    const pLng = problem.location?.lng || 87.3;
-
-    const scored = users.map(u => {
-      const uLat = u.location?.lat || 22.3;
-      const uLng = u.location?.lng || 87.3;
-      const dist = getDistance(pLat, pLng, uLat, uLng);
-      
-      let score = Math.max(0, 100 - dist); // Distance score
-      
-      // Skill match
-      const pCat = String(problem.category || "").toLowerCase();
-      const uSkills = (u.skills || []).map(s => String(s).toLowerCase());
-      if (uSkills.includes(pCat)) score += 50;
-
-      return { id: u._id, score };
-    });
-
-    const selectedIds = scored
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 3)
-      .map(s => s.id);
-
-    problem.team = selectedIds;
-    if (selectedIds.length > 0 && !problem.leader) {
-      problem.leader = selectedIds[0];
-    }
-
-    problem.timeline.push({ text: `AI Neural-Assign: Recruited ${selectedIds.length} specialists based on proximity and skill-match.` });
+    problem.team = problem.team.filter(id => id.toString() !== memberId);
+    problem.timeline.push({ text: `Member removed from active duty by Command` });
     await problem.save();
 
-    res.json({ success: true, team: problem.team });
+    // Remove from Chat
+    const Chat = require("../models/Chat");
+    await Chat.updateOne(
+      { problemId: problem._id, type: "team" },
+      { $pull: { participants: memberId } }
+    );
+
+    // Notification
+    const notification = new Notification({
+      userId: memberId,
+      message: `You have been removed from the mission: ${problem.title}`,
+      type: "info"
+    });
+    await notification.save();
+
+    const io = req.app.get("io");
+    if (io) {
+      io.to(memberId.toString()).emit("new-notification", notification);
+      io.emit("problem-updated", problem);
+    }
+
+    res.json({ success: true, message: "Member removed." });
   } catch (err) {
-    res.status(500).json({ error: "AI Assign failed" });
+    res.status(500).json({ error: "Failed to remove member." });
   }
 });
 
-// GET /api/problems/:id/ai-match — Get best matches
-router.get("/:id/ai-match", auth, async (req, res) => {
-  try {
-    const problem = await Problem.findById(req.params.id);
-    if (!problem) return res.status(404).json({ error: "Problem not found" });
-
-    const matches = await matchVolunteers(problem, 5);
-    res.json(matches);
-  } catch (err) {
-    res.status(500).json({ error: "AI Match failed" });
-  }
-});
-
-// OVERRIDE PATCH status to enforce leader control
+// ── PATCH /api/problems/:id/status — Update status (Leader/NGO/Admin only) ────
 router.patch("/:id/status", auth, async (req, res) => {
   try {
     const { status } = req.body;
@@ -455,17 +310,21 @@ router.patch("/:id/status", auth, async (req, res) => {
     const problem = await Problem.findById(req.params.id);
     if (!problem) return res.status(404).json({ error: "Problem not found" });
 
-    // Enforce Leader Control: Only leader or admin or creator can update status
     const isLeader = problem.leader && problem.leader.toString() === userId;
     const isCreator = problem.createdBy === userId;
-    const isAdmin = req.user.role === "admin";
+    const isAdmin = req.user.role === "admin" || req.user.role === "ngo";
 
     if (!isLeader && !isCreator && !isAdmin) {
-      return res.status(403).json({ error: "Only the team leader or admin can update status" });
+      return res.status(403).json({ error: "Unauthorized status control." });
     }
 
-    problem.status = status;
+    problem.status = status.toUpperCase();
     problem.timeline.push({ text: `Status updated to ${status} by ${req.user.name}` });
+    
+    if (status.toUpperCase() === "RESOLVED") {
+      problem.timeline.push({ text: "🏁 Operation concluded successfully." });
+    }
+
     await problem.save();
 
     const io = req.app.get("io");
@@ -477,72 +336,217 @@ router.patch("/:id/status", auth, async (req, res) => {
   }
 });
 
-// PATCH /api/problems/:id/leader — Assign Leader (NGO/Admin only)
-router.patch("/:id/leader", auth, authorize("ngo", "admin"), async (req, res) => {
+// ── DELETE /api/problems/:id — Delete (Owner/NGO/Admin only) ──────────────────
+router.delete("/:id", auth, async (req, res) => {
   try {
-    const { userId } = req.body;
     const problem = await Problem.findById(req.params.id);
     if (!problem) return res.status(404).json({ error: "Problem not found" });
 
-    problem.leader = userId;
-    if (!problem.team.includes(userId)) {
-      problem.team.push(userId);
+    const isOwner = problem.createdBy === req.user.id.toString();
+    const isNGO = req.user.role === "ngo" || req.user.role === "admin";
+
+    if (!isOwner && !isNGO) {
+      return res.status(403).json({ error: "Unauthorized to delete this mission." });
     }
+
+    await problem.deleteOne();
     
-    problem.timeline.push({ text: `New team leader assigned: ${userId}` });
-    await problem.save();
-    
-    res.json({ success: true, problem });
+    const io = req.app.get("io");
+    if (io) io.emit("problem-deleted", req.params.id);
+
+    res.json({ success: true, message: "Mission terminated ✅" });
   } catch (err) {
-    res.status(500).json({ error: "Failed to assign leader" });
+    res.status(500).json({ error: "Deletion failed." });
   }
 });
 
-// POST /api/problems/:id/members — Add members (Leader/NGO only)
-router.post("/:id/members", auth, async (req, res) => {
+// ── GET /api/problems/:id/team — Get full team details ────────────────────────
+router.get("/:id/team", auth, async (req, res) => {
   try {
-    const { memberId } = req.body;
-    const userId = req.user.id.toString();
-    
+    const problem = await Problem.findById(req.params.id).populate("team leader", "name email role phone skills bio");
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
+    res.json({
+      leader: problem.leader,
+      members: problem.team
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch team data." });
+  }
+});
+
+// ── POST /api/problems/:id/ai-assign — AI Assignment Engine ───────────────────
+router.post("/:id/ai-assign", auth, authorize("ngo", "admin"), async (req, res) => {
+  try {
     const problem = await Problem.findById(req.params.id);
     if (!problem) return res.status(404).json({ error: "Problem not found" });
 
-    const isLeader = problem.leader && problem.leader.toString() === userId;
-    const isNGO = req.user.role === "ngo" || req.user.role === "admin";
+    const users = await User.find({ 
+      role: { $in: ["worker", "volunteer", "Worker", "Volunteer"] },
+      _id: { $nin: problem.team }
+    });
     
-    if (!isLeader && !isNGO) {
-      return res.status(403).json({ error: "Only team leader or NGO can add members" });
-    }
+    const pLat = problem.location?.lat || 22.3;
+    const pLng = problem.location?.lng || 87.3;
 
-    // Role Hierarchy Rule
-    const targetUser = await User.findById(memberId);
-    if (!targetUser) return res.status(404).json({ error: "Target member not found" });
+    const scored = users.map(u => {
+      const uLat = u.location?.lat || 22.3;
+      const uLng = u.location?.lng || 87.3;
+      const dist = getDistance(pLat, pLng, uLat, uLng);
+      
+      let score = Math.max(0, 100 - dist);
+      
+      const pCat = String(problem.category || "").toLowerCase();
+      const uSkills = (u.skills || []).map(s => String(s).toLowerCase());
+      if (uSkills.includes(pCat)) score += 50;
 
-    const uRole = (req.user.role || "").toLowerCase();
-    const tRole = (targetUser.role || "").toLowerCase();
+      return { user: u, score };
+    });
 
-    if (!isNGO) {
-       // Leaders who aren't NGOs (Workers/Volunteers)
-       if (uRole === "volunteer" && tRole === "worker") {
-         return res.status(403).json({ error: "Volunteers cannot recruit professional Workers" });
-       }
-       if (uRole === "worker" && tRole === "worker" && !isNGO) {
-         // Maybe workers can add workers? User says "Worker -> volunteer". I'll stick to their rule.
-         // Actually, "Worker -> volunteer" implies Workers can't add Workers.
-       }
-    }
+    const topMatches = scored
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3);
 
-    if (!problem.team.includes(memberId)) {
-      problem.team.push(memberId);
-      await problem.save();
-    }
-    
-    res.json({ success: true, team: problem.team });
+    // AI adds them to the request list with 'pending' status
+    topMatches.forEach(({ user }) => {
+      const alreadyRequested = problem.requests.some(r => r.userId.toString() === user._id.toString());
+      if (!alreadyRequested) {
+        problem.requests.push({
+          userId: user._id,
+          userName: user.name,
+          role: user.role,
+          type: "assign",
+          status: "pending"
+        });
+
+        // Notify User
+        const notification = new Notification({
+          userId: user._id,
+          message: `🤖 AI DISPATCHER: You are a high-match for mission "${problem.title}". Accept to join.`,
+          type: "alert"
+        });
+        notification.save();
+      }
+    });
+
+    problem.timeline.push({ text: `🧠 AI Intelligence: Recommended ${topMatches.length} specialists for mobilization.` });
+    await problem.save();
+
+    res.json({ success: true, message: "AI recommendations processed." });
   } catch (err) {
-    res.status(500).json({ error: "Failed to add member" });
+    res.status(500).json({ error: "AI Dispatcher failed." });
+  }
+});
+
+// ── POST /api/problems/:id/tasks/auto-assign — Smart Assignment Flow ────────
+router.post("/:id/tasks/auto-assign", auth, async (req, res) => {
+  try {
+    const { assignTask } = require("../engine/intelligence");
+    const problem = await Problem.findById(req.params.id).populate("team");
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
+
+    // Validate authority
+    const isLeader = problem.leader?.toString() === req.user.id.toString();
+    const isNGO = req.user.role === "ngo" || req.user.role === "admin";
+    if (!isLeader && !isNGO) return res.status(403).json({ error: "Only the Leader or Command can trigger auto-assign." });
+
+    let assignmentsMade = 0;
+
+    problem.tasks.forEach(task => {
+      if (!task.assignedTo && task.status !== "COMPLETED") {
+        const bestMember = assignTask(task.title, problem.team);
+        if (bestMember) {
+          task.assignedTo = bestMember._id;
+          task.assignedName = bestMember.name;
+          assignmentsMade++;
+
+          // Alert the user
+          const notification = new Notification({
+            userId: bestMember._id,
+            message: task.priority === "CRITICAL" ? `🚨 URGENT TASK ASSIGNED: ${task.title}` : `You have been assigned a task: ${task.title}`,
+            type: "assignment"
+          });
+          notification.save();
+
+          const io = req.app.get("io");
+          if (io) io.to(bestMember._id.toString()).emit("new-notification", notification);
+        }
+      }
+    });
+
+    if (assignmentsMade > 0) {
+      problem.timeline.push({ text: `🧠 AI Engine deployed ${assignmentsMade} task assignments.` });
+      await problem.save();
+      const io = req.app.get("io");
+      if (io) io.emit("problem-updated", problem);
+    }
+
+    res.json({ success: true, assignments: assignmentsMade });
+  } catch (err) {
+    res.status(500).json({ error: "AI Assignment failed." });
+  }
+});
+
+// ── PATCH /api/problems/:id/tasks/:taskId — Edit/Override Task ──────────────
+router.patch("/:id/tasks/:taskId", auth, async (req, res) => {
+  try {
+    const { title, priority, status, assignedTo, assignedName } = req.body;
+    const problem = await Problem.findById(req.params.id);
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
+
+    const task = problem.tasks.id(req.params.taskId);
+    if (!task) return res.status(404).json({ error: "Task not found" });
+
+    // Authority checks
+    const isLeader = problem.leader?.toString() === req.user.id.toString();
+    const isNGO = req.user.role === "ngo" || req.user.role === "admin";
+    const isAssigned = task.assignedTo?.toString() === req.user.id.toString();
+
+    if (!isLeader && !isNGO && !isAssigned) {
+      return res.status(403).json({ error: "Unauthorized access to task." });
+    }
+
+    // Only leaders/ngo can change everything. Assignee can only change status.
+    if (isLeader || isNGO) {
+      if (title) task.title = title;
+      if (priority) task.priority = priority;
+      if (assignedTo !== undefined) {
+        task.assignedTo = assignedTo || null;
+        task.assignedName = assignedName || null;
+      }
+    }
+    
+    if (status) task.status = status;
+
+    await problem.save();
+    const io = req.app.get("io");
+    if (io) io.emit("problem-updated", problem);
+
+    res.json(problem);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update task." });
+  }
+});
+
+// ── DELETE /api/problems/:id/tasks/:taskId — Delete Task ────────────────────
+router.delete("/:id/tasks/:taskId", auth, async (req, res) => {
+  try {
+    const problem = await Problem.findById(req.params.id);
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
+
+    const isLeader = problem.leader?.toString() === req.user.id.toString();
+    const isNGO = req.user.role === "ngo" || req.user.role === "admin";
+    if (!isLeader && !isNGO) return res.status(403).json({ error: "Unauthorized." });
+
+    problem.tasks.pull({ _id: req.params.taskId });
+    await problem.save();
+
+    const io = req.app.get("io");
+    if (io) io.emit("problem-updated", problem);
+
+    res.json(problem);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete task." });
   }
 });
 
 module.exports = router;
-
-

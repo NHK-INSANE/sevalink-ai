@@ -6,7 +6,7 @@ const { auth } = require("../middleware/auth");
 // Get all notifications for logged in user
 router.get("/", auth, async (req, res) => {
   try {
-    const notifications = await Notification.find({ userId: req.user._id })
+    const notifications = await Notification.find({ userId: req.user.id })
       .sort({ createdAt: -1 })
       .limit(20);
     res.json(notifications);
@@ -19,7 +19,7 @@ router.get("/", auth, async (req, res) => {
 router.patch("/:id/read", auth, async (req, res) => {
   try {
     const notification = await Notification.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user._id },
+      { _id: req.params.id, userId: req.user.id },
       { isRead: true },
       { new: true }
     );
@@ -33,7 +33,7 @@ router.patch("/:id/read", auth, async (req, res) => {
 router.patch("/read-all", auth, async (req, res) => {
   try {
     await Notification.updateMany(
-      { userId: req.user._id, isRead: false },
+      { userId: req.user.id, isRead: false },
       { isRead: true }
     );
     res.json({ success: true });
@@ -45,7 +45,7 @@ router.patch("/read-all", auth, async (req, res) => {
 // Delete a notification
 router.delete("/:id", auth, async (req, res) => {
   try {
-    await Notification.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
+    await Notification.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });

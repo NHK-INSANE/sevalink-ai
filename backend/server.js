@@ -54,6 +54,11 @@ global.io = io; // Make accessible globally for notification emitters
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// System Health Check
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date() });
+});
+
 const userSockets = new Map(); // userId -> socketId
 
 // 📐 Distance Function (Haversine)
@@ -222,6 +227,20 @@ io.on("connection", (socket) => {
       type: "SOS"
     });
   });
+  
+  socket.on("broadcast_alert", (data) => {
+    // Broadcast a general alert to everyone
+    io.emit("global_alert", {
+      message: `📢 BROADCAST: ${data.message}`,
+      type: "ALERT"
+    });
+
+    io.to("ops_room").emit("ops_event", {
+      type: "SYSTEM",
+      payload: { message: `Global Broadcast: ${data.message}` },
+      time: new Date()
+    });
+  });
 
   socket.on("run_simulation", async (config) => {
     console.log("🧪 SIMULATION: Starting autonomous test sequence...");
@@ -259,6 +278,37 @@ io.on("connection", (socket) => {
       payload: data,
       time: new Date()
     });
+  });
+
+  socket.on("send_message", async (data) => {
+    try {
+      const Message = require("./models/Message");
+      const Chat = require("./models/Chat");
+      
+      const chat = await Chat.findById(data.chatId);
+      if (!chat) return;
+
+      const newMessage = new Message({
+        chatId: data.chatId,
+        senderId: data.senderId,
+        message: data.message,
+        type: data.type || "text",
+        mediaUrl: data.mediaUrl,
+      });
+      await newMessage.save();
+      await newMessage.populate("senderId", "name");
+
+      chat.lastMessage = newMessage._id;
+      await chat.save();
+
+      // Emit to all participants in this chat
+      chat.participants.forEach(pId => {
+        const sid = userSockets.get(pId.toString());
+        if (sid) io.to(sid).emit("receive_message", newMessage);
+      });
+    } catch (err) {
+      console.error("Socket send_message error:", err);
+    }
   });
 
   socket.on("system_event", (data) => {
@@ -354,13 +404,25 @@ app.post("/api/sos", sosLimiter, async (req, res) => {
       .sort((a, b) => a.distance - b.distance)
       .slice(0, 5);
 
-    // 🚀 Broadcast to them directly
-    nearest.forEach(r => {
-      const socketId = userSockets.get(r.user._id.toString());
+    // 🚀 Broadcast to them directly and save persistent notifications
+    for (const r of nearest) {
+      const userId = r.user._id.toString();
+      
+      // 1. Save to DB
+      const notification = new Notification({
+        userId: userId,
+        type: "sos",
+        message: `🚨 SOS Emergency Nearby: ${sos.message}`,
+        data: { sosId: sos._id }
+      });
+      await notification.save();
+
+      // 2. Emit via socket
+      const socketId = userSockets.get(userId);
       if (socketId) {
-        io.to(socketId).emit("sos-alert", sos);
+        io.to(socketId).emit("new-notification", notification);
       }
-    });
+    }
 
     // Auto-remove SOS
     setTimeout(async () => {
@@ -537,6 +599,29 @@ const startServer = async () => {
         io.emit("heatmap_update", heatmapData);
       } catch (err) { console.error("Heatmap Worker Error:", err); }
     }, 2 * 60 * 1000); // Update every 2 minutes
+
+    // 🔥 MISSION LIFECYCLE WORKER (Auto-Archive)
+    setInterval(async () => {
+      try {
+        const Problem = require("./models/Problem");
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        
+        const result = await Problem.updateMany(
+          { 
+            status: "RESOLVED", 
+            updatedAt: { $lte: sevenDaysAgo },
+            isArchived: false 
+          },
+          { $set: { isArchived: true } }
+        );
+        
+        if (result.modifiedCount > 0) {
+          console.log(`🧹 Archived ${result.modifiedCount} resolved missions.`);
+        }
+      } catch (err) {
+        console.error("Lifecycle Worker Error:", err);
+      }
+    }, 24 * 60 * 60 * 1000); // Run once a day
 
   } catch (err) {
     console.error("❌ MongoDB connection error:", err.message);

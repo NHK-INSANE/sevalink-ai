@@ -13,7 +13,6 @@ import ProblemCard from "../components/ProblemCard";
 import VolunteerDashboard from "../components/dashboards/VolunteerDashboard";
 import AdminDashboard from "../components/dashboards/AdminDashboard";
 import NgoDashboard from "../components/dashboards/NgoDashboard";
-import OpsPanel from "../components/OpsPanel";
 import { motion, AnimatePresence } from "framer-motion";
 import { getUserLocation } from "../utils/location";
 import { useMemo } from "react";
@@ -505,7 +504,6 @@ export default function Dashboard() {
           </div>
         </main>
       </PageWrapper>
-      <OpsPanel />
     </div>
   );
 }

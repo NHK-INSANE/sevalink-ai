@@ -1,101 +1,103 @@
 const express = require("express");
 const router = express.Router();
-const Conversation = require("../models/Conversation");
-const ChatMessage = require("../models/ChatMessage");
+const Chat = require("../models/Chat");
+const Message = require("../models/Message");
 const { auth } = require("../middleware/auth");
+const mongoose = require("mongoose");
+const rateLimit = require("express-rate-limit");
 
-// 1. Get all conversations for a user
+const messageLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30, // 30 messages per minute
+  message: { error: "Too many messages sent. Please slow down." }
+});
+
+// GET all chats for the logged in user
 router.get("/", auth, async (req, res) => {
   try {
-    const conversations = await Conversation.find({
-      members: { $in: [req.user.id] },
-    }).populate("members", "name email role displayId customId");
-    res.json(conversations);
+    const chats = await Chat.find({ participants: req.user.id })
+      .populate("participants", "name role customId email")
+      .populate("problemId", "title problemId")
+      .populate("lastMessage")
+      .sort({ updatedAt: -1 });
+    res.json(chats);
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch conversations" });
+    res.status(500).json({ error: "Failed to load chats" });
   }
 });
 
-// 2. Create or get a conversation between two users
-router.post("/", auth, async (req, res) => {
+// Create or get a direct chat
+router.post("/direct", auth, async (req, res) => {
   try {
-    const { receiverId } = req.body;
-    if (!receiverId) return res.status(400).json({ error: "receiverId is required" });
+    const { targetUserId } = req.body;
+    if (!targetUserId) return res.status(400).json({ error: "Target user required" });
+    if (targetUserId === req.user.id) return res.status(400).json({ error: "Cannot chat with yourself" });
 
-    let conversation = await Conversation.findOne({
-      members: { $all: [req.user.id, receiverId] },
-    }).populate("members", "name email role displayId customId");
+    let chat = await Chat.findOne({
+      type: "direct",
+      participants: { $all: [req.user.id, targetUserId] }
+    }).populate("participants", "name role customId email");
 
-    if (!conversation) {
-      conversation = await Conversation.create({
-        members: [req.user.id, receiverId],
+    if (!chat) {
+      chat = await Chat.create({
+        type: "direct",
+        participants: [req.user.id, targetUserId]
       });
-      conversation = await conversation.populate("members", "name email role displayId customId");
+      chat = await chat.populate("participants", "name role customId email");
+    }
+    
+    res.json(chat);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to initialize chat" });
+  }
+});
+
+// GET messages for a chat
+router.get("/:chatId/messages", auth, async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const chat = await Chat.findById(chatId);
+    if (!chat) return res.status(404).json({ error: "Chat not found" });
+
+    // Validate participant
+    if (!chat.participants.includes(req.user.id)) {
+      return res.status(403).json({ error: "Unauthorized access to chat" });
     }
 
-    res.json(conversation);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to create conversation" });
-  }
-});
-
-// 3. Get messages for a conversation
-router.get("/:conversationId/messages", auth, async (req, res) => {
-  try {
-    const messages = await ChatMessage.find({
-      conversationId: req.params.conversationId,
-    }).sort({ createdAt: 1 });
+    const messages = await Message.find({ chatId }).sort({ createdAt: 1 }).limit(100).populate("senderId", "name");
     res.json(messages);
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch messages" });
+    res.status(500).json({ error: "Failed to load messages" });
   }
 });
 
-// 4. Send a message
-router.post("/:conversationId/messages", auth, async (req, res) => {
+// We will handle POST /messages mostly through Socket.IO, but a fallback REST endpoint is good
+router.post("/:chatId/messages", auth, messageLimiter, async (req, res) => {
   try {
-    const { text, receiverId } = req.body;
-    const conversationId = req.params.conversationId;
-
-    const message = await ChatMessage.create({
-      conversationId,
-      senderId: req.user.id,
-      text,
-    });
-
-    // Update last message in conversation
-    await Conversation.findByIdAndUpdate(conversationId, {
-      lastMessage: text,
-      updatedAt: Date.now()
-    });
-
-    // Emit socket event if io is available
-    const io = req.app.get("io");
-    if (io) {
-      // Find the socket ID of the receiver if userSockets is accessible
-      // Since userSockets is mapped in server.js, we might need a global or direct room broadcast.
-      // The user suggested: socket.join(userId), so we can just emit to the userId room!
-      io.to(receiverId).emit("chat_message", message);
+    const { chatId } = req.params;
+    const { message, type, mediaUrl } = req.body;
+    
+    const chat = await Chat.findById(chatId);
+    if (!chat || !chat.participants.includes(req.user.id)) {
+      return res.status(403).json({ error: "Unauthorized" });
     }
 
-    res.json(message);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to send message" });
-  }
-});
+    const newMessage = await Message.create({
+      chatId,
+      senderId: req.user.id,
+      message,
+      type: type || "text",
+      mediaUrl
+    });
 
-// 5. Mark messages as seen
-router.patch("/:conversationId/seen", auth, async (req, res) => {
-  try {
-    const conversationId = req.params.conversationId;
-    await ChatMessage.updateMany(
-      { conversationId, senderId: { $ne: req.user.id }, seen: false },
-      { $set: { seen: true } }
-    );
-    res.json({ success: true });
+    await newMessage.populate("senderId", "name");
+
+    chat.lastMessage = newMessage._id;
+    await chat.save();
+
+    res.json(newMessage);
   } catch (err) {
-    res.status(500).json({ error: "Failed to update seen status" });
+    res.status(500).json({ error: "Failed to send message" });
   }
 });
 

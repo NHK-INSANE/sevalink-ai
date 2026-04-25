@@ -53,8 +53,81 @@ function classifyCrisis(text) {
   return { type: "GENERAL", priority: detectSeverity(d) };
 }
 
+function generateTasks(description) {
+  const tasks = [];
+  const d = String(description || "").toLowerCase();
+
+  if (d.includes("injured") || d.includes("casualty") || d.includes("bleeding")) {
+    tasks.push("Provide first aid");
+    tasks.push("Call ambulance");
+  }
+
+  if (d.includes("fire") || d.includes("smoke")) {
+    tasks.push("Extinguish fire");
+    tasks.push("Clear perimeter");
+  }
+
+  if (d.includes("collapse") || d.includes("trapped")) {
+    tasks.push("Rescue trapped people");
+    tasks.push("Stabilize structure");
+  }
+
+  if (d.includes("flood") || d.includes("water")) {
+    tasks.push("Evacuate waterlogged zones");
+    tasks.push("Deploy life jackets");
+  }
+  
+  if (tasks.length === 0) {
+    tasks.push("Assess situation and report back");
+    tasks.push("Secure the area");
+  }
+
+  return [...new Set(tasks)].slice(0, 5); // Limit max tasks to avoid overload
+}
+
+function getPriority(task) {
+  const t = task.toLowerCase();
+  if (t.includes("rescue") || t.includes("life") || t.includes("evacuate")) return "CRITICAL";
+  if (t.includes("ambulance") || t.includes("aid") || t.includes("medical") || t.includes("fire")) return "HIGH";
+  if (t.includes("perimeter") || t.includes("secure") || t.includes("stabilize")) return "MEDIUM";
+  return "LOW";
+}
+
+// Basic skill-matching logic. In a real system, `task` could be embedded using an LLM.
+function assignTask(task, members) {
+  if (!members || members.length === 0) return null;
+  
+  // Exclude busy members if we were tracking them, but for now we just pick the first available
+  // Here we just pick the best match, for now we will randomize or match based on simple heuristics
+  const available = members.filter(m => m.status !== "busy");
+  if (available.length === 0) return null;
+  
+  // Calculate score
+  const scored = available.map(m => {
+    let score = 0;
+    const skills = (m.skills || []).map(s => s.toLowerCase());
+    const t = task.toLowerCase();
+    
+    if (t.includes("medical") || t.includes("aid") || t.includes("ambulance")) {
+      if (skills.includes("medical") || skills.includes("first aid")) score += 10;
+    }
+    if (t.includes("rescue") || t.includes("fire")) {
+      if (skills.includes("rescue") || skills.includes("firefighting")) score += 10;
+    }
+    if (m.role === "worker") score += 5; // Preference to official workers
+    
+    return { user: m, score };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored[0].user;
+}
+
 module.exports = {
   detectSeverity,
   recommendResources,
-  classifyCrisis
+  classifyCrisis,
+  generateTasks,
+  getPriority,
+  assignTask
 };
