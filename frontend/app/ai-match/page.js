@@ -122,11 +122,16 @@ export default function AIMatchPage() {
       const openProblems = probs.filter((p) => p.status === "Open");
       
       const matchedResults = await Promise.all(openProblems.map(async (p) => {
-        const res = await fetch(`${API_BASE}/api/ai/match/users/${p._id}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-        });
-        const vols = await res.json();
-        return { problem: p, volunteers: Array.isArray(vols) ? vols : [] };
+        try {
+          const res = await fetch(`${API_BASE}/api/ai/match/users/${p._id}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+          });
+          const vols = await res.json();
+          return { problem: p, volunteers: Array.isArray(vols) ? vols : [] };
+        } catch (err) {
+          console.error(`Match failed for ${p._id}:`, err);
+          return { problem: p, volunteers: [] };
+        }
       }));
       
       setMatches(matchedResults);
@@ -197,18 +202,6 @@ export default function AIMatchPage() {
 
             <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.03)", padding: 4, borderRadius: 14, border: "1px solid rgba(255,255,255,0.06)" }}>
               <button 
-                onClick={() => setActiveTab("byProblem")}
-                style={{ 
-                  padding: "8px 16px", borderRadius: 10, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em",
-                  background: activeTab === "byProblem" ? "rgba(99,102,241,0.15)" : "transparent",
-                  color: activeTab === "byProblem" ? "#818cf8" : "#64748b",
-                  border: activeTab === "byProblem" ? "1px solid rgba(99,102,241,0.3)" : "1px solid transparent",
-                  transition: "all 0.3s ease", cursor: "pointer"
-                }}
-              >
-                Match by Crisis
-              </button>
-              <button 
                 onClick={() => {
                   if (!currentUser) return toast.error("Login to match yourself");
                   setActiveTab("yourself");
@@ -222,6 +215,18 @@ export default function AIMatchPage() {
                 }}
               >
                 Match Yourself
+              </button>
+              <button 
+                onClick={() => setActiveTab("byProblem")}
+                style={{ 
+                  padding: "8px 16px", borderRadius: 10, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em",
+                  background: activeTab === "byProblem" ? "rgba(99,102,241,0.15)" : "transparent",
+                  color: activeTab === "byProblem" ? "#818cf8" : "#64748b",
+                  border: activeTab === "byProblem" ? "1px solid rgba(99,102,241,0.3)" : "1px solid transparent",
+                  transition: "all 0.3s ease", cursor: "pointer"
+                }}
+              >
+                Match by Crisis
               </button>
             </div>
           </div>

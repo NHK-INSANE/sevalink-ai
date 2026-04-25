@@ -145,7 +145,10 @@ export default function Navbar() {
                         
                         <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
                           {notifications.length === 0 ? (
-                            <p className="text-xs text-gray-500 py-4 text-center">No active alerts</p>
+                            <div className="py-8 px-4 text-center border border-dashed border-white/5 rounded-xl bg-white/[0.02]">
+                              <Bell size={24} className="mx-auto mb-2 text-gray-700 opacity-20" />
+                              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">No Active Tactical Alerts</p>
+                            </div>
                           ) : (
                             notifications.map((n) => (
                               <div 
@@ -200,7 +203,7 @@ export default function Navbar() {
                           <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-gray-400">
                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                           </div>
-                          My Account
+                          Your Account
                         </Link>
 
                         <Link href="/profile?edit=true" className="flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-gray-300 hover:bg-white/5 hover:text-white rounded-xl transition-all">

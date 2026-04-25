@@ -44,6 +44,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
+    username: "",
     email: "",
     phone: "",
     address: "",
@@ -60,6 +61,7 @@ export default function ProfilePage() {
       setUser(u);
       setFormData({
         name: u.name || "",
+        username: u.username || "",
         email: u.email || "",
         phone: u.phone || "",
         address: u.address || "",
@@ -172,6 +174,20 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div className="space-y-3">
+                    <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Username</label>
+                    <input 
+                      type="text"
+                      value={formData.username}
+                      onChange={(e) => setFormData({...formData, username: e.target.value})}
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm focus:border-[var(--primary)] outline-none transition-all placeholder-white/20"
+                      placeholder="handle"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-3">
                     <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Email</label>
                     <input 
                       type="email"
@@ -182,17 +198,16 @@ export default function ProfilePage() {
                       required
                     />
                   </div>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Contact Phone</label>
-                  <input 
-                    type="text"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm focus:border-[var(--primary)] outline-none transition-all placeholder-white/20"
-                    placeholder="+1 (555) 000-0000"
-                  />
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Contact Phone</label>
+                    <input 
+                      type="text"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm focus:border-[var(--primary)] outline-none transition-all placeholder-white/20"
+                      placeholder="+1 (555) 000-0000"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-3">
@@ -239,6 +254,7 @@ export default function ProfilePage() {
               <>
                 <div className="p-10 space-y-2">
                   <InfoRow label="Full Name" value={user.name} icon="👤" />
+                  <InfoRow label="Username" value={user.username ? `@${user.username}` : null} icon="🏷️" />
                   <InfoRow label="Official User ID" value={user.customId} icon="🆔" />
                   <InfoRow label="Gmail Address" value={user.email} icon="📧" />
                   <InfoRow label="Contact Phone" value={user.phone || "Not provided"} icon="📱" />

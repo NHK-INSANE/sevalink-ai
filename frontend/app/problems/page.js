@@ -88,12 +88,20 @@ export default function ProblemsPage() {
     .filter((p) => {
       if (filterUrgency !== "All" && p.urgency !== filterUrgency) return false;
       if (filterStatus !== "All" && p.status !== filterStatus) return false;
-      if (search && 
-          !p.title.toLowerCase().includes(search.toLowerCase()) && 
-          !p.description.toLowerCase().includes(search.toLowerCase()) &&
-          !(p.problemId && p.problemId.toLowerCase().includes(search.toLowerCase())) &&
-          !(p.displayId && p.displayId.toLowerCase().includes(search.toLowerCase()))
-      ) return false;
+      if (search) {
+        const s = search.toLowerCase();
+        // If it looks like an ID, prioritize exact/prefix match
+        const isIdSearch = s.startsWith("prb-");
+        const idMatches = (p.problemId?.toLowerCase().includes(s)) || (p.displayId?.toLowerCase().includes(s));
+        
+        if (isIdSearch) return idMatches;
+
+        // Otherwise check title/desc
+        if (!idMatches && 
+            !p.title.toLowerCase().includes(s) && 
+            !p.description.toLowerCase().includes(s)
+        ) return false;
+      }
       return true;
     })
     .sort((a, b) => {
