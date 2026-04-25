@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 import { getUserLocation } from "../utils/location";
-
+import Link from "next/link";
 const MapPicker = dynamic(() => import("../components/MapPicker"), { ssr: false });
 
 const CATEGORIES = [
