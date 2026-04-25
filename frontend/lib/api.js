@@ -13,7 +13,11 @@ export const api = {
     fetch(`${BASE_URL}${url}`, {
       headers: getHeaders(),
     }).then(async (res) => {
-      if (!res.ok) throw new Error(`API Error: ${res.status}`);
+      if (!res.ok) {
+        let err;
+        try { err = await res.json(); } catch { err = {}; }
+        throw new Error(err.error || err.message || `API Error: ${res.status}`);
+      }
       return res.json();
     }),
     
@@ -23,7 +27,11 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(data),
     }).then(async (res) => {
-      if (!res.ok) throw new Error(`API Error: ${res.status}`);
+      if (!res.ok) {
+        let err;
+        try { err = await res.json(); } catch { err = {}; }
+        throw new Error(err.error || err.message || `API Error: ${res.status}`);
+      }
       return res.json();
     }),
 
@@ -33,7 +41,11 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(data),
     }).then(async (res) => {
-      if (!res.ok) throw new Error(`API Error: ${res.status}`);
+      if (!res.ok) {
+        let err;
+        try { err = await res.json(); } catch { err = {}; }
+        throw new Error(err.error || err.message || `API Error: ${res.status}`);
+      }
       return res.json();
     }),
 
@@ -42,7 +54,11 @@ export const api = {
       method: "DELETE",
       headers: getHeaders(),
     }).then(async (res) => {
-      if (!res.ok) throw new Error(`API Error: ${res.status}`);
+      if (!res.ok) {
+        let err;
+        try { err = await res.json(); } catch { err = {}; }
+        throw new Error(err.error || err.message || `API Error: ${res.status}`);
+      }
       return res.json();
     }),
 };

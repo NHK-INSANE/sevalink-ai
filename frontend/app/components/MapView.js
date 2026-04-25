@@ -253,10 +253,17 @@ export default function MapView({
           />
         )}
 
-        {showClusters ? (
         <MarkerClusterGroup 
+          key={showClusters ? "numbers" : "dots"}
           chunkedLoading
           iconCreateFunction={(cluster) => {
+            if (!showClusters) {
+              return new L.DivIcon({
+                html: `<div style="background: #ef4444; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.3);"></div>`,
+                className: "",
+                iconSize: L.point(12, 12)
+              });
+            }
             return new L.DivIcon({
               html: `<div style="background: rgba(99,102,241,0.9); color: white; border-radius: 12px; width: 32px; height: 32px; display: flex; items-center; justify-center; font-size: 10px; font-weight: 900; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(4px);">${cluster.getChildCount()}</div>`,
               className: "",
@@ -343,9 +350,6 @@ export default function MapView({
             })}
 
         </MarkerClusterGroup>
-        ) : (
-          <></>
-        )}
       </MapContainer>
     </div>
   );
