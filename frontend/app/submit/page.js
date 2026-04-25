@@ -429,7 +429,10 @@ export default function SubmitPage() {
             {/* Location Section */}
             <div className="space-y-6">
               <div className="space-y-3">
-                <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Target Coordinates</label>
+                <div className="flex flex-col gap-1 ml-1 mb-1">
+                  <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">Mission Geolocation *</label>
+                  <p className="text-[9px] text-gray-500 font-medium">Auto-detecting real-time coordinates for precise response.</p>
+                </div>
                 <div className="flex gap-3">
                   <input
                     placeholder="Search location or enter address"
@@ -451,7 +454,7 @@ export default function SubmitPage() {
                 <div className="h-[300px] rounded-[2rem] overflow-hidden border border-white/10 bg-black/40 group relative">
                   <MapPicker setLocation={setLocation} setAddress={setAddress} initialLocation={location} />
                   {!location && (
-                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center bg-black/20 backdrop-blur-[2px] transition-opacity opacity-100 group-hover:opacity-0">
+                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center bg-black/20 transition-opacity opacity-100 group-hover:opacity-0">
                       <p className="text-[10px] font-bold text-white uppercase tracking-widest">Pin exact location on map</p>
                     </div>
                   )}
@@ -472,7 +475,7 @@ export default function SubmitPage() {
                   whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={loading}
-                  className="btn-glow !px-20 !py-6 !text-lg !rounded-3xl shadow-[0_20px_50px_var(--primary-glow)] active:scale-95 disabled:opacity-50 group flex items-center justify-center gap-3"
+                  className="btn-glow !px-12 !py-4 !text-sm !rounded-2xl shadow-[0_20px_50px_var(--primary-glow)] active:scale-95 disabled:opacity-50 group flex items-center justify-center gap-3"
                 >
                   {loading ? (
                     <div className="loader-small"></div>

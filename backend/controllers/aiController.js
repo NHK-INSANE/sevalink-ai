@@ -120,14 +120,18 @@ exports.suggestDescription = async (req, res) => {
 
     const prompt = `
 You are a professional crisis coordinator and emergency strategist. 
-Rewrite the following casual text into a highly professional, detailed, and actionable problem report.
-Expand on the context to ensure responders understand the gravity and specific needs, but keep it structured and clear. 
-The explanation should be comprehensive enough for logistics and medical units to prepare.
-Keep it under 100 words.
+Task: Expand the following casual text into a HIGHLY DETAILED, professional, and actionable problem report.
 
-Text: ${text}
+Rules:
+1. DO NOT just copy or summarize. EXPAND and explain the situation.
+2. Provide a structured explanation including potential risks and resource requirements.
+3. Make it interactive and strategic for responders (e.g., "Immediate triage is required due to...", "Logistics must prioritize...").
+4. Keep the tone authoritative and calm.
+5. Minimum 60 words, Maximum 150 words.
 
-Professional Version:
+Casual Input: "${text}"
+
+Detailed Strategic Report:
 `;
 
     const result = await model.generateContent(prompt);

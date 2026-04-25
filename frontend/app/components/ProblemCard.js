@@ -151,6 +151,14 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
     resolved: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   };
 
+  const copyId = () => {
+    const idText = problem.displayId || problem.problemId || `PRB-${problem._id?.slice(-6).toUpperCase()}`;
+    navigator.clipboard.writeText(idText);
+    toast.success("Problem ID copied to clipboard", {
+      style: { background: "#0f172a", color: "#fff", fontSize: "10px", fontWeight: "bold" }
+    });
+  };
+
   return (
     <div className="bg-[#0B1220] p-6 rounded-2xl border border-white/10 hover:border-purple-500/30 transition-all shadow-xl flex flex-col gap-5 relative">
       
@@ -158,9 +166,12 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
       <div className="flex justify-between items-start">
         <div className="space-y-2 flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] text-indigo-400 font-black border border-indigo-400/20 px-2 py-0.5 rounded bg-indigo-400/5 uppercase tracking-widest">
-              {problem.displayId || problem.problemId || `PRB-${problem._id?.slice(-6).toUpperCase()}`}
-            </span>
+            <div className="flex items-center gap-1.5 group cursor-pointer" onClick={copyId}>
+              <span className="text-[10px] text-indigo-400 font-black border border-indigo-400/20 px-2 py-0.5 rounded bg-indigo-400/5 uppercase tracking-widest group-hover:border-indigo-400/50 transition-all">
+                {problem.displayId || problem.problemId || `PRB-${problem._id?.slice(-6).toUpperCase()}`}
+              </span>
+              <svg className="opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400/50" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            </div>
           </div>
           <h3 className="text-base font-bold text-white tracking-tight leading-snug">{problem.title}</h3>
           

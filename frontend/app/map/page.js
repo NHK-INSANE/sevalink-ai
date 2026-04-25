@@ -266,29 +266,31 @@ export default function MapPage() {
         </div>
 
         {/* ── MAP CARD ── */}
-        <div className="space-y-4">
-          <div className="mb-2">
-            <LiveLegend showCount={true} />
-          </div>
-
-          <div className="relative card !p-0 overflow-hidden border border-white/10 shadow-2xl group">
-            <div className="absolute top-6 right-6 flex flex-col gap-3 z-[1000]">
+          <div className="flex justify-between items-end mb-4">
+            <div className="space-y-1">
+              <h2 className="text-sm font-bold text-white uppercase tracking-widest">Real-time Geospatial Visualization</h2>
+              <LiveLegend showCount={true} />
+            </div>
+            <div className="flex gap-3 mb-2">
               <button 
                 onClick={sendSOS}
                 disabled={sendingSOS}
-                className="bg-red-600 hover:bg-red-700 h-10 px-4 rounded-xl text-white text-[10px] font-black shadow-2xl transition-all flex items-center gap-2 hover:scale-105 active:scale-95 border border-red-400/30"
+                className="bg-red-600 hover:bg-red-700 h-9 px-4 rounded-xl text-white text-[9px] font-black shadow-xl transition-all flex items-center gap-2 hover:scale-105 active:scale-95 border border-red-400/30 uppercase tracking-widest"
               >
-                {sendingSOS ? <div className="loader-small" /> : <>🚨 SOS EMERGENCY</>}
+                {sendingSOS ? <div className="loader-small" /> : <>🚨 SOS</>}
               </button>
               
               <button 
                 onClick={() => window.dispatchEvent(new CustomEvent('map-locate-me'))}
-                className="bg-white hover:bg-gray-200 h-10 px-4 rounded-xl text-black text-[10px] font-black uppercase tracking-widest border border-white shadow-xl transition-all flex items-center justify-center gap-2"
+                className="bg-white hover:bg-gray-200 h-9 px-4 rounded-xl text-black text-[9px] font-black uppercase tracking-widest border border-white shadow-xl transition-all flex items-center justify-center gap-2"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
                 Locate Me
               </button>
             </div>
+          </div>
+
+          <div className="relative card !p-0 overflow-hidden border border-white/10 shadow-2xl group">
             <div className="h-[68vh] w-full relative">
               <MapView
                 problems={problems}

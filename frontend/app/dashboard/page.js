@@ -398,32 +398,29 @@ export default function Dashboard() {
 
           {/* ── LIVE MAP ── */}
           <div className="space-y-4 mb-20 px-2">
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold text-white">Live Operations Map</h2>
-              <p className="text-sm text-gray-400">
-                Real-time visualization of crisis reports, responders, and NGO activity across regions.
-              </p>
-            </div>
-
-            <div className="mb-2">
-              <LiveLegend showCount={false} />
-            </div>
-
-            <div className="relative rounded-xl overflow-hidden border border-white/10 shadow-2xl">
-              <div className="absolute top-4 right-4 flex flex-col gap-2 z-[1000]">
+            <div className="flex justify-between items-end mb-2">
+              <div className="space-y-1">
+                <h2 className="text-lg font-semibold text-white tracking-tight">Live Operations Map</h2>
+                <LiveLegend showCount={false} />
+              </div>
+              <div className="flex gap-2 mb-2">
                 <button 
                   onClick={() => router.push('/map')}
-                  className="bg-red-600 hover:bg-red-700 px-5 py-2 rounded-lg text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-red-500/20 transition-all flex items-center justify-center gap-2"
+                  className="bg-red-600 hover:bg-red-700 px-5 py-2 rounded-lg text-white text-[9px] font-black uppercase tracking-widest shadow-xl shadow-red-500/20 transition-all flex items-center justify-center gap-2"
                 >
                   🚨 SOS
                 </button>
                 <button 
                   onClick={handleLocateAndSort}
-                  className="bg-white text-black px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest border border-white hover:bg-gray-200 shadow-lg transition-all"
+                  className="bg-white text-black px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest border border-white hover:bg-gray-200 shadow-lg transition-all"
                 >
                   Locate Me
                 </button>
               </div>
+            </div>
+
+            <div className="relative rounded-xl overflow-hidden border border-white/10 shadow-2xl">
+              <div className="h-[500px]">
               <div className="h-[500px]">
                 <MapView 
                   problems={safeProblems} 

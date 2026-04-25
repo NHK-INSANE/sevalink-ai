@@ -8,7 +8,7 @@ export default function LiveLegend({ showCount = false }) {
   ];
 
   return (
-    <div className="flex justify-between items-center mb-2 w-full">
+    <div className="flex justify-start items-center mb-4 w-full gap-6">
       <span className="text-sm text-green-400 flex items-center gap-1">
         <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
         Live
