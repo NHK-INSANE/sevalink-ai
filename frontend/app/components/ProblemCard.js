@@ -300,8 +300,6 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
             </button>
           ))}
         </div>
-      </div>n>
-        ))}
       </div>
 
       {/* ── TAB CONTENT ── */}
