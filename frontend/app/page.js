@@ -122,7 +122,7 @@ export default function Landing() {
             Real-time tracking, intelligent matching, and life-saving speed.
           </p>
 
-          <div className="mt-0 flex flex-col sm:flex-row items-center justify-center gap-12 px-4">
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-12 px-4">
             <Link href="/submit" className="px-10 py-4 rounded-xl bg-purple-600 text-white font-bold text-[13px] shadow-xl shadow-purple-500/20 hover:bg-purple-500 transition-all">
               Get Started →
             </Link>
@@ -134,7 +134,7 @@ export default function Landing() {
           </motion.div>
 
         {/* Quick Stats */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="container mt-5 pt-10 border-t border-white/5 relative z-10">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="container mt-16 pt-10 border-t border-white/5 relative z-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
             <Stat end={stats.problems} label="Live Incidents" />
             <Stat end={stats.responders} label="Active Helpers" />

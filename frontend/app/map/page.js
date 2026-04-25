@@ -50,6 +50,7 @@ export default function MapPage() {
   const [sosAlert, setSosAlert] = useState(null);   // current SOS banner
   const [sendingSOS, setSendingSOS] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
+  const [mapZoom, setMapZoom]   = useState(6);
   const user = getUser();
 
   // ── Fetch initial data ────────────────────────────────────────────────────
@@ -269,7 +270,7 @@ export default function MapPage() {
           <div className="flex justify-between items-end mb-4">
             <div className="space-y-1">
               <h2 className="text-sm font-bold text-white uppercase tracking-widest">Real-time Geospatial Visualization</h2>
-              <LiveLegend showCount={true} />
+              {mapZoom >= 8 && <LiveLegend showCount={true} />}
             </div>
             <div className="flex gap-3 mb-2">
               <button 
@@ -302,6 +303,7 @@ export default function MapPage() {
                 zoom={6}
                 zoomToUser={true}
                 showHeatmap={showHeatmap}
+                onZoomChange={setMapZoom}
               />
             </div>
           </div>

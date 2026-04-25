@@ -63,6 +63,7 @@ export default function Dashboard() {
   const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userLoc, setUserLoc] = useState(null);
+  const [mapZoom, setMapZoom] = useState(6);
   const [sortNearest, setSortNearest] = useState(false);
   const [user, setUser] = useState({ role: "volunteer", name: "Guest" });
   const [lastUpdate, setLastUpdate] = useState(null);
@@ -401,7 +402,7 @@ export default function Dashboard() {
             <div className="flex justify-between items-end mb-2">
               <div className="space-y-1">
                 <h2 className="text-lg font-semibold text-white tracking-tight">Live Operations Map</h2>
-                <LiveLegend showCount={false} />
+                {mapZoom >= 8 && <LiveLegend showCount={false} />}
               </div>
               <div className="flex gap-2 mb-2">
                 <button 
@@ -429,6 +430,7 @@ export default function Dashboard() {
                   center={userLoc ? [userLoc.lat, userLoc.lng] : [22.3, 87.3]} 
                   showHeatmap={true} 
                   zoomToUser={!!userLoc}
+                  onZoomChange={setMapZoom}
                 />
               </div>
             </div>

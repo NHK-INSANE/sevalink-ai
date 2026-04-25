@@ -98,7 +98,7 @@ const sosIcon = new L.DivIcon({
 });
 
 const helperIcon = makePulseIcon("#2563eb", "rgba(37,99,235,0.5)");
-const ngoIcon    = makePulseIcon("#16a34a", "rgba(22,163,74,0.5)");
+const ngoIcon    = makePulseIcon("#3b82f6", "rgba(59,130,246,0.5)"); // blue
 
 // ── Live Tracking (Uber-style) ────────────────────────────────────────────────
 function LiveTracking() {
@@ -181,6 +181,22 @@ function FocusProblem() {
   return null;
 }
 
+// ── Zoom Listener ───────────────────────────────────────────────────────────
+function MapZoomListener({ setShowClusters, onZoomChange }) {
+  const map = useMap();
+  useEffect(() => {
+    const handleZoom = () => {
+      const z = map.getZoom();
+      setShowClusters(z >= 8);
+      if (onZoomChange) onZoomChange(z);
+    };
+    handleZoom();
+    map.on("zoomend", handleZoom);
+    return () => map.off("zoomend", handleZoom);
+  }, [map, setShowClusters, onZoomChange]);
+  return null;
+}
+
 
 /**
  * MapView — urgency-colored markers, SOS markers, live-count legend,
@@ -197,7 +213,10 @@ export default function MapView({
   height = "400px",
   zoomToUser = false,
   showHeatmap = false,
+  onZoomChange,
 }) {
+  const [showClusters, setShowClusters] = useState(true);
+
   return (
     <div style={{ height, width: "100%", position: "relative" }}
       className="rounded-xl overflow-hidden shadow-md border border-gray-200 bg-white">
@@ -218,6 +237,7 @@ export default function MapView({
         {zoomToUser && <LiveTracking />}
         <FocusProblem />
         <LocateMeHandler />
+        <MapZoomListener setShowClusters={setShowClusters} onZoomChange={onZoomChange} />
 
         {/* 🔥 Custom Crisis Heatmap Layer */}
         {showHeatmap && (
@@ -233,6 +253,7 @@ export default function MapView({
           />
         )}
 
+        {showClusters ? (
         <MarkerClusterGroup 
           chunkedLoading
           iconCreateFunction={(cluster) => {
@@ -322,6 +343,9 @@ export default function MapView({
             })}
 
         </MarkerClusterGroup>
+        ) : (
+          <></>
+        )}
       </MapContainer>
     </div>
   );
