@@ -159,17 +159,22 @@ function NGOContent() {
             </div>
 
             <div className="flex items-center gap-3">
-              <select 
-                value={sortBy} 
-                onChange={(e) => {
-                  if (e.target.value === "nearest" && !userLoc) handleLocate();
-                  else setSortBy(e.target.value);
-                }}
-                className="bg-[#0B1220] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-semibold text-gray-300 outline-none hover:border-purple-500/50 transition cursor-pointer"
-              >
-                <option value="name" className="bg-[#0B1220]">Sort by Name</option>
-                <option value="nearest" className="bg-[#0B1220]">Sort by Nearest</option>
-              </select>
+              <div className="relative group">
+                <select 
+                  value={sortBy} 
+                  onChange={(e) => {
+                    if (e.target.value === "nearest" && !userLoc) handleLocate();
+                    else setSortBy(e.target.value);
+                  }}
+                  className="bg-[#0B1220] border border-white/10 rounded-xl pl-4 pr-10 py-2.5 text-xs font-semibold text-gray-300 outline-none hover:border-purple-500/50 transition cursor-pointer appearance-none shadow-lg w-40"
+                >
+                  <option value="name" className="bg-[#0B1220]">Sort by Name</option>
+                  <option value="nearest" className="bg-[#0B1220]">Sort by Nearest</option>
+                </select>
+                <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-500 group-hover:text-purple-400 transition-colors">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -186,21 +191,29 @@ function NGOContent() {
               {sortedNgos.map((ngo) => (
                 <div key={ngo._id} className="card card-hover-effect !p-6 flex flex-col gap-0">
                   <div className="flex justify-between items-start pb-4 mb-4 border-b border-white/5">
-                    <div>
-                      <h3 className="text-base font-bold text-white line-clamp-1">{ngo.ngoName || ngo.name || "Unnamed NGO"}</h3>
-                      {ngo.customId && <p className="text-[10px] text-gray-500 font-mono mt-1">{ngo.customId}</p>}
+                    <div className="flex-1">
+                      <h3 className="text-lg font-black text-white tracking-tight leading-none group-hover:text-indigo-400 transition-colors">{ngo.ngoName || ngo.name || "Unnamed NGO"}</h3>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-[10px] font-mono text-indigo-400/80 bg-indigo-400/5 px-2 py-0.5 rounded border border-indigo-400/10 uppercase tracking-widest">
+                          {ngo.displayId || ngo.customId || "NGO-PENDING"}
+                        </span>
+                        <span className="text-[9px] font-bold text-emerald-500/80 uppercase tracking-tighter">Verified Partner</span>
+                      </div>
                     </div>
-                    <span className="text-[9px] font-bold text-emerald-400 border border-emerald-400/30 px-2 py-0.5 rounded-md uppercase tracking-wider">Verified</span>
                   </div>
 
-                  <div className="flex flex-col gap-2.5 mb-6">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500 font-semibold text-[11px] uppercase tracking-wider">Email</span>
-                      <span className="text-gray-300 truncate max-w-[160px]">{ngo.email}</span>
+                  <div className="flex flex-col gap-3 mb-6">
+                    <div className="flex justify-between items-start text-sm">
+                      <span className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider mt-0.5">Email</span>
+                      <span className="text-gray-300 truncate max-w-[160px] text-right font-medium">{ngo.email}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500 font-semibold text-[11px] uppercase tracking-wider">Phone</span>
-                      <span className="text-gray-300">{ngo.phone || "Not listed"}</span>
+                      <span className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider">Phone</span>
+                      <span className="text-gray-300 font-medium">{ngo.phone || "Not listed"}</span>
+                    </div>
+                    <div className="flex justify-between items-start text-sm pt-3 border-t border-white/5 mt-1">
+                      <span className="text-gray-500 font-bold text-[9px] uppercase tracking-widest mt-1">HQ Address</span>
+                      <span className="text-gray-300 text-[11px] text-right max-w-[160px] font-medium leading-relaxed">{ngo.address || "Location Access Pending"}</span>
                     </div>
                   </div>
 

@@ -122,7 +122,7 @@ export default function Landing() {
         </motion.div>
 
         {/* Quick Stats */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="container mt-24 pt-24 border-t border-white/5 relative z-10">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="container mt-40 pt-24 border-t border-white/5 relative z-10">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-10">
             <Stat end={stats.problems} label="Live Incidents" />
             <Stat end={stats.responders} label="Active Helpers" />

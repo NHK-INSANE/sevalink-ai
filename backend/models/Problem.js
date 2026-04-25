@@ -65,15 +65,23 @@ const problemSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-});
+}, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
 
 // Auto-generate unique Hex ID before saving
 const { generateHexId } = require("../utils/idGenerator");
 problemSchema.pre("save", async function (next) {
   if (!this.problemId) {
-    this.problemId = "PRB-" + generateHexId(6);
+    this.problemId = "PRB-" + generateHexId(8);
   }
   next();
+});
+
+// Add virtual for display if field is missing
+problemSchema.virtual('displayId').get(function() {
+  if (this.problemId) return this.problemId;
+  // Fallback for legacy records
+  const hex = this._id.toString().slice(-8).toUpperCase();
+  return `PRB-${hex}`;
 });
 
 module.exports = mongoose.model("Problem", problemSchema);

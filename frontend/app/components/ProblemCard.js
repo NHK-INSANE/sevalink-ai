@@ -131,32 +131,63 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
     setChatInput("");
   };
 
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const isLeader = problem.leader?._id === user?._id || problem.leader === user?._id;
   const isOwner = problem.createdBy === user?._id || (user?.id && problem.createdBy === user.id);
+
+  const categories = Array.isArray(problem.category) ? problem.category : [problem.category || "General"];
+
+  const urgencyColors = {
+    critical: "bg-red-500/10 text-red-400 border-red-500/20",
+    high: "bg-orange-500/10 text-orange-400 border-orange-500/20",
+    medium: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+    low: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  };
+
+  const statusColors = {
+    open: "bg-white/5 text-gray-400 border-white/10",
+    "in progress": "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    resolved: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  };
 
   return (
     <div className="bg-[#0B1220] p-6 rounded-2xl border border-white/10 hover:border-purple-500/30 transition-all shadow-xl flex flex-col gap-5 relative">
       
       {/* ── HEADER ── */}
       <div className="flex justify-between items-start">
-        <div className="space-y-1">
+        <div className="space-y-2 flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            {(problem.displayId || problem.problemId) && (
+              <span className="text-[10px] text-indigo-400 font-mono border border-indigo-400/20 px-2 py-0.5 rounded bg-indigo-400/5 uppercase tracking-widest">
+                {problem.displayId || problem.problemId}
+              </span>
+            )}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+              {categories.map((cat, idx) => (
+                <span key={idx} className="text-[9px] text-purple-400 font-bold uppercase tracking-widest whitespace-nowrap bg-purple-400/5 px-2 py-0.5 rounded border border-purple-400/10">
+                  {cat}
+                </span>
+              ))}
+            </div>
+          </div>
           <h3 className="text-base font-bold text-white tracking-tight leading-snug">{problem.title}</h3>
-          <div className="flex items-center gap-2">
-            <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border border-white/10 text-gray-500`}>
+          
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${urgencyColors[problem.urgency?.toLowerCase()] || urgencyColors.medium}`}>
               {problem.urgency}
             </span>
-            <span className="text-[9px] text-purple-400 font-bold uppercase tracking-widest">{problem.category}</span>
-            {problem.problemId && (
-              <span className="text-[9px] text-gray-500 font-mono border border-white/5 px-1.5 rounded">{problem.problemId}</span>
+            {problem.location?.address && (
+              <div className="flex items-center gap-1 text-[10px] text-gray-500 font-medium italic">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span className="line-clamp-1 max-w-[150px]">{problem.location.address}</span>
+              </div>
             )}
           </div>
         </div>
+
         <div className="flex flex-col items-end gap-2">
-          <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-            problem.status?.toLowerCase() === 'resolved' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
-            problem.status?.toLowerCase() === 'in progress' ? "bg-blue-500/10 text-blue-400 border-blue-500/20" :
-            "bg-white/5 text-gray-400 border-white/10"
-          }`}>
+          <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${statusColors[problem.status?.toLowerCase()] || statusColors.open}`}>
             {problem.status}
           </div>
           {problem.score > 0 && (
@@ -173,7 +204,19 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
         </div>
       </div>
 
-      <p className="text-[13px] text-gray-400 leading-relaxed line-clamp-2">{problem.description}</p>
+      <div className="relative">
+        <p className={`text-[13px] text-gray-400 leading-relaxed ${!isExpanded ? 'line-clamp-2' : ''}`}>
+          {problem.description}
+        </p>
+        {problem.description?.length > 100 && (
+          <button 
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-[10px] font-black text-purple-500 uppercase tracking-widest mt-1 hover:text-purple-400 transition-colors"
+          >
+            {isExpanded ? 'Show Less' : 'Read Full Report'}
+          </button>
+        )}
+      </div>
 
       {/* ── 🔥 PRIMARY ASSIGN BUTTON ── */}
       <button
@@ -297,9 +340,12 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
             <button
               onClick={async () => {
                 const token = localStorage.getItem("token");
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/problems/${problem._id}/ai-assign`, { 
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/ai/auto-assign/${problem._id}`, { 
                   method: "POST",
-                  headers: { "Authorization": `Bearer ${token}` }
+                  headers: { 
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                  }
                 });
                 const data = await res.json();
                 if (data.success && Array.isArray(data.team)) {

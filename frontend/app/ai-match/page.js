@@ -107,7 +107,7 @@ export default function AIMatchPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(`AI auto-assigned ${data.assigned.length} responders!`);
+        toast.success(`AI auto-assigned ${data.team?.length || 0} responders!`);
         fetchMatches();
       }
     } catch (err) {

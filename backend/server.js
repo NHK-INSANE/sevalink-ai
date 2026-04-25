@@ -133,6 +133,7 @@ const statsRoutes = require("./routes/statsRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const teamRoutes = require("./routes/teamRoutes");
 const messageRoutes = require("./routes/messageRoutes");
+const requestRoutes = require("./routes/requestRoutes");
 
 app.use("/api/problems", problemRoutes);
 app.use("/api/ai", aiRoutes);
@@ -140,6 +141,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/requests", requestRoutes);
 app.use("/api", statsRoutes);
 
 // Media Upload Route

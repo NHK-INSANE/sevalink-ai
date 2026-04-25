@@ -282,17 +282,7 @@ export default function MapPage() {
               </button>
               
               <button 
-                onClick={() => {
-                  if (typeof window !== "undefined" && navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition((pos) => {
-                      // We need to trigger map flyTo. 
-                      // For now, let's use a custom event or just reload with params if needed, 
-                      // but the user wants it interactive.
-                      // I'll add a 'triggerLocate' state to pass to MapView if possible.
-                      window.dispatchEvent(new CustomEvent('map-locate-me'));
-                    });
-                  }
-                }}
+                onClick={() => window.dispatchEvent(new CustomEvent('map-locate-me'))}
                 className="bg-white/10 backdrop-blur-md hover:bg-white/20 h-10 px-4 rounded-xl text-white text-[10px] font-black uppercase tracking-widest border border-white/10 shadow-xl transition-all flex items-center justify-center gap-2"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>

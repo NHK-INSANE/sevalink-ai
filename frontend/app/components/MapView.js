@@ -181,44 +181,6 @@ function FocusProblem() {
   return null;
 }
 
-// ── Locate Me Button ─────────────────────────────────────────────────────────
-function LocateMeButton() {
-  const map = useMap();
-  function locateMe() {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition((pos) => {
-      const { latitude, longitude } = pos.coords;
-      map.flyTo([latitude, longitude], 14, { duration: 1.5 });
-      L.marker([latitude, longitude], { icon: makePulseIcon("#3b82f6", "rgba(59,130,246,0.7)", 14) })
-        .addTo(map)
-        .bindPopup("YOU")
-        .openPopup();
-    });
-  }
-  return (
-    <div style={{ position: "absolute", top: 10, right: 10, zIndex: 1000 }}>
-      <button
-        onClick={locateMe}
-        style={{
-          background: "#fff",
-          border: "1px solid #e5e7eb",
-          borderRadius: "10px",
-          padding: "6px 14px",
-          fontSize: "12px",
-          fontWeight: "600",
-          cursor: "pointer",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
-          display: "flex",
-          alignItems: "center",
-          gap: "5px",
-          color: "#374151",
-        }}
-      >
-        Locate Me
-      </button>
-    </div>
-  );
-}
 
 /**
  * MapView — urgency-colored markers, SOS markers, live-count legend,

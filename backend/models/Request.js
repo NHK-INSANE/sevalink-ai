@@ -1,12 +1,12 @@
 const mongoose = require("mongoose");
 
 const requestSchema = new mongoose.Schema({
-  from: {
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
   },
-  to: {
+  ngoId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
@@ -14,19 +14,16 @@ const requestSchema = new mongoose.Schema({
   problemId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Problem",
-  },
-  message: {
-    type: String,
     required: true,
   },
   type: {
     type: String,
-    enum: ["leader", "join"],
+    enum: ["join", "lead"],
     default: "join",
   },
   status: {
     type: String,
-    enum: ["pending", "accepted", "rejected"],
+    enum: ["pending", "approved", "rejected"],
     default: "pending",
   },
   createdAt: {

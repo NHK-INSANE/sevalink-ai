@@ -29,8 +29,7 @@ const userSchema = new mongoose.Schema({
     }
   ],
   customId: { type: String, unique: true },
-  createdAt: { type: Date, default: Date.now },
-});
+}, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
 
 // 🔒 Hash password and generate custom ID before saving
 const bcrypt = require("bcryptjs");
@@ -52,7 +51,7 @@ userSchema.pre("save", async function (next) {
     const rolePrefix = 
       this.role === "ngo" ? "NGO-" :
       (this.role === "volunteer" || this.role === "worker") ? "HLP-" : "USR-";
-    this.customId = rolePrefix + generateHexId(6);
+    this.customId = rolePrefix + generateHexId(8);
   }
 
   next();
@@ -62,5 +61,13 @@ userSchema.pre("save", async function (next) {
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
+
+// Add virtual for display if field is missing
+userSchema.virtual('displayId').get(function() {
+  if (this.customId) return this.customId;
+  const hex = this._id.toString().slice(-8).toUpperCase();
+  const prefix = this.role === 'ngo' ? 'NGO' : this.role === 'worker' ? 'WKR' : 'VOL';
+  return `${prefix}-${hex}`;
+});
 
 module.exports = mongoose.model("User", userSchema);

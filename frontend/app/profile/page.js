@@ -238,9 +238,11 @@ export default function ProfilePage() {
             ) : (
               <>
                 <div className="p-10 space-y-2">
-                  <InfoRow label="Access Email" value={user.email} icon="📧" />
-                  <InfoRow label="Field Contact" value={user.phone || "Not provided"} icon="📱" />
-                  <InfoRow label="Command Center" value={user.address || "No address set"} icon="📍" />
+                  <InfoRow label="Full Name" value={user.name} icon="👤" />
+                  <InfoRow label="Official User ID" value={user.customId} icon="🆔" />
+                  <InfoRow label="Gmail Address" value={user.email} icon="📧" />
+                  <InfoRow label="Contact Phone" value={user.phone || "Not provided"} icon="📱" />
+                  <InfoRow label="Home/Base Address" value={user.address || "No address set"} icon="📍" />
                   {user.ngoName && <InfoRow label="Organization" value={user.ngoName} icon="🏢" />}
                   {user.bio && <InfoRow label="Mission Profile" value={user.bio} icon="📝" />}
                 </div>
