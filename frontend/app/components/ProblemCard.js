@@ -146,6 +146,9 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
               {problem.urgency}
             </span>
             <span className="text-[9px] text-purple-400 font-bold uppercase tracking-widest">{problem.category}</span>
+            {problem.problemId && (
+              <span className="text-[9px] text-gray-500 font-mono border border-white/5 px-1.5 rounded">{problem.problemId}</span>
+            )}
           </div>
         </div>
         <div className="flex flex-col items-end gap-2">
@@ -156,6 +159,12 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
           }`}>
             {problem.status}
           </div>
+          {problem.score > 0 && (
+            <div className="flex flex-col items-end">
+              <div className="text-[10px] font-black text-purple-400 tracking-tighter">{problem.score}%</div>
+              <div className="text-[7px] text-gray-600 font-bold uppercase tracking-widest leading-none">AI Score</div>
+            </div>
+          )}
           {isOwner && (
             <button onClick={handleDelete} className="text-[8px] font-black uppercase text-red-500/60 hover:text-red-500 tracking-[0.2em] transition-colors">
               [ Delete Report ]
@@ -293,8 +302,8 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
                   headers: { "Authorization": `Bearer ${token}` }
                 });
                 const data = await res.json();
-                if (Array.isArray(data)) {
-                  toast.success(`AI assigned ${data.length} mission specialists`);
+                if (data.success && Array.isArray(data.team)) {
+                  toast.success(`AI assigned ${data.team.length} mission specialists`);
                   loadTeam();
                 } else toast.error("Neural assignment failed");
               }}

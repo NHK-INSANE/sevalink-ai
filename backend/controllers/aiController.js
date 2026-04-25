@@ -250,8 +250,8 @@ exports.autoAssign = async (req, res) => {
     const volunteers = await User.find({ role: "volunteer" });
     const matched = matchVolunteers(problem, volunteers);
 
-    // Filter out _id for assignment
-    problem.assignedTo = matched.map(v => v._id);
+    // Assign top matches to the problem team
+    problem.team = matched.map(v => v._id);
     problem.status = "In Progress";
     await problem.save();
 
@@ -266,7 +266,7 @@ exports.autoAssign = async (req, res) => {
       });
     }
 
-    res.json({ success: true, matched });
+    res.json({ success: true, team: matched });
   } catch (err) {
     console.error("AutoAssign Error:", err);
     res.status(500).json({ error: "Auto-assignment failed" });

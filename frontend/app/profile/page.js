@@ -65,6 +65,12 @@ export default function ProfilePage() {
         address: u.address || "",
         bio: u.bio || "",
       });
+
+      // Check for edit mode in URL
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("edit") === "true") setIsEditing(true);
+      }
     }
   }, [router]);
 
@@ -141,6 +147,11 @@ export default function ProfilePage() {
               } !text-[10px] !px-6 !py-2`}>
                 {getRoleLabel ? getRoleLabel(user.role) : user.role}
               </span>
+              {user.customId && (
+                <div className="mt-4 text-[10px] font-mono text-gray-500 uppercase tracking-widest bg-white/5 inline-block px-3 py-1 rounded-lg border border-white/5">
+                  ID: {user.customId}
+                </div>
+              )}
             </div>
           </div>
 

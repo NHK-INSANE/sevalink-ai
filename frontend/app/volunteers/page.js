@@ -277,7 +277,10 @@ function VolunteersContent() {
                 return (
                   <div key={u._id} className="card card-hover-effect !p-6 flex flex-col gap-0">
                     <div className="flex justify-between items-start pb-4 mb-4 border-b border-white/5">
-                      <h3 className="text-base font-bold text-white line-clamp-1">{u.name || "Unnamed Helper"}</h3>
+                      <div>
+                        <h3 className="text-base font-bold text-white line-clamp-1">{u.name || "Unnamed Helper"}</h3>
+                        {u.customId && <p className="text-[10px] text-gray-500 font-mono mt-1">{u.customId}</p>}
+                      </div>
                       <span className={`text-[9px] font-bold ${isVol ? "text-emerald-400 border-emerald-400/30" : "text-blue-400 border-blue-400/30"} border px-2 py-0.5 rounded-md uppercase tracking-wider`}>
                         {isVol ? "Volunteer" : "Worker"}
                       </span>
@@ -387,17 +390,32 @@ function VolunteersContent() {
               </div>
 
               <div className="space-y-4 mb-8">
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Select Active Incident</label>
-                <select 
-                  value={selectedProbId}
-                  onChange={(e) => setSelectedProbId(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white outline-none focus:border-purple-500 transition-all appearance-none"
-                >
-                  <option value="">-- Choose Problem --</option>
-                  {problems.filter(p => p.status !== "Resolved").map(p => (
-                    <option key={p._id} value={p._id} className="bg-[#0B1220]">{p.title}</option>
-                  ))}
-                </select>
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Select Active Incident (or Enter ID)</label>
+                <div className="space-y-2">
+                  <select 
+                    value={selectedProbId}
+                    onChange={(e) => setSelectedProbId(e.target.value)}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white outline-none focus:border-purple-500 transition-all appearance-none"
+                  >
+                    <option value="">-- Choose Problem --</option>
+                    {problems.filter(p => p.status !== "Resolved").map(p => (
+                      <option key={p._id} value={p._id} className="bg-[#0B1220]">{p.title} ({p.problemId})</option>
+                    ))}
+                  </select>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-[10px] font-bold text-gray-500 uppercase tracking-widest">OR ID:</div>
+                    <input 
+                      type="text" 
+                      placeholder="PRB-XXXXXX"
+                      onChange={(e) => {
+                        const val = e.target.value.toUpperCase();
+                        const found = problems.find(p => p.problemId === val);
+                        if (found) setSelectedProbId(found._id);
+                      }}
+                      className="w-full bg-black/40 border border-white/10 rounded-xl p-4 pl-16 text-sm text-white outline-none focus:border-purple-500 transition-all"
+                    />
+                  </div>
+                </div>
               </div>
               
               <div className="flex gap-3">

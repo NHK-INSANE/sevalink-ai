@@ -57,10 +57,23 @@ const problemSchema = new mongoose.Schema({
       time: { type: Date, default: Date.now },
     }
   ],
+  problemId: {
+    type: String,
+    unique: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
   },
+});
+
+// Auto-generate unique Hex ID before saving
+const { generateHexId } = require("../utils/idGenerator");
+problemSchema.pre("save", async function (next) {
+  if (!this.problemId) {
+    this.problemId = "PRB-" + generateHexId(6);
+  }
+  next();
 });
 
 module.exports = mongoose.model("Problem", problemSchema);

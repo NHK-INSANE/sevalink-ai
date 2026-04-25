@@ -28,19 +28,34 @@ const userSchema = new mongoose.Schema({
       date: { type: Date, default: Date.now },
     }
   ],
+  customId: { type: String, unique: true },
   createdAt: { type: Date, default: Date.now },
 });
 
-// 🔒 Hash password before saving
+// 🔒 Hash password and generate custom ID before saving
 const bcrypt = require("bcryptjs");
-userSchema.pre("save", async function () {
-  if (!this.isModified("password")) return;
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-  } catch (err) {
-    throw err;
+const { generateHexId } = require("../utils/idGenerator");
+
+userSchema.pre("save", async function (next) {
+  // Hash password
+  if (this.isModified("password")) {
+    try {
+      const salt = await bcrypt.genSalt(10);
+      this.password = await bcrypt.hash(this.password, salt);
+    } catch (err) {
+      return next(err);
+    }
   }
+
+  // Generate Custom ID
+  if (!this.customId) {
+    const rolePrefix = 
+      this.role === "ngo" ? "NGO-" :
+      (this.role === "volunteer" || this.role === "worker") ? "HLP-" : "USR-";
+    this.customId = rolePrefix + generateHexId(6);
+  }
+
+  next();
 });
 
 // 🔓 Compare password method

@@ -138,7 +138,24 @@ function LiveTracking() {
   );
 }
 
-// ── Auto-Focus Problem ───────────────────────────────────────────────────────
+// ── Locate Me Hook ───────────────────────────────────────────────────────────
+function LocateMeHandler() {
+  const map = useMap();
+  useEffect(() => {
+    const handleLocate = () => {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const { latitude, longitude } = pos.coords;
+        map.flyTo([latitude, longitude], 14, { duration: 1.5 });
+      });
+    };
+    window.addEventListener("map-locate-me", handleLocate);
+    return () => window.removeEventListener("map-locate-me", handleLocate);
+  }, [map]);
+  return null;
+}
+
+// ── Focus Problem ───────────────────────────────────────────────────────
 function FocusProblem() {
   const map = useMap();
   useEffect(() => {
@@ -238,7 +255,7 @@ export default function MapView({
 
         {zoomToUser && <LiveTracking />}
         <FocusProblem />
-        <LocateMeButton />
+        <LocateMeHandler />
 
         {/* 🔥 Custom Crisis Heatmap Layer */}
         {showHeatmap && (

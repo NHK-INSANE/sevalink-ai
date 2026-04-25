@@ -10,6 +10,7 @@ import { getUser } from "../utils/auth";
 import { motion, AnimatePresence } from "framer-motion";
 import { socket } from "../../lib/socket";
 import toast from "react-hot-toast";
+import Link from "next/link";
 import LiveLegend from "../components/LiveLegend";
 
 const API_BASE =
@@ -270,14 +271,32 @@ export default function MapPage() {
             <LiveLegend showCount={true} />
           </div>
 
-          <div className="relative card !p-0 overflow-hidden border border-white/10 shadow-2xl">
-            <div className="absolute top-4 right-4 flex gap-2 z-[1000]">
+          <div className="relative card !p-0 overflow-hidden border border-white/10 shadow-2xl group">
+            <div className="absolute top-6 right-6 flex flex-col gap-3 z-[1000]">
               <button 
                 onClick={sendSOS}
                 disabled={sendingSOS}
-                className="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg text-white text-sm font-bold shadow-md transition-colors flex items-center gap-2"
+                className="bg-red-600 hover:bg-red-700 h-12 px-6 rounded-2xl text-white text-sm font-black shadow-2xl transition-all flex items-center gap-2 hover:scale-105 active:scale-95 border border-red-400/30"
               >
-                {sendingSOS ? <div className="loader-small" /> : <>🚨 SOS</>}
+                {sendingSOS ? <div className="loader-small" /> : <>🚨 SOS EMERGENCY</>}
+              </button>
+              
+              <button 
+                onClick={() => {
+                  if (typeof window !== "undefined" && navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition((pos) => {
+                      // We need to trigger map flyTo. 
+                      // For now, let's use a custom event or just reload with params if needed, 
+                      // but the user wants it interactive.
+                      // I'll add a 'triggerLocate' state to pass to MapView if possible.
+                      window.dispatchEvent(new CustomEvent('map-locate-me'));
+                    });
+                  }
+                }}
+                className="bg-white/10 backdrop-blur-md hover:bg-white/20 h-10 px-4 rounded-xl text-white text-[10px] font-black uppercase tracking-widest border border-white/10 shadow-xl transition-all flex items-center justify-center gap-2"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                Locate Me
               </button>
             </div>
             <div className="h-[68vh] w-full relative">
