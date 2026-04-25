@@ -27,6 +27,19 @@
   --content-max: 1200px;
 }
 
+/* ── MAP CLUSTERS ── */
+.no-count-cluster div {
+  display: none !important;
+}
+
+.dot-cluster {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 0 5px rgba(0,0,0,0.3);
+}
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    RESET & BASE
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */

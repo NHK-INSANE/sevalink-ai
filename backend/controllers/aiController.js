@@ -67,36 +67,56 @@ exports.getUrgency = async (req, res) => {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `
-You are an emergency classification system.
+You are an emergency response AI.
 
-Classify the urgency into EXACTLY one word:
-Critical, High, Medium, or Low.
+Classify the severity STRICTLY based on rules:
 
-Rules:
-- Critical: life-threatening, no food/water, severe injury, disaster
-- High: serious issue needing quick action (medical, safety)
-- Medium: important but not urgent
-- Low: minor inconvenience
+CRITICAL:
+- Deaths reported
+- Multiple severe injuries
+- Building collapse, fire, disaster
 
-Also give a score from 0 to 100 (100 = most urgent).
+HIGH:
+- Injuries but no deaths
 
-Respond ONLY in this format:
-Urgency: <level>
-Score: <number>
+MEDIUM:
+- Minor injuries or risk
 
-Problem: ${description}
+LOW:
+- No immediate danger
+
+Also determine the required responders (e.g., Ambulance, Fire Brigade, Police, NGO, Medical).
+
+Now analyze:
+
+"${description}"
+
+Return JSON:
+{
+  "severity": "CRITICAL | HIGH | MEDIUM | LOW",
+  "confidence": number (0-100),
+  "reason": "short explanation",
+  "responders": ["Ambulance", "Fire Brigade"]
+}
 `;
 
     const result = await model.generateContent(prompt);
-    const text = result.response.text();
+    let text = result.response.text();
+    text = text.replace(/```json/gi, "").replace(/```/gi, "").trim();
 
-    const urgencyMatch = text.match(/Urgency:\s*(Critical|High|Medium|Low)/i);
-    const scoreMatch = text.match(/Score:\s*(\d+)/i);
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      data = {};
+    }
 
-    const urgency = urgencyMatch ? urgencyMatch[1] : cleanUrgency(text);
-    const score = scoreMatch ? parseInt(scoreMatch[1]) : 10;
+    const urgencyRaw = data.severity || text;
+    const urgency = cleanUrgency(urgencyRaw);
+    const score = data.confidence ?? 10;
+    const responders = Array.isArray(data.responders) ? data.responders : [];
 
-    res.json({ urgency, score });
+    res.json({ urgency, score, reason: data.reason, responders });
   } catch (err) {
     console.error("AI failed, using fallback:", err.message);
 
@@ -119,19 +139,21 @@ exports.suggestDescription = async (req, res) => {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `
-You are a professional crisis coordinator and emergency strategist. 
-Task: Expand the following casual text into a HIGHLY DETAILED, professional, and actionable problem report.
+You are an emergency response assistant.
 
-Rules:
-1. DO NOT just copy or summarize. EXPAND and explain the situation.
-2. Provide a structured explanation including potential risks and resource requirements.
-3. Make it interactive and strategic for responders (e.g., "Immediate triage is required due to...", "Logistics must prioritize...").
-4. Keep the tone authoritative and calm.
-5. Minimum 60 words, Maximum 150 words.
+Rewrite and EXPAND the following crisis report into a detailed, structured, and professional emergency report.
 
-Casual Input: "${text}"
+Include:
+- What happened
+- Estimated casualties
+- Urgency level
+- Required response teams
+- Immediate actions needed
 
-Detailed Strategic Report:
+Original:
+"${text}"
+
+Return ONLY the improved report without any markdown blocks.
 `;
 
     const result = await model.generateContent(prompt);

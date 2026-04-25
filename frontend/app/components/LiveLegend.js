@@ -1,10 +1,10 @@
-export default function LiveLegend({ showCount = false }) {
+export default function LiveLegend({ showCount = false, stats = {} }) {
   const data = [
-    { label: "Critical", color: "text-red-500", count: 25 },
-    { label: "High", color: "text-orange-400", count: 20 },
-    { label: "Medium", color: "text-yellow-400", count: 40 },
-    { label: "Low", color: "text-green-500", count: 40 },
-    { label: "NGOs", color: "text-blue-500", count: 20 },
+    { label: "Critical", color: "text-red-500", count: stats.critical || 0 },
+    { label: "High", color: "text-orange-400", count: stats.high || 0 },
+    { label: "Medium", color: "text-yellow-400", count: stats.medium || 0 },
+    { label: "Low", color: "text-green-500", count: stats.low || 0 },
+    { label: "NGOs", color: "text-blue-500", count: stats.ngos || 0 },
   ];
 
   return (

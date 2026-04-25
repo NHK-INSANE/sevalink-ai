@@ -255,6 +255,33 @@ const startServer = async () => {
     console.log("✅ MongoDB connected successfully");
     const PORT = process.env.PORT || 8000;
     server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+    // Real-Time Crisis Escalation Background Worker
+    setInterval(async () => {
+      try {
+        const Problem = require("./models/Problem");
+        const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
+        
+        // Find problems that are old, unresolved, and not yet Critical
+        const problems = await Problem.find({
+          createdAt: { $lte: thirtyMinsAgo },
+          status: { $in: ["Open", "open", "In Progress", "in-progress"] },
+          urgency: { $ne: "Critical" }
+        });
+
+        for (let r of problems) {
+          r.urgency = "Critical";
+          r.timeline.push({ text: "⚠️ System Auto-Escalation: Unresolved for > 30 mins" });
+          await r.save();
+          
+          io.emit("escalation", r);
+          io.emit("problem-updated", r);
+        }
+      } catch (err) {
+        console.error("Escalation worker error:", err);
+      }
+    }, 60000); // Check every minute
+
   } catch (err) {
     console.error("❌ MongoDB connection error:", err.message);
   }

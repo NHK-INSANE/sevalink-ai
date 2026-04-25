@@ -111,6 +111,13 @@ export default function SubmitPage() {
       const result = await getUrgency(form.description);
       setAiUrgency(result.urgency);
       setAiScore(result.score ?? null);
+      if (result.responders && result.responders.length > 0) {
+        setForm(prev => ({
+          ...prev,
+          requiredSkills: [...new Set([...prev.requiredSkills, ...result.responders])]
+        }));
+        toast.success(`AI detected needed responders: ${result.responders.join(", ")}`);
+      }
     } catch {
       setAiUrgency("Medium");
       setAiScore(null);

@@ -48,8 +48,9 @@ function getUrgencyColor(urgency) {
 }
 
 // ── Pulse Icon Factory ────────────────────────────────────────────────────────
-function makePulseIcon(color, glowColor, size = 12) {
+function makePulseIcon(color, glowColor, size = 12, type = "normal") {
   return new L.DivIcon({
+    type,
     className: "",
     html: `<div style="
       position: relative;
@@ -97,8 +98,8 @@ const sosIcon = new L.DivIcon({
   popupAnchor: [0, -14],
 });
 
-const helperIcon = makePulseIcon("#2563eb", "rgba(37,99,235,0.5)");
-const ngoIcon    = makePulseIcon("#3b82f6", "rgba(59,130,246,0.5)"); // blue
+const helperIcon = makePulseIcon("#2563eb", "rgba(37,99,235,0.5)", 12, "helper");
+const ngoIcon    = makePulseIcon("#3b82f6", "rgba(59,130,246,0.5)", 12, "ngo"); // blue
 
 // ── Live Tracking (Uber-style) ────────────────────────────────────────────────
 function LiveTracking() {
@@ -258,9 +259,18 @@ export default function MapView({
           chunkedLoading
           iconCreateFunction={(cluster) => {
             if (!showClusters) {
+              const markers = cluster.getAllChildMarkers();
+              const hasCritical = markers.some(m => m.options.icon?.options?.type === "critical");
+              const hasHigh = markers.some(m => m.options.icon?.options?.type === "high");
+              
+              let dotColor = "#10b981"; // default green
+              if (hasCritical) dotColor = "#ef4444";
+              else if (hasHigh) dotColor = "#f97316";
+              else if (markers.every(m => m.options.icon?.options?.type === "ngo")) dotColor = "#3b82f6";
+              
               return new L.DivIcon({
-                html: `<div style="background: #ef4444; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.3);"></div>`,
-                className: "",
+                html: `<span class="dot-cluster" style="background: ${dotColor}; display: block;"></span>`,
+                className: "no-count-cluster",
                 iconSize: L.point(12, 12)
               });
             }
@@ -297,7 +307,7 @@ export default function MapView({
           {(type === "all" || type === "problems") &&
             problems.filter(p => (p.location?.lat && p.location?.lng) || (p.latitude && p.longitude)).slice(0, 100).map((p, i) => {
               const { bg, glow } = getUrgencyColor(p.urgency);
-              const icon = makePulseIcon(bg, glow);
+              const icon = makePulseIcon(bg, glow, 12, p.urgency?.toLowerCase() || "normal");
               const lat = p.location?.lat || p.latitude;
               const lng = p.location?.lng || p.longitude;
               return (

@@ -123,8 +123,24 @@ export default function Dashboard() {
       });
     });
 
+    socket.on("escalation", (escalatedProb) => {
+      if (!escalatedProb?._id) return;
+      toast(`⚠️ CRISIS ESCALATED TO CRITICAL: ${escalatedProb.title}`, {
+        duration: 8000,
+        icon: '⚠️',
+        style: { background: "#7f1d1d", color: "#fff", border: "1px solid #ef4444", fontWeight: "bold" }
+      });
+      setProblems(prev => prev.map(p => p._id === escalatedProb._id ? escalatedProb : p));
+    });
+
+    socket.on("problem-updated", (updatedProb) => {
+      setProblems(prev => prev.map(p => p._id === updatedProb._id ? updatedProb : p));
+    });
+
     return () => {
       socket.off("new-problem");
+      socket.off("escalation");
+      socket.off("problem-updated");
     };
   }, []);
 
@@ -402,7 +418,7 @@ export default function Dashboard() {
             <div className="flex justify-between items-end mb-2">
               <div className="space-y-1">
                 <h2 className="text-lg font-semibold text-white tracking-tight">Live Operations Map</h2>
-                {mapZoom >= 8 && <LiveLegend showCount={false} />}
+                {mapZoom >= 8 && <LiveLegend showCount={true} stats={{ critical: criticalCount, high: highCount, medium: mediumCount, low: lowCount, ngos: ngosCount }} />}
               </div>
               <div className="flex gap-2 mb-2">
                 <button 

@@ -270,7 +270,13 @@ export default function MapPage() {
           <div className="flex justify-between items-end mb-4">
             <div className="space-y-1">
               <h2 className="text-sm font-bold text-white uppercase tracking-widest">Real-time Geospatial Visualization</h2>
-              {mapZoom >= 8 && <LiveLegend showCount={true} />}
+              {mapZoom >= 8 && <LiveLegend showCount={true} stats={{
+                critical: problems.filter(p => p.urgency?.toLowerCase() === "critical").length,
+                high: problems.filter(p => p.urgency?.toLowerCase() === "high").length,
+                medium: problems.filter(p => p.urgency?.toLowerCase() === "medium").length,
+                low: problems.filter(p => p.urgency?.toLowerCase() === "low").length,
+                ngos: ngos.length
+              }} />}
             </div>
             <div className="flex gap-3 mb-2">
               <button 
