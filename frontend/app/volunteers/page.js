@@ -31,6 +31,7 @@ function VolunteersContent() {
   const [connectReason, setConnectReason] = useState("");
   const [user, setUser] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const u = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("seva_user")) : null;
@@ -76,7 +77,28 @@ function VolunteersContent() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = filterRole === "all" ? users : users.filter((u) => u.role?.toLowerCase() === filterRole);
+  const filtered = users.filter((u) => {
+    // 1. Exclude self
+    if (user && (u._id === user._id || u._id === user.id)) return false;
+
+    // 2. Search by code
+    if (searchQuery) {
+      const code = (u.displayId || u.customId || "").toLowerCase();
+      if (!code.includes(searchQuery.toLowerCase())) return false;
+    }
+
+    // 3. Tab filter
+    if (filterRole !== "all" && u.role?.toLowerCase() !== filterRole) return false;
+
+    // 4. Enforce role-based filtering (Workers only see volunteers)
+    if (user) {
+      const myRole = user.role?.toLowerCase();
+      const theirRole = u.role?.toLowerCase();
+      if (myRole === "worker" && theirRole === "worker") return false;
+    }
+
+    return true;
+  });
 
   const sorted = [...filtered].sort((a, b) => {
     if (sortBy === "nearest" && userLoc) {
@@ -226,6 +248,12 @@ function VolunteersContent() {
             </div>
 
             <div className="flex items-center gap-3">
+              <input
+                placeholder="Search by Code (e.g. VOL-FD843AF3)"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-[#0B1220] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-semibold text-gray-300 outline-none hover:border-purple-500/50 focus:border-purple-500 transition w-64 shadow-lg"
+              />
               <div className="relative group">
                 <select 
                   value={sortBy} 

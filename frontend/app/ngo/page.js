@@ -22,6 +22,15 @@ function NGOContent() {
   const [connectReason, setConnectReason] = useState("");
   const [user, setUser] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [ngoQuery, setNgoQuery] = useState("");
+
+  const locateNgo = (ngo) => {
+    if (ngo.location?.lat && ngo.location?.lng) {
+      router.push(`/map?lat=${ngo.location.lat}&lng=${ngo.location.lng}&title=${encodeURIComponent(ngo.ngoName || ngo.name || "NGO")}`);
+    } else {
+      toast.error("NGO location not available");
+    }
+  };
 
   useEffect(() => {
     const u = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("seva_user")) : null;
@@ -59,7 +68,15 @@ function NGOContent() {
       .finally(() => setLoading(false));
   }, []);
 
-  const sortedNgos = [...ngos].sort((a, b) => {
+  const filteredNgos = ngos.filter(n => {
+    if (ngoQuery) {
+      const code = (n.displayId || n.customId || "").toLowerCase();
+      if (!code.includes(ngoQuery.toLowerCase())) return false;
+    }
+    return true;
+  });
+
+  const sortedNgos = [...filteredNgos].sort((a, b) => {
     if (sortBy === "nearest" && userLoc) {
       const d1 = getDistance(userLoc.lat, userLoc.lng, a.location?.lat, a.location?.lng);
       const d2 = getDistance(userLoc.lat, userLoc.lng, b.location?.lat, b.location?.lng);
@@ -159,6 +176,12 @@ function NGOContent() {
             </div>
 
             <div className="flex items-center gap-3">
+              <input
+                placeholder="Search NGO ID (e.g. NGO-99439011)"
+                value={ngoQuery}
+                onChange={(e) => setNgoQuery(e.target.value)}
+                className="bg-[#0B1220] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-semibold text-gray-300 outline-none hover:border-purple-500/50 focus:border-purple-500 transition w-64 shadow-lg"
+              />
               <div className="relative group">
                 <select 
                   value={sortBy} 
@@ -189,9 +212,19 @@ function NGOContent() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sortedNgos.map((ngo) => (
-                <div key={ngo._id} className="card card-hover-effect !p-6 flex flex-col gap-0">
-                  <div className="flex justify-between items-start pb-4 mb-4 border-b border-white/5">
-                    <div className="flex-1">
+                <div key={ngo._id} className="card card-hover-effect !p-6 flex flex-col gap-0 relative">
+                  
+                  <div className="absolute top-3 right-3 z-10">
+                    <button 
+                      onClick={() => locateNgo(ngo)}
+                      className="bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-600 hover:text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-md flex items-center gap-1.5"
+                    >
+                      📍 Locate
+                    </button>
+                  </div>
+
+                  <div className="flex justify-between items-start pb-4 mb-4 border-b border-white/5 mt-4">
+                    <div className="flex-1 pr-16">
                       <h3 className="text-lg font-black text-white tracking-tight leading-none group-hover:text-indigo-400 transition-colors">{ngo.ngoName || ngo.name || "Unnamed NGO"}</h3>
                       <div className="flex items-center gap-2 mt-2">
                         <div 
