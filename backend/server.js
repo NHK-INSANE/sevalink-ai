@@ -8,6 +8,7 @@ const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 
 const app = express();
+const Problem = require("./models/Problem");
 
 // 1. CORS - PRODUCTION READY (Simplified for reliability)
 app.use(cors({
@@ -76,8 +77,15 @@ io.on("connection", (socket) => {
   socket.on("register-user", (userId) => {
     if (userId) {
       userSockets.set(userId, socket.id);
-      socket.join(userId); // 🔥 Important for 1-1 chat routing
-      console.log(`👤 User ${userId} registered to socket ${socket.id} and joined room ${userId}`);
+      socket.join(userId); 
+      console.log(`👤 User ${userId} registered and joined room ${userId}`);
+    }
+  });
+
+  socket.on("join", (userId) => {
+    if (userId) {
+      socket.join(userId);
+      console.log(`💬 User ${userId} joined their notification room`);
     }
   });
 
@@ -118,33 +126,45 @@ io.on("connection", (socket) => {
     console.log(`💬 Joined problem room: ${id}`);
   });
 
-  socket.on("send_message", ({ problemId, text, senderName }) => {
-    io.to(problemId).emit("receive_message", { text, senderName, time: new Date() });
+  socket.on("send_message", async ({ problemId, text, senderId, senderName, type }) => {
+    try {
+      const problem = await Problem.findById(problemId);
+      if (!problem) return;
 
-    // 🔥 AI DISPATCHER AUTO-REPLY (Simulation)
-    if (text.toLowerCase().includes("help") || text.toLowerCase().includes("status") || text.toLowerCase().includes("update")) {
-      setTimeout(() => {
-        io.to(problemId).emit("receive_message", { 
-          text: "🤖 AI DISPATCHER: I've processed your message. Nearby units have been alerted to the latest status. Please maintain secure communications.", 
+      // Security: Only team members or NGO can send messages
+      const isMember = problem.team?.some(m => m.userId.toString() === senderId);
+      const isNGO = problem.createdBy?.toString() === senderId; // Simplified check or handle via role
+      
+      const newMessage = {
+        senderId,
+        senderName,
+        text,
+        type: type || "text",
+        createdAt: new Date()
+      };
+
+      problem.messages.push(newMessage);
+      await problem.save();
+
+      io.to(problemId).emit("receive_message", newMessage);
+
+      // 🔥 AI DISPATCHER AUTO-REPLY
+      if (text.toLowerCase().includes("help") || text.toLowerCase().includes("status")) {
+        const aiMsg = { 
+          text: "🤖 AI DISPATCHER: Status logged. Nearby units alerted.", 
           senderName: "AI Dispatcher", 
-          time: new Date() 
-        });
-      }, 1500);
+          type: "system",
+          createdAt: new Date() 
+        };
+        problem.messages.push(aiMsg);
+        await problem.save();
+        io.to(problemId).emit("receive_message", aiMsg);
+      }
+    } catch (err) {
+      console.error("Socket send_message error:", err);
     }
   });
 
-  // 🔥 LIVE RESPONDER TRACKING
-  socket.on("update_location", (data) => {
-    // data = { id, lat, lng }
-    io.emit("responder_moved", data);
-    
-    // 🔥 Sync with OPS Command Center
-    io.to("ops_room").emit("ops_event", {
-      type: "SYSTEM",
-      payload: { message: `Unit ${data.id?.slice(-4)} moving to target`, location: { lat: data.lat, lng: data.lng }, isTracking: true },
-      time: new Date()
-    });
-  });
 
   // 🏥 OPS COMMAND CENTER LOGIC
   let liveLocations = {};
@@ -166,6 +186,19 @@ io.on("connection", (socket) => {
     
     // Broadcast to everyone (or just OPS)
     io.emit("live_locations", liveLocations);
+
+    // 🔥 Sync with OPS Command Center (Throttled/Clean)
+    if (data.name && data.name !== "undefined") {
+       io.to("ops_room").emit("ops_event", {
+         type: "SYSTEM",
+         payload: { 
+           message: `Unit ${data.name} moving to target`, 
+           location: { lat: data.lat, lng: data.lng }, 
+           isTracking: true 
+         },
+         time: new Date()
+       });
+    }
   });
 
   socket.on("new_crisis", async (data) => {

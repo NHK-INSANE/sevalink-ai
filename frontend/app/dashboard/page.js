@@ -168,18 +168,21 @@ export default function Dashboard() {
   const safeProblems = useMemo(() => Array.isArray(problems) ? problems : [], [problems]);
   const safeUsers = useMemo(() => Array.isArray(usersList) ? usersList : [], [usersList]);
 
-  const openCount = safeProblems.filter(p => String(p?.status || "").toLowerCase() === "open").length;
-  const resolvedCount = safeProblems.filter(p => String(p?.status || "").toLowerCase() === "resolved").length;
-  const progressCount = safeProblems.filter(p => String(p?.status || "").toLowerCase() === "in progress" || String(p?.status || "").toLowerCase() === "in-progress").length;
+  const openCount = useMemo(() => safeProblems.filter(p => String(p?.status || "").trim().toUpperCase() === "OPEN").length, [safeProblems]);
+  const resolvedCount = useMemo(() => safeProblems.filter(p => String(p?.status || "").trim().toUpperCase() === "RESOLVED").length, [safeProblems]);
+  const progressCount = useMemo(() => safeProblems.filter(p => {
+    const s = String(p?.status || "").trim().toUpperCase();
+    return s === "IN PROGRESS" || s === "IN-PROGRESS";
+  }).length, [safeProblems]);
 
-  const volunteersCount = safeUsers.filter(u => String(u?.role || "").toLowerCase() === "volunteer").length;
-  const workersCount = safeUsers.filter(u => String(u?.role || "").toLowerCase() === "worker").length;
-  const ngosCount = safeUsers.filter(u => String(u?.role || "").toLowerCase() === "ngo").length;
+  const criticalCount = useMemo(() => safeProblems.filter(p => String(p?.urgency || "").trim().toUpperCase() === "CRITICAL").length, [safeProblems]);
+  const highCount = useMemo(() => safeProblems.filter(p => String(p?.urgency || "").trim().toUpperCase() === "HIGH").length, [safeProblems]);
+  const mediumCount = useMemo(() => safeProblems.filter(p => String(p?.urgency || "").trim().toUpperCase() === "MEDIUM").length, [safeProblems]);
+  const lowCount = useMemo(() => safeProblems.filter(p => String(p?.urgency || "").trim().toUpperCase() === "LOW").length, [safeProblems]);
 
-  const criticalCount = safeProblems.filter(p => String(p?.urgency || "").toLowerCase() === "critical").length;
-  const highCount = safeProblems.filter(p => String(p?.urgency || "").toLowerCase() === "high").length;
-  const mediumCount = safeProblems.filter(p => String(p?.urgency || "").toLowerCase() === "medium").length;
-  const lowCount = safeProblems.filter(p => String(p?.urgency || "").toLowerCase() === "low").length;
+  const volunteersCount = useMemo(() => safeUsers.filter(u => String(u?.role || "").toLowerCase() === "volunteer").length, [safeUsers]);
+  const workersCount = useMemo(() => safeUsers.filter(u => String(u?.role || "").toLowerCase() === "worker").length, [safeUsers]);
+  const ngosCount = useMemo(() => safeUsers.filter(u => String(u?.role || "").toLowerCase() === "ngo").length, [safeUsers]);
 
   const categoryCount = {};
   safeProblems.forEach(p => {
@@ -252,23 +255,23 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#080a12]">
+      <div className="min-h-screen bg-[#080B14] text-white pb-24">
         <Navbar />
-        <main className="page-wrapper pt-[120px]">
-          <div className="animate-pulse space-y-8">
+        <PageWrapper className="pt-28 px-6">
+          <div className="max-w-7xl mx-auto space-y-8">
             <div className="h-10 bg-white/5 rounded-2xl w-64" />
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
               {[1, 2, 3, 4].map((i) => <SkeletonStats key={i} />)}
             </div>
             <div className="h-[400px] bg-white/5 rounded-3xl" />
           </div>
-        </main>
+        </PageWrapper>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0b0f1a] to-[#05070d] text-white selection:bg-indigo-500/30">
+    <div className="min-h-screen bg-[#080B14] text-white pb-24">
       <Navbar />
       
       <PageWrapper>

@@ -24,6 +24,7 @@ function NGOContent() {
   const [requestType, setRequestType] = useState(""); // "assign" or "lead"
   const [selectedProbId, setSelectedProbId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorShown, setErrorShown] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -92,8 +93,12 @@ function NGOContent() {
       setUserLoc(loc);
       setSortBy("nearest");
       toast.success("GPS Lock: Proximity sorting active.");
+      setErrorShown(false);
     } catch (err) {
-      toast.error("Location services offline.");
+      if (!errorShown) {
+        toast.error("Location services offline.");
+        setErrorShown(true);
+      }
     }
   };
 
@@ -172,15 +177,15 @@ function NGOContent() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {sortedNgos.map((ngo) => {
-                const isBusy = ngo.status === "busy";
+                const ngoMissions = problems.filter(p => p.team?.includes(ngo._id) || p.leader === ngo._id).length;
+                const specializations = ngo.skills || ngo.specialization || ["General Relief"];
                 const dist = userLoc ? getDistance(userLoc.lat, userLoc.lng, ngo.location?.lat, ngo.location?.lng) : null;
-                const responseTime = isBusy ? "Variable" : "~5 mins";
 
                 return (
                   <motion.div 
                     layout
                     key={ngo._id} 
-                    className="bg-[#0f172a]/30 border border-white/5 rounded-[2.5rem] p-8 flex flex-col gap-6 group hover:border-white/10 transition-all shadow-2xl relative overflow-hidden"
+                    className="bg-[#0f172a]/30 border border-white/5 rounded-[2.5rem] p-8 flex flex-col gap-6 group hover:border-indigo-500/30 transition-all shadow-2xl relative overflow-hidden"
                   >
                     <div className="absolute top-6 right-6">
                       <button 
@@ -196,39 +201,39 @@ function NGOContent() {
                           {(ngo.ngoName || ngo.name)?.[0]?.toUpperCase() || "N"}
                        </div>
                        <div className="space-y-1">
-                         <h3 className="text-lg font-black text-white uppercase tracking-tight leading-tight">{ngo.ngoName || ngo.name || "Unnamed NGO"}</h3>
+                         <h3 className="text-lg font-black text-white uppercase tracking-tight leading-tight">{ngo.name || ngo.ngoName || "Unnamed NGO"}</h3>
                          <div className="flex items-center gap-2">
-                           <span className="text-[9px] font-mono text-purple-400 font-bold uppercase tracking-widest">{ngo.customId || ngo.displayId || "NGO-PENDING"}</span>
+                           <span className="text-[10px] font-mono text-purple-400 font-bold uppercase tracking-widest px-2 py-0.5 bg-purple-500/10 rounded-md border border-purple-500/20">ID: {ngo.customId || ngo.displayId || ngo._id?.slice(-8).toUpperCase()}</span>
                            <span className="w-1 h-1 rounded-full bg-gray-700" />
-                           <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Verified</span>
+                           <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Verified Command</span>
                          </div>
                        </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 pt-2">
-                       <div className="bg-white/5 border border-white/5 p-3 rounded-xl">
-                          <p className="text-[8px] font-black uppercase tracking-widest text-gray-500 mb-1">Status</p>
-                          <div className="flex items-center gap-1.5">
-                             <div className={`w-2 h-2 rounded-full ${isBusy ? "bg-red-500" : "bg-emerald-500"}`} />
-                             <span className={`text-[10px] font-bold uppercase ${isBusy ? "text-red-400" : "text-emerald-400"}`}>{isBusy ? "High Load" : "Available"}</span>
+                    <div className="grid grid-cols-1 gap-4 pt-2">
+                       <div className="bg-white/5 border border-white/5 p-4 rounded-2xl">
+                          <p className="text-[8px] font-black uppercase tracking-widest text-gray-500 mb-2">🛠 Specializations</p>
+                          <div className="flex flex-wrap gap-2">
+                             {specializations.map((s, i) => (
+                               <span key={i} className="text-[10px] font-bold text-gray-300 px-2.5 py-1 bg-white/5 rounded-lg border border-white/5">{s}</span>
+                             ))}
                           </div>
-                       </div>
-                       <div className="bg-white/5 border border-white/5 p-3 rounded-xl">
-                          <p className="text-[8px] font-black uppercase tracking-widest text-gray-500 mb-1">Est. Response</p>
-                          <p className="text-[10px] font-bold text-gray-300 uppercase">{responseTime}</p>
                        </div>
                     </div>
 
                     <div className="space-y-3 pt-2">
-                       <div className="flex items-center gap-3 text-gray-400 text-[11px] font-bold">
+                       <div className="flex items-center justify-between bg-white/5 border border-white/5 p-4 rounded-2xl">
+                          <div className="flex items-center gap-3">
+                             <span className="text-indigo-400 text-lg">📊</span>
+                             <span className="text-[11px] font-black uppercase tracking-widest text-gray-400">Active Missions</span>
+                          </div>
+                          <span className="text-xl font-black text-white">{ngoMissions}</span>
+                       </div>
+                       <div className="flex items-center gap-3 text-gray-400 text-[11px] font-bold px-1">
                           <span className="text-indigo-400">📧</span>
                           <span className="truncate">{ngo.email}</span>
                        </div>
-                       <div className="flex items-center gap-3 text-gray-400 text-[11px] font-bold">
-                          <span className="text-indigo-400">📞</span>
-                          <span>{ngo.phone || "No direct line"}</span>
-                       </div>
-                       <div className="flex items-start gap-3 text-gray-400 text-[11px] font-bold">
+                       <div className="flex items-start gap-3 text-gray-400 text-[11px] font-bold px-1">
                           <span className="text-indigo-400">📍</span>
                           <span className="leading-relaxed">{ngo.address || "Location Access Pending"}</span>
                        </div>
@@ -242,9 +247,9 @@ function NGOContent() {
                     <div className="mt-auto pt-6 flex flex-col gap-2">
                        <button 
                         onClick={() => handleConnect(ngo)}
-                        className="w-full py-3 bg-white/5 hover:bg-white/10 text-white border border-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                        className="w-full py-4 bg-white/5 hover:bg-white/10 text-white border border-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                        >
-                          Connect
+                          Establish Neural Link
                        </button>
                        <div className="grid grid-cols-2 gap-2">
                          <button 

@@ -8,7 +8,7 @@ export default function OpsPanel() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("alerts"); // alerts, chat, actions, ai
+  const [activeTab, setActiveTab] = useState("alerts"); // alerts, ai
   const [sosConfirm, setSosConfirm] = useState(false);
   const scrollRef = useRef(null);
   const chatScrollRef = useRef(null);
@@ -128,15 +128,13 @@ export default function OpsPanel() {
 
   const tabs = [
     { id: "alerts", label: "Alerts", icon: "🔔" },
-    { id: "chat", label: "Chat", icon: "💬" },
-    { id: "actions", label: "Actions", icon: "⚡" },
     { id: "ai", label: "AI", icon: "🤖" },
   ];
 
   return (
     <>
       {/* Floating Button */}
-      <div className="fixed bottom-6 right-6 z-[999]">
+      <div className="fixed bottom-[20px] right-[20px] z-[40]">
         <button
           onClick={() => setIsOpen(true)}
           className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-95 bg-purple-600 text-white hover:bg-purple-500 relative ${events.some(e => e.type === "CRISIS" || e.type === "SOS") ? "animate-pulse shadow-red-500/50" : "shadow-purple-500/50"}`}
@@ -241,140 +239,6 @@ export default function OpsPanel() {
                     </motion.div>
                   )}
 
-                  {activeTab === "chat" && (
-                    <motion.div
-                      key="chat"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="flex-1 flex flex-col"
-                    >
-                      <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-                        {messages.length === 0 ? (
-                          <div className="h-full flex flex-col items-center justify-center opacity-30 text-center p-8">
-                            <div className="w-12 h-12 rounded-full border border-dashed border-white/20 mb-4" />
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Secure Node Standby</p>
-                          </div>
-                        ) : (
-                          messages.map((m, i) => (
-                            <div key={i} className="flex flex-col gap-1.5">
-                              <div className="flex justify-between items-baseline px-1">
-                                <span className="text-[9px] font-black text-purple-400 uppercase tracking-tight">{m.senderName}</span>
-                                <span className="text-[7px] text-gray-500 font-medium">{new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                              </div>
-                              <div className="text-[12px] text-gray-300 leading-snug bg-white/5 p-3 rounded-2xl rounded-tl-none border border-white/5">
-                                {m.text}
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                      <div className="p-4 bg-white/[0.02] border-t border-white/10 flex gap-2">
-                        <input
-                          value={input}
-                          onChange={(e) => setInput(e.target.value)}
-                          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                          placeholder="Broadcast transmission..."
-                          className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[12px] text-white outline-none focus:border-purple-500 transition-all placeholder:text-gray-600"
-                        />
-                        <button onClick={sendMessage} className="bg-purple-600 hover:bg-purple-500 w-12 h-12 flex items-center justify-center rounded-xl transition-all shadow-lg shadow-purple-500/20">
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {activeTab === "actions" && (
-                    <motion.div
-                      key="actions"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="flex-1 p-6 space-y-6"
-                    >
-                      <div className="space-y-4">
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 px-1">Emergency Protocols</h3>
-                        
-                        {sosConfirm ? (
-                          <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 space-y-3">
-                            <p className="text-[11px] text-red-400 font-bold text-center">Are you sure? This will notify all responders.</p>
-                            <div className="flex gap-2">
-                              <button 
-                                onClick={sendSOS}
-                                className="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-                              >
-                                Confirm SOS
-                              </button>
-                              <button 
-                                onClick={() => setSosConfirm(false)}
-                                className="flex-1 bg-white/5 hover:bg-white/10 text-white py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <button 
-                            onClick={() => setSosConfirm(true)}
-                            className="w-full bg-red-600/10 hover:bg-red-600/20 border border-red-600/20 text-red-500 p-4 rounded-2xl flex items-center justify-between group transition-all"
-                          >
-                            <div className="text-left">
-                              <span className="block text-[11px] font-black uppercase tracking-widest mb-1">Signal SOS</span>
-                              <span className="block text-[9px] opacity-60">Immediate priority broadcast</span>
-                            </div>
-                            <span className="text-2xl group-hover:scale-110 transition-transform">🆘</span>
-                          </button>
-                        )}
-
-                        {showBroadcastInput ? (
-                          <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4 space-y-3">
-                            <textarea
-                              value={broadcastMsg}
-                              onChange={(e) => setBroadcastMsg(e.target.value)}
-                              placeholder="Type broadcast message..."
-                              className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-[11px] text-white outline-none focus:border-orange-500 transition-all h-20 resize-none"
-                            />
-                            <div className="flex gap-2">
-                              <button 
-                                onClick={sendBroadcast}
-                                className="flex-1 bg-orange-600 hover:bg-orange-500 text-white py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-                              >
-                                Send Alert
-                              </button>
-                              <button 
-                                onClick={() => setShowBroadcastInput(false)}
-                                className="flex-1 bg-white/5 hover:bg-white/10 text-white py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <button 
-                            onClick={() => setShowBroadcastInput(true)}
-                            className="w-full bg-orange-600/10 hover:bg-orange-600/20 border border-orange-600/20 text-orange-500 p-4 rounded-2xl flex items-center justify-between group transition-all"
-                          >
-                            <div className="text-left">
-                              <span className="block text-[11px] font-black uppercase tracking-widest mb-1">Broadcast Alert</span>
-                              <span className="block text-[9px] opacity-60">Regional emergency update</span>
-                            </div>
-                            <span className="text-2xl group-hover:scale-110 transition-transform">📢</span>
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="space-y-4">
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 px-1">Network Actions</h3>
-                        <button className="w-full bg-blue-600/10 hover:bg-blue-600/20 border border-blue-600/20 text-blue-500 p-4 rounded-2xl flex items-center justify-between group transition-all">
-                          <div className="text-left">
-                            <span className="block text-[11px] font-black uppercase tracking-widest mb-1">Mobilize Team</span>
-                            <span className="block text-[9px] opacity-60">Summon nearby responders</span>
-                          </div>
-                          <span className="text-2xl group-hover:scale-110 transition-transform">🚀</span>
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
 
                   {activeTab === "ai" && (
                     <motion.div

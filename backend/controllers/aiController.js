@@ -1,5 +1,5 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const { matchVolunteers } = require("../services/aiMatcher");
+const { calculateAIScore } = require("../services/aiMatcher");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -253,10 +253,13 @@ exports.matchUsersForProblem = async (req, res) => {
     
     const users = await User.find({ role: { $in: ["volunteer", "worker"] } });
 
-    const matches = users.map(u => ({
-      user: u,
-      score: calculateMatch(u, problem)
-    }));
+    const matches = users.map(u => {
+      const matchData = calculateAIScore(u, problem);
+      return {
+        user: { _id: u._id, name: u.name, role: u.role, skills: u.skills, status: u.status, location: u.location },
+        ...matchData
+      };
+    });
 
     matches.sort((a, b) => b.score - a.score);
 
@@ -270,31 +273,61 @@ exports.autoAssign = async (req, res) => {
   try {
     const Problem = require("../models/Problem");
     const User = require("../models/User");
+    const Notification = require("../models/Notification");
     const { problemId } = req.params;
 
     const problem = await Problem.findById(problemId);
     if (!problem) return res.status(404).json({ error: "Problem not found" });
 
-    const volunteers = await User.find({ role: "volunteer" });
-    const matched = matchVolunteers(problem, volunteers);
+    const responders = await User.find({ role: { $in: ["volunteer", "worker"] }, status: "available" });
+    
+    const matches = responders.map(u => ({
+      user: u,
+      ...calculateAIScore(u, problem)
+    })).sort((a, b) => b.score - a.score);
 
-    // Assign top matches to the problem team
-    problem.team = matched.map(v => v._id);
-    problem.status = "In Progress";
-    await problem.save();
-
-    // Broadcast notification via Socket.IO
+    const bestUsers = matches.slice(0, 3);
     const io = req.app.get("io");
-    if (io) {
-      io.emit("notification", {
-        message: `🤖 AI auto-assigned ${matched.length} responders to: ${problem.title}`,
-        type: "ai_assignment",
-        problemId: problem._id,
-        urgency: problem.urgency
+
+    for (const match of bestUsers) {
+      const u = match.user;
+      
+      // Check if already requested or in team
+      if (problem.requests.some(r => r.userId.toString() === u._id.toString())) continue;
+      if (problem.team.some(m => m.userId.toString() === u._id.toString())) continue;
+
+      problem.requests.push({
+        userId: u._id,
+        role: u.role,
+        status: "pending",
+        type: "AI_SUGGESTED"
       });
+
+      // Persistent Notification
+      const notif = new Notification({
+        userId: u._id,
+        message: `🤖 AI Dispatcher suggests you join mission: ${problem.title}. Priority: ${match.priority}`,
+        type: "ai_suggestion",
+        problemId: problem._id
+      });
+      await notif.save();
+
+      // Real-time Emit
+      if (io) {
+        io.to(u._id.toString()).emit("aiRequest", {
+          message: `AI Suggestion: Join mission ${problem.title}?`,
+          problemId: problem._id,
+          priority: match.priority,
+          score: match.score.toFixed(2)
+        });
+        io.to(u._id.toString()).emit("new-notification", notif);
+      }
     }
 
-    res.json({ success: true, team: matched });
+    await problem.save();
+    if (io) io.emit("problem-updated", problem);
+
+    res.json({ success: true, suggestions: bestUsers.length });
   } catch (err) {
     console.error("AutoAssign Error:", err);
     res.status(500).json({ error: "Auto-assignment failed" });

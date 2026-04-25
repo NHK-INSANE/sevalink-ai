@@ -54,22 +54,27 @@ const problemSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  team: [
+    {
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      role: String,
+      isLeader: { type: Boolean, default: false }
+    }
+  ],
   requests: [
     {
       userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-      userName: String,
       role: String,
-      type: { type: String, enum: ["assign", "lead"], default: "assign" },
       status: { type: String, enum: ["pending", "accepted", "rejected"], default: "pending" },
       createdAt: { type: Date, default: Date.now }
     }
   ],
-  assignedTo: {
-    type: String,
-    default: null,
-  },
-  team: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-  leader: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  leadRequests: [
+    {
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      createdAt: { type: Date, default: Date.now }
+    }
+  ],
   tasks: [
     {
       title: { type: String, required: true },
@@ -90,6 +95,15 @@ const problemSchema = new mongoose.Schema({
     type: String,
     unique: true,
   },
+  messages: [
+    {
+      senderId: String,
+      senderName: String,
+      text: String,
+      type: { type: String, enum: ["text", "image", "voice", "system"], default: "text" },
+      createdAt: { type: Date, default: Date.now }
+    }
+  ],
   createdAt: {
     type: Date,
     default: Date.now,

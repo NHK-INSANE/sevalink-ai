@@ -293,9 +293,9 @@ export default function Navbar() {
             {/* Mobile Menu Toggle */}
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-              className="lg:hidden px-3 h-10 flex items-center justify-center text-gray-400 hover:text-white bg-white/5 rounded-xl border border-white/10 text-[10px] font-bold uppercase tracking-widest"
+              className="lg:hidden w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white bg-white/5 rounded-xl border border-white/10 text-xl font-bold transition-all active:scale-95 shadow-lg"
             >
-              {mobileMenuOpen ? "CLOSE" : "MENU"}
+              {mobileMenuOpen ? "✕" : "⋮"}
             </button>
           </div>
         </div>

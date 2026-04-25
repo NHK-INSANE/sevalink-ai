@@ -1,42 +1,61 @@
-const haversine = (loc1, loc2) => {
-  if (!loc1 || !loc2 || !loc1.lat || !loc1.lng || !loc2.lat || !loc2.lng) return 9999;
-  const R = 6371e3; // meters
-  const φ1 = loc1.lat * Math.PI/180;
-  const φ2 = loc2.lat * Math.PI/180;
-  const Δφ = (loc2.lat-loc1.lat) * Math.PI/180;
-  const Δλ = (loc2.lng-loc1.lng) * Math.PI/180;
+function getDistance(lat1, lon1, lat2, lon2) {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return 9999;
+  const R = 6371; // km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
 
-  const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-          Math.cos(φ1) * Math.cos(φ2) *
-          Math.sin(Δλ/2) * Math.sin(Δλ/2);
+  const a =
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI/180) *
+    Math.cos(lat2 * Math.PI/180) *
+    Math.sin(dLon/2) *
+    Math.sin(dLon/2);
+
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-  return (R * c) / 1000; // km
-};
-
-function matchVolunteers(problem, volunteers) {
-  const reqSkills = Array.isArray(problem.requiredSkills) ? problem.requiredSkills : [];
-  
-  return volunteers
-    .map(v => {
-      const vSkills = Array.isArray(v.skills) ? v.skills : [];
-      const matchSkills = reqSkills.filter(skill =>
-        vSkills.some(s => s.toLowerCase().includes(skill.toLowerCase()))
-      );
-
-      const skillScore = matchSkills.length;
-      const distance = haversine(problem.location, v.location);
-
-      // Score: higher is better. Each skill match is worth 10km of distance.
-      return {
-        _id: v._id,
-        name: v.name,
-        email: v.email,
-        score: (skillScore * 10) - distance
-      };
-    })
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 5); // Pick top 5
+  return R * c;
 }
 
-module.exports = { matchVolunteers, haversine };
+const matchSkills = (userSkills = [], problemSkills = []) => {
+  let match = 0;
+  if (!Array.isArray(userSkills)) userSkills = [userSkills];
+  if (!Array.isArray(problemSkills)) problemSkills = [problemSkills];
+
+  problemSkills.forEach(skill => {
+    if (userSkills.some(s => s.toLowerCase().includes(skill.toLowerCase()))) match++;
+  });
+
+  return (match / (problemSkills.length || 1)) * 100; 
+};
+
+function calculateAIScore(user, problem) {
+  const distance = getDistance(
+    problem.location?.lat,
+    problem.location?.lng,
+    user.location?.lat,
+    user.location?.lng
+  );
+
+  const skillScore = matchSkills(user.skills, problem.category || []); // Using category as skills for now if skills not explicitly in problem
+  
+  // availability: 1 if user.status === "available", else 0.5?
+  const availability = user.status === "available" ? 1 : 0.5;
+
+  // Score = (skillScore * 0.5) + ((1 / distance) * 0.3) + (availability * 0.2);
+  // Normalize 1/distance to be meaningful, e.g., 100/distance capped at 100
+  const distFactor = Math.min(100, 100 / (distance || 1));
+  
+  const score = (skillScore * 0.5) + (distFactor * 0.3) + (availability * 20); // Scaled availability
+
+  // Smart Routing Priority
+  let priority = "LOW";
+  if (distance < 5) priority = "HIGH";
+  else if (distance < 20) priority = "MEDIUM";
+
+  return {
+    score,
+    distance: distance.toFixed(2),
+    priority
+  };
+}
+
+module.exports = { getDistance, matchSkills, calculateAIScore };

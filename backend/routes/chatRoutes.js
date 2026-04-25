@@ -26,6 +26,31 @@ router.get("/", auth, async (req, res) => {
   }
 });
 
+// GET active missions for tactical chat
+router.get("/missions", auth, async (req, res) => {
+  try {
+    const Problem = require("../models/Problem");
+    const missions = await Problem.find({
+      "team.userId": req.user.id
+    }).select("title urgency status messages team createdAt");
+    
+    // Format them to look like chats for the frontend
+    const formatted = missions.map(m => ({
+      _id: m._id,
+      type: "team",
+      title: m.title,
+      urgency: m.urgency,
+      status: m.status,
+      lastMessage: m.messages[m.messages.length - 1],
+      updatedAt: m.messages[m.messages.length - 1]?.createdAt || m.createdAt
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load missions" });
+  }
+});
+
 // Create or get a direct chat
 router.post("/direct", auth, async (req, res) => {
   try {

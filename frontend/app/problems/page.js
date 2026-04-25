@@ -66,14 +66,20 @@ export default function ProblemsPage() {
     };
   }, [sortBy, filterUrgency, filterStatus, userLoc]);
 
+  const [errorShown, setErrorShown] = useState(false);
+
   const handleLocate = async () => {
     try {
       const loc = await getUserLocation();
       setUserLoc(loc);
       setSortBy("nearest");
       toast.success("GPS Proximity Lock: Active");
+      setErrorShown(false);
     } catch (err) {
-      toast.error("Geolocation signal lost.");
+      if (!errorShown) {
+        toast.error("Geolocation signal lost.");
+        setErrorShown(true);
+      }
     }
   };
 

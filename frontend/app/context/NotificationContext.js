@@ -66,20 +66,32 @@ export const NotificationProvider = ({ children }) => {
     fetchNotifications();
 
     socketRef.current = io(API_BASE);
-    socketRef.current.emit("register-user", user._id || user.id);
+    const userId = user._id || user.id;
+    socketRef.current.emit("register-user", userId);
+    socketRef.current.emit("join", userId);
 
-    socketRef.current.on("new-notification", (notification) => {
-      setNotifications(prev => [notification, ...prev]);
+    const handleNewNotif = (notification) => {
+      setNotifications(prev => {
+        if (prev.some(n => n._id === notification._id)) return prev;
+        return [notification, ...prev];
+      });
       setUnreadCount(prev => prev + 1);
       
-      // Optional: show a toast based on type
       let icon = "🔔";
-      if (notification.type === "sos") icon = "🚨";
-      if (notification.type === "assignment") icon = "🟢";
-      if (notification.type === "request") icon = "🟡";
+      const type = notification.type?.toUpperCase();
+      if (type === "SOS") icon = "🚨";
+      else if (type === "ASSIGN" || type === "ASSIGNMENT") icon = "🟢";
+      else if (type === "REQUEST") icon = "🟡";
+      else if (type === "AI" || type === "AI_SUGGESTION") icon = "🧠";
       
-      toast.success(notification.message, { icon, style: { background: "#0f172a", color: "#fff", border: "1px solid rgba(255,255,255,0.1)" } });
-    });
+      toast.success(notification.message || notification.text, { 
+        icon, 
+        style: { background: "#0f172a", color: "#fff", border: "1px solid rgba(255,255,255,0.1)", fontSize: '12px', fontWeight: 'bold' } 
+      });
+    };
+
+    socketRef.current.on("new-notification", handleNewNotif);
+    socketRef.current.on("notification", handleNewNotif);
 
     return () => {
       if (socketRef.current) socketRef.current.disconnect();

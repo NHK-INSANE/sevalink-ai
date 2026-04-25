@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const Problem = require("../models/Problem");
 const User = require("../models/User");
+const { sendNotification } = require("../utils/notifications");
 const Notification = require("../models/Notification");
 const Conversation = require("../models/Conversation");
 const ChatMessage = require("../models/ChatMessage");
@@ -27,10 +28,12 @@ router.get("/", async (req, res) => {
     const { lat, lng, sort, urgency, status } = req.query;
     let query = { isArchived: false };
 
-    if (urgency) query.urgency = urgency;
-    if (status) query.status = status.toUpperCase();
+    if (urgency) query.urgency = urgency.toUpperCase();
+    if (status && status !== "All") query.status = status.toUpperCase();
 
-    let problems = await Problem.find(query).lean();
+    console.log("🔍 Problem Query:", query);
+    let problems = await Problem.find(query).sort({ createdAt: -1 }).lean();
+    console.log(`✅ Found ${problems.length} problems for query`);
 
     // Calculate score and distance
     problems = problems.map(p => {
@@ -117,50 +120,88 @@ const requestLimiter = rateLimit({
   message: { error: "Too many tactical requests. Please slow down." }
 });
 
-// ── POST /api/problems/:id/request — Request to Assign or Lead ────────────────
-router.post("/:id/request", auth, requestLimiter, async (req, res) => {
+// ── POST /api/problems/:id/assign — Request to Join Team ───────────────────────
+router.post("/:id/assign", auth, authorize("volunteer", "worker", "ngo", "admin"), async (req, res) => {
   try {
-    const { type } = req.body; // 'assign' or 'lead'
     const userId = req.user.id;
-    const user = await User.findById(userId);
-
-    if (user.role === "user") {
-      return res.status(403).json({ error: "Standard users cannot join tactical teams." });
-    }
-
     const problem = await Problem.findById(req.params.id);
     if (!problem) return res.status(404).json({ error: "Problem not found" });
 
-    // Check if already requested or member
-    const existing = problem.requests.find(r => r.userId.toString() === userId && r.status === "pending");
-    if (existing) return res.status(400).json({ error: "Request already pending." });
-
-    if (problem.team.includes(userId)) {
-      if (type === "assign") return res.status(400).json({ error: "Already a member of this team." });
-      if (problem.leader?.toString() === userId) return res.status(400).json({ error: "Already the leader of this team." });
+    // Check if already in team
+    if (problem.team.find(m => m.userId.toString() === userId)) {
+      return res.status(400).json({ error: "Already assigned to this team." });
     }
 
-    // Limit requests per user
-    const userPendingRequests = problem.requests.filter(r => r.userId.toString() === userId && r.status === "pending").length;
-    if (userPendingRequests >= 3) return res.status(400).json({ error: "Too many pending requests for this problem." });
+    // Check if already requested
+    if (problem.requests.find(r => r.userId.toString() === userId && r.status === "pending")) {
+      return res.status(400).json({ error: "Request already pending." });
+    }
 
     problem.requests.push({
       userId,
-      userName: user.name,
-      role: user.role,
-      type: type || "assign",
+      role: req.user.role,
       status: "pending"
     });
 
     await problem.save();
-    res.json({ success: true, message: "Tactical request transmitted." });
+
+    // Notify NGO
+    const io = req.app.get("io");
+    if (problem.createdBy) {
+      await sendNotification(io, {
+        userId: problem.createdBy,
+        type: "REQUEST",
+        message: `Personnel ID-${userId.toString().slice(-4).toUpperCase()} requested to join: ${problem.title}`,
+        data: { problemId: problem._id }
+      });
+    }
+
+    res.json({ success: true, message: "Assignment request transmitted." });
   } catch (err) {
     res.status(500).json({ error: "Request failed." });
   }
 });
 
-// ── POST /api/problems/:id/request/respond — NGO Accept/Reject Request ────────
-router.post("/:id/request/respond", auth, authorize("ngo", "admin"), async (req, res) => {
+// ── POST /api/problems/:id/lead — Request Leadership ───────────────────────────
+router.post("/:id/lead", auth, authorize("volunteer", "worker", "ngo", "admin"), async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const problem = await Problem.findById(req.params.id);
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
+
+    // Check if already leader
+    if (problem.team.find(m => m.userId.toString() === userId && m.isLeader)) {
+      return res.status(400).json({ error: "Already the leader of this mission." });
+    }
+
+    // Check if already requested leadership
+    if (problem.leadRequests.find(r => r.userId.toString() === userId)) {
+      return res.status(400).json({ error: "Leadership request already pending." });
+    }
+
+    problem.leadRequests.push({ userId });
+
+    await problem.save();
+
+    // Notify NGO
+    const io = req.app.get("io");
+    if (problem.createdBy) {
+      await sendNotification(io, {
+        userId: problem.createdBy,
+        type: "REQUEST",
+        message: `Personnel ID-${userId.toString().slice(-4).toUpperCase()} requested LEADERSHIP for: ${problem.title}`,
+        data: { problemId: problem._id }
+      });
+    }
+
+    res.json({ success: true, message: "Leadership request transmitted." });
+  } catch (err) {
+    res.status(500).json({ error: "Request failed." });
+  }
+});
+
+// ── POST /api/problems/:id/team/respond — NGO Accept/Reject Request ───────────
+router.post("/:id/team/respond", auth, authorize("ngo", "admin"), async (req, res) => {
   try {
     const { requestId, action } = req.body; // action: 'accept' or 'reject'
     const problem = await Problem.findById(req.params.id);
@@ -174,130 +215,109 @@ router.post("/:id/request/respond", auth, authorize("ngo", "admin"), async (req,
     if (action === "accept") {
       request.status = "accepted";
       
-      if (request.type === "lead") {
-        if (problem.leader) {
-          return res.status(400).json({ error: "Mission already has an assigned leader." });
-        }
-        problem.leader = request.userId;
-        if (!problem.team.includes(request.userId)) problem.team.push(request.userId);
-        problem.timeline.push({ text: `Team Leader Assigned: ${request.userName}` });
-      } else {
-        if (!problem.team.includes(request.userId)) problem.team.push(request.userId);
-        problem.timeline.push({ text: `Member Added: ${request.userName}` });
+      // Add to team
+      if (!problem.team.find(m => m.userId.toString() === request.userId.toString())) {
+        problem.team.push({
+          userId: request.userId,
+          role: request.role,
+          isLeader: false
+        });
+        
+        problem.status = "IN PROGRESS";
+        problem.timeline.push({ text: `Member accepted into tactical unit: ${request.role}` });
+        
+        // System Message for Chat
+        problem.messages.push({
+          senderId: "SYSTEM",
+          senderName: "Mission Control",
+          text: `Tactical unit updated: New ${request.role} joined the mission.`,
+          type: "system",
+          createdAt: new Date()
+        });
+
+        // Add to Team Chat
+        const Chat = require("../models/Chat");
+        await Chat.updateOne(
+          { problemId: problem._id, type: "team" },
+          { $addToSet: { participants: request.userId } }
+        );
       }
-      
-      problem.status = "IN PROGRESS";
-
-      // Notify User
-      const notification = new Notification({
-        userId: request.userId,
-        message: `Your request to ${request.type} for "${problem.title}" was ACCEPTED.`,
-        type: "success"
-      });
-      await notification.save();
-      
-      const io = req.app.get("io");
-      if (io) {
-        io.to(request.userId.toString()).emit("new-notification", notification);
-      }
-
-      // Add to Team Chat
-      const Chat = require("../models/Chat");
-      await Chat.updateOne(
-        { problemId: problem._id, type: "team" },
-        { $addToSet: { participants: request.userId } }
-      );
-
     } else {
       request.status = "rejected";
     }
 
     await problem.save();
-    
+
+    // Broadcast update
     const io = req.app.get("io");
     if (io) io.emit("problem-updated", problem);
 
-    res.json({ success: true, problem });
+    // Notify User
+    await sendNotification(io, {
+      userId: request.userId,
+      type: action === "accept" ? "ASSIGN" : "info",
+      message: action === "accept" 
+        ? `TACTICAL ALERT: You are ASSIGNED to mission: ${problem.title}` 
+        : `Deployment request REJECTED for mission: ${problem.title}`,
+      data: { problemId: problem._id }
+    });
+
+    res.json({ success: true, message: `Request ${action}ed.` });
   } catch (err) {
     res.status(500).json({ error: "Response failed." });
   }
 });
 
-// ── POST /api/problems/:id/make-leader — Change Team Leader ────────────────
-router.post("/:id/make-leader", auth, authorize("ngo", "admin"), async (req, res) => {
+// ── POST /api/problems/:id/team/remove — NGO Remove Member ───────────────────
+router.post("/:id/team/remove", auth, authorize("ngo", "admin"), async (req, res) => {
   try {
-    const { newLeaderId } = req.body;
+    const { userId } = req.body;
     const problem = await Problem.findById(req.params.id);
     if (!problem) return res.status(404).json({ error: "Problem not found" });
 
-    // Validate new leader is actually a member
-    if (!problem.team.includes(newLeaderId)) {
-      return res.status(400).json({ error: "User must be a team member to become a leader." });
-    }
-
-    problem.leader = newLeaderId;
-    problem.timeline.push({ text: `Team Leader reassigned by Command` });
-    await problem.save();
-
-    // Notification
-    const notification = new Notification({
-      userId: newLeaderId,
-      message: `You have been assigned as the LEADER for mission: ${problem.title}`,
-      type: "assignment"
+    problem.team = problem.team.filter(m => m.userId.toString() !== userId);
+    
+    // System Message
+    problem.messages.push({
+      senderId: "SYSTEM",
+      senderName: "Mission Control",
+      text: "Tactical unit updated: A member has been removed from active duty.",
+      type: "system",
+      createdAt: new Date()
     });
-    await notification.save();
 
-    const io = req.app.get("io");
-    if (io) {
-      io.to(newLeaderId.toString()).emit("new-notification", notification);
-      io.emit("problem-updated", problem);
-    }
-
-    res.json({ success: true, message: "Leader updated successfully" });
+    await problem.save();
+    res.json({ success: true, message: "Member removed from mission." });
   } catch (err) {
-    res.status(500).json({ error: "Failed to update leader." });
+    res.status(500).json({ error: "Removal failed." });
   }
 });
 
-// ── POST /api/problems/:id/remove-member — Remove Member from Team ─────────
-router.post("/:id/remove-member", auth, authorize("ngo", "admin"), async (req, res) => {
+// ── POST /api/problems/:id/team/leader — NGO Make Leader ──────────────────────
+router.post("/:id/team/leader", auth, authorize("ngo", "admin"), async (req, res) => {
   try {
-    const { memberId } = req.body;
+    const { userId } = req.body;
     const problem = await Problem.findById(req.params.id);
     if (!problem) return res.status(404).json({ error: "Problem not found" });
 
-    if (problem.leader?.toString() === memberId) {
-      return res.status(400).json({ error: "Cannot remove current leader. Assign a new leader first." });
-    }
-
-    problem.team = problem.team.filter(id => id.toString() !== memberId);
-    problem.timeline.push({ text: `Member removed from active duty by Command` });
-    await problem.save();
-
-    // Remove from Chat
-    const Chat = require("../models/Chat");
-    await Chat.updateOne(
-      { problemId: problem._id, type: "team" },
-      { $pull: { participants: memberId } }
-    );
-
-    // Notification
-    const notification = new Notification({
-      userId: memberId,
-      message: `You have been removed from the mission: ${problem.title}`,
-      type: "info"
+    // Only one leader
+    problem.team.forEach(m => {
+      m.isLeader = m.userId.toString() === userId;
     });
-    await notification.save();
 
-    const io = req.app.get("io");
-    if (io) {
-      io.to(memberId.toString()).emit("new-notification", notification);
-      io.emit("problem-updated", problem);
-    }
+    // System Message
+    problem.messages.push({
+      senderId: "SYSTEM",
+      senderName: "Mission Control",
+      text: `Mission Leadership established: ID-${userId.toString().slice(-4).toUpperCase()} is now the Mission Leader.`,
+      type: "system",
+      createdAt: new Date()
+    });
 
-    res.json({ success: true, message: "Member removed." });
+    await problem.save();
+    res.json({ success: true, message: "Mission leadership updated." });
   } catch (err) {
-    res.status(500).json({ error: "Failed to remove member." });
+    res.status(500).json({ error: "Leadership update failed." });
   }
 });
 
@@ -310,7 +330,7 @@ router.patch("/:id/status", auth, async (req, res) => {
     const problem = await Problem.findById(req.params.id);
     if (!problem) return res.status(404).json({ error: "Problem not found" });
 
-    const isLeader = problem.leader && problem.leader.toString() === userId;
+    const isLeader = problem.team?.some(m => m.userId.toString() === userId && m.isLeader);
     const isCreator = problem.createdBy === userId;
     const isAdmin = req.user.role === "admin" || req.user.role === "ngo";
 
@@ -546,6 +566,69 @@ router.delete("/:id/tasks/:taskId", auth, async (req, res) => {
     res.json(problem);
   } catch (err) {
     res.status(500).json({ error: "Failed to delete task." });
+  }
+});
+
+
+// ── GET /api/problems/:id/history — Fetch Mission Chat History ────────────────
+router.get("/:id/history", auth, async (req, res) => {
+  try {
+    const problem = await Problem.findById(req.params.id);
+    if (!problem) return res.status(404).json({ error: "Mission not found" });
+
+    // Access Control: Team or NGO only
+    const isMember = problem.team?.some(m => m.userId.toString() === req.user.id);
+    const isNGO = req.user.role === "ngo" || req.user.role === "admin";
+    
+    if (!isMember && !isNGO) {
+      return res.status(403).json({ error: "Access Denied: Tactical Channel restricted." });
+    }
+
+    // Part 8: 14 Day Retention Logic
+    const now = new Date();
+    const fourteenDaysAgo = new Date(now - (14 * 24 * 60 * 60 * 1000));
+    
+    const messages = problem.messages.filter(msg => msg.createdAt > fourteenDaysAgo);
+    
+    if (messages.length < problem.messages.length) {
+      problem.messages = messages;
+      await problem.save();
+    }
+
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: "History fetch failed." });
+  }
+});
+
+// ── POST /api/problems/:id/messages — Fallback Message Save ────────────────────
+router.post("/:id/messages", auth, async (req, res) => {
+  try {
+    const { text, type } = req.body;
+    const problem = await Problem.findById(req.params.id);
+    if (!problem) return res.status(404).json({ error: "Mission not found" });
+
+    const isMember = problem.team?.some(m => m.userId.toString() === req.user.id);
+    const isNGO = req.user.role === "ngo" || req.user.role === "admin";
+    
+    if (!isMember && !isNGO) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const newMessage = {
+      senderId: req.user.id,
+      senderName: req.user.name,
+      text,
+      type: type || "text",
+      createdAt: new Date()
+    };
+
+    problem.messages.push(newMessage);
+    await problem.save();
+
+    res.json(newMessage);
+  } catch (err) {
+    res.status(500).json({ error: "Save failed." });
   }
 });
 

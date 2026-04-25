@@ -507,14 +507,13 @@ export default function RegisterPage() {
                   />
                 )}
 
-                {/* Volunteer bio */}
-                {form.role === "Volunteer" && (
-                  <input
-                    id="reg-volunteer-bio"
-                    type="text"
-                    placeholder="Short bio (optional)"
+                {/* Volunteer/Worker bio */}
+                {(form.role === "Volunteer" || form.role === "Worker") && (
+                  <textarea
+                    id={`reg-${form.role.toLowerCase()}-bio`}
+                    placeholder="Describe your experience, background or special skills..."
                     onChange={update("bio")}
-                    className={INPUT_CLS}
+                    className={`${INPUT_CLS} h-24 resize-none`}
                   />
                 )}
               </div>
