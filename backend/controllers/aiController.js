@@ -300,3 +300,49 @@ exports.autoAssign = async (req, res) => {
     res.status(500).json({ error: "Auto-assignment failed" });
   }
 };
+
+exports.copilot = async (req, res) => {
+  const { messages, report } = req.body;
+
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    const contextMessages = Array.isArray(messages) 
+      ? messages.slice(-10).map(m => `${m.senderName || "Unknown"}: ${m.text}`).join("\n")
+      : "No recent messages.";
+
+    const prompt = `
+You are SevaLink AI Copilot, an emergency field commander.
+
+CRISIS CONTEXT:
+- Problem: ${report?.title || "Unknown Incident"}
+- Description: ${report?.description || "No description provided."}
+- Severity: ${report?.urgency || "Unknown"}
+- Location: ${JSON.stringify(report?.location || "Unknown")}
+
+RECENT CHAT HISTORY:
+${contextMessages}
+
+YOUR MISSION:
+Analyze the chat and crisis context. Provide ONE SHORT, ACTIONABLE PIECE OF GUIDANCE for the responders.
+- Be concise (max 3 sentences).
+- Act like a field commander.
+- Prioritize human life and responder safety.
+- Do not repeat what responders just said.
+- If they just arrived, tell them what to check first.
+- If they need medical, remind them of triage.
+
+Response (Text only, no markdown):
+`;
+
+    const result = await model.generateContent(prompt);
+    const reply = result.response.text().trim();
+
+    res.json({ reply });
+  } catch (err) {
+    console.error("AI Copilot Error:", err);
+    res.json({ 
+      reply: "⚠️ System Note: AI Engine offline. Proceed with standard emergency protocols. Prioritize safety and clear communication." 
+    });
+  }
+};

@@ -51,6 +51,7 @@ export default function MapPage() {
   const [sendingSOS, setSendingSOS] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [mapZoom, setMapZoom]   = useState(6);
+  const [isLocated, setIsLocated] = useState(false);
   const user = getUser();
 
   // ── Fetch initial data ────────────────────────────────────────────────────
@@ -157,6 +158,9 @@ export default function MapPage() {
       });
     });
 
+    const handleDenied = () => setIsLocated(false);
+    window.addEventListener("map-user-denied", handleDenied);
+
     return () => {
       socket.off("new-problem");
       socket.off("problem-updated");
@@ -165,6 +169,7 @@ export default function MapPage() {
       socket.off("dispatch");
       socket.off("responder_moved");
       socket.off("pre_alert");
+      window.removeEventListener("map-user-denied", handleDenied);
     };
   }, []);
 
@@ -191,6 +196,18 @@ export default function MapPage() {
       toast.error("Could not send SOS — enable location access");
     } finally {
       setSendingSOS(false);
+    }
+  };
+
+  const handleLocateToggle = () => {
+    const nextState = !isLocated;
+    setIsLocated(nextState);
+    window.dispatchEvent(new CustomEvent("map-toggle-user", { detail: { show: nextState } }));
+    
+    if (nextState) {
+      toast.success("Initializing GPS sync... 📍");
+    } else {
+      toast("Location hidden", { icon: "🕶️" });
     }
   };
 
@@ -321,11 +338,13 @@ export default function MapPage() {
               </button>
               
               <button 
-                onClick={() => window.dispatchEvent(new CustomEvent('map-locate-me'))}
-                className="bg-white hover:bg-gray-200 h-9 px-4 rounded-xl text-black text-[9px] font-black uppercase tracking-widest border border-white shadow-xl transition-all flex items-center justify-center gap-2"
+                onClick={handleLocateToggle}
+                className={`h-9 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest border shadow-xl transition-all flex items-center justify-center gap-2 ${
+                  isLocated ? "bg-gray-700 text-gray-300 border-white/10" : "bg-white text-black border-white hover:bg-gray-200"
+                }`}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
-                Locate Me
+                {isLocated ? "Hide Me" : "Locate Me"}
               </button>
             </div>
           </div>

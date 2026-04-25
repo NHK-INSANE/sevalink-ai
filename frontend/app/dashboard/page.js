@@ -63,6 +63,7 @@ export default function Dashboard() {
   const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userLoc, setUserLoc] = useState(null);
+  const [isLocated, setIsLocated] = useState(false);
   const [mapZoom, setMapZoom] = useState(6);
   const [sortNearest, setSortNearest] = useState(false);
   const [user, setUser] = useState({ role: "volunteer", name: "Guest" });
@@ -151,12 +152,16 @@ export default function Dashboard() {
       });
     });
 
+    const handleDenied = () => setIsLocated(false);
+    window.addEventListener("map-user-denied", handleDenied);
+
     return () => {
       socket.off("new-problem");
       socket.off("escalation");
       socket.off("problem-updated");
       socket.off("responder_moved");
       socket.off("pre_alert");
+      window.removeEventListener("map-user-denied", handleDenied);
     };
   }, []);
 
@@ -212,15 +217,15 @@ export default function Dashboard() {
     { day: "Sun", cases: openCount },
   ];
 
-  const handleLocateAndSort = async () => {
-    try {
-      const loc = await getUserLocation();
-      if (loc) {
-        setUserLoc(loc);
-        toast.success("Location detected 📍");
-      }
-    } catch (err) {
-      toast.error("Location permission required");
+  const handleLocateToggle = () => {
+    const nextState = !isLocated;
+    setIsLocated(nextState);
+    window.dispatchEvent(new CustomEvent("map-toggle-user", { detail: { show: nextState } }));
+    
+    if (nextState) {
+      toast.success("Locating system... 📍");
+    } else {
+      toast("Operations hidden", { icon: "🕶️" });
     }
   };
 
@@ -444,10 +449,12 @@ export default function Dashboard() {
                   🚨 SOS
                 </button>
                 <button 
-                  onClick={handleLocateAndSort}
-                  className="bg-white text-black px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest border border-white hover:bg-gray-200 shadow-lg transition-all"
+                  onClick={handleLocateToggle}
+                  className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-lg transition-all ${
+                    isLocated ? "bg-gray-700 text-gray-300 border-white/10" : "bg-white text-black border-white hover:bg-gray-200"
+                  }`}
                 >
-                  Locate Me
+                  {isLocated ? "Hide Me" : "Locate Me"}
                 </button>
               </div>
             </div>
@@ -459,9 +466,9 @@ export default function Dashboard() {
                   type="problems" 
                   height="100%" 
                   zoom={userLoc ? 14 : 6} 
-                  center={userLoc ? [userLoc.lat, userLoc.lng] : [22.3, 87.3]} 
+                  center={[22.3, 87.3]} 
                   showHeatmap={true} 
-                  zoomToUser={!!userLoc}
+                  zoomToUser={true}
                   onZoomChange={setMapZoom}
                 />
               </div>

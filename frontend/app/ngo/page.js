@@ -17,19 +17,21 @@ function NGOContent() {
   const [loading, setLoading] = useState(true);
   const [userLoc, setUserLoc] = useState(null);
   const [sortBy, setSortBy] = useState("name");
-  const [showConnectModal, setShowConnectModal] = useState(false);
-  const [selectedNgo, setSelectedNgo] = useState(null);
-  const [connectReason, setConnectReason] = useState("");
   const [user, setUser] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [ngoQuery, setNgoQuery] = useState("");
 
   const locateNgo = (ngo) => {
     if (ngo.location?.lat && ngo.location?.lng) {
-      router.push(`/map?lat=${ngo.location.lat}&lng=${ngo.location.lng}&title=${encodeURIComponent(ngo.ngoName || ngo.name || "NGO")}`);
+      router.push(`/map?ngoId=${ngo._id}&lat=${ngo.location.lat}&lng=${ngo.location.lng}&title=${encodeURIComponent(ngo.ngoName || ngo.name || "NGO")}`);
     } else {
       toast.error("NGO location not available");
     }
+  };
+
+  const handleConnect = (ngo) => {
+    if (!user) return toast.error("Please login to connect");
+    router.push(`/chat?id=${ngo._id}`);
   };
 
   useEffect(() => {
@@ -96,71 +98,7 @@ function NGOContent() {
     fetch(`${API_BASE}/api/problems`).then(res => res.json()).then(setProblems);
   }, []);
 
-  const handleOpenRequest = (ngo, type) => {
-    setSelectedNgo(ngo);
-    setRequestType(type);
-    setShowRequestModal(true);
-  };
 
-  const submitJoinRequest = async () => {
-    if (!selectedProbId) return toast.error("Please select a problem");
-    setIsSubmitting(true);
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE}/api/requests`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ 
-          ngoId: selectedNgo._id,
-          problemId: selectedProbId,
-          type: requestType, // "join" or "lead"
-          userId: user._id || user.id
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(`Request sent to ${selectedNgo.ngoName || selectedNgo.name}`);
-        setShowRequestModal(false);
-        router.push("/problems");
-      } else toast.error(data.error || "Request failed");
-    } catch (err) { toast.error("Connection failed"); }
-    finally { setIsSubmitting(false); }
-  };
-
-  const submitConnectRequest = async () => {
-    if (!user) return toast.error("Please login to connect");
-    if (!connectReason.trim()) return toast.error("Please provide a reason");
-    
-    setIsSubmitting(true);
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE.replace("/api", "")}/api/connect`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          fromUser: user._id || user.id,
-          toUser: selectedNgo._id,
-          fromName: user.name,
-          message: connectReason
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(`Request sent to ${selectedNgo.ngoName || selectedNgo.name}`);
-        setShowConnectModal(false);
-        setConnectReason("");
-      } else {
-        toast.error(data.error || "Failed to send request");
-      }
-    } catch (err) {
-      toast.error("Connection failed");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[var(--bg-main)]">
@@ -263,25 +201,10 @@ function NGOContent() {
                   <div className="flex flex-col gap-2 mt-auto">
                     <button 
                       onClick={() => handleConnect(ngo)}
-                      className="w-full py-2.5 rounded-xl text-xs font-bold text-white transition-all shadow-lg shadow-indigo-500/20"
-                      style={{ background: "linear-gradient(to right, #7c3aed, #6366f1)" }}
+                      className="w-full py-3 rounded-xl text-xs font-black uppercase tracking-widest text-white transition-all shadow-lg shadow-indigo-500/20 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500"
                     >
-                      Connect with NGO
+                      Connect & Request Support
                     </button>
-                    <div className="grid grid-cols-2 gap-2">
-                       <button 
-                         onClick={() => handleOpenRequest(ngo, "join")}
-                         className="py-2 rounded-lg text-[9px] font-black uppercase tracking-widest text-white bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
-                       >
-                         Request Join
-                       </button>
-                       <button 
-                         onClick={() => handleOpenRequest(ngo, "lead")}
-                         className="py-2 rounded-lg text-[9px] font-black uppercase tracking-widest text-purple-400 bg-purple-500/5 border border-purple-500/20 hover:bg-purple-500/10 transition-all"
-                       >
-                         Request Lead
-                       </button>
-                    </div>
                   </div>
                 </div>
               ))}
@@ -290,73 +213,6 @@ function NGOContent() {
           </main>
         </div>
       </PageWrapper>
-
-      <AnimatePresence>
-        {showConnectModal && (
-          <div className="fixed inset-0 z-[20000] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowConnectModal(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
-            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="bg-[#0B1220] p-6 rounded-2xl w-full max-w-md border border-white/10 shadow-2xl relative z-10">
-              <h2 className="text-xl font-extrabold text-white mb-2">Connect with {selectedNgo?.ngoName || selectedNgo?.name}</h2>
-              <textarea placeholder="Reason..." value={connectReason} onChange={(e) => setConnectReason(e.target.value)} className="w-full h-32 bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white outline-none focus:border-purple-500 transition-all mb-6 resize-none" />
-              <div className="flex gap-3">
-                <button onClick={() => setShowConnectModal(false)} className="flex-1 py-3 text-xs font-bold text-gray-400">Cancel</button>
-                <button onClick={submitConnectRequest} disabled={isSubmitting} className="flex-[2] py-3 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 shadow-lg shadow-indigo-500/20 disabled:opacity-50">{isSubmitting ? "Sending..." : "Send Request"}</button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showRequestModal && (
-          <div className="fixed inset-0 z-[20000] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowRequestModal(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
-            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="bg-[#0B1220] p-7 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl relative z-10">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-black text-white mb-1 uppercase tracking-tighter">{requestType === 'lead' ? 'Leadership' : 'Mission'} Request</h2>
-                <p className="text-gray-500 text-[11px] font-bold uppercase tracking-widest">To: {selectedNgo?.ngoName || selectedNgo?.name}</p>
-              </div>
-              <div className="space-y-4 mb-8">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Target Problem (Select or Enter ID)</label>
-                  <select value={selectedProbId} onChange={(e) => setSelectedProbId(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white outline-none focus:border-purple-500 transition-all appearance-none">
-                    <option value="" className="bg-[#0B1220]">-- Choose Problem --</option>
-                    {problems.filter(p => p.status !== "Resolved").map(p => (
-                      <option key={p._id} value={p._id} className="bg-[#0B1220]">{p.title} ({p.problemId})</option>
-                    ))}
-                  </select>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-[10px] font-bold text-gray-600 uppercase tracking-widest">ENTER ID:</div>
-                    <input 
-                      type="text" 
-                      placeholder="PRB-XXXXXX"
-                      onChange={(e) => {
-                        const val = e.target.value.toUpperCase();
-                        const found = problems.find(p => p.problemId === val || p.displayId === val);
-                        if (found) setSelectedProbId(found._id);
-                      }}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl p-4 pl-24 text-sm text-white outline-none focus:border-purple-500 transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                   <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Your Personnel Code (ID)</label>
-                   <input 
-                     type="text" 
-                     placeholder="VOL-XXXXXX / WKR-XXXXXX"
-                     className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white outline-none focus:border-purple-500 transition-all"
-                   />
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <button onClick={() => setShowRequestModal(false)} className="flex-1 py-3.5 text-xs font-bold text-gray-400">Cancel</button>
-                <button onClick={submitJoinRequest} disabled={isSubmitting} className="flex-[2] py-3.5 rounded-xl text-xs font-black uppercase text-white bg-gradient-to-r from-purple-600 to-indigo-600 shadow-xl shadow-purple-500/20">{isSubmitting ? "Submitting..." : "Send Request"}</button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

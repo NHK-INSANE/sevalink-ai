@@ -189,51 +189,54 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
   };
 
   return (
-    <div className="bg-[#0B1220] p-6 rounded-2xl border border-white/10 hover:border-purple-500/30 transition-all shadow-xl flex flex-col gap-5 relative">
+    <div className="bg-[#0B1220] p-6 rounded-2xl border border-white/10 hover:border-purple-500/30 transition-all shadow-xl flex flex-col gap-4 relative overflow-hidden">
       
-      {/* ── HEADER ── */}
+      {/* ── 1. TITLE (BIG, BOLD) ── */}
       <div className="flex justify-between items-start">
-        <div className="space-y-2 flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="flex items-center gap-1.5 group cursor-pointer" onClick={copyId}>
-              <span className="text-[10px] text-indigo-400 font-black border border-indigo-400/20 px-2 py-0.5 rounded bg-indigo-400/5 uppercase tracking-widest group-hover:border-indigo-400/50 transition-all">
-                {problem.displayId || problem.problemId || `PRB-${problem._id?.slice(-8).toUpperCase()}`}
-              </span>
-              <svg className="opacity-40 group-hover:opacity-100 transition-opacity text-indigo-400" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-            </div>
-          </div>
-          <h3 className="text-base font-bold text-white tracking-tight leading-snug">{problem.title}</h3>
-          
-            <div className="flex flex-wrap items-center gap-2">
-              <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${urgencyColors[problem.urgency?.toLowerCase()] || urgencyColors.medium}`}>
-                {problem.urgency}
-              </span>
-              {categories.map((cat, idx) => (
-                <span key={idx} className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border border-purple-500/20 bg-purple-500/5 text-purple-400">
-                  {cat}
-                </span>
-              ))}
-              <div className="flex items-center gap-1 text-[10px] text-gray-500 font-medium italic">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-              <span className="line-clamp-1 max-w-[200px]">
-                {problem.location?.address || `${problem.location?.lat?.toFixed(3)}, ${problem.location?.lng?.toFixed(3)}`}
-              </span>
-            </div>
-          </div>
-        </div>
+        <h3 className="text-xl font-black text-white tracking-tight leading-tight flex-1">
+          {problem.title}
+        </h3>
+        {isOwner && (
+          <button onClick={handleDelete} className="text-[9px] font-black uppercase text-red-500/40 hover:text-red-500 transition-colors ml-4">
+            [ Delete ]
+          </button>
+        )}
+      </div>
 
-        <div className="flex flex-col items-end gap-2">
-          <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${statusColors[problem.status?.toLowerCase()] || statusColors.open}`}>
-            {problem.status}
-          </div>
-          {isOwner && (
-            <button onClick={handleDelete} className="text-[8px] font-black uppercase text-red-500/60 hover:text-red-500 tracking-[0.2em] transition-colors">
-              [ Delete Report ]
-            </button>
-          )}
+      {/* ── 2. ID + STATUS ── */}
+      <div className="flex justify-between items-center bg-white/5 px-3 py-2 rounded-xl border border-white/5">
+        <div className="flex items-center gap-1.5 group cursor-pointer" onClick={copyId}>
+          <span className="text-[10px] text-indigo-400 font-black uppercase tracking-widest">
+            {problem.displayId || problem.problemId || `PRB-${problem._id?.slice(-8).toUpperCase()}`}
+          </span>
+          <svg className="opacity-40 group-hover:opacity-100 transition-opacity text-indigo-400" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+        </div>
+        <div className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border ${statusColors[problem.status?.toLowerCase()] || statusColors.open}`}>
+          {problem.status}
         </div>
       </div>
 
+      {/* ── 3. SEVERITY + CATEGORY ── */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border ${urgencyColors[problem.urgency?.toLowerCase()] || urgencyColors.medium}`}>
+          {problem.urgency?.toLowerCase() === 'critical' ? '🔴 ' : ''}{problem.urgency}
+        </span>
+        {categories.map((cat, idx) => (
+          <span key={idx} className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border border-white/10 bg-white/5 text-gray-400">
+            {cat}
+          </span>
+        ))}
+      </div>
+
+      {/* ── 4. LOCATION ── */}
+      <div className="flex items-center gap-2 text-[11px] text-gray-400 font-bold bg-white/[0.02] p-2 rounded-lg border border-white/[0.05]">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-400"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span className="truncate">
+          {problem.location?.address || `${problem.location?.lat?.toFixed(4)}, ${problem.location?.lng?.toFixed(4)}`}
+        </span>
+      </div>
+
+      {/* ── 5. DESCRIPTION ── */}
       <div className="relative">
         <p className={`text-[13px] text-gray-400 leading-relaxed ${!isExpanded ? 'line-clamp-2' : ''}`}>
           {problem.description}
@@ -241,48 +244,63 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
         {problem.description?.length > 100 && (
           <button 
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-[10px] font-black text-purple-500 uppercase tracking-widest mt-1 hover:text-purple-400 transition-colors"
+            className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mt-1 hover:text-indigo-300 transition-colors"
           >
-            {isExpanded ? 'Show Less' : 'Read Full Report'}
+            {isExpanded ? 'Collapse' : 'Expand Description'}
           </button>
         )}
       </div>
 
-      {/* ── 🔥 PRIMARY ASSIGN BUTTON ── */}
-      <div className="flex gap-2">
-        <button
-          onClick={handleAssign}
-          className="flex-1 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-purple-500/20 transition-all active:scale-[0.98]"
-        >
-          Assign
-        </button>
-        {(user?.role?.toLowerCase() === 'ngo' || user?.role?.toLowerCase() === 'worker') && !isLeader && (
-           <button
-             onClick={handleRequestLead}
-             className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase text-purple-400 hover:bg-white/10 transition-all"
-           >
-             Request Lead
-           </button>
-        )}
-      </div>
-
-      {/* ── TABS SELECTOR ── */}
-      <div className="grid grid-cols-4 gap-2">
-        {[
-          { id: "team", label: "Team", onClick: loadTeam },
-          { id: "chat", label: "Chat", onClick: loadHistory },
-          { id: "aiAssign", label: "AI Assign" },
-          { id: "aiMatch", label: "AI Match" },
-        ].map(tab => (
-          <button 
-            key={tab.id}
-            onClick={() => { setActiveTab(activeTab === tab.id ? null : tab.id); if(tab.onClick) tab.onClick(); }}
-            className={`py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border ${
-              activeTab === tab.id ? "bg-white/10 text-white border-white/20 shadow-inner" : "bg-white/5 text-gray-500 border-transparent hover:bg-white/10 hover:text-gray-300"
-            }`}
+      {/* ── 6. ACTIONS ── */}
+      <div className="flex flex-col gap-3 pt-2">
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              const lat = problem.location?.lat || problem.latitude;
+              const lng = problem.location?.lng || problem.longitude;
+              router.push(`/map?problemId=${problem._id}&lat=${lat}&lng=${lng}&title=${encodeURIComponent(problem.title)}`);
+            }}
+            className="flex-1 py-3 rounded-xl bg-white text-black text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all flex items-center justify-center gap-2 shadow-lg"
           >
-            {tab.label}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+            Locate
           </button>
+          <button
+            onClick={handleAssign}
+            className="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-500/20 transition-all"
+          >
+            Assign
+          </button>
+          {(user?.role?.toLowerCase() === 'ngo' || user?.role?.toLowerCase() === 'worker') && !isLeader && (
+            <button
+              onClick={handleRequestLead}
+              className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase text-purple-400 hover:bg-white/10 transition-all"
+            >
+              Lead
+            </button>
+          )}
+        </div>
+
+        {/* ── TABS SELECTOR (Chat/AI) ── */}
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { id: "team", label: "Team", onClick: loadTeam },
+            { id: "chat", label: "Chat", onClick: loadHistory },
+            { id: "aiAssign", label: "AI Assign" },
+            { id: "aiMatch", label: "AI Match" },
+          ].map(tab => (
+            <button 
+              key={tab.id}
+              onClick={() => { setActiveTab(activeTab === tab.id ? null : tab.id); if(tab.onClick) tab.onClick(); }}
+              className={`py-2 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all border ${
+                activeTab === tab.id ? "bg-white/10 text-white border-white/20 shadow-inner" : "bg-white/5 text-gray-500 border-transparent hover:bg-white/10 hover:text-gray-300"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>n>
         ))}
       </div>
 

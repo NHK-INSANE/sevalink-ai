@@ -45,49 +45,6 @@ export default function Navbar() {
   useEffect(() => {
     const currentUser = getUser();
     setUser(currentUser);
-
-    socket.on("sos-alert", (data) => {
-      try {
-        const audio = new Audio("https://www.soundjay.com/buttons/beep-07a.mp3");
-        audio.play().catch(() => {});
-      } catch (err) {}
-
-      toast.error(`SOS: ${data.message}`, {
-        duration: 8000,
-        position: "top-center",
-        style: { background: "#dc2626", color: "#fff", fontWeight: "bold", borderRadius: "12px" },
-      });
-    });
-
-    socket.on("dispatch_alert", (data) => {
-      toast.error(`🚨 DISPATCH: ${data.message}`, {
-        duration: 10000,
-        icon: '🚨',
-        style: { background: "#7f1d1d", color: "#fff", border: "1px solid #ef4444", fontWeight: "bold" }
-      });
-      // Optionally auto-redirect or show a button
-      if (data.conversationId) {
-        toast((t) => (
-          <span className="flex items-center gap-3">
-            <b>New Instructions from AI</b>
-            <button 
-              className="bg-white text-black px-3 py-1 rounded-md text-[10px] font-black uppercase"
-              onClick={() => {
-                toast.dismiss(t.id);
-                router.push(`/chat?id=${data.conversationId}`);
-              }}
-            >
-              Open Chat
-            </button>
-          </span>
-        ), { duration: 15000 });
-      }
-    });
-
-    return () => {
-      socket.off("sos-alert");
-      socket.off("dispatch_alert");
-    };
   }, []);
 
   const handleLogout = () => {

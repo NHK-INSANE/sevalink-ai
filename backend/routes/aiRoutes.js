@@ -26,5 +26,6 @@ router.get("/match/users/:problemId", matchUsersForProblem);
  * @route POST /api/ai/auto-assign/:problemId
  */
 router.post("/auto-assign/:problemId", autoAssign);
+router.post("/copilot", require("../controllers/aiController").copilot);
 
 module.exports = router;
