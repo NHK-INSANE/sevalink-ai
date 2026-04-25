@@ -421,7 +421,6 @@ export default function Dashboard() {
 
             <div className="relative rounded-xl overflow-hidden border border-white/10 shadow-2xl">
               <div className="h-[500px]">
-              <div className="h-[500px]">
                 <MapView 
                   problems={safeProblems} 
                   type="problems" 
