@@ -7,6 +7,8 @@ import CountUp from "react-countup";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
+import { getStats } from "./utils/api";
+
 const FEATURES = [
   { title: "REPORT & LOCATE",       desc: "Submit crisis reports with precise GPS coordinates and photo evidence in seconds.",     color: "#6366f1" },
   { title: "AI CLASSIFICATION",     desc: "Neural engine instantly classifies urgency level and predicts required resources.",       color: "#a855f7" },
@@ -57,7 +59,7 @@ function Stat({ end, suffix, label }) {
   return (
     <motion.div whileHover={{ scale: 1.06 }} transition={{ type: "spring", stiffness: 300 }} className="flex flex-col items-center gap-1">
       <div className="text-3xl md:text-5xl font-bold text-white tabular-nums">
-        <CountUp end={end} duration={2.5} enableScrollSpy scrollSpyOnce />{suffix}
+        <CountUp end={end || 0} duration={2.5} enableScrollSpy scrollSpyOnce />{suffix}
       </div>
       <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-widest text-center leading-relaxed">{label}</div>
     </motion.div>
@@ -71,9 +73,18 @@ export default function Landing() {
   const [stats, setStats] = useState({ users: 0, problems: 0, citizens: 0, responders: 0, ngos: 0 });
 
   useEffect(() => {
-    import("./utils/api").then(api => {
-      api.getStats().then(d => setStats(d)).catch(() => {});
-    });
+    const fetchStats = async () => {
+      try {
+        const d = await getStats();
+        if (d) setStats(d);
+      } catch (err) {
+        console.error("Stats fetch failed:", err);
+      }
+    };
+    fetchStats();
+    // Refresh stats every 30 seconds
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -123,13 +134,12 @@ export default function Landing() {
           </motion.div>
 
         {/* Quick Stats */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="container mt-40 pt-24 border-t border-white/5 relative z-10">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-10">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="container mt-40 pt-[116px] border-t border-white/5 relative z-10">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
             <Stat end={stats.problems} label="Live Incidents" />
             <Stat end={stats.responders} label="Active Helpers" />
             <Stat end={stats.ngos} label="NGO Partners" />
             <Stat end={stats.citizens} label="Citizen Reporters" />
-            <Stat end={99} suffix="%" label="AI Precision" />
           </div>
         </motion.div>
       </section>

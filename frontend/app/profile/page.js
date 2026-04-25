@@ -199,7 +199,7 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div className="space-y-3">
-                    <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Contact Phone</label>
+                    <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Mobile Number</label>
                     <input 
                       type="text"
                       value={formData.phone}
@@ -211,7 +211,7 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Operational Address</label>
+                  <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Location</label>
                   <input 
                     type="text"
                     value={formData.address}
@@ -255,10 +255,10 @@ export default function ProfilePage() {
                 <div className="p-10 space-y-2">
                   <InfoRow label="Full Name" value={user.name} icon="👤" />
                   <InfoRow label="Username" value={user.username ? `@${user.username}` : null} icon="🏷️" />
-                  <InfoRow label="Official User ID" value={user.customId} icon="🆔" />
-                  <InfoRow label="Gmail Address" value={user.email} icon="📧" />
-                  <InfoRow label="Contact Phone" value={user.phone || "Not provided"} icon="📱" />
-                  <InfoRow label="Home/Base Address" value={user.address || "No address set"} icon="📍" />
+                  <InfoRow label="User ID" value={user.customId} icon="🆔" />
+                  <InfoRow label="Gmail" value={user.email} icon="📧" />
+                  <InfoRow label="Mobile Number" value={user.phone || "Not provided"} icon="📱" />
+                  <InfoRow label="Location" value={user.address || "No address set"} icon="📍" />
                   {user.ngoName && <InfoRow label="Organization" value={user.ngoName} icon="🏢" />}
                   {user.bio && <InfoRow label="Mission Profile" value={user.bio} icon="📝" />}
                 </div>

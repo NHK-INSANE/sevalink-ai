@@ -203,7 +203,7 @@ export default function Navbar() {
                           <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-gray-400">
                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                           </div>
-                          Your Account
+                          My Account
                         </Link>
 
                         <Link href="/profile?edit=true" className="flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-gray-300 hover:bg-white/5 hover:text-white rounded-xl transition-all">
@@ -267,7 +267,25 @@ export default function Navbar() {
                   </Link>
                 );
               })}
-              {!user && (
+              {user ? (
+                <div className="pt-4 border-t border-white/5 flex flex-col gap-3">
+                  <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 py-3 text-gray-300 font-bold">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-xs">
+                      {user.name?.[0]?.toUpperCase() || "U"}
+                    </div>
+                    My Account
+                  </Link>
+                  <button 
+                    onClick={() => { handleLogout(); setMobileMenuOpen(false); }} 
+                    className="w-full text-left py-3 text-red-400 font-bold flex items-center gap-3"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                    </div>
+                    Logout
+                  </button>
+                </div>
+              ) : (
                 <div className="pt-4 border-t border-white/5 flex flex-col gap-3">
                   <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="text-center py-3 text-gray-400 font-bold">Login</Link>
                   <Link href="/register" onClick={() => setMobileMenuOpen(false)} className="btn-primary py-3 rounded-xl">Get Started</Link>
