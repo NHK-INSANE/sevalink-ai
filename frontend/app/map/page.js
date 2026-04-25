@@ -164,6 +164,22 @@ export default function MapPage() {
       setHeatmapPoints(data);
     });
 
+    socket.on("live_locations", (locations) => {
+      // locations: { userId: { lat, lng, name, role } }
+      const activeHelpers = Object.values(locations);
+      setHelpers(prev => {
+        // Merge live data with static data
+        // We keep static helpers but override coordinates for those who are live
+        return prev.map(h => {
+          const live = activeHelpers.find(l => l.userId === h._id);
+          if (live) {
+            return { ...h, location: { lat: live.lat, lng: live.lng }, isLive: true };
+          }
+          return h;
+        });
+      });
+    });
+
     const handleDenied = () => setIsLocated(false);
     window.addEventListener("map-user-denied", handleDenied);
 

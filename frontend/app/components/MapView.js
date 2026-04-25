@@ -216,6 +216,9 @@ const sosIcon = new L.DivIcon({
 const helperIcon = makePulseIcon("#2563eb", "rgba(37,99,235,0.5)", 12, "helper");
 const ngoIcon    = makePulseIcon("#3b82f6", "rgba(59,130,246,0.5)", 12, "ngo"); // blue
 
+// 🔥 Live Pulse Icon (Green for active movement)
+const liveHelperIcon = makePulseIcon("#10b981", "rgba(16,185,129,0.5)", 14, "live");
+
 // ── User Marker Toggle Hook ──────────────────────────────────────────────────
 function UserMarkerToggle() {
   const map = useMap();
@@ -534,6 +537,34 @@ export default function MapView({
 
                       <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #f1f5f9" }}>
                         <span style={{ fontSize: "10px", fontWeight: "700", color: "#15803d", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "2px 8px", borderRadius: "20px" }}>NGO PARTNER</span>
+                      </div>
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
+
+          {/* 🟢 Responders / Helpers */}
+          {(type === "all" || type === "helpers") &&
+            safeHelpers.filter(h => (h.location?.lat && h.location?.lng) || (h.latitude && h.longitude)).map((h, i) => {
+              const lat = h.location?.lat || h.latitude;
+              const lng = h.location?.lng || h.longitude;
+              const icon = h.isLive ? liveHelperIcon : helperIcon;
+              return (
+                <Marker key={`h-${h._id || i}`} position={[lat, lng]} icon={icon}>
+                  <Popup minWidth={220}>
+                    <div className="map-popup-card">
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                        <strong className="map-popup-title">{h.name}</strong>
+                        {h.isLive && <span style={{ fontSize: "9px", fontWeight: "900", color: "#10b981", background: "#f0fdf4", padding: "2px 6px", borderRadius: "10px", border: "1px solid #bbf7d0" }}>LIVE</span>}
+                      </div>
+                      <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: 10 }}>Role: {h.role || "Volunteer"}</div>
+                      <div className="map-coords-row">
+                        <div>LAT: {lat.toFixed(6)}</div>
+                        <div>LNG: {lng.toFixed(6)}</div>
+                      </div>
+                      <div className="map-action-grid">
+                        <button className="map-copy-btn full" onClick={() => copyToClipboard(`${lat.toFixed(6)}, ${lng.toFixed(6)}`)}>Copy Position</button>
                       </div>
                     </div>
                   </Popup>

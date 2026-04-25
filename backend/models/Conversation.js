@@ -13,6 +13,10 @@ const conversationSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  isMission: {
+    type: Boolean,
+    default: false
+  },
 });
 
 // Update the updatedAt timestamp before saving

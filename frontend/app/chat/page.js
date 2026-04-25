@@ -76,9 +76,6 @@ function ChatContent() {
           setConversations(prev => [newConv, ...prev]);
           setSelectedChat(newConv);
         }
-      } else if (convs.length > 0 && !selectedChat) {
-        // Optionally select first one
-        // setSelectedChat(convs[0]);
       }
     } catch (err) {
       console.error("Load error", err);
@@ -126,20 +123,44 @@ function ChatContent() {
     const handleMessage = (msg) => {
       // If it's for current chat
       if (selectedChat && msg.conversationId === selectedChat._id) {
-        setMessages(prev => [...prev, msg]);
+        setMessages(prev => {
+          if (prev.some(m => m._id === msg._id)) return prev;
+          return [...prev, msg];
+        });
       } else {
-        toast.success("New message in another channel");
+        toast.success(`New message from ${msg.senderName || "Responder"}`, {
+          icon: '💬',
+          style: { background: '#1e293b', color: '#fff' }
+        });
       }
-      // Update sidebar
       updateSidebar(msg);
     };
 
+    const handleOpsEvent = (event) => {
+      if (event.type === "MISSION") {
+        toast.error(`🚨 MISSION ALERT: ${event.payload.title}`, {
+          duration: 6000,
+          style: { background: '#ef4444', color: '#fff', fontWeight: 'bold' }
+        });
+        loadAll(user);
+      }
+    };
+
     socket.on("chat_message", handleMessage);
-    return () => socket.off("chat_message", handleMessage);
+    socket.on("ops_event", handleOpsEvent);
+    return () => {
+      socket.off("chat_message", handleMessage);
+      socket.off("ops_event", handleOpsEvent);
+    };
   }, [user, selectedChat]);
 
   const updateSidebar = (msg) => {
     setConversations(prev => {
+      const exists = prev.some(c => c._id === msg.conversationId);
+      if (!exists) {
+        loadAll(user);
+        return prev;
+      }
       return prev.map(c => {
         if (c._id === msg.conversationId) {
           return { ...c, lastMessage: msg.text, updatedAt: new Date() };
@@ -169,12 +190,10 @@ function ChatContent() {
       });
       const newMsg = await res.json();
       
-      // Update local state
       setMessages(prev => [...prev, newMsg]);
       updateSidebar(newMsg);
 
-      // 🔥 Smart Trigger for AI Copilot
-      const triggerWords = ["help", "injured", "arrived", "trapped", "critical", "blood", "fire", "smoke"];
+      const triggerWords = ["help", "injured", "arrived", "trapped", "critical", "blood", "fire", "smoke", "coordinates", "eta"];
       if (triggerWords.some(word => textToSend.toLowerCase().includes(word))) {
         triggerAICopilot([...messages, newMsg]);
       }
@@ -185,7 +204,6 @@ function ChatContent() {
 
   const triggerAICopilot = async (currentMessages) => {
     try {
-      // For demo, we use a generic crisis report context if none is found
       const reportContext = {
         title: "Active Field Operation",
         description: "Emergency responders coordinating in real-time.",
@@ -205,28 +223,23 @@ function ChatContent() {
       if (data.reply) {
         const aiMsg = {
           _id: "ai-" + Date.now(),
-          senderId: "AI-COPILOT",
+          senderId: "AI-COMMAND",
           senderName: "AI COMMAND",
           text: data.reply,
           createdAt: new Date(),
           isAI: true
         };
         setMessages(prev => [...prev, aiMsg]);
+        setTimeout(scrollToBottom, 100);
       }
     } catch (err) {
       console.error("AI Copilot failed", err);
     }
   };
 
-  const sendQuickNote = (text) => {
-    setInputText(text);
-    // Auto-send or just fill? Let's fill and user can hit enter or click send.
-    // Actually, sending directly is more "tactical".
-    // But for safety, let's just set the text so they can review.
-  };
-
   const getOtherMember = (chat) => {
-    return chat.members.find(m => m._id !== (user?.id || user?._id)) || chat.members[0];
+    if (!chat || !chat.members) return { name: "System" };
+    return chat.members.find(m => m._id !== (user?.id || user?._id)) || chat.members[0] || { name: "Operator" };
   };
 
   if (!user) return <div className="min-h-screen bg-[#0B1220]" />;
@@ -234,48 +247,72 @@ function ChatContent() {
   return (
     <div className="min-h-screen bg-[#0B1220] flex flex-col h-screen overflow-hidden">
       <Navbar />
-      <PageWrapper className="flex-1 flex flex-col overflow-hidden pt-20">
-        <div className="flex-1 flex max-w-[1400px] w-full mx-auto bg-[#0f172a]/30 border border-white/10 rounded-t-2xl overflow-hidden mt-4">
+      <PageWrapper className="flex-1 flex flex-col overflow-hidden pt-20 pb-4 px-4">
+        <div className="flex-1 flex max-w-[1600px] w-full mx-auto bg-[#0f172a]/30 border border-white/10 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
           
-          {/* ── LEFT SIDEBAR (CONVERSATIONS) ── */}
-          <div className="w-full md:w-[350px] lg:w-[400px] flex flex-col border-r border-white/10 bg-[#0B1220]/50 backdrop-blur-xl">
-            <div className="p-6 border-b border-white/10 bg-[#0f172a]/30 flex items-center justify-between">
-              <h2 className="text-xl font-black text-white uppercase tracking-[0.2em]">Sec-Coms</h2>
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Secure Link Active" />
+          {/* ── SIDEBAR ── */}
+          <div className="w-full md:w-[350px] lg:w-[450px] flex flex-col border-r border-white/10 bg-[#0B1220]/40">
+            <div className="p-6 border-b border-white/10 bg-[#0f172a]/50 flex items-center justify-between">
+              <div className="space-y-1">
+                <h2 className="text-xl font-black text-white uppercase tracking-[0.2em]">Sec-Coms</h2>
+                <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                  Satellite Link: Active
+                </p>
+              </div>
             </div>
             
             <div className="flex-1 overflow-y-auto custom-scrollbar">
               {loading ? (
                 <div className="p-10 space-y-4">
-                  {[...Array(5)].map((_, i) => <div key={i} className="h-16 bg-white/5 rounded-xl animate-pulse" />)}
+                  {[...Array(6)].map((_, i) => <div key={i} className="h-20 bg-white/5 rounded-2xl animate-pulse" />)}
                 </div>
               ) : conversations.length === 0 ? (
-                <div className="p-10 text-center text-gray-600">
-                  <p className="text-xs font-black uppercase tracking-widest">No active channels</p>
+                <div className="p-10 text-center">
+                  <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4 border border-dashed border-white/10">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-600"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">No Secure Channels Open</p>
                 </div>
               ) : (
                 conversations.map(c => {
                   const other = getOtherMember(c);
                   const isSelected = selectedChat?._id === c._id;
+                  const isMission = c.members?.length > 2;
+                  
                   return (
                     <div 
                       key={c._id}
                       onClick={() => setSelectedChat(c)}
-                      className={`group p-4 border-b border-white/5 cursor-pointer transition-all flex items-center gap-4 ${isSelected ? "bg-indigo-600/10 border-l-4 border-l-indigo-500" : "hover:bg-white/5"}`}
+                      className={`group p-5 border-b border-white/5 cursor-pointer transition-all flex items-center gap-4 relative ${isSelected ? "bg-indigo-600/10" : "hover:bg-white/5"}`}
                     >
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600/30 to-purple-600/30 border border-white/10 flex items-center justify-center text-white font-black text-lg">
-                        {other.name?.charAt(0)}
+                      {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.6)]" />}
+                      
+                      <div className="relative">
+                        <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br border flex items-center justify-center text-white font-black text-xl shadow-lg ${isMission ? "from-red-600/40 to-orange-600/40 border-red-500/30" : "from-indigo-600/30 to-purple-600/30 border-white/10"}`}>
+                          {isMission ? "🚨" : (other.name?.charAt(0) || "U")}
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-[#0B1220]" />
                       </div>
+
                       <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start">
-                          <span className="font-bold text-gray-200 text-sm truncate">{other.name}</span>
-                          <span className="text-[9px] text-gray-500 font-medium">
+                        <div className="flex justify-between items-start mb-1">
+                          <span className={`font-bold text-sm truncate ${isSelected ? "text-white" : "text-gray-300"}`}>
+                            {isMission ? `MISSION: ${c.lastMessage?.includes("🚨") ? c.lastMessage.split(":")[1]?.trim() : "Emergency Group"}` : other.name}
+                          </span>
+                          <span className="text-[9px] text-gray-500 font-black uppercase whitespace-nowrap ml-2">
                             {c.updatedAt ? new Date(c.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ""}
                           </span>
                         </div>
-                        <div className="text-[11px] text-gray-500 truncate mt-0.5 group-hover:text-gray-400 transition-colors">
-                          {c.lastMessage || "Establish connection..."}
+                        <div className="text-[11px] text-gray-500 truncate font-medium flex items-center gap-1.5">
+                          {c.lastMessage || "Establish secure link..."}
                         </div>
+                        {isMission && (
+                          <div className="mt-1.5 flex gap-1">
+                            <span className="text-[7px] font-black uppercase px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">Active Mission</span>
+                            <span className="text-[7px] font-black uppercase px-1.5 py-0.5 rounded bg-white/5 text-gray-400 border border-white/10">{c.members.length} Responders</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -284,68 +321,66 @@ function ChatContent() {
             </div>
           </div>
 
-          {/* ── RIGHT WINDOW (CHAT) ── */}
-          <div className="flex-1 flex flex-col bg-[#0B1220]/80 relative overflow-hidden">
+          {/* ── CHAT WINDOW ── */}
+          <div className="flex-1 flex flex-col bg-[#0B1220]/60 relative overflow-hidden">
             {selectedChat ? (
               <>
-                {/* Header */}
-                <div className="px-6 py-4 border-b border-white/10 bg-[#0f172a]/50 flex items-center justify-between backdrop-blur-md">
+                <div className="px-8 py-5 border-b border-white/10 bg-[#0f172a]/60 flex items-center justify-between backdrop-blur-2xl z-10">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-bold">
-                      {getOtherMember(selectedChat).name?.charAt(0)}
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-black text-xl shadow-inner">
+                      {getOtherMember(selectedChat).name?.charAt(0) || "M"}
                     </div>
                     <div>
-                      <h3 className="text-md font-black text-white tracking-tight">{getOtherMember(selectedChat).name}</h3>
-                      <div className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400/80">Secure End-to-End Link</span>
+                      <h3 className="text-lg font-black text-white tracking-tight flex items-center gap-2">
+                        {getOtherMember(selectedChat).name}
+                        {selectedChat.members?.length > 2 && <span className="text-[8px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full border border-red-500/20">MISSION GROUP</span>}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.8)] animate-pulse" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400/80">Operational Frequency Secured</span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-4">
-                    <button className="text-gray-500 hover:text-white transition-colors"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.28-2.28a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
+                  <div className="flex gap-3">
+                    <button className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all border border-white/5">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.28-2.28a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    </button>
                   </div>
                 </div>
                 
-                {/* Messages Area */}
-                <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] bg-fixed">
+                <div className="flex-1 overflow-y-auto p-10 space-y-8 custom-scrollbar relative">
                   {messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full opacity-20">
-                      <div className="w-16 h-16 rounded-3xl border-2 border-dashed border-gray-600 flex items-center justify-center mb-4">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    <div className="flex flex-col items-center justify-center h-full text-center">
+                      <div className="w-20 h-20 rounded-3xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center mx-auto mb-6">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-indigo-400"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                       </div>
-                      <p className="text-xs font-black uppercase tracking-[0.3em]">Channel Established</p>
+                      <h4 className="text-lg font-black text-white uppercase tracking-[0.2em] mb-2">Comm-Link Verified</h4>
+                      <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest max-w-[200px] mx-auto leading-relaxed">Encrypted channel established. Maintain strict operational security.</p>
                     </div>
                   ) : (
                     messages.map((m, idx) => {
                       const isMe = m.senderId === (user.id || user._id);
+                      const isCommand = m.senderId === "AI-COMMAND";
                       return (
                         <div key={m._id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                           <motion.div 
-                            initial={{ opacity: 0, scale: 0.9, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-                            transition={{ duration: 0.2, delay: idx === messages.length - 1 ? 0 : 0 }}
-                            className={`relative group max-w-[80%] md:max-w-[65%] px-5 py-3 rounded-2xl shadow-xl transition-all ${
-                              m.isAI
-                                ? "bg-sky-500 text-white rounded-tl-none border-2 border-sky-400/50"
-                                : isMe 
-                                  ? "bg-indigo-600 text-white rounded-tr-none hover:bg-indigo-500" 
-                                  : "bg-[#1e293b] text-gray-200 rounded-tl-none border border-white/5 hover:border-white/10"
+                            initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+                            className={`max-w-[85%] md:max-w-[70%] shadow-2xl rounded-2xl px-6 py-4 ${
+                              isCommand ? "bg-red-600/90 text-white border border-red-400/30" :
+                              m.isAI ? "bg-indigo-600/20 text-indigo-100 border border-indigo-500/30" :
+                              isMe ? "bg-indigo-600 text-white rounded-tr-none" : "bg-[#1e293b] text-gray-200 rounded-tl-none border border-white/5"
                             }`}
                           >
-                            {m.isAI && (
-                              <div className="flex items-center gap-1.5 mb-1.5 border-b border-white/10 pb-1">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-sky-200">AI CO-PILOT</span>
-                                <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                            {(m.isAI || isCommand) && (
+                              <div className="flex items-center gap-2 mb-2 border-b border-white/10 pb-1.5">
+                                <span className="text-[9px] font-black uppercase tracking-widest">{isCommand ? "COMMANDER OVERRIDE" : "AI COPILOT"}</span>
                               </div>
                             )}
-                            <p className="text-[14px] leading-relaxed font-medium">{m.text}</p>
-                            <div className={`flex items-center justify-end gap-1.5 mt-1.5 text-[9px] font-black uppercase tracking-widest ${isMe ? "text-indigo-200/60" : "text-gray-500"}`}>
+                            {!isMe && !isCommand && !m.isAI && <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">{m.senderName || "Responder"}</p>}
+                            <p className="text-[15px] leading-relaxed font-medium">{m.text}</p>
+                            <div className="flex justify-end gap-2 mt-2 text-[8px] font-black opacity-40">
                               {new Date(m.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                              {isMe && !m.isAI && (
-                                <span className={m.seen ? "text-emerald-400" : "text-indigo-300/40"}>
-                                  {m.seen ? "✓✓" : "✓"}
-                                </span>
-                              )}
+                              {isMe && !m.isAI && <span>{m.seen ? "✓✓" : "✓"}</span>}
                             </div>
                           </motion.div>
                         </div>
@@ -354,64 +389,50 @@ function ChatContent() {
                   )}
                   <div ref={messagesEndRef} />
                 </div>
-
-                {/* AI Quick Commands */}
-                <div className="px-6 py-3 bg-[#0f172a]/40 border-t border-white/5 flex gap-2 overflow-x-auto no-scrollbar">
+                
+                <div className="px-8 py-4 bg-[#0f172a]/60 border-t border-white/10 flex flex-wrap gap-2 z-10">
                   {[
-                    { label: "📍 Arrived", text: "I have arrived at the designated coordinates." },
-                    { label: "🚑 Need Medic", text: "Situation assessment requires immediate medical assistance." },
-                    { label: "⚠️ Critical", text: "Situation has escalated to CRITICAL. Requesting backup." },
-                    { label: "✅ Resolved", text: "Incident resolved. Standing down." },
-                    { label: "🤖 Ask AI", text: "AI Copilot, analyze current situation and advise." }
+                    { label: "📍 On Site", text: "Unit is on-site. Beginning assessment." },
+                    { label: "🚑 Med Needed", text: "Requesting medical backup. Casualty detected." },
+                    { label: "✅ Secured", text: "Zone secured. Situation under control." },
+                    { label: "🧠 Advise Me", text: "Requesting AI tactical overview of current context." },
                   ].map(cmd => (
                     <button 
                       key={cmd.label}
-                      onClick={() => {
-                        if (cmd.label === "🤖 Ask AI") triggerAICopilot(messages);
-                        else setInputText(cmd.text);
-                      }}
-                      className="whitespace-nowrap px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:bg-indigo-600/20 hover:text-indigo-400 hover:border-indigo-500/30 transition-all active:scale-95"
+                      onClick={() => cmd.label === "🧠 Advise Me" ? triggerAICopilot(messages) : setInputText(cmd.text)}
+                      className="px-4 py-2 rounded-xl bg-indigo-600/5 border border-indigo-500/20 text-[9px] font-black uppercase tracking-widest text-indigo-300 hover:bg-indigo-600 hover:text-white transition-all active:scale-95"
                     >
                       {cmd.label}
                     </button>
                   ))}
                 </div>
 
-                {/* Input Area */}
-                <div className="p-6 bg-[#0f172a]/80 backdrop-blur-lg border-t border-white/10 flex items-center gap-4">
-                  <div className="flex-1 relative">
-                    <input 
-                      type="text"
-                      value={inputText}
-                      onChange={(e) => setInputText(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                      placeholder="Type secure transmission..."
-                      className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white placeholder-gray-600 outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all"
-                    />
-                  </div>
+                <div className="p-8 bg-[#0f172a]/90 backdrop-blur-2xl border-t border-white/10 flex items-center gap-5 z-10">
+                  <input 
+                    type="text"
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                    placeholder="Type secure tactical transmission..."
+                    className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-8 py-5 text-sm text-white placeholder-gray-600 outline-none focus:border-indigo-500/50 transition-all"
+                  />
                   <button 
                     onClick={sendMessage}
                     disabled={!inputText.trim()}
-                    className="p-4 rounded-2xl bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-20 disabled:grayscale transition-all shadow-lg shadow-indigo-500/20 active:scale-95"
+                    className="w-16 h-16 rounded-[2rem] bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-500 disabled:opacity-20 transition-all active:scale-90"
                   >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
                   </button>
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center bg-[#0B1220] p-10 text-center">
-                <div className="relative mb-8">
-                  <div className="absolute inset-0 bg-indigo-500/20 blur-[80px] rounded-full" />
-                  <div className="w-24 h-24 rounded-[2.5rem] bg-[#0f172a] border border-white/5 flex items-center justify-center relative z-10 shadow-2xl">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                  </div>
-                </div>
-                <h3 className="text-xl font-black text-white uppercase tracking-[0.4em] mb-3">Comm-Link Idle</h3>
-                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest max-w-[280px] leading-relaxed">Select a secure operational channel to begin encrypted coordination.</p>
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-10 relative">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-indigo-500/5 blur-[100px] rounded-full -z-10" />
+                <h3 className="text-2xl font-black text-white uppercase tracking-[0.5em] mb-4">Comm-Link Standby</h3>
+                <p className="text-gray-600 text-[10px] font-black uppercase tracking-[0.2em] max-w-[320px]">Initialize an encrypted operational frequency to begin.</p>
               </div>
             )}
           </div>
-
         </div>
       </PageWrapper>
     </div>

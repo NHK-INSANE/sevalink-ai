@@ -8,8 +8,10 @@ import toast from "react-hot-toast";
 import { NotificationContext } from "../context/NotificationContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, Link2, MapPin } from "lucide-react";
+import { useLocationTracker } from "../hooks/useLocationTracker";
 
 export default function Navbar() {
+  useLocationTracker(); // Persistent background tracking
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState(null);
@@ -89,6 +91,7 @@ export default function Navbar() {
     { href: "/map",       label: "Map"       },
     { href: "/ai-match",  label: "AI Match"  },
     { href: "/chat",      label: "Messages"  },
+    { href: "/admin/simulate", label: "Simulate" },
   ];
 
   return (

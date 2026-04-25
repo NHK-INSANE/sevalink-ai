@@ -142,13 +142,29 @@ io.on("connection", (socket) => {
   });
 
   // 🏥 OPS COMMAND CENTER LOGIC
+  let liveLocations = {};
+
   socket.on("join_ops", () => {
     socket.join("ops_room");
     console.log(`📡 Socket ${socket.id} joined OPS Command Center`);
+    // Send current live locations to the joined user
+    socket.emit("live_locations", liveLocations);
   });
 
-  socket.on("new_crisis", (data) => {
-    // 1. AI Auto-Reply to the sender
+  socket.on("update_location", (data) => {
+    // data: { userId, lat, lng, name, role }
+    if (!data.userId) return;
+    liveLocations[data.userId] = {
+      ...data,
+      lastUpdate: new Date()
+    };
+    
+    // Broadcast to everyone (or just OPS)
+    io.emit("live_locations", liveLocations);
+  });
+
+  socket.on("new_crisis", async (data) => {
+    // 1. Immediate AI Ack to the sender
     socket.emit("ops_event", {
       type: "AI",
       payload: { 
@@ -158,65 +174,26 @@ io.on("connection", (socket) => {
       time: new Date()
     });
 
-    // 2. Global Alert if Critical
-    if (String(data.urgency || "").toLowerCase() === "critical") {
+    // 2. Trigger Global Alert if Critical (Intelligence is now modular)
+    const { detectSeverity } = require("./engine/intelligence");
+    const severity = detectSeverity(data.message || data.description);
+
+    if (severity === "CRITICAL") {
       io.emit("global_alert", {
-        message: `🚨 URGENT: Critical crisis reported: ${data.title}`,
+        message: `🚨 URGENT: Critical crisis detected: ${data.title}`,
         location: data.location,
         type: "CRITICAL"
       });
     }
 
-    // 3. Auto-Assign Logic (Basic)
-    const autoAssign = (desc) => {
-      const d = String(desc || "").toLowerCase();
-      if (d.includes("injured") || d.includes("blood") || d.includes("medical")) return ["Ambulance", "Medical Team"];
-      if (d.includes("fire") || d.includes("smoke") || d.includes("explosion")) return ["Fire Dept", "Rescue Squad"];
-      if (d.includes("flood") || d.includes("water") || d.includes("drown")) return ["Water Rescue", "NGO"];
-      return ["Local NGO", "Volunteer Unit"];
-    };
+    // 3. Autonomous Dispatch Flow
+    const { autoDispatch } = require("./engine/dispatcher");
+    await autoDispatch(data, io, userSockets);
 
-    const suggestedResponders = autoAssign(data.message || data.description);
-
-    // 4. Find Nearest Responders
-    const findNearest = async () => {
-      try {
-        const responders = await User.find({
-          role: { $in: ["volunteer", "Volunteer", "worker", "Worker", "ngo", "NGO"] }
-        });
-        const nearby = responders
-          .map(r => {
-            const rLat = r.location?.lat || r.latitude || 22.3;
-            const rLng = r.location?.lng || r.longitude || 87.3;
-            const dist = getDistance(data.location?.lat || 22.3, data.location?.lng || 87.3, rLat, rLng);
-            return { name: r.name, role: r.role, distance: dist.toFixed(2), _id: r._id };
-          })
-          .sort((a, b) => a.distance - b.distance)
-          .slice(0, 5);
-        
-        io.to("ops_room").emit("ops_event", {
-          type: "NEAREST",
-          payload: { nearby, crisisTitle: data.title },
-          time: new Date()
-        });
-      } catch (err) { console.error("Smart Routing Error:", err); }
-    };
-    findNearest();
-
-    // 5. Broadcast to OPS
+    // 4. Broadcast to OPS for live visualization
     io.to("ops_room").emit("ops_event", {
       type: "DISPATCH",
-      payload: { ...data, suggestedResponders },
-      time: new Date()
-    });
-
-    // 5. Broadcast Auto-Assign Event
-    io.to("ops_room").emit("ops_event", {
-      type: "AI",
-      payload: { 
-        message: `🧠 AI Suggested: ${suggestedResponders.join(" + ")}`,
-        crisisTitle: data.title 
-      },
+      payload: { ...data, severity },
       time: new Date()
     });
   });
@@ -243,6 +220,36 @@ io.on("connection", (socket) => {
       message: `🆘 SOS EMERGENCY: ${data.senderName || "Unknown"} needs help!`,
       location: data.location,
       type: "SOS"
+    });
+  });
+
+  socket.on("run_simulation", async (config) => {
+    console.log("🧪 SIMULATION: Starting autonomous test sequence...");
+    
+    const fakeCrisis = {
+      userId: "SIM-USER-001",
+      title: config.type === "FLOOD" ? "Major Flood: Sector 7" : "Building Collapse: North Bridge",
+      description: config.type === "FLOOD" 
+        ? "Water levels rising rapidly. 50+ households trapped. Need immediate evacuation."
+        : "Commercial structure collapse. Multiple casualties reported. Structural fire detected.",
+      location: config.location || { lat: 22.57, lng: 88.36 },
+      category: [config.type || "GENERAL"],
+      urgency: "CRITICAL",
+      time: new Date()
+    };
+
+    // Trigger the real Brain
+    const { autoDispatch } = require("./engine/dispatcher");
+    const result = await autoDispatch(fakeCrisis, io, userSockets);
+
+    io.emit("simulation_started", { 
+      crisis: fakeCrisis, 
+      missionId: result?.missionChat?._id 
+    });
+
+    io.emit("global_alert", {
+      message: `🧪 SIMULATION ACTIVE: ${fakeCrisis.title}`,
+      type: "CRITICAL"
     });
   });
 

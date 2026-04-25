@@ -119,65 +119,72 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-[#0B1220] text-gray-200">
       <Navbar />
       <PageWrapper className="pt-24 pb-20">
-        <div className="max-w-xl mx-auto px-4">
+        <div className="max-w-4xl mx-auto px-4 space-y-6">
           
-          {/* ── PROFILE CARD ── */}
+          {/* ── PROFILE HEADER ── */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="bg-[#0f172a]/50 border border-white/10 rounded-[2rem] p-10 text-center mb-8 backdrop-blur-xl relative"
+            className="bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 p-8 rounded-[2.5rem] shadow-2xl text-center relative overflow-hidden"
           >
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-indigo-500/10 blur-[80px] -z-10" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-3xl -mr-16 -mt-16 rounded-full" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-black/10 blur-2xl -ml-12 -mb-12 rounded-full" />
             
-            <motion.div whileHover={{ scale: 1.05 }} className="relative inline-block mb-6">
-              <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-3xl font-black text-white shadow-2xl">
+            <motion.div whileHover={{ scale: 1.05 }} className="relative inline-block mb-4">
+              <div className="w-24 h-24 rounded-full bg-white text-indigo-600 flex items-center justify-center text-3xl font-black shadow-xl border-4 border-white/20">
                 {user.name?.[0]?.toUpperCase()}
               </div>
             </motion.div>
 
-            <h2 className="text-[20px] font-semibold text-white mb-1 tracking-tight">{user.name}</h2>
-            <p className="text-[12px] opacity-60 font-mono tracking-widest mb-4">ID: {user.customId || user.id || user._id}</p>
+            <h2 className="text-2xl font-black text-white mb-2 tracking-tight uppercase">{user.name}</h2>
+            
+            {/* ROLE BADGE */}
+            <div className="flex justify-center gap-2 mb-3">
+              <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm
+                ${String(user.role).toLowerCase() === "volunteer" 
+                  ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" 
+                  : "bg-blue-500/20 text-blue-300 border-blue-500/30"}
+              `}>
+                {user.role || "FIELD OPERATOR"}
+              </span>
+            </div>
 
-            <span className="px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">
-              {user.role}
-            </span>
+            <p className="text-[10px] font-mono text-white/60 tracking-widest uppercase">Operator ID: {user.customId || user.id?.slice(-8) || "GEN-77218"}</p>
           </motion.div>
 
-          {/* ── DETAILS CARD ── */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="bg-[#0f172a]/30 border border-white/5 rounded-[2rem] overflow-hidden mb-8"
-          >
-            {isEditing ? (
-              <form onSubmit={handleUpdate} className="p-8 space-y-6">
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Full Name</label>
-                      <input 
-                        value={formData.name}
-                        onChange={(e) => setFormData({...formData, name: e.target.value})}
-                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-indigo-500 transition-all outline-none"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Mobile</label>
-                      <input 
-                        value={formData.phone}
-                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-indigo-500 transition-all outline-none"
-                      />
-                    </div>
+          {/* ── EDIT MODE OR INFO GRID ── */}
+          {isEditing ? (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              className="bg-[#0f172a]/50 border border-white/10 rounded-[2rem] p-8 shadow-xl"
+            >
+              <form onSubmit={handleUpdate} className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Full Name</label>
+                    <input 
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-indigo-500 transition-all outline-none"
+                    />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Email</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Mobile Contact</label>
+                    <input 
+                      value={formData.phone}
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-indigo-500 transition-all outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Email Address</label>
                     <input 
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
                       className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-indigo-500 transition-all outline-none"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Location</label>
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Operation Base (Location)</label>
                     <input 
                       value={formData.address}
                       onChange={(e) => setFormData({...formData, address: e.target.value})}
@@ -188,58 +195,55 @@ export default function ProfilePage() {
                 <div className="flex gap-4 pt-4">
                   <motion.button whileTap={{ scale: 0.95 }} type="button" onClick={() => setIsEditing(false)} className="flex-1 py-4 rounded-2xl bg-white/5 text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all">Cancel</motion.button>
                   <motion.button whileTap={{ scale: 0.95 }} type="submit" disabled={saving} className="flex-1 py-4 rounded-2xl bg-indigo-600 text-white text-xs font-black uppercase tracking-widest hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-500/20">
-                    {saving ? "Syncing..." : "Sync Profile"}
+                    {saving ? "Updating..." : "Save Changes"}
                   </motion.button>
                 </div>
               </form>
-            ) : (
-              <div className="divide-y divide-white/5">
-                <div className="p-8 flex items-center justify-between group hover:bg-white/[0.02] transition-colors">
-                  <div className="flex flex-col gap-1">
-                    <strong className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Location</strong>
-                    <p className="text-sm font-bold text-gray-200">{user.address || "Field Operator: Global"}</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-gray-400">📍</div>
-                </div>
-                <div className="p-8 flex items-center justify-between group hover:bg-white/[0.02] transition-colors">
-                  <div className="flex flex-col gap-1">
-                    <strong className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Phone</strong>
-                    <p className="text-sm font-bold text-gray-200">{user.phone || "Not Linked"}</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-gray-400">📞</div>
-                </div>
-                <div className="p-8 flex items-center justify-between group hover:bg-white/[0.02] transition-colors">
-                  <div className="flex flex-col gap-1">
-                    <strong className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Email</strong>
-                    <p className="text-sm font-bold text-gray-200">{user.email}</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-gray-400">📧</div>
-                </div>
-              </div>
-            )}
-          </motion.div>
-
-          {/* ── ACTIONS ── */}
-          {!isEditing && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}
-              className="grid grid-cols-2 gap-4"
-            >
-              <motion.button 
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsEditing(true)}
-                className="py-5 rounded-[1.5rem] bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 text-xs font-black uppercase tracking-widest hover:bg-indigo-600/20 transition-all shadow-xl shadow-indigo-500/5"
+            </motion.div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-4">
+              <motion.div 
+                whileHover={{ y: -4 }}
+                className="bg-[#0f172a]/30 border border-white/5 rounded-3xl p-6 transition-all"
               >
-                Edit Profile
-              </motion.button>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">📍</div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Operation Base</p>
+                </div>
+                <p className="text-sm font-bold text-gray-200">{user.address || "Field Operator: Global"}</p>
+              </motion.div>
+
+              <motion.div 
+                whileHover={{ y: -4 }}
+                className="bg-[#0f172a]/30 border border-white/5 rounded-3xl p-6 transition-all"
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">📞</div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Encrypted Line</p>
+                </div>
+                <p className="text-sm font-bold text-gray-200">{user.phone || "Not Linked"}</p>
+              </motion.div>
+
+              <motion.div 
+                whileHover={{ y: -4 }}
+                className="bg-[#0f172a]/30 border border-white/5 rounded-3xl p-6 md:col-span-2 transition-all"
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">📧</div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Secure Email</p>
+                </div>
+                <p className="text-sm font-bold text-gray-200">{user.email}</p>
+              </motion.div>
+
               <motion.button 
                 whileTap={{ scale: 0.95 }}
                 onClick={handleLogout}
-                className="py-5 rounded-[1.5rem] bg-red-500/5 border border-red-500/10 text-red-400 text-xs font-black uppercase tracking-widest hover:bg-red-500/10 transition-all"
+                className="md:col-span-2 py-5 rounded-[1.5rem] bg-red-500/5 border border-red-500/10 text-red-400 text-xs font-black uppercase tracking-widest hover:bg-red-500/10 transition-all flex items-center justify-center gap-2"
               >
-                Logout Account
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                Logout Tactical Network
               </motion.button>
-            </motion.div>
+            </div>
           )}
 
         </div>
