@@ -72,10 +72,14 @@ router.post("/:conversationId/messages", auth, async (req, res) => {
     // Emit socket event if io is available
     const io = req.app.get("io");
     if (io) {
-      // Find the socket ID of the receiver if userSockets is accessible
-      // Since userSockets is mapped in server.js, we might need a global or direct room broadcast.
-      // The user suggested: socket.join(userId), so we can just emit to the userId room!
-      io.to(receiverId).emit("chat_message", message);
+      const chat = await Conversation.findById(conversationId);
+      if (chat && chat.members) {
+        chat.members.forEach(memberId => {
+          if (memberId.toString() !== req.user.id) {
+            io.to(memberId.toString()).emit("chat_message", message);
+          }
+        });
+      }
     }
 
     res.json(message);

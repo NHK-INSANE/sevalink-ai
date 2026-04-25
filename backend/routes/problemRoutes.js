@@ -3,6 +3,8 @@ const router = express.Router();
 const Problem = require("../models/Problem");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
+const Conversation = require("../models/Conversation");
+const ChatMessage = require("../models/ChatMessage");
 const { auth, authorize } = require("../middleware/auth");
 const { validate, problemSchema } = require("../middleware/validation");
 
@@ -82,52 +84,72 @@ router.post("/", auth, validate(problemSchema), async (req, res) => {
       timeline: [{ text: "Problem reported" }]
     });
 
-    const topMatches = await matchVolunteers(problem, 5);
-    const bestMatch = topMatches[0];
+    const topMatches = await matchVolunteers(problem, 3);
 
-    if (bestMatch) {
-      problem.assignedTo = bestMatch._id.toString();
+    if (topMatches.length > 0) {
+      problem.team = topMatches.map(m => m._id.toString());
+      problem.assignedTo = topMatches[0]._id.toString();
       problem.status = "In Progress";
-      problem.timeline.push({ text: `AI auto-assigned to ${bestMatch.name || "volunteer"}` });
+      problem.timeline.push({ text: `AI Auto-Dispatcher assigned ${topMatches.length} responders.` });
 
-      const notifText = `🚨 You matched a nearby ${problem.urgency || ""} crisis: "${problem.title}"`;
-      await Promise.all(
-        topMatches.map(m => {
-          const notification = new Notification({
-            userId: m._id,
-            message: notifText,
-            type: "assigned",
+      // Create Chat Conversation
+      const members = [req.user.id.toString(), ...topMatches.map(m => m._id.toString())];
+      const conversation = await Conversation.create({ members });
+
+      // Create AI Message
+      const systemMessage = `🚨 EMERGENCY DISPATCH 🚨
+
+Type: ${problem.category || "General"} Emergency
+Severity: ${problem.urgency || "Unknown"}
+Location: [${problem.location?.lat}, ${problem.location?.lng}]
+
+Instructions:
+- Reach location immediately.
+- Coordinate with the reporter.
+- Provide status updates here.
+
+Description: "${problem.description}"
+`;
+      await ChatMessage.create({
+        conversationId: conversation._id,
+        senderId: "AI_SYSTEM", // Use string or special ID if schema allows. Wait, ChatMessage senderId is ObjectId ref 'User'.
+        text: systemMessage
+      });
+
+      const io = req.app.get("io");
+      if (io) {
+        // Broadcast AI message to all members
+        members.forEach(userId => {
+          io.to(userId).emit("chat_message", {
+            conversationId: conversation._id,
+            senderId: "AI_SYSTEM",
+            text: systemMessage,
+            createdAt: new Date()
           });
-          return notification.save();
-        })
-      );
+        });
+
+        // Send dispatch alert to assigned helpers
+        topMatches.forEach(m => {
+          io.to(m._id.toString()).emit("dispatch_alert", {
+            message: `🚨 You have been dispatched to a crisis: ${problem.title}`,
+            reportId: problem._id,
+            conversationId: conversation._id
+          });
+        });
+
+        io.emit("new-problem", problem);
+      }
+
+      await problem.save();
+      return res.status(201).json({ problem, matched: topMatches, conversationId: conversation._id });
     }
 
     await problem.save();
-
+    
     const io = req.app.get("io");
-    if (io) {
-      io.emit("new-problem", problem);
-      if (problem.urgency?.toLowerCase() === "critical") {
-        io.emit("emergency-alert", problem);
-      }
-      if (topMatches.length > 0) {
-        io.emit("matched-volunteers", {
-          problem: { _id: problem._id, title: problem.title, urgency: problem.urgency },
-          matched: topMatches
-        });
-        
-        if (bestMatch) {
-          io.emit("dispatch", {
-            responderId: bestMatch._id.toString(),
-            reportId: problem._id.toString(),
-            title: problem.title
-          });
-        }
-      }
-    }
+    if (io) io.emit("new-problem", problem);
 
-    res.status(201).json({ problem, matched: topMatches });
+    res.status(201).json({ problem, matched: [] });
   } catch (err) {
     console.error("🔥 CREATE PROBLEM ERROR:", err);
     res.status(500).json({ 

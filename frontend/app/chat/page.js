@@ -1,16 +1,16 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import Navbar from "../components/Navbar";
 import PageWrapper from "../components/PageWrapper";
 import { socket } from "../../lib/socket";
 import { getUser } from "../utils/auth";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
-export default function ChatPage() {
+function ChatContent() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [conversations, setConversations] = useState([]);
@@ -18,6 +18,8 @@ export default function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
   const messagesEndRef = useRef(null);
+  const searchParams = useSearchParams();
+  const defaultConversationId = searchParams.get("conversationId");
 
   useEffect(() => {
     const u = getUser();
@@ -37,6 +39,10 @@ export default function ChatPage() {
       });
       const data = await res.json();
       setConversations(data);
+      if (defaultConversationId) {
+        const defaultChat = data.find(c => c._id === defaultConversationId);
+        if (defaultChat) setSelectedChat(defaultChat);
+      }
     } catch (err) {
       console.error("Failed to fetch conversations", err);
     }
@@ -122,7 +128,10 @@ export default function ChatPage() {
   };
 
   const getOtherMember = (chat) => {
-    return chat.members.find(m => m._id !== user?.id) || chat.members[0];
+    if (chat.members.length > 2) {
+      return { name: "Emergency Response Team", displayId: "TEAM", customId: "GRP" };
+    }
+    return chat.members.find(m => m._id !== user?.id) || chat.members[0] || { name: "System" };
   };
 
   if (!user) return <div className="min-h-screen bg-[#0B1220]" />;
@@ -224,5 +233,13 @@ export default function ChatPage() {
         </div>
       </PageWrapper>
     </div>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0B1220]" />}>
+      <ChatContent />
+    </Suspense>
   );
 }

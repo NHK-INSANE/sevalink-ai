@@ -59,8 +59,20 @@ export default function Navbar() {
       });
     });
 
+    socket.on("dispatch_alert", (data) => {
+      toast.success(data.message, {
+        duration: 8000,
+        position: "top-center",
+        style: { background: "#10b981", color: "#fff", fontWeight: "bold", borderRadius: "12px" },
+      });
+      if (data.conversationId) {
+        router.push(`/chat?conversationId=${data.conversationId}`);
+      }
+    });
+
     return () => {
       socket.off("sos-alert");
+      socket.off("dispatch_alert");
     };
   }, []);
 
