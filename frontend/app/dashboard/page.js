@@ -86,9 +86,9 @@ export default function Dashboard() {
 
       setCounts({
         total: statsData?.problems || pCount,
-        volunteers: statsData?.responders || uList.filter(u => u?.role?.toLowerCase() === "volunteer").length,
-        workers: statsData?.workers || uList.filter(u => u?.role?.toLowerCase() === "worker").length,
-        ngos: statsData?.ngos || uList.filter(u => u?.role?.toLowerCase() === "ngo").length
+        volunteers: statsData?.responders || uList.filter(u => String(u?.role || "").toLowerCase() === "volunteer").length,
+        workers: statsData?.workers || uList.filter(u => String(u?.role || "").toLowerCase() === "worker").length,
+        ngos: statsData?.ngos || uList.filter(u => String(u?.role || "").toLowerCase() === "ngo").length
       });
 
       setLastUpdate(new Date().toLocaleTimeString());
@@ -168,18 +168,18 @@ export default function Dashboard() {
   const safeProblems = useMemo(() => Array.isArray(problems) ? problems : [], [problems]);
   const safeUsers = useMemo(() => Array.isArray(usersList) ? usersList : [], [usersList]);
 
-  const openCount = safeProblems.filter(p => p?.status?.toLowerCase() === "open").length;
-  const resolvedCount = safeProblems.filter(p => p?.status?.toLowerCase() === "resolved").length;
-  const progressCount = safeProblems.filter(p => p?.status?.toLowerCase() === "in progress" || p?.status?.toLowerCase() === "in-progress").length;
+  const openCount = safeProblems.filter(p => String(p?.status || "").toLowerCase() === "open").length;
+  const resolvedCount = safeProblems.filter(p => String(p?.status || "").toLowerCase() === "resolved").length;
+  const progressCount = safeProblems.filter(p => String(p?.status || "").toLowerCase() === "in progress" || String(p?.status || "").toLowerCase() === "in-progress").length;
 
-  const volunteersCount = safeUsers.filter(u => u?.role?.toLowerCase() === "volunteer").length;
-  const workersCount = safeUsers.filter(u => u?.role?.toLowerCase() === "worker").length;
-  const ngosCount = safeUsers.filter(u => u?.role?.toLowerCase() === "ngo").length;
+  const volunteersCount = safeUsers.filter(u => String(u?.role || "").toLowerCase() === "volunteer").length;
+  const workersCount = safeUsers.filter(u => String(u?.role || "").toLowerCase() === "worker").length;
+  const ngosCount = safeUsers.filter(u => String(u?.role || "").toLowerCase() === "ngo").length;
 
-  const criticalCount = safeProblems.filter(p => p?.urgency?.toLowerCase() === "critical").length;
-  const highCount = safeProblems.filter(p => p?.urgency?.toLowerCase() === "high").length;
-  const mediumCount = safeProblems.filter(p => p?.urgency?.toLowerCase() === "medium").length;
-  const lowCount = safeProblems.filter(p => p?.urgency?.toLowerCase() === "low").length;
+  const criticalCount = safeProblems.filter(p => String(p?.urgency || "").toLowerCase() === "critical").length;
+  const highCount = safeProblems.filter(p => String(p?.urgency || "").toLowerCase() === "high").length;
+  const mediumCount = safeProblems.filter(p => String(p?.urgency || "").toLowerCase() === "medium").length;
+  const lowCount = safeProblems.filter(p => String(p?.urgency || "").toLowerCase() === "low").length;
 
   const categoryCount = {};
   safeProblems.forEach(p => {
@@ -244,7 +244,7 @@ export default function Dashboard() {
   const recentProblems = sortedProblems.slice(0, 3);
 
   const renderRoleSpecific = () => {
-    const role = user?.role?.toLowerCase() || "volunteer";
+    const role = String(user?.role || "").toLowerCase() || "volunteer";
     if (role === "admin") return <AdminDashboard problems={safeProblems} usersList={safeUsers} lastUpdate={lastUpdate} />;
     if (role === "ngo") return <NgoDashboard problems={safeProblems} usersList={safeUsers} />;
     return <VolunteerDashboard problems={safeProblems} userLoc={userLoc} />;
@@ -409,7 +409,7 @@ export default function Dashboard() {
             {/* Incident Trend Chart */}
             <div className="card lg:col-span-1">
               <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-8">Incident Trend (Last 7 Days)</h3>
-              <div className="h-[240px] w-full">
+              <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={trendData}>
                     <defs>

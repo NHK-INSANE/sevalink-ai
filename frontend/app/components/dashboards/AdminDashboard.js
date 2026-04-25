@@ -10,9 +10,9 @@ export default function AdminDashboard({ problems = [], usersList = [], lastUpda
   const safeProbs = Array.isArray(problems) ? problems : [];
   const safeUsers = Array.isArray(usersList) ? usersList : [];
 
-  const volunteersCount = safeUsers.filter(u => u?.role?.toLowerCase() === "volunteer").length;
-  const ngosCount = safeUsers.filter(u => u?.role?.toLowerCase() === "ngo").length;
-  const workersCount = safeUsers.filter(u => u?.role?.toLowerCase() === "worker").length;
+  const volunteersCount = safeUsers.filter(u => String(u?.role || "").toLowerCase() === "volunteer").length;
+  const ngosCount = safeUsers.filter(u => String(u?.role || "").toLowerCase() === "ngo").length;
+  const workersCount = safeUsers.filter(u => String(u?.role || "").toLowerCase() === "worker").length;
 
   return (
     <div className="space-y-6">

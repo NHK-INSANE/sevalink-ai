@@ -160,7 +160,7 @@ function AIMatchContent() {
           score += Math.max(0, 100 - (dist || 999));
           
           const uSkills = (currentUser.skills || []).map(s => s.toLowerCase());
-          const pSkill = (p.requiredSkill || p.category || "").toLowerCase();
+          const pSkill = String(p.requiredSkill || p.category || "").toLowerCase();
           if (pSkill && uSkills.includes(pSkill)) score += 50;
           
           return { problem: p, score: Math.round(score), distKm: dist };

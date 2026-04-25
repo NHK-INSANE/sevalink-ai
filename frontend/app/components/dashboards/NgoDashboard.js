@@ -12,8 +12,8 @@ import Link from "next/link";
 export default function NgoDashboard({ problems = [], usersList = [] }) {
   const [requests, setRequests] = useState([]);
   const safeProbs = Array.isArray(problems) ? problems : [];
-  const openProblems = safeProbs.filter(p => p?.status === "Open");
-  const inProgress = safeProbs.filter(p => p?.status === "In Progress");
+  const openProblems = safeProbs.filter(p => String(p?.status || "").toLowerCase() === "open");
+  const inProgress = safeProbs.filter(p => String(p?.status || "").toLowerCase() === "in progress" || String(p?.status || "").toLowerCase() === "in-progress");
 
   useEffect(() => {
     const fetchRequests = async () => {

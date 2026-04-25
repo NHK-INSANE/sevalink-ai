@@ -68,7 +68,7 @@ function VolunteersContent() {
   useEffect(() => {
     getUsers()
       .then((data) => {
-        const helpers = data.filter((u) => u.role?.toLowerCase() === "volunteer" || u.role?.toLowerCase() === "worker");
+        const helpers = data.filter((u) => String(u.role || "").toLowerCase() === "volunteer" || String(u.role || "").toLowerCase() === "worker");
         setUsers(helpers);
       })
       .catch((err) => console.error(err))
@@ -81,17 +81,17 @@ function VolunteersContent() {
 
     // 2. Search by code
     if (searchQuery) {
-      const code = (u.displayId || u.customId || "").toLowerCase();
-      if (!code.includes(searchQuery.toLowerCase())) return false;
+      const code = String(u.displayId || u.customId || "").toLowerCase();
+      if (!code.includes(String(searchQuery || "").toLowerCase())) return false;
     }
 
     // 3. Tab filter
-    if (filterRole !== "all" && u.role?.toLowerCase() !== filterRole) return false;
+    if (filterRole !== "all" && String(u.role || "").toLowerCase() !== filterRole) return false;
 
     // 4. Enforce role-based filtering (Workers only see volunteers)
     if (user) {
-      const myRole = user.role?.toLowerCase();
-      const theirRole = u.role?.toLowerCase();
+      const myRole = String(user.role || "").toLowerCase();
+      const theirRole = String(u.role || "").toLowerCase();
       if (myRole === "worker" && theirRole === "worker") return false;
     }
 
@@ -104,7 +104,7 @@ function VolunteersContent() {
       const d2 = getDistance(userLoc.lat, userLoc.lng, b.location?.lat, b.location?.lng);
       return d1 - d2;
     }
-    return (a.name || "").toLowerCase().localeCompare((b.name || "").toLowerCase());
+    return String(a.name || "").toLowerCase().localeCompare(String(b.name || "").toLowerCase());
   });
 
   const [problems, setProblems] = useState([]);
@@ -171,8 +171,8 @@ function VolunteersContent() {
 
   const canAssign = (targetRole) => {
     if (!user) return false;
-    const uRole = user.role?.toLowerCase();
-    const tRole = targetRole?.toLowerCase();
+    const uRole = String(user.role || "").toLowerCase();
+    const tRole = String(targetRole || "").toLowerCase();
     if (uRole === "admin" || uRole === "ngo") return true;
     if (uRole === "worker" && tRole === "volunteer") return true;
     if (uRole === "volunteer" && tRole === "volunteer") return true;
@@ -270,8 +270,8 @@ function VolunteersContent() {
               {sorted.map((u) => {
                 const rawSkills = Array.isArray(u.skills) ? u.skills : (u.skills ? [u.skills] : []);
                 const skills = Array.from(new Set([...rawSkills, u.skill].filter(Boolean)));
-                const isVol = u.role?.toLowerCase() === "volunteer";
-                const isWorker = u.role?.toLowerCase() === "worker";
+                const isVol = String(u.role || "").toLowerCase() === "volunteer";
+                const isWorker = String(u.role || "").toLowerCase() === "worker";
 
                 return (
                   <div key={u._id} className="card card-hover-effect !p-6 flex flex-col gap-0">
@@ -324,7 +324,7 @@ function VolunteersContent() {
                       {addMemberTo ? (
                         <button 
                           onClick={() => handleAddToMission(u._id)}
-                          disabled={isSubmitting || (user?.role?.toLowerCase() === 'volunteer' && isWorker)}
+                          disabled={isSubmitting || (String(user?.role || "").toLowerCase() === 'volunteer' && isWorker)}
                           className="w-full py-3 rounded-xl text-[11px] font-black uppercase tracking-widest text-white shadow-xl shadow-purple-500/20 bg-gradient-to-r from-purple-600 to-indigo-600 disabled:opacity-30"
                         >
                           {isSubmitting ? "Adding..." : "Add to Team"}

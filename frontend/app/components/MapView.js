@@ -3,7 +3,7 @@
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import HeatmapLayer from "./HeatmapLayer";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -153,7 +153,7 @@ if (typeof document !== "undefined") {
 
 // ── Urgency Color Map ─────────────────────────────────────────────────────────
 function getUrgencyColor(urgency) {
-  switch (urgency?.toLowerCase()) {
+  switch (String(urgency || "").toLowerCase()) {
     case "critical": return { bg: "#ef4444", glow: "rgba(239,68,68,0.5)" };
     case "high":     return { bg: "#f97316", glow: "rgba(249,115,22,0.5)" };
     case "medium":   return { bg: "#eab308", glow: "rgba(234,179,8,0.5)" };
@@ -371,6 +371,14 @@ export default function MapView({
 }) {
   const [showClusters, setShowClusters] = useState(true);
 
+  // Safety checks
+  const safeProblems = Array.isArray(problems) ? problems : [];
+  const safeNgos = Array.isArray(ngos) ? ngos : [];
+  const safeHelpers = Array.isArray(helpers) ? helpers : [];
+  const safeSosMarkers = Array.isArray(sosMarkers) ? sosMarkers : [];
+
+  if (!problems && !ngos && !helpers && !sosMarkers) return null;
+
   const copyToClipboard = (text) => {
     if (typeof navigator !== "undefined") {
       navigator.clipboard.writeText(text);
@@ -404,7 +412,7 @@ export default function MapView({
         {/* 🔥 Custom Crisis Heatmap Layer */}
         {showHeatmap && (
           <HeatmapLayer 
-            points={problems
+            points={safeProblems
               .filter(p => p.location?.lat && p.location?.lng)
               .map(p => ({
                 lat: p.location.lat,
@@ -431,7 +439,7 @@ export default function MapView({
         >
 
           {/* 🚨 SOS Markers */}
-          {sosMarkers.map((s, i) => (
+          {safeSosMarkers.map((s, i) => (
             s.latitude && s.longitude ? (
               <Marker key={`sos-${i}`} position={[s.latitude, s.longitude]} icon={sosIcon}>
                 <Popup>
@@ -453,9 +461,9 @@ export default function MapView({
 
           {/* 🔴 Problems — color by urgency */}
           {(type === "all" || type === "problems") &&
-            problems.filter(p => (p.location?.lat && p.location?.lng) || (p.latitude && p.longitude)).slice(0, 100).map((p, i) => {
+            safeProblems.filter(p => (p.location?.lat && p.location?.lng) || (p.latitude && p.longitude)).slice(0, 100).map((p, i) => {
               const { bg, glow } = getUrgencyColor(p.urgency);
-              const icon = makePulseIcon(bg, glow, 12, p.urgency?.toLowerCase() || "normal");
+              const icon = makePulseIcon(bg, glow, 12, String(p.urgency || "").toLowerCase() || "normal");
               const lat = p.location?.lat || p.latitude;
               const lng = p.location?.lng || p.longitude;
               return (
@@ -466,8 +474,8 @@ export default function MapView({
                         <strong className="map-popup-title">{p.title}</strong>
                         <span style={{
                           fontSize: "10px", fontWeight: "700", padding: "2px 6px", borderRadius: 4, marginLeft: 6, flexShrink: 0,
-                          background: p.urgency?.toLowerCase() === "critical" ? "#fee2e2" : p.urgency?.toLowerCase() === "high" ? "#ffedd5" : p.urgency?.toLowerCase() === "medium" ? "#fef9c3" : "#dcfce7",
-                          color: p.urgency?.toLowerCase() === "critical" ? "#dc2626" : p.urgency?.toLowerCase() === "high" ? "#ea580c" : p.urgency?.toLowerCase() === "medium" ? "#ca8a04" : "#16a34a",
+                          background: String(p.urgency || "").toLowerCase() === "critical" ? "#fee2e2" : String(p.urgency || "").toLowerCase() === "high" ? "#ffedd5" : String(p.urgency || "").toLowerCase() === "medium" ? "#fef9c3" : "#dcfce7",
+                          color: String(p.urgency || "").toLowerCase() === "critical" ? "#dc2626" : String(p.urgency || "").toLowerCase() === "high" ? "#ea580c" : String(p.urgency || "").toLowerCase() === "medium" ? "#ca8a04" : "#16a34a",
                         }}>{p.urgency}</span>
                       </div>
                       
@@ -487,8 +495,8 @@ export default function MapView({
                         {p.status && (
                           <span style={{
                             fontSize: "10px", fontWeight: "700", padding: "1px 6px", borderRadius: 4,
-                            background: String(p.status).toLowerCase() === "open" ? "#eff6ff" : String(p.status).toLowerCase() === "in progress" ? "#fefce8" : "#f0fdf4",
-                            color: String(p.status).toLowerCase() === "open" ? "#2563eb" : String(p.status).toLowerCase() === "in progress" ? "#ca8a04" : "#16a34a",
+                            background: String(p.status || "").toLowerCase() === "open" ? "#eff6ff" : String(p.status || "").toLowerCase() === "in progress" ? "#fefce8" : "#f0fdf4",
+                            color: String(p.status || "").toLowerCase() === "open" ? "#2563eb" : String(p.status || "").toLowerCase() === "in progress" ? "#ca8a04" : "#16a34a",
                           }}>{p.status}</span>
                         )}
                       </div>
@@ -500,7 +508,7 @@ export default function MapView({
 
           {/* 🟢 NGOs */}
           {(type === "all" || type === "ngo") &&
-            ngos.filter(n => (n.location?.lat && n.location?.lng) || (n.latitude && n.longitude)).slice(0, 50).map((n, i) => {
+            safeNgos.filter(n => (n.location?.lat && n.location?.lng) || (n.latitude && n.longitude)).slice(0, 50).map((n, i) => {
               const lat = n.location?.lat || n.latitude;
               const lng = n.location?.lng || n.longitude;
               return (
