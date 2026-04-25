@@ -219,11 +219,11 @@ export default function SubmitPage() {
       setAiScore(null);
     } catch (err) {
       console.error("🚨 SUBMISSION FAILED:", err);
-      // Log the error message if it exists
-      if (err.message) {
-        console.log("❌ ERROR DETAILS:", err.message);
+      if (err.message && err.message.includes("401")) {
+        toast.error("Session expired or unauthorized. Please log out and log in again.");
+      } else {
+        toast.error(`Failed to submit: ${err.message || "Make sure the backend is running."}`);
       }
-      toast.error("Failed to submit. Make sure the backend is running.");
     } finally {
       setLoading(false);
     }
