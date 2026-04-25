@@ -363,6 +363,7 @@ export default function MapView({
   sosMarkers,
   type = "all",
   height = "400px",
+  center = [22.57, 88.36],
   zoom = 6,
   zoomToUser = true,
   showHeatmap = false,

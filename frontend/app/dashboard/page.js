@@ -410,8 +410,8 @@ export default function Dashboard() {
             {/* Incident Trend Chart */}
             <div className="card lg:col-span-1">
               <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-8">Incident Trend (Last 7 Days)</h3>
-              <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
+              <div className="h-[300px] w-full" style={{ minHeight: '300px' }}>
+                <ResponsiveContainer width="100%" height="100%" minHeight={300}>
                   <AreaChart data={trendData}>
                     <defs>
                       <linearGradient id="colorCases" x1="0" y1="0" x2="0" y2="1">

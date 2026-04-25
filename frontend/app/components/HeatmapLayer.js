@@ -12,9 +12,11 @@ export default function HeatmapLayer({ points }) {
 
     const heatPoints = points.map(p => {
       // Return [lat, lng, intensity]
-      let intensity = 0.5;
-      if (p.urgency === "Critical") intensity = 1.0;
-      else if (p.urgency === "High") intensity = 0.8;
+      let intensity = p.intensity || 0.5;
+      if (!p.intensity) {
+        if (p.urgency === "Critical") intensity = 1.0;
+        else if (p.urgency === "High") intensity = 0.8;
+      }
       
       return [p.lat, p.lng, intensity];
     });
