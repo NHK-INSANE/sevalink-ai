@@ -63,7 +63,8 @@ io.on("connection", (socket) => {
   socket.on("register-user", (userId) => {
     if (userId) {
       userSockets.set(userId, socket.id);
-      console.log(`👤 User ${userId} registered to socket ${socket.id}`);
+      socket.join(userId); // 🔥 Important for 1-1 chat routing
+      console.log(`👤 User ${userId} registered to socket ${socket.id} and joined room ${userId}`);
     }
   });
 
@@ -140,6 +141,7 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const teamRoutes = require("./routes/teamRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const requestRoutes = require("./routes/requestRoutes");
+const chatRoutes = require("./routes/chatRoutes");
 
 app.use("/api/problems", problemRoutes);
 app.use("/api/ai", aiRoutes);
@@ -148,6 +150,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/requests", requestRoutes);
+app.use("/api/chat", chatRoutes);
 app.use("/api", statsRoutes);
 
 // Media Upload Route

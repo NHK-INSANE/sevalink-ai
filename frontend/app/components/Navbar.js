@@ -76,6 +76,7 @@ export default function Navbar() {
     { href: "/ngo",       label: "NGOs"      },
     { href: "/map",       label: "Map"       },
     { href: "/ai-match",  label: "AI Match"  },
+    { href: "/chat",      label: "Messages"  },
   ];
 
   return (
