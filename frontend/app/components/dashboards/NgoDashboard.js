@@ -1,6 +1,8 @@
 "use client";
 import { motion } from "framer-motion";
 import Counter from "../Counter";
+import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 
 import ProblemCard from "../ProblemCard";
 import Link from "next/link";
@@ -18,7 +20,7 @@ export default function NgoDashboard({ problems = [], usersList = [] }) {
       try {
         const token = localStorage.getItem("token");
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/requests/ngo`, {
-          headers: { "Authorization": `Bearer ${token}` }
+          headers: { "Authorization": `Bearer ${encodeURIComponent(token)}` }
         });
         const data = await res.json();
         setRequests(Array.isArray(data) ? data : []);
@@ -33,7 +35,7 @@ export default function NgoDashboard({ problems = [], usersList = [] }) {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/requests/${requestId}`, {
         method: "PATCH",
         headers: { 
-          "Authorization": `Bearer ${token}`,
+          "Authorization": `Bearer ${encodeURIComponent(token)}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({ status })

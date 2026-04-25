@@ -54,7 +54,7 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/problems/${problem._id}/history`, {
-        headers: { "Authorization": `Bearer ${token}` }
+        headers: { "Authorization": `Bearer ${encodeURIComponent(token)}` }
       });
       const data = await res.json();
       if (Array.isArray(data)) setMessages(data);
@@ -73,7 +73,7 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
       const token = localStorage.getItem("token");
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/requests`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${encodeURIComponent(token)}` },
         body: JSON.stringify({ 
           problemId: problem._id,
           ngoId: problem.leader || problem.createdBy, // Target the creator/leader
@@ -93,7 +93,7 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
       const token = localStorage.getItem("token");
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/requests`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${encodeURIComponent(token)}` },
         body: JSON.stringify({ 
           problemId: problem._id,
           ngoId: problem.createdBy,
@@ -114,7 +114,7 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
       const token = localStorage.getItem("token");
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/problems/${problem._id}/status`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${encodeURIComponent(token)}` },
         body: JSON.stringify({ status: newStatus }),
       });
       const data = await res.json();
@@ -129,7 +129,7 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
       const token = localStorage.getItem("token");
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/problems/${problem._id}`, {
         method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
+        headers: { "Authorization": `Bearer ${encodeURIComponent(token)}` }
       });
       if (res.ok) {
         toast.success("Report deleted successfully");
@@ -150,7 +150,7 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
       const token = localStorage.getItem("token");
       await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/problems/${problem._id}/messages`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${encodeURIComponent(token)}` },
         body: JSON.stringify(msgData)
       });
     } catch (err) {}
@@ -399,7 +399,7 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
                 const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com"}/api/ai/auto-assign/${problem._id}`, { 
                   method: "POST",
                   headers: { 
-                    "Authorization": `Bearer ${token}`,
+                    "Authorization": `Bearer ${encodeURIComponent(token)}`,
                     "Content-Type": "application/json"
                   }
                 });

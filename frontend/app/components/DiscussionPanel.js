@@ -26,7 +26,7 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
     setLoading(true);
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     fetch(`${API_BASE}/api/messages/${problemId}`, {
-      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+      headers: { ...(token ? { Authorization: `Bearer ${encodeURIComponent(token)}` } : {}) }
     })
       .then(res => res.json())
       .then(data => {
@@ -74,7 +74,7 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
 
     // Fetch Teams
     fetch(`${API_BASE}/api/teams/problem/${problemId}`, {
-      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+      headers: { ...(token ? { Authorization: `Bearer ${encodeURIComponent(token)}` } : {}) }
     })
       .then(res => res.json())
       .then(data => setTeams(Array.isArray(data) ? data : []))
@@ -100,7 +100,7 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "Authorization": `Bearer ${encodeURIComponent(token)}`
         },
         body: JSON.stringify({ ...newTeam, problemId })
       });
@@ -121,7 +121,7 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
     try {
       const res = await fetch(`${API_BASE}/api/teams/${teamId}/join`, {
         method: "POST",
-        headers: { "Authorization": `Bearer ${token}` }
+        headers: { "Authorization": `Bearer ${encodeURIComponent(token)}` }
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
@@ -135,7 +135,7 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
     try {
       const res = await fetch(`${API_BASE}/api/teams/${teamId}/leave`, {
         method: "POST",
-        headers: { "Authorization": `Bearer ${token}` }
+        headers: { "Authorization": `Bearer ${encodeURIComponent(token)}` }
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
@@ -190,7 +190,7 @@ export default function DiscussionPanel({ problemId, user, onClose, problemTitle
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
+          ...(token ? { Authorization: `Bearer ${encodeURIComponent(token)}` } : {})
         },
         body: JSON.stringify(msgData)
       });

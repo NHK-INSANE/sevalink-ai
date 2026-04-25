@@ -107,7 +107,7 @@ router.post("/", auth, validate(problemSchema), async (req, res) => {
 
 Type: ${problem.category || "General Incident"}
 Urgency: ${problem.urgency || "HIGH"}
-Location: [${problem.location?.lat.toFixed(4)}, ${problem.location?.lng.toFixed(4)}]
+Location: [${(problem.location?.lat || 0).toFixed(4)}, ${(problem.location?.lng || 0).toFixed(4)}]
 
 INSTRUCTIONS FOR RESPONDERS:
 1. Proceed to coordinate via this secure channel.

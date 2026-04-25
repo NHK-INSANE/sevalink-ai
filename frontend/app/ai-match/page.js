@@ -108,7 +108,7 @@ function AIMatchContent() {
     try {
       const res = await fetch(`${API_BASE}/api/ai/auto-assign/${problemId}`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
       });
       const data = await res.json();
       if (data.success) {
@@ -137,7 +137,7 @@ function AIMatchContent() {
       const matchedResults = await Promise.all(openProblems.map(async (p) => {
         try {
           const res = await fetch(`${API_BASE}/api/ai/match/users/${p._id}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+            headers: { Authorization: `Bearer ${encodeURIComponent(localStorage.getItem("token"))}` }
           });
           const vols = await res.json();
           return { problem: p, volunteers: Array.isArray(vols) ? vols : [] };

@@ -99,7 +99,7 @@ export default function ProfilePage() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.put(`${API_BASE}/api/users/update-profile`, formData, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
       });
       
       const updatedUser = res.data;

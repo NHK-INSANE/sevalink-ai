@@ -219,7 +219,7 @@ export default function SubmitPage() {
         });
       }
       setSuccess(true);
-      setForm({ title: "", description: "", category: "", requiredSkill: "" });
+      setForm({ title: "", description: "", categories: [], requiredSkills: [] });
       setCustomCategory("");
       setCustomSkill("");
       setAiUrgency(null);

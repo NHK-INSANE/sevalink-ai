@@ -19,7 +19,7 @@ export const NotificationProvider = ({ children }) => {
       if (!token) return;
       
       const res = await fetch(`${API_BASE}/api/notifications`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
       });
       const data = await res.json();
       if (Array.isArray(data)) {
@@ -36,7 +36,7 @@ export const NotificationProvider = ({ children }) => {
       const token = localStorage.getItem("token");
       await fetch(`${API_BASE}/api/notifications/${id}/read`, {
         method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
       });
       setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
       setUnreadCount(prev => Math.max(0, prev - 1));
@@ -50,7 +50,7 @@ export const NotificationProvider = ({ children }) => {
       const token = localStorage.getItem("token");
       await fetch(`${API_BASE}/api/notifications/read-all`, {
         method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
       });
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       setUnreadCount(0);

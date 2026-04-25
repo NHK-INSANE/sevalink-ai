@@ -50,7 +50,7 @@ function ChatContent() {
       
       // 1. Fetch conversations
       const convRes = await fetch(`${API_BASE}/api/chat`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
       });
       let convs = await convRes.json();
       setConversations(convs);
@@ -68,7 +68,7 @@ function ChatContent() {
             method: "POST",
             headers: { 
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}` 
+              Authorization: `Bearer ${encodeURIComponent(token)}` 
             },
             body: JSON.stringify({ receiverId: targetUserId })
           });
@@ -97,7 +97,7 @@ function ChatContent() {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/api/chat/${chatId}/messages`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
       });
       const data = await res.json();
       setMessages(data);
@@ -105,7 +105,7 @@ function ChatContent() {
       // Mark as seen
       fetch(`${API_BASE}/api/chat/${chatId}/seen`, {
         method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
       });
     } catch (err) {
       console.error("Fetch messages error", err);
@@ -163,7 +163,7 @@ function ChatContent() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${encodeURIComponent(token)}`
         },
         body: JSON.stringify({ text: textToSend, receiverId })
       });

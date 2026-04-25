@@ -132,7 +132,7 @@ function VolunteersContent() {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/api/problems/${addMemberTo}/members`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${encodeURIComponent(token)}` },
         body: JSON.stringify({ memberId: targetUserId })
       });
       const data = await res.json();
@@ -151,7 +151,7 @@ function VolunteersContent() {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/api/problems/${selectedProbId}/assign`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${encodeURIComponent(token)}` },
         body: JSON.stringify({ 
           volunteerId: selectedUser._id,
           volunteerName: selectedUser.name
