@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
 import PageWrapper from "../components/PageWrapper";
 import { createProblem, getUrgency, getAISuggestion } from "../utils/api";
+import { socket } from "../../lib/socket";
 import { getUser } from "../utils/auth";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -118,6 +119,14 @@ export default function SubmitPage() {
         }));
         toast.success(`AI detected needed responders: ${result.responders.join(", ")}`);
       }
+
+      // 🔥 Emit to OPS Command Center
+      socket.emit("ai_update", {
+        priority: result.urgency,
+        score: result.score,
+        responders: result.responders,
+        message: `AI Analysis: ${result.urgency} priority detected.`
+      });
     } catch {
       setAiUrgency("Medium");
       setAiScore(null);
@@ -205,9 +214,15 @@ export default function SubmitPage() {
         } 
       });
       
-      console.log("📥 SUBMIT RESPONSE:", response);
-      
       toast.success("Problem submitted successfully!");
+
+      // 🔥 Emit to OPS Command Center
+      socket.emit("new_crisis", {
+        title: form.title,
+        urgency: urgency,
+        location: { lat: location?.lat, lng: location?.lng },
+        message: form.description
+      });
       
       // Show matched volunteer info if available
       if (response?.matched?.length > 0) {

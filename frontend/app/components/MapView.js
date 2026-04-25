@@ -357,17 +357,17 @@ function MapZoomListener({ setShowClusters, onZoomChange }) {
  * Locate Me button. Tiles always stay OSM light (unaffected by dark mode).
  */
 export default function MapView({
-  problems = [],
-  ngos = [],
-  helpers = [],
-  sosMarkers = [],   // [{latitude, longitude, message, senderName, time}]
+  problems,
+  ngos,
+  helpers,
+  sosMarkers,
   type = "all",
-  center = [22.57, 88.36],
-  zoom = 5,
   height = "400px",
-  zoomToUser = false,
+  zoom = 6,
+  zoomToUser = true,
   showHeatmap = false,
-  onZoomChange,
+  heatmapData = [],
+  onZoomChange
 }) {
   const [showClusters, setShowClusters] = useState(true);
 
@@ -412,13 +412,15 @@ export default function MapView({
         {/* 🔥 Custom Crisis Heatmap Layer */}
         {showHeatmap && (
           <HeatmapLayer 
-            points={safeProblems
-              .filter(p => p.location?.lat && p.location?.lng)
-              .map(p => ({
-                lat: p.location.lat,
-                lng: p.location.lng,
-                urgency: p.urgency
-              }))
+            points={heatmapData.length > 0 
+              ? heatmapData 
+              : safeProblems
+                .filter(p => p.location?.lat && p.location?.lng)
+                .map(p => ({
+                  lat: p.location.lat,
+                  lng: p.location.lng,
+                  intensity: p.urgency?.toLowerCase() === "critical" ? 1.0 : 0.6
+                }))
             } 
           />
         )}

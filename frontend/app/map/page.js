@@ -52,6 +52,7 @@ export default function MapPage() {
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [mapZoom, setMapZoom]   = useState(6);
   const [isLocated, setIsLocated] = useState(false);
+  const [heatmapPoints, setHeatmapPoints] = useState([]);
   const user = getUser();
 
   // ── Fetch initial data ────────────────────────────────────────────────────
@@ -158,6 +159,11 @@ export default function MapPage() {
       });
     });
 
+    socket.on("heatmap_update", (data) => {
+      console.log("🔥 Heatmap data received:", data.length, "points");
+      setHeatmapPoints(data);
+    });
+
     const handleDenied = () => setIsLocated(false);
     window.addEventListener("map-user-denied", handleDenied);
 
@@ -169,6 +175,7 @@ export default function MapPage() {
       socket.off("dispatch");
       socket.off("responder_moved");
       socket.off("pre_alert");
+      socket.off("heatmap_update");
       window.removeEventListener("map-user-denied", handleDenied);
     };
   }, []);
@@ -191,6 +198,14 @@ export default function MapPage() {
           senderName: user?.name || "Anonymous",
         }),
       });
+
+      // 🔥 Emit to OPS Command Center
+      socket.emit("sos_alert", {
+        location: { lat: position.coords.latitude, lng: position.coords.longitude },
+        message: "Emergency! Immediate help needed!",
+        senderName: user?.name || "Anonymous"
+      });
+
       toast.success("SOS sent to all connected users!");
     } catch {
       toast.error("Could not send SOS — enable location access");
@@ -361,6 +376,7 @@ export default function MapPage() {
                 zoom={6}
                 zoomToUser={true}
                 showHeatmap={showHeatmap}
+                heatmapData={heatmapPoints}
                 onZoomChange={setMapZoom}
               />
             </div>

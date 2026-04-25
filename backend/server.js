@@ -54,8 +54,16 @@ global.io = io; // Make accessible globally for notification emitters
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Real-time Socket Mapping
 const userSockets = new Map(); // userId -> socketId
+
+// 📐 Distance Function (Haversine)
+const getDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+};
 
 io.on("connection", (socket) => {
   console.log("🟢 User connected via Socket.IO:", socket.id);
@@ -107,12 +115,151 @@ io.on("connection", (socket) => {
 
   socket.on("send_message", ({ problemId, text, senderName }) => {
     io.to(problemId).emit("receive_message", { text, senderName, time: new Date() });
+
+    // 🔥 AI DISPATCHER AUTO-REPLY (Simulation)
+    if (text.toLowerCase().includes("help") || text.toLowerCase().includes("status") || text.toLowerCase().includes("update")) {
+      setTimeout(() => {
+        io.to(problemId).emit("receive_message", { 
+          text: "🤖 AI DISPATCHER: I've processed your message. Nearby units have been alerted to the latest status. Please maintain secure communications.", 
+          senderName: "AI Dispatcher", 
+          time: new Date() 
+        });
+      }, 1500);
+    }
   });
 
   // 🔥 LIVE RESPONDER TRACKING
   socket.on("update_location", (data) => {
     // data = { id, lat, lng }
     io.emit("responder_moved", data);
+    
+    // 🔥 Sync with OPS Command Center
+    io.to("ops_room").emit("ops_event", {
+      type: "SYSTEM",
+      payload: { message: `Unit ${data.id?.slice(-4)} moving to target`, location: { lat: data.lat, lng: data.lng }, isTracking: true },
+      time: new Date()
+    });
+  });
+
+  // 🏥 OPS COMMAND CENTER LOGIC
+  socket.on("join_ops", () => {
+    socket.join("ops_room");
+    console.log(`📡 Socket ${socket.id} joined OPS Command Center`);
+  });
+
+  socket.on("new_crisis", (data) => {
+    // 1. AI Auto-Reply to the sender
+    socket.emit("ops_event", {
+      type: "AI",
+      payload: { 
+        message: "🧠 AI DISPATCHER: We are taking action for your request. Stay calm. Help is being coordinated.",
+        isAutoReply: true
+      },
+      time: new Date()
+    });
+
+    // 2. Global Alert if Critical
+    if (String(data.urgency || "").toLowerCase() === "critical") {
+      io.emit("global_alert", {
+        message: `🚨 URGENT: Critical crisis reported: ${data.title}`,
+        location: data.location,
+        type: "CRITICAL"
+      });
+    }
+
+    // 3. Auto-Assign Logic (Basic)
+    const autoAssign = (desc) => {
+      const d = String(desc || "").toLowerCase();
+      if (d.includes("injured") || d.includes("blood") || d.includes("medical")) return ["Ambulance", "Medical Team"];
+      if (d.includes("fire") || d.includes("smoke") || d.includes("explosion")) return ["Fire Dept", "Rescue Squad"];
+      if (d.includes("flood") || d.includes("water") || d.includes("drown")) return ["Water Rescue", "NGO"];
+      return ["Local NGO", "Volunteer Unit"];
+    };
+
+    const suggestedResponders = autoAssign(data.message || data.description);
+
+    // 4. Find Nearest Responders
+    const findNearest = async () => {
+      try {
+        const responders = await User.find({
+          role: { $in: ["volunteer", "Volunteer", "worker", "Worker", "ngo", "NGO"] }
+        });
+        const nearby = responders
+          .map(r => {
+            const rLat = r.location?.lat || r.latitude || 22.3;
+            const rLng = r.location?.lng || r.longitude || 87.3;
+            const dist = getDistance(data.location?.lat || 22.3, data.location?.lng || 87.3, rLat, rLng);
+            return { name: r.name, role: r.role, distance: dist.toFixed(2), _id: r._id };
+          })
+          .sort((a, b) => a.distance - b.distance)
+          .slice(0, 5);
+        
+        io.to("ops_room").emit("ops_event", {
+          type: "NEAREST",
+          payload: { nearby, crisisTitle: data.title },
+          time: new Date()
+        });
+      } catch (err) { console.error("Smart Routing Error:", err); }
+    };
+    findNearest();
+
+    // 5. Broadcast to OPS
+    io.to("ops_room").emit("ops_event", {
+      type: "DISPATCH",
+      payload: { ...data, suggestedResponders },
+      time: new Date()
+    });
+
+    // 5. Broadcast Auto-Assign Event
+    io.to("ops_room").emit("ops_event", {
+      type: "AI",
+      payload: { 
+        message: `🧠 AI Suggested: ${suggestedResponders.join(" + ")}`,
+        crisisTitle: data.title 
+      },
+      time: new Date()
+    });
+  });
+
+  socket.on("sos_alert", (data) => {
+    // AI Auto-Reply for SOS
+    socket.emit("ops_event", {
+      type: "AI",
+      payload: { 
+        message: "🚨 SOS RECEIVED: Help is on the way. The nearest responders have been notified.",
+        isAutoReply: true
+      },
+      time: new Date()
+    });
+
+    io.to("ops_room").emit("ops_event", {
+      type: "SOS",
+      payload: data,
+      time: new Date()
+    });
+
+    // Global Alert for SOS
+    io.emit("global_alert", {
+      message: `🆘 SOS EMERGENCY: ${data.senderName || "Unknown"} needs help!`,
+      location: data.location,
+      type: "SOS"
+    });
+  });
+
+  socket.on("ai_update", (data) => {
+    io.to("ops_room").emit("ops_event", {
+      type: "AI",
+      payload: data,
+      time: new Date()
+    });
+  });
+
+  socket.on("system_event", (data) => {
+    io.to("ops_room").emit("ops_event", {
+      type: data.type || "SYSTEM",
+      payload: data.payload || data,
+      time: new Date()
+    });
   });
 
   socket.on("disconnect", () => {
@@ -179,18 +326,17 @@ app.post("/api/sos", sosLimiter, async (req, res) => {
     await sos.save();
     console.log("🚨 SOS saved:", sos);
 
+    // 🔥 Broadcast to OPS Room
+    io.to("ops_room").emit("ops_event", {
+      type: "SOS",
+      payload: sos,
+      time: new Date()
+    });
+
     // 🔥 Find Nearest Responders (NGOs & Volunteers)
     const responders = await User.find({
       role: { $in: ["volunteer", "Volunteer", "worker", "Worker", "ngo", "NGO"] }
     });
-
-    const getDistance = (lat1, lon1, lat2, lon2) => {
-      const R = 6371;
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-      return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-    };
 
     const nearest = responders
       .map(r => {
@@ -312,6 +458,13 @@ const startServer = async () => {
           
           io.emit("escalation", r);
           io.emit("problem-updated", r);
+
+          // 🔥 Broadcast to OPS Room
+          io.to("ops_room").emit("ops_event", {
+            type: "SYSTEM",
+            payload: { message: `Escalated: ${r.title}`, problemId: r._id },
+            time: new Date()
+          });
         }
       } catch (err) {
         console.error("Escalation worker error:", err);
@@ -340,12 +493,43 @@ const startServer = async () => {
               message: `⚠️ Predictive System: High incident cluster forming near [${zone.lat.toFixed(2)}, ${zone.lng.toFixed(2)}]`,
               location: { lat: zone.lat, lng: zone.lng }
             });
+
+            // 🔥 Broadcast to OPS Room
+            io.to("ops_room").emit("ops_event", {
+              type: "AI",
+              payload: { message: `Cluster detected at ${zone.lat.toFixed(2)}, ${zone.lng.toFixed(2)}` },
+              time: new Date()
+            });
           }
         });
       } catch (err) {
         console.error("Prediction worker error:", err);
       }
     }, 5 * 60 * 1000); // Check every 5 minutes
+
+    // 🔥 HEATMAP INTELLIGENCE WORKER
+    setInterval(async () => {
+      try {
+        const Problem = require("./models/Problem");
+        const crises = await Problem.find({
+          status: { $ne: "Resolved" }
+        });
+        
+        const heatMap = {};
+        crises.forEach(c => {
+          if (!c.location?.lat || !c.location?.lng) return;
+          const key = `${Math.round(c.location.lat * 10)}_${Math.round(c.location.lng * 10)}`;
+          heatMap[key] = (heatMap[key] || 0) + 1;
+        });
+
+        const heatmapData = Object.entries(heatMap).map(([key, count]) => {
+          const [lat, lng] = key.split("_");
+          return { lat: lat / 10, lng: lng / 10, intensity: count };
+        });
+
+        io.emit("heatmap_update", heatmapData);
+      } catch (err) { console.error("Heatmap Worker Error:", err); }
+    }, 2 * 60 * 1000); // Update every 2 minutes
 
   } catch (err) {
     console.error("❌ MongoDB connection error:", err.message);

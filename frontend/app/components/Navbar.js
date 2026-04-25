@@ -45,6 +45,35 @@ export default function Navbar() {
   useEffect(() => {
     const currentUser = getUser();
     setUser(currentUser);
+
+    // 🔥 Global Emergency Alerts
+    const handleGlobalAlert = (alert) => {
+      toast.error(alert.message, {
+        duration: 10000,
+        position: "top-center",
+        style: {
+          background: alert.type === "CRITICAL" ? "#dc2626" : "#f97316",
+          color: "#fff",
+          fontWeight: "bold",
+          fontSize: "14px",
+          border: "2px solid #fff",
+          boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
+          minWidth: "300px"
+        },
+        icon: alert.type === "CRITICAL" ? "🚨" : "🆘",
+      });
+
+      // Play alert sound if critical
+      if (alert.type === "CRITICAL" || alert.type === "SOS") {
+        try {
+          const audio = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
+          audio.play().catch(() => {});
+        } catch (e) {}
+      }
+    };
+
+    socket.on("global_alert", handleGlobalAlert);
+    return () => socket.off("global_alert", handleGlobalAlert);
   }, []);
 
   const handleLogout = () => {

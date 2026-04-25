@@ -83,6 +83,16 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
       const data = await res.json();
       if (data.success) {
         toast.success("Request sent to the mission waiting list");
+        
+        // 🔥 Emit to OPS Command Center
+        socket.emit("system_event", {
+          type: "CONNECT",
+          payload: { 
+            message: `${user.name} requested to join: ${problem.title}`,
+            from: user._id,
+            problemId: problem._id
+          }
+        });
       } else toast.error(data.error || "Request failed");
     } catch (err) { toast.error("Connection error"); }
   };
@@ -101,7 +111,19 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
         }),
       });
       const data = await res.json();
-      if (data.success) toast.success("Leadership request transmitted to HQ");
+      if (data.success) {
+        toast.success("Leadership request transmitted to HQ");
+
+        // 🔥 Emit to OPS Command Center
+        socket.emit("system_event", {
+          type: "SYSTEM",
+          payload: { 
+            message: `${user.name} requested LEADERSHIP for: ${problem.title}`,
+            from: user._id,
+            problemId: problem._id
+          }
+        });
+      }
       else toast.error(data.error || "Request failed");
     } catch (err) { toast.error("Connection error"); }
   };
