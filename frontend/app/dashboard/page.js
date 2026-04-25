@@ -424,13 +424,25 @@ export default function Dashboard() {
                 </button>
                 <button 
                   onClick={handleLocateAndSort}
-                  className="bg-white/10 hover:bg-white/20 backdrop-blur-md px-4 py-2 rounded-lg text-white text-[10px] font-black uppercase tracking-widest border border-white/10 shadow-lg transition-all"
+                  className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest border shadow-lg transition-all ${
+                    sortNearest 
+                    ? "bg-indigo-600 text-white border-indigo-500 shadow-indigo-500/20" 
+                    : "bg-white text-black border-white hover:bg-gray-200"
+                  }`}
                 >
                   {sortNearest ? "Show All" : "Locate Me"}
                 </button>
               </div>
               <div className="h-[500px]">
-                <MapView problems={safeProblems} type="problems" height="100%" zoom={6} center={[22.3, 87.3]} showHeatmap={true} />
+                <MapView 
+                  problems={safeProblems} 
+                  type="problems" 
+                  height="100%" 
+                  zoom={sortNearest ? 14 : 6} 
+                  center={sortNearest && userLoc ? [userLoc.lat, userLoc.lng] : [22.3, 87.3]} 
+                  showHeatmap={true} 
+                  zoomToUser={sortNearest}
+                />
               </div>
             </div>
           </div>

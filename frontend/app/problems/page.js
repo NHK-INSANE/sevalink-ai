@@ -134,19 +134,19 @@ export default function ProblemsPage() {
               className="w-full md:max-w-md px-4 py-2.5 rounded-xl border border-white/10 bg-black/20 text-sm focus:border-purple-500 transition-all outline-none text-white"
             />
             <div className="flex items-center gap-3 w-full md:w-auto">
-              <div className="relative group">
+              <div className="relative group w-full md:w-48">
                 <select 
                   value={sortBy} 
                   onChange={(e) => {
                     if (e.target.value === "nearest" && !userLoc) handleLocate();
                     else setSortBy(e.target.value);
                   }}
-                  className="bg-[#0B1220] border border-white/10 rounded-xl pl-4 pr-10 py-2.5 text-xs font-semibold text-gray-300 outline-none hover:border-purple-500/50 transition cursor-pointer appearance-none shadow-lg w-full md:w-48"
+                  className="w-full bg-[#0B1220] border border-white/10 rounded-xl pl-4 pr-10 py-3 text-[10px] font-black uppercase tracking-widest text-gray-300 outline-none hover:border-purple-500/50 transition cursor-pointer appearance-none shadow-xl"
                 >
-                  <option value="newest" className="bg-[#0B1220]">Newest First</option>
-                  <option value="nearest" className="bg-[#0B1220]">Nearest</option>
-                  <option value="urgency" className="bg-[#0B1220]">By Urgency</option>
-                  <option value="category" className="bg-[#0B1220]">By Category</option>
+                  <option value="newest" className="bg-[#0B1220] text-white">Newest First</option>
+                  <option value="nearest" className="bg-[#0B1220] text-white">Nearest</option>
+                  <option value="urgency" className="bg-[#0B1220] text-white">By Urgency</option>
+                  <option value="category" className="bg-[#0B1220] text-white">By Category</option>
                 </select>
                 <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-500 group-hover:text-purple-400 transition-colors">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>

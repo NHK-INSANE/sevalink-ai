@@ -137,8 +137,14 @@ export default function SubmitPage() {
   };
 
   const applySuggestion = () => {
-    setForm(prev => ({ ...prev, description: aiSuggestion }));
+    if (!aiSuggestion) return;
+    setForm(prev => {
+      const next = { ...prev, description: aiSuggestion };
+      console.log("Applying AI Suggestion. New description:", aiSuggestion);
+      return next;
+    });
     setAiSuggestion("");
+    toast.success("AI suggestion applied!");
   };
 
   const handleUseMyLocation = async () => {
@@ -320,7 +326,7 @@ export default function SubmitPage() {
                     disabled={!form.description.trim() || aiLoading} 
                     className="btn-secondary !text-[9px] !px-4 !py-2 !rounded-xl !bg-black/40 backdrop-blur-md border-white/5 hover:!border-white/20"
                   >
-                    {aiLoading ? "Analyzing..." : "🤖 Classify"}
+                    {aiLoading ? "Analyzing..." : "🤖 Get AI Score"}
                   </button>
                   <button 
                     type="button" 
@@ -380,7 +386,7 @@ export default function SubmitPage() {
             {/* Multi-select Pills */}
             <div className="space-y-8">
               <div className="space-y-4">
-                <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Classification Categories</label>
+                <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Incident Categories</label>
                 <div className="flex flex-wrap gap-2">
                   {CATEGORIES.map(c => (
                     <button
@@ -389,7 +395,7 @@ export default function SubmitPage() {
                       onClick={() => toggleSelection("categories", c)}
                       className={`px-5 py-2.5 rounded-xl text-[10px] font-bold border uppercase tracking-widest transition-all ${
                         form.categories.includes(c)
-                          ? "bg-[var(--primary)] text-white border-transparent shadow-lg shadow-indigo-500/20"
+                          ? "bg-purple-600 text-white border-transparent shadow-lg shadow-purple-500/20"
                           : "bg-white/5 text-[var(--text-secondary)] border-white/5 hover:border-white/10 hover:text-white"
                       }`}
                     >
@@ -471,7 +477,7 @@ export default function SubmitPage() {
                   <div className="loader-small"></div>
                 ) : (
                   <>
-                    Transmit Crisis Signal
+                    Submit Crisis Report
                     <span className="text-xl group-hover:translate-x-2 transition-transform">→</span>
                   </>
                 )}

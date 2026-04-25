@@ -327,10 +327,10 @@ select:focus {
   background: rgba(255, 255, 255, 0.06) !important;
 }
 
-/* Fix select option background (dark) */
+/* Fix select option background (solid for cross-browser visibility) */
 option {
-  background: var(--bg-card);
-  color: var(--text-primary);
+  background: #111827 !important;
+  color: #f3f4f6 !important;
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

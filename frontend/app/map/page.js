@@ -283,7 +283,7 @@ export default function MapPage() {
               
               <button 
                 onClick={() => window.dispatchEvent(new CustomEvent('map-locate-me'))}
-                className="bg-white/10 backdrop-blur-md hover:bg-white/20 h-10 px-4 rounded-xl text-white text-[10px] font-black uppercase tracking-widest border border-white/10 shadow-xl transition-all flex items-center justify-center gap-2"
+                className="bg-white hover:bg-gray-200 h-10 px-4 rounded-xl text-black text-[10px] font-black uppercase tracking-widest border border-white shadow-xl transition-all flex items-center justify-center gap-2"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
                 Locate Me
