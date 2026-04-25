@@ -127,11 +127,29 @@ export default function MapPage() {
       }
     });
 
+    socket.on("dispatch", (data) => {
+      if (user && (user._id === data.responderId || user.id === data.responderId)) {
+        toast(`🚨 You have been dispatched to a crisis!`, {
+          duration: 10000,
+          icon: '🚨',
+          style: { background: "#7f1d1d", color: "#fff", border: "1px solid #ef4444", fontWeight: "bold" }
+        });
+      }
+    });
+
+    socket.on("responder_moved", (data) => {
+      setNgos(prev => prev.map(u => 
+        u._id === data.id ? { ...u, location: { lat: data.lat, lng: data.lng } } : u
+      ));
+    });
+
     return () => {
       socket.off("new-problem");
       socket.off("problem-updated");
       socket.off("sos-alert");
       socket.off("assigned");
+      socket.off("dispatch");
+      socket.off("responder_moved");
     };
   }, []);
 

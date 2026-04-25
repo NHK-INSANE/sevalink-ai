@@ -116,6 +116,14 @@ router.post("/", auth, validate(problemSchema), async (req, res) => {
           problem: { _id: problem._id, title: problem.title, urgency: problem.urgency },
           matched: topMatches
         });
+        
+        if (bestMatch) {
+          io.emit("dispatch", {
+            responderId: bestMatch._id.toString(),
+            reportId: problem._id.toString(),
+            title: problem.title
+          });
+        }
       }
     }
 

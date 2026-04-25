@@ -367,23 +367,45 @@ export default function SubmitPage() {
               </AnimatePresence>
             </div>
 
+            {/* User Severity */}
+            <div className="space-y-3">
+              <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Your Severity Estimate</label>
+              <select
+                value={form.userSeverity || "Medium"}
+                onChange={(e) => setForm(prev => ({ ...prev, userSeverity: e.target.value }))}
+                className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:border-[var(--primary)] outline-none transition-all text-white"
+              >
+                <option value="Low">Low (No immediate danger)</option>
+                <option value="Medium">Medium (Minor risk)</option>
+                <option value="High">High (Serious issue)</option>
+                <option value="Critical">Critical (Life-threatening)</option>
+              </select>
+            </div>
+
             {/* AI Urgency Result */}
             <AnimatePresence>
               {aiUrgency && (
                 <motion.div 
                   initial={{ scale: 0.95, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="card !bg-white/[0.02] border-white/10 flex items-center gap-6 p-6"
+                  className="flex flex-col gap-3"
                 >
-                  <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-3xl">🤖</div>
-                  <div className="flex-1">
-                    <div className={`text-sm font-bold uppercase tracking-tight ${URGENCY_INFO[aiUrgency]?.color}`}>{aiUrgency} Priority</div>
-                    <div className="text-[10px] text-[var(--text-secondary)] mt-1 font-medium">{URGENCY_INFO[aiUrgency]?.desc}</div>
+                  <div className="card !bg-white/[0.02] border-white/10 flex items-center gap-6 p-6">
+                    <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-3xl">🤖</div>
+                    <div className="flex-1">
+                      <div className={`text-sm font-bold uppercase tracking-tight ${URGENCY_INFO[aiUrgency]?.color}`}>{aiUrgency} Priority</div>
+                      <div className="text-[10px] text-[var(--text-secondary)] mt-1 font-medium">{URGENCY_INFO[aiUrgency]?.desc}</div>
+                    </div>
+                    {aiScore !== null && (
+                      <div className="text-right">
+                        <div className={`text-3xl font-extrabold ${URGENCY_INFO[aiUrgency]?.color} tracking-tighter`}>{aiScore}%</div>
+                        <div className="text-[8px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-0.5">Confidence</div>
+                      </div>
+                    )}
                   </div>
-                  {aiScore !== null && (
-                    <div className="text-right">
-                      <div className={`text-3xl font-extrabold ${URGENCY_INFO[aiUrgency]?.color} tracking-tighter`}>{aiScore}%</div>
-                      <div className="text-[8px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-0.5">Urgency Index</div>
+                  {aiUrgency !== form.userSeverity && aiScore > 70 && (
+                    <div className="text-yellow-400 text-sm font-bold bg-yellow-400/10 border border-yellow-400/20 px-4 py-2 rounded-xl flex items-center gap-2">
+                      ⚠️ AI upgraded severity to {aiUrgency}
                     </div>
                   )}
                 </motion.div>

@@ -137,10 +137,17 @@ export default function Dashboard() {
       setProblems(prev => prev.map(p => p._id === updatedProb._id ? updatedProb : p));
     });
 
+    socket.on("responder_moved", (data) => {
+      setUsersList(prev => prev.map(u => 
+        u._id === data.id ? { ...u, location: { lat: data.lat, lng: data.lng } } : u
+      ));
+    });
+
     return () => {
       socket.off("new-problem");
       socket.off("escalation");
       socket.off("problem-updated");
+      socket.off("responder_moved");
     };
   }, []);
 

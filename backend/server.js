@@ -108,6 +108,12 @@ io.on("connection", (socket) => {
     io.to(problemId).emit("receive_message", { text, senderName, time: new Date() });
   });
 
+  // 🔥 LIVE RESPONDER TRACKING
+  socket.on("update_location", (data) => {
+    // data = { id, lat, lng }
+    io.emit("responder_moved", data);
+  });
+
   socket.on("disconnect", () => {
     for (const [uid, sid] of userSockets.entries()) {
       if (sid === socket.id) {
@@ -157,7 +163,7 @@ const sosLimiter = rateLimit({
   message: "Too many SOS requests. Please wait a moment."
 });
 
-// SOS Emergency Broadcast
+// SOS Emergency Broadcast to Nearest Responders
 app.post("/api/sos", sosLimiter, async (req, res) => {
   try {
     const { latitude, longitude, message, senderName } = req.body;
@@ -168,20 +174,47 @@ app.post("/api/sos", sosLimiter, async (req, res) => {
       senderName: senderName || "Anonymous",
     });
     await sos.save();
-    io.emit("sos-alert", sos);
-    console.log("🚨 SOS broadcast saved & emitted:", sos);
+    console.log("🚨 SOS saved:", sos);
 
+    // 🔥 Find Nearest Responders (NGOs & Volunteers)
+    const responders = await User.find({
+      role: { $in: ["volunteer", "Volunteer", "worker", "Worker", "ngo", "NGO"] }
+    });
+
+    const getDistance = (lat1, lon1, lat2, lon2) => {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+      return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    };
+
+    const nearest = responders
+      .map(r => {
+        const rLat = r.location?.lat || r.latitude || 22.3;
+        const rLng = r.location?.lng || r.longitude || 87.3;
+        return { user: r, distance: getDistance(latitude, longitude, rLat, rLng) };
+      })
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 5);
+
+    // 🚀 Broadcast to them directly
+    nearest.forEach(r => {
+      const socketId = userSockets.get(r.user._id.toString());
+      if (socketId) {
+        io.to(socketId).emit("sos-alert", sos);
+      }
+    });
+
+    // Auto-remove SOS
     setTimeout(async () => {
       try {
         await SOS.deleteOne({ _id: sos._id });
-        io.emit("remove-sos", sos._id);
-        console.log(`🗑️ SOS ${sos._id} auto-removed`);
-      } catch (err) {
-        console.error("SOS removal error:", err);
-      }
+        io.emit("remove-sos", sos._id); // tell everyone to remove the marker
+      } catch (err) {}
     }, 5 * 60 * 1000);
 
-    res.json({ success: true, sos });
+    res.json({ success: true, sos, notifiedCount: nearest.length });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

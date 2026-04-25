@@ -130,10 +130,28 @@ function LiveTracking() {
     return () => navigator.geolocation.clearWatch(watchId);
   }, [map]);
 
+  const userPinIcon = new L.DivIcon({
+    className: "",
+    html: `<div style="
+      width: 24px; height: 24px;
+      background: #9333ea;
+      border: 3px solid white;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      box-shadow: -2px 2px 5px rgba(0,0,0,0.3);
+      display: flex; align-items: center; justify-content: center;
+    ">
+      <div style="width: 8px; height: 8px; background: white; border-radius: 50%;"></div>
+    </div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 24],
+    popupAnchor: [0, -24],
+  });
+
   if (!userLocation) return null;
 
   return (
-    <Marker position={userLocation} icon={makePulseIcon("#3b82f6", "rgba(59,130,246,0.7)", 14)}>
+    <Marker position={userLocation} icon={userPinIcon}>
       <Popup>You are here</Popup>
     </Marker>
   );
