@@ -90,13 +90,15 @@ export default function ProblemsPage() {
       if (filterStatus !== "All" && p.status !== filterStatus) return false;
       if (search) {
         const s = search.toLowerCase();
-        // If it looks like an ID, prioritize exact/prefix match
-        const isIdSearch = s.startsWith("prb-");
-        const idMatches = (p.problemId?.toLowerCase().includes(s)) || (p.displayId?.toLowerCase().includes(s));
+        // Generate fallback ID to match what the user sees in the ProblemCard
+        const fallbackId = `PRB-${p._id?.slice(-8).toUpperCase()}`;
+        const currentId = (p.problemId || p.displayId || fallbackId).toLowerCase();
+        const idMatches = currentId.includes(s);
         
-        if (isIdSearch) return idMatches;
+        // If it looks like an ID search (starts with prb-), ONLY show ID matches
+        if (s.startsWith("prb-")) return idMatches;
 
-        // Otherwise check title/desc
+        // Otherwise check title/desc/id
         if (!idMatches && 
             !p.title.toLowerCase().includes(s) && 
             !p.description.toLowerCase().includes(s)

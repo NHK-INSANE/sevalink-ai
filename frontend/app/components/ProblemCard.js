@@ -168,7 +168,7 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
           <div className="flex items-center gap-2 mb-1">
             <div className="flex items-center gap-1.5 group cursor-pointer" onClick={copyId}>
               <span className="text-[10px] text-indigo-400 font-black border border-indigo-400/20 px-2 py-0.5 rounded bg-indigo-400/5 uppercase tracking-widest group-hover:border-indigo-400/50 transition-all">
-                {problem.displayId || problem.problemId || `PRB-${problem._id?.slice(-6).toUpperCase()}`}
+                {problem.displayId || problem.problemId || `PRB-${problem._id?.slice(-8).toUpperCase()}`}
               </span>
               <svg className="opacity-40 group-hover:opacity-100 transition-opacity text-indigo-400" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
             </div>
