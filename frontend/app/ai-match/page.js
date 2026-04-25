@@ -7,6 +7,7 @@ import { getProblems, getUsers } from "../utils/api";
 import { getUser } from "../utils/auth";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
+import Link from "next/link";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
 function getDistance(lat1, lon1, lat2, lon2) {
@@ -324,5 +325,17 @@ function AIMatchContent() {
         </main>
       </PageWrapper>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: "100vh", background: "#020617", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div className="loader" />
+      </div>
+    }>
+      <AIMatchContent />
+    </Suspense>
   );
 }
