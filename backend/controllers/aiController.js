@@ -119,9 +119,11 @@ exports.suggestDescription = async (req, res) => {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `
-You are a professional crisis coordinator. 
-Rewrite the following casual text into a professional, clear, and actionable problem report.
-Make it sound authoritative but concise. Keep it under 60 words.
+You are a professional crisis coordinator and emergency strategist. 
+Rewrite the following casual text into a highly professional, detailed, and actionable problem report.
+Expand on the context to ensure responders understand the gravity and specific needs, but keep it structured and clear. 
+The explanation should be comprehensive enough for logistics and medical units to prepare.
+Keep it under 100 words.
 
 Text: ${text}
 

@@ -276,7 +276,7 @@ export default function MapPage() {
               <button 
                 onClick={sendSOS}
                 disabled={sendingSOS}
-                className="bg-red-600 hover:bg-red-700 h-12 px-6 rounded-2xl text-white text-sm font-black shadow-2xl transition-all flex items-center gap-2 hover:scale-105 active:scale-95 border border-red-400/30"
+                className="bg-red-600 hover:bg-red-700 h-10 px-4 rounded-xl text-white text-[10px] font-black shadow-2xl transition-all flex items-center gap-2 hover:scale-105 active:scale-95 border border-red-400/30"
               >
                 {sendingSOS ? <div className="loader-small" /> : <>🚨 SOS EMERGENCY</>}
               </button>

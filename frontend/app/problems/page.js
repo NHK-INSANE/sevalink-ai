@@ -88,7 +88,12 @@ export default function ProblemsPage() {
     .filter((p) => {
       if (filterUrgency !== "All" && p.urgency !== filterUrgency) return false;
       if (filterStatus !== "All" && p.status !== filterStatus) return false;
-      if (search && !p.title.toLowerCase().includes(search.toLowerCase()) && !p.description.toLowerCase().includes(search.toLowerCase())) return false;
+      if (search && 
+          !p.title.toLowerCase().includes(search.toLowerCase()) && 
+          !p.description.toLowerCase().includes(search.toLowerCase()) &&
+          !(p.problemId && p.problemId.toLowerCase().includes(search.toLowerCase())) &&
+          !(p.displayId && p.displayId.toLowerCase().includes(search.toLowerCase()))
+      ) return false;
       return true;
     })
     .sort((a, b) => {

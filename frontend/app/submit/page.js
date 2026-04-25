@@ -442,7 +442,7 @@ export default function SubmitPage() {
                     onClick={handleUseMyLocation} 
                     className="btn-secondary !px-6 !text-[10px] !uppercase !tracking-widest"
                   >
-                    GPS Detect
+                    Auto Detect Location
                   </button>
                 </div>
               </div>
@@ -465,23 +465,25 @@ export default function SubmitPage() {
               </div>
             </div>
 
-            {/* Submit Action */}
+            {/* Submit Action Card */}
             <div className="pt-6">
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                type="submit"
-                disabled={loading}
-                className="btn-glow w-full !py-6 !text-lg !rounded-3xl shadow-[0_20px_50px_var(--primary-glow)] active:scale-95 disabled:opacity-50 group flex items-center justify-center gap-3"
-              >
-                {loading ? (
-                  <div className="loader-small"></div>
-                ) : (
-                  <>
-                    Submit Crisis Report
-                    <span className="text-xl group-hover:translate-x-2 transition-transform">→</span>
-                  </>
-                )}
-              </motion.button>
+              <div className="card !bg-white/5 border-white/10 p-8 flex flex-col items-center">
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  disabled={loading}
+                  className="btn-glow !px-20 !py-6 !text-lg !rounded-3xl shadow-[0_20px_50px_var(--primary-glow)] active:scale-95 disabled:opacity-50 group flex items-center justify-center gap-3"
+                >
+                  {loading ? (
+                    <div className="loader-small"></div>
+                  ) : (
+                    <>
+                      Submit
+                      <span className="text-xl group-hover:translate-x-2 transition-transform">→</span>
+                    </>
+                  )}
+                </motion.button>
+              </div>
             </div>
           </form>
         </div>

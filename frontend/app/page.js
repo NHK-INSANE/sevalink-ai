@@ -120,28 +120,7 @@ export default function Landing() {
             </Link>
           </div>
 
-          {/* Gibson's Face */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.8 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-16 flex flex-col items-center gap-4"
-          >
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
-              <img 
-                src="/gibson.png" 
-                alt="Gibson AI" 
-                className="relative w-24 h-24 rounded-full border-2 border-white/10 shadow-2xl grayscale hover:grayscale-0 transition-all duration-500 cursor-pointer object-cover"
-              />
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-4 border-[#0b0f1a] rounded-full" />
-            </div>
-            <div className="flex flex-col items-center">
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-purple-400">Gibson</span>
-              <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest mt-1">Lead Neural Coordinator</span>
-            </div>
           </motion.div>
-        </motion.div>
 
         {/* Quick Stats */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="container mt-24 pt-20 border-t border-white/5 relative z-10">

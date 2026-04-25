@@ -180,16 +180,11 @@ export default function Dashboard() {
   ];
 
   const handleLocateAndSort = async () => {
-    if (sortNearest) {
-      setSortNearest(false);
-      return;
-    }
     try {
       const loc = await getUserLocation();
       if (loc) {
         setUserLoc(loc);
-        setSortNearest(true);
-        toast.success("Sorting by distance active");
+        toast.success("Location detected 📍");
       }
     } catch (err) {
       toast.error("Location permission required");
@@ -252,7 +247,7 @@ export default function Dashboard() {
                   System Live
                 </div>
                 <span className="w-px h-3 bg-white/10" />
-                <span className="text-indigo-400">{user?.role || "Guest Observer"}</span>
+                <span className="text-indigo-400">{user?.name || "Guest Observer"}</span>
               </div>
             </div>
 
@@ -424,13 +419,9 @@ export default function Dashboard() {
                 </button>
                 <button 
                   onClick={handleLocateAndSort}
-                  className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest border shadow-lg transition-all ${
-                    sortNearest 
-                    ? "bg-indigo-600 text-white border-indigo-500 shadow-indigo-500/20" 
-                    : "bg-white text-black border-white hover:bg-gray-200"
-                  }`}
+                  className="bg-white text-black px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest border border-white hover:bg-gray-200 shadow-lg transition-all"
                 >
-                  {sortNearest ? "Show All" : "Locate Me"}
+                  Locate Me
                 </button>
               </div>
               <div className="h-[500px]">
@@ -438,10 +429,10 @@ export default function Dashboard() {
                   problems={safeProblems} 
                   type="problems" 
                   height="100%" 
-                  zoom={sortNearest ? 14 : 6} 
-                  center={sortNearest && userLoc ? [userLoc.lat, userLoc.lng] : [22.3, 87.3]} 
+                  zoom={userLoc ? 14 : 6} 
+                  center={userLoc ? [userLoc.lat, userLoc.lng] : [22.3, 87.3]} 
                   showHeatmap={true} 
-                  zoomToUser={sortNearest}
+                  zoomToUser={!!userLoc}
                 />
               </div>
             </div>

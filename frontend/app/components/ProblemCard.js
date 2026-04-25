@@ -164,11 +164,16 @@ export default function ProblemCard({ problem: initialProblem, user: propUser })
           </div>
           <h3 className="text-base font-bold text-white tracking-tight leading-snug">{problem.title}</h3>
           
-          <div className="flex flex-wrap items-center gap-2">
-            <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${urgencyColors[problem.urgency?.toLowerCase()] || urgencyColors.medium}`}>
-              {problem.urgency}
-            </span>
-            <div className="flex items-center gap-1 text-[10px] text-gray-500 font-medium italic">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${urgencyColors[problem.urgency?.toLowerCase()] || urgencyColors.medium}`}>
+                {problem.urgency}
+              </span>
+              {categories.map((cat, idx) => (
+                <span key={idx} className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border border-purple-500/20 bg-purple-500/5 text-purple-400">
+                  {cat}
+                </span>
+              ))}
+              <div className="flex items-center gap-1 text-[10px] text-gray-500 font-medium italic">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
               <span className="line-clamp-1 max-w-[200px]">
                 {problem.location?.address || `${problem.location?.lat?.toFixed(3)}, ${problem.location?.lng?.toFixed(3)}`}
