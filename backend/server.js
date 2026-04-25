@@ -315,6 +315,35 @@ const startServer = async () => {
       }
     }, 60000); // Check every minute
 
+    // 🔥 PREDICTIVE CRISIS DETECTION
+    setInterval(async () => {
+      try {
+        const Problem = require("./models/Problem");
+        const recentProblems = await Problem.find({
+          createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+        });
+
+        const zones = {};
+        recentProblems.forEach(r => {
+          if (!r.location?.lat || !r.location?.lng) return;
+          const key = `${Math.round(r.location.lat * 10) / 10}-${Math.round(r.location.lng * 10) / 10}`;
+          if (!zones[key]) zones[key] = { count: 0, lat: r.location.lat, lng: r.location.lng };
+          zones[key].count++;
+        });
+
+        Object.values(zones).forEach(zone => {
+          if (zone.count >= 3) {
+            io.emit("pre_alert", {
+              message: `⚠️ Predictive System: High incident cluster forming near [${zone.lat.toFixed(2)}, ${zone.lng.toFixed(2)}]`,
+              location: { lat: zone.lat, lng: zone.lng }
+            });
+          }
+        });
+      } catch (err) {
+        console.error("Prediction worker error:", err);
+      }
+    }, 5 * 60 * 1000); // Check every 5 minutes
+
   } catch (err) {
     console.error("❌ MongoDB connection error:", err.message);
   }

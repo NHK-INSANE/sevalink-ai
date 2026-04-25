@@ -90,6 +90,12 @@ export default function MapPage() {
     });
 
     socket.on("sos-alert", (data) => {
+      // Play alert sound
+      try {
+        const audio = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
+        audio.play().catch(e => console.log("Audio play blocked by browser:", e));
+      } catch (e) {}
+
       // Show persistent banner
       setSosAlert(data);
       // Add to map markers
@@ -143,6 +149,14 @@ export default function MapPage() {
       ));
     });
 
+    socket.on("pre_alert", (data) => {
+      toast(`🔮 PREDICTIVE ALERT: ${data.message}`, {
+        duration: 10000,
+        icon: '🔮',
+        style: { background: "#4c1d95", color: "#fff", border: "1px solid #a855f7", fontWeight: "bold" }
+      });
+    });
+
     return () => {
       socket.off("new-problem");
       socket.off("problem-updated");
@@ -150,6 +164,7 @@ export default function MapPage() {
       socket.off("assigned");
       socket.off("dispatch");
       socket.off("responder_moved");
+      socket.off("pre_alert");
     };
   }, []);
 
