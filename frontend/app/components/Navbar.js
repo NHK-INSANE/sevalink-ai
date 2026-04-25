@@ -60,13 +60,27 @@ export default function Navbar() {
     });
 
     socket.on("dispatch_alert", (data) => {
-      toast.success(data.message, {
-        duration: 8000,
-        position: "top-center",
-        style: { background: "#10b981", color: "#fff", fontWeight: "bold", borderRadius: "12px" },
+      toast.error(`🚨 DISPATCH: ${data.message}`, {
+        duration: 10000,
+        icon: '🚨',
+        style: { background: "#7f1d1d", color: "#fff", border: "1px solid #ef4444", fontWeight: "bold" }
       });
+      // Optionally auto-redirect or show a button
       if (data.conversationId) {
-        router.push(`/chat?conversationId=${data.conversationId}`);
+        toast((t) => (
+          <span className="flex items-center gap-3">
+            <b>New Instructions from AI</b>
+            <button 
+              className="bg-white text-black px-3 py-1 rounded-md text-[10px] font-black uppercase"
+              onClick={() => {
+                toast.dismiss(t.id);
+                router.push(`/chat?id=${data.conversationId}`);
+              }}
+            >
+              Open Chat
+            </button>
+          </span>
+        ), { duration: 15000 });
       }
     });
 

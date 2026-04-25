@@ -75,87 +75,90 @@ async function matchVolunteers(problem, topN = 5) {
   }
 }
 
-// POST /api/problems — Create a new problem
+// POST /api/problems — Create a new problem (AI DISPATCHER BRAIN)
 router.post("/", auth, validate(problemSchema), async (req, res) => {
   try {
     const problem = new Problem({
       ...req.body,
       createdBy: req.user.id.toString(),
-      timeline: [{ text: "Problem reported" }]
+      timeline: [{ text: "🚨 Crisis reported to Neural Link" }]
     });
 
+    // 1. AI Analysis (Simulated or using Gemini)
+    // We already have some logic, let's enhance the flow.
     const topMatches = await matchVolunteers(problem, 3);
-
+    
     if (topMatches.length > 0) {
+      const bestMatch = topMatches[0];
+      problem.assignedTo = bestMatch._id.toString();
       problem.team = topMatches.map(m => m._id.toString());
-      problem.assignedTo = topMatches[0]._id.toString();
       problem.status = "In Progress";
-      problem.timeline.push({ text: `AI Auto-Dispatcher assigned ${topMatches.length} responders.` });
+      problem.timeline.push({ text: `🧠 AI Dispatcher: Selected top ${topMatches.length} responders.` });
 
-      // Create Chat Conversation
-      const members = [req.user.id.toString(), ...topMatches.map(m => m._id.toString())];
-      const conversation = await Conversation.create({ members });
-
-      // Create AI Message
-      const systemMessage = `🚨 EMERGENCY DISPATCH 🚨
-
-Type: ${problem.category || "General"} Emergency
-Severity: ${problem.urgency || "Unknown"}
-Location: [${problem.location?.lat}, ${problem.location?.lng}]
-
-Instructions:
-- Reach location immediately.
-- Coordinate with the reporter.
-- Provide status updates here.
-
-Description: "${problem.description}"
-`;
-      await ChatMessage.create({
-        conversationId: conversation._id,
-        senderId: "AI_SYSTEM", // Use string or special ID if schema allows. Wait, ChatMessage senderId is ObjectId ref 'User'.
-        text: systemMessage
+      // 2. Auto-Create Conversation Room
+      const conversation = await Conversation.create({
+        members: [req.user.id, ...problem.team],
+        lastMessage: "🚨 Emergency Response Initialized"
       });
 
+      // 3. Auto-Send AI Instruction Message
+      const aiSystemMessage = `
+🚨 EMERGENCY PROTOCOL INITIALIZED
+
+Type: ${problem.category || "General Incident"}
+Urgency: ${problem.urgency || "HIGH"}
+Location: [${problem.location?.lat.toFixed(4)}, ${problem.location?.lng.toFixed(4)}]
+
+INSTRUCTIONS FOR RESPONDERS:
+1. Proceed to coordinate via this secure channel.
+2. Confirm arrival at location.
+3. Status updates required every 15 minutes.
+
+TEAM: ${topMatches.map(m => m.name).join(", ")}
+`;
+
+      await ChatMessage.create({
+        conversationId: conversation._id,
+        senderId: "000000000000000000000000", // System ID
+        text: aiSystemMessage
+      });
+
+      // 4. Notify via Socket
       const io = req.app.get("io");
       if (io) {
-        // Broadcast AI message to all members
-        members.forEach(userId => {
-          io.to(userId).emit("chat_message", {
+        // Dispatch alerts to helpers
+        topMatches.forEach(h => {
+          io.to(h._id.toString()).emit("dispatch_alert", {
+            message: "🚨 You have been assigned to a crisis",
+            reportId: problem._id,
+            conversationId: conversation._id
+          });
+          
+          // Send the message to their room too
+          io.to(h._id.toString()).emit("chat_message", {
             conversationId: conversation._id,
-            senderId: "AI_SYSTEM",
-            text: systemMessage,
+            senderId: "000000000000000000000000",
+            text: aiSystemMessage,
             createdAt: new Date()
           });
         });
 
-        // Send dispatch alert to assigned helpers
-        topMatches.forEach(m => {
-          io.to(m._id.toString()).emit("dispatch_alert", {
-            message: `🚨 You have been dispatched to a crisis: ${problem.title}`,
-            reportId: problem._id,
-            conversationId: conversation._id
-          });
-        });
-
+        // Broadcast problem
         io.emit("new-problem", problem);
       }
 
       await problem.save();
-      return res.status(201).json({ problem, matched: topMatches, conversationId: conversation._id });
+      res.status(201).json({ problem, matched: topMatches, conversationId: conversation._id });
+    } else {
+      await problem.save();
+      const io = req.app.get("io");
+      if (io) io.emit("new-problem", problem);
+      res.status(201).json({ problem, matched: [] });
     }
 
-    await problem.save();
-    
-    const io = req.app.get("io");
-    if (io) io.emit("new-problem", problem);
-
-    res.status(201).json({ problem, matched: [] });
   } catch (err) {
-    console.error("🔥 CREATE PROBLEM ERROR:", err);
-    res.status(500).json({ 
-      error: "Failed to create problem.",
-      details: err.message 
-    });
+    console.error("🔥 AI DISPATCHER ERROR:", err);
+    res.status(500).json({ error: "Autonomous dispatch failed", details: err.message });
   }
 });
 

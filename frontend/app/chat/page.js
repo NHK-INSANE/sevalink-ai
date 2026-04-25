@@ -10,16 +10,25 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0B1220]" />}>
+      <ChatContent />
+    </Suspense>
+  );
+}
+
 function ChatContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialChatId = searchParams.get("id");
+  
   const [user, setUser] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
   const messagesEndRef = useRef(null);
-  const searchParams = useSearchParams();
-  const defaultConversationId = searchParams.get("conversationId");
 
   useEffect(() => {
     const u = getUser();
@@ -39,9 +48,11 @@ function ChatContent() {
       });
       const data = await res.json();
       setConversations(data);
-      if (defaultConversationId) {
-        const defaultChat = data.find(c => c._id === defaultConversationId);
-        if (defaultChat) setSelectedChat(defaultChat);
+      
+      // Auto-select if ID in URL
+      if (initialChatId && !selectedChat) {
+        const target = data.find(c => c._id === initialChatId);
+        if (target) setSelectedChat(target);
       }
     } catch (err) {
       console.error("Failed to fetch conversations", err);
@@ -128,10 +139,7 @@ function ChatContent() {
   };
 
   const getOtherMember = (chat) => {
-    if (chat.members.length > 2) {
-      return { name: "Emergency Response Team", displayId: "TEAM", customId: "GRP" };
-    }
-    return chat.members.find(m => m._id !== user?.id) || chat.members[0] || { name: "System" };
+    return chat.members.find(m => m._id !== user?.id) || chat.members[0];
   };
 
   if (!user) return <div className="min-h-screen bg-[#0B1220]" />;
@@ -233,13 +241,5 @@ function ChatContent() {
         </div>
       </PageWrapper>
     </div>
-  );
-}
-
-export default function ChatPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0B1220]" />}>
-      <ChatContent />
-    </Suspense>
   );
 }
