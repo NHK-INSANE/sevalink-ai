@@ -305,8 +305,7 @@ export default function MapPage() {
               />
             </div>
           </div>
-        </div>
-      </main>
+        </main>
       </div>
       </PageWrapper>
     </div>
