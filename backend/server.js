@@ -61,6 +61,7 @@ app.get("/health", (req, res) => {
 });
 
 const userSockets = new Map(); // userId -> socketId
+const lastOpsUpdate = new Map(); // userId -> lastTimestamp (ms)
 
 // 📐 Distance Function (Haversine)
 const getDistance = (lat1, lon1, lat2, lon2) => {
@@ -188,16 +189,22 @@ io.on("connection", (socket) => {
     io.emit("live_locations", liveLocations);
 
     // 🔥 Sync with OPS Command Center (Throttled/Clean)
-    if (data.name && data.name !== "undefined") {
-       io.to("ops_room").emit("ops_event", {
-         type: "SYSTEM",
-         payload: { 
-           message: `Unit ${data.name} moving to target`, 
-           location: { lat: data.lat, lng: data.lng }, 
-           isTracking: true 
-         },
-         time: new Date()
-       });
+    if (data.name && data.name !== "undefined" && data.name !== "null" && data.name.trim() !== "") {
+       const now = Date.now();
+       const lastUpdate = lastOpsUpdate.get(data.userId) || 0;
+       
+       if (now - lastUpdate > 30000) { // 30 second throttle
+          lastOpsUpdate.set(data.userId, now);
+          io.to("ops_room").emit("ops_event", {
+            type: "SYSTEM",
+            payload: { 
+              message: `Unit ${data.name} moving to target`, 
+              location: { lat: data.lat, lng: data.lng }, 
+              isTracking: true 
+            },
+            time: new Date()
+          });
+       }
     }
   });
 

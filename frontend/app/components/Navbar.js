@@ -177,18 +177,18 @@ export default function Navbar() {
 
         {/* nav-right: Actions */}
         <div className="nav-right">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {user ? (
               <>
-                {/* Notification Bell */}
+                {/* Notification Bell - ALWAYS VISIBLE */}
                 <div className="relative" ref={notifRef}>
                   <button 
                     onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); }}
                     className="relative p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-all"
                   >
-                    <Bell size={20} />
+                    <Bell size={18} />
                     {unreadCount > 0 && (
-                      <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                      <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
                     )}
                   </button>
 
@@ -200,13 +200,13 @@ export default function Navbar() {
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         className="absolute right-0 mt-3 w-72 bg-[#0f172a] border border-white/10 rounded-xl shadow-xl p-4 z-50 overflow-hidden"
                       >
-                        <p className="text-sm text-gray-400 mb-3 font-semibold">Notifications</p>
+                        <p className="text-xs text-gray-400 mb-3 font-semibold">Notifications</p>
                         
                         <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
                           {notifications.length === 0 ? (
                             <div className="py-8 px-4 text-center border border-dashed border-white/5 rounded-xl bg-white/[0.02]">
-                              <Bell size={24} className="mx-auto mb-2 text-gray-700 opacity-20" />
-                              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">No Active Tactical Alerts</p>
+                              <Bell size={20} className="mx-auto mb-2 text-gray-700 opacity-20" />
+                              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">No Tactical Alerts</p>
                             </div>
                           ) : (
                             notifications.map((n) => (
@@ -215,7 +215,7 @@ export default function Navbar() {
                                 onClick={() => markAsRead(n._id)}
                                 className={`p-3 rounded-lg bg-white/5 cursor-pointer hover:bg-white/10 transition-colors ${!n.isRead ? "border-l-2 border-purple-500" : "opacity-60"}`}
                               >
-                                <p className="text-[12px] text-gray-200 leading-tight mb-1">{n.message}</p>
+                                <p className="text-[11px] text-gray-200 leading-tight mb-1">{n.message}</p>
                                 <p className="text-[9px] text-gray-500 font-bold uppercase">
                                   {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </p>
@@ -226,7 +226,7 @@ export default function Navbar() {
                         <div className="flex justify-between mt-3 pt-3 border-t border-white/5">
                           <Link href="/notifications" onClick={() => setNotifOpen(false)} className="text-[10px] font-bold text-gray-400 hover:text-white transition-colors uppercase tracking-widest text-center">View All</Link>
                           {unreadCount > 0 && (
-                            <button onClick={markAllAsRead} className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors uppercase tracking-widest text-center">Mark all as read</button>
+                            <button onClick={markAllAsRead} className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors uppercase tracking-widest text-center">Mark all</button>
                           )}
                         </div>
                       </motion.div>
@@ -234,66 +234,59 @@ export default function Navbar() {
                   </AnimatePresence>
                 </div>
 
-                {/* Profile */}
-                  <div className="relative" ref={profileRef}>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => { 
-                        setProfileOpen(!profileOpen); 
-                        setNotifOpen(false); 
-                      }}
-                      className="flex items-center gap-2.5 p-1.5 pr-3 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all"
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-black text-xs">
-                        {user.name?.[0]?.toUpperCase() || "U"}
-                      </div>
-                      <span className="text-[10px] font-bold text-gray-200 uppercase tracking-widest hidden sm:block">{user.name?.split(" ")[0] || "User"}</span>
-                    </motion.button>
+                {/* Profile - ALWAYS VISIBLE */}
+                <div className="relative" ref={profileRef}>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => { 
+                      setProfileOpen(!profileOpen); 
+                      setNotifOpen(false); 
+                    }}
+                    className="flex items-center justify-center w-9 h-9 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all"
+                  >
+                    <div className="w-6 h-6 rounded-md bg-indigo-600 flex items-center justify-center text-white font-black text-[10px]">
+                      {user.name?.[0]?.toUpperCase() || "U"}
+                    </div>
+                  </motion.button>
 
-                    <AnimatePresence>
-                      {profileOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          className="absolute right-0 mt-3 w-56 bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden p-2"
-                          style={{ zIndex: 999999 }}
-                        >
-                          <div className="px-3 py-3 mb-2 border-b border-white/5">
-                             <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Signed in as</p>
-                             <p className="text-xs font-bold text-white truncate">{user.name || user.email}</p>
-                          </div>
+                  <AnimatePresence>
+                    {profileOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute right-0 mt-3 w-56 bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden p-2"
+                        style={{ zIndex: 999999 }}
+                      >
+                        <div className="px-3 py-3 mb-2 border-b border-white/5">
+                           <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Session Active</p>
+                           <p className="text-xs font-bold text-white truncate">{user.name || user.email}</p>
+                        </div>
 
-                          <Link href="/profile" className="flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-gray-300 hover:bg-white/5 hover:text-white rounded-xl transition-all">
-                            <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-gray-400">
-                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                            </div>
-                            My Account
-                          </Link>
-                          
-                          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-red-400 hover:bg-red-500/10 rounded-xl transition-all">
-                            <div className="w-8 h-8 rounded-lg bg-red-500/5 flex items-center justify-center">
-                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
-                            </div>
-                            Logout
-                          </button>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
+                        <Link href="/profile" className="flex items-center gap-3 px-3 py-2 text-xs font-bold text-gray-300 hover:bg-white/5 hover:text-white rounded-xl transition-all">
+                          Account Details
+                        </Link>
+                        
+                        <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-red-400 hover:bg-red-500/10 rounded-xl transition-all">
+                          Logout System
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2">
                 <Link href="/login" className="text-xs font-bold text-gray-400 hover:text-white px-4">Login</Link>
-                <Link href="/register" className="btn-primary !text-[11px] !px-5 !py-2 !rounded-xl shadow-indigo-500/20">Register</Link>
+                <Link href="/register" className="btn-primary !text-[11px] !px-5 !py-2 !rounded-xl">Register</Link>
               </div>
             )}
 
-            {/* Mobile Menu Toggle */}
+            {/* Mobile Menu Toggle (⋮) - ALWAYS VISIBLE */}
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-              className="lg:hidden w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white bg-white/5 rounded-xl border border-white/10 text-xl font-bold transition-all active:scale-95 shadow-lg"
+              className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white bg-white/5 rounded-xl border border-white/10 text-xl font-bold transition-all active:scale-95 shadow-lg"
             >
               {mobileMenuOpen ? "✕" : "⋮"}
             </button>

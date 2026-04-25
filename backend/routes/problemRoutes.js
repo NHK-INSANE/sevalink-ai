@@ -26,7 +26,7 @@ function getDistance(lat1, lon1, lat2, lon2) {
 router.get("/", async (req, res) => {
   try {
     const { lat, lng, sort, urgency, status } = req.query;
-    let query = { isArchived: false };
+    let query = {};
 
     if (urgency) query.urgency = urgency.toUpperCase();
     if (status && status !== "All") query.status = status.toUpperCase();

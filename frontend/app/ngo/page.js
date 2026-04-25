@@ -185,86 +185,42 @@ function NGOContent() {
                   <motion.div 
                     layout
                     key={ngo._id} 
-                    className="bg-[#0f172a]/30 border border-white/5 rounded-[2.5rem] p-8 flex flex-col gap-6 group hover:border-indigo-500/30 transition-all shadow-2xl relative overflow-hidden"
+                    className="p-5 rounded-2xl bg-[#0f172a] border border-white/10 space-y-4 hover:border-indigo-500/50 transition-all shadow-xl group"
                   >
-                    <div className="absolute top-6 right-6">
-                      <button 
-                        onClick={() => locateNgo(ngo)}
-                        className="bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-600 hover:text-white hover:border-indigo-500 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all"
-                      >
-                        📍 Locate HQ
-                      </button>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-lg shrink-0">
+                        {(ngo.ngoName || ngo.name)?.[0]?.toUpperCase() || "N"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-bold text-white truncate">{ngo.ngoName || ngo.name || "Unnamed NGO"}</h3>
+                        <p className="text-[10px] text-gray-500 font-mono">ID: {ngo.customId || ngo.displayId || ngo._id?.slice(-8).toUpperCase()}</p>
+                      </div>
                     </div>
 
-                    <div className="flex items-start gap-4 pr-24">
-                       <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-xl font-black text-white shrink-0">
-                          {(ngo.ngoName || ngo.name)?.[0]?.toUpperCase() || "N"}
-                       </div>
-                       <div className="space-y-1">
-                         <h3 className="text-lg font-black text-white uppercase tracking-tight leading-tight">{ngo.name || ngo.ngoName || "Unnamed NGO"}</h3>
-                         <div className="flex items-center gap-2">
-                           <span className="text-[10px] font-mono text-purple-400 font-bold uppercase tracking-widest px-2 py-0.5 bg-purple-500/10 rounded-md border border-purple-500/20">ID: {ngo.customId || ngo.displayId || ngo._id?.slice(-8).toUpperCase()}</span>
-                           <span className="w-1 h-1 rounded-full bg-gray-700" />
-                           <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Verified Command</span>
-                         </div>
-                       </div>
+                    <div className="space-y-2.5">
+                      <div className="flex items-center gap-3 text-gray-400 text-xs">
+                        <span className="text-indigo-400">📍</span>
+                        <span className="truncate">{ngo.address || "Location Pending"}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-gray-400 text-xs">
+                        <span className="text-indigo-400">📞</span>
+                        <span className="truncate">{ngo.phone || "No contact provided"}</span>
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 pt-2">
-                       <div className="bg-white/5 border border-white/5 p-4 rounded-2xl">
-                          <p className="text-[8px] font-black uppercase tracking-widest text-gray-500 mb-2">🛠 Specializations</p>
-                          <div className="flex flex-wrap gap-2">
-                             {specializations.map((s, i) => (
-                               <span key={i} className="text-[10px] font-bold text-gray-300 px-2.5 py-1 bg-white/5 rounded-lg border border-white/5">{s}</span>
-                             ))}
-                          </div>
-                       </div>
-                    </div>
-
-                    <div className="space-y-3 pt-2">
-                       <div className="flex items-center justify-between bg-white/5 border border-white/5 p-4 rounded-2xl">
-                          <div className="flex items-center gap-3">
-                             <span className="text-indigo-400 text-lg">📊</span>
-                             <span className="text-[11px] font-black uppercase tracking-widest text-gray-400">Active Missions</span>
-                          </div>
-                          <span className="text-xl font-black text-white">{ngoMissions}</span>
-                       </div>
-                       <div className="flex items-center gap-3 text-gray-400 text-[11px] font-bold px-1">
-                          <span className="text-indigo-400">📧</span>
-                          <span className="truncate">{ngo.email}</span>
-                       </div>
-                       <div className="flex items-start gap-3 text-gray-400 text-[11px] font-bold px-1">
-                          <span className="text-indigo-400">📍</span>
-                          <span className="leading-relaxed">{ngo.address || "Location Access Pending"}</span>
-                       </div>
-                       {dist !== null && (
-                         <div className="text-[9px] font-black text-purple-400 uppercase tracking-widest pl-7">
-                            {dist.toFixed(1)} km from your location
-                         </div>
-                       )}
-                    </div>
-
-                    <div className="mt-auto pt-6 flex flex-col gap-2">
+                    <div className="flex gap-2 pt-2">
                        <button 
                         onClick={() => handleConnect(ngo)}
-                        className="w-full py-4 bg-white/5 hover:bg-white/10 text-white border border-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                        className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-[11px] font-bold transition-all border border-white/5"
                        >
-                          Establish Neural Link
+                          View Details
                        </button>
-                       <div className="grid grid-cols-2 gap-2">
-                         <button 
-                          onClick={() => handleOpenRequest("assign")}
-                          className="w-full py-3 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
-                         >
-                            Request Join
-                         </button>
-                         <button 
-                          onClick={() => handleOpenRequest("lead")}
-                          className="w-full py-3 bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 border border-purple-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
-                         >
-                            Request Lead
-                         </button>
-                       </div>
+                       <button 
+                        onClick={() => handleOpenRequest("assign")}
+                        className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-[11px] font-bold transition-all shadow-lg shadow-indigo-500/20"
+                       >
+                          Request Help
+                       </button>
                     </div>
                   </motion.div>
                 );

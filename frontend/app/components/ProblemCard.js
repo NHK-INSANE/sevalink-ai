@@ -213,7 +213,9 @@ export default function ProblemCard({ problem: initialProblem }) {
             <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Reported by {problem.submittedByName}</span>
           </div>
         </div>
-        <button onClick={handleLocate} className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-lg hover:bg-indigo-600 transition-all" title="Focus on Map">📍</button>
+        <button onClick={handleLocate} className="px-4 py-2 flex items-center gap-2 rounded-xl bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all whitespace-nowrap">
+          📍 View Location
+        </button>
       </div>
 
       {/* ── 2. STATS BAR ── */}

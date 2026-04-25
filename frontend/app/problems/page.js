@@ -129,9 +129,9 @@ export default function ProblemsPage() {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="bg-[#0f172a] border border-white/10 rounded-xl px-4 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-indigo-500 transition-all cursor-pointer"
               >
-                <option value="newest">Newest First</option>
-                <option value="nearest">Nearest First</option>
-                <option value="score">Priority Score</option>
+                <option value="newest">Latest</option>
+                <option value="nearest">Nearest</option>
+                <option value="score">Urgency</option>
               </select>
 
               {/* Urgency Filters */}
@@ -176,8 +176,10 @@ export default function ProblemsPage() {
               {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="py-32 text-center bg-[#0f172a]/20 border border-white/5 rounded-[3rem]">
-              <p className="text-gray-500 font-black uppercase tracking-widest text-xs">No active missions matching criteria</p>
+            <div className="py-20 text-center bg-[#0f172a]/20 border border-white/5 rounded-[2rem] space-y-4">
+              <div className="text-4xl">🔎</div>
+              <p className="text-gray-400 font-bold">No problems found</p>
+              <p className="text-gray-600 text-xs uppercase tracking-widest">Adjust filters or check back later</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

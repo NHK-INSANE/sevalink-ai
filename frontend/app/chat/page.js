@@ -276,8 +276,10 @@ function ChatContent() {
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-10 relative">
                 <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center text-3xl mb-4 border border-dashed border-white/10 opacity-50">📡</div>
-                <h3 className="text-xl font-black text-white uppercase tracking-[0.3em] mb-2">System Standby</h3>
-                <p className="text-gray-600 text-[10px] font-bold uppercase tracking-widest">Select a channel to transmit.</p>
+                <h3 className="text-xl font-black text-white uppercase tracking-[0.2em] mb-2">Select a channel → Start communication</h3>
+                <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">
+                  Select a team member to start chat
+                </p>
               </div>
             )}
           </div>

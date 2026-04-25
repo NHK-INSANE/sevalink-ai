@@ -134,7 +134,7 @@ export default function OpsPanel() {
   return (
     <>
       {/* Floating Button */}
-      <div className="fixed bottom-[20px] right-[20px] z-[40]">
+      <div className="fixed bottom-[20px] right-[16px] z-[40]">
         <button
           onClick={() => setIsOpen(true)}
           className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-95 bg-purple-600 text-white hover:bg-purple-500 relative ${events.some(e => e.type === "CRISIS" || e.type === "SOS") ? "animate-pulse shadow-red-500/50" : "shadow-purple-500/50"}`}

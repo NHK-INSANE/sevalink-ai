@@ -5,26 +5,28 @@
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 :root {
   /* ── Deep Premium Dark Palette ── */
-  --bg: #0b0f17;
-  --card: rgba(17, 24, 39, 0.7);
-  --surface: #111827;
-  --border: #1f2937;
-  --border-hover: #374151;
+  --bg: #080b14;
+  --card: #0f172a;
+  --surface: #0f172a;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.15);
 
   /* ── Refined Typography ── */
-  --text-primary: #f3f4f6;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
 
   /* ── Brand & Accents ── */
   --accent: #6366f1;
-  --accent-glow: rgba(99, 102, 241, 0.15);
+  --primary-purple: #8b5cf6;
   --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
 
   /* ── Spacing System ── */
   --space-unit: 4px;
-  --navbar-height: 72px;
+  --navbar-height: 64px;
   --content-max: 1200px;
+  --mobile-pad: 16px;
+  --mobile-gap: 12px;
 }
 
 /* ── MAP CLUSTERS ── */
@@ -52,36 +54,42 @@ body {
 }
 
 h1 {
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: -0.025em;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   color: var(--text-primary);
 }
 
 h2 {
-  font-size: 20px;
-  font-weight: 500;
+  font-size: 18px;
+  font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--text-primary);
-}
-
-p {
-  font-size: 14px;
-  color: var(--text-secondary);
 }
 
 h3 {
   font-size: 16px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
 p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.subtitle {
   font-size: 14px;
   color: var(--text-secondary);
-  line-height: 1.65;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  h1 { font-size: 20px; }
+  h2 { font-size: 16px; }
+  h3 { font-size: 14px; }
+  p { font-size: 12px; }
 }
 
 a {
@@ -152,10 +160,13 @@ a {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 24px;
+  padding: var(--mobile-pad);
   transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), border-color 0.2s ease;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mobile-gap);
 }
 
 .card:hover {
@@ -174,7 +185,7 @@ a {
 
 @media (max-width: 768px) {
   .page-wrapper {
-    padding: 0 20px;
+    padding: 0 var(--mobile-pad);
   }
 }
 
@@ -598,7 +609,7 @@ option {
 .problem-card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--mobile-gap);
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
