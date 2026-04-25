@@ -9,11 +9,11 @@
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
-    "axios": "^1.15.2",
+    "axios": "^1.7.8",
     "framer-motion": "^12.38.0",
     "leaflet": "^1.9.4",
     "leaflet.heat": "^0.2.0",
-    "lucide-react": "^1.8.0",
+    "lucide-react": "^0.460.0",
     "maplibre-gl": "^5.23.0",
     "next": "15.5.15",
     "react": "18.3.1",
@@ -28,6 +28,9 @@
     "react-parallax-tilt": "^1.7.324",
     "recharts": "^3.8.1",
     "socket.io-client": "^4.8.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
