@@ -54,8 +54,11 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       const [problemData, userData] = await Promise.all([getProblems(), getUsers()]);
-      setProblems(Array.isArray(problemData) ? problemData : []);
-      setUsersList(Array.isArray(userData) ? userData : []);
+      const probs = Array.isArray(problemData) ? problemData : (problemData?.data || []);
+      const users = Array.isArray(userData) ? userData : (userData?.data || []);
+      
+      setProblems(probs);
+      setUsersList(users);
       setLastUpdate(new Date().toLocaleTimeString());
     } catch (e) {
       console.error("Dashboard Sync Error", e);
@@ -89,7 +92,7 @@ export default function Dashboard() {
   const safeProblems = useMemo(() => Array.isArray(problems) ? problems : [], [problems]);
   const safeUsers = useMemo(() => Array.isArray(usersList) ? usersList : [], [usersList]);
 
-  // FINAL POLISH COUNTS (Step 10)
+  // FINAL POLISH COUNTS (Step 10 + Fixes)
   const stats = useMemo(() => {
     const p = safeProblems;
     return {
@@ -101,7 +104,7 @@ export default function Dashboard() {
     };
   }, [safeProblems]);
 
-  const progressCount = safeProblems.filter(p => ["in_progress", "in progress"].includes(p.status?.toLowerCase())).length;
+  const progressCount = safeProblems.filter(p => ["in_progress", "in progress", "in-progress"].includes(p.status?.toLowerCase())).length;
   const resolvedCount = safeProblems.filter(p => p.status?.toLowerCase() === "resolved").length;
 
   const trendData = [
@@ -109,6 +112,28 @@ export default function Dashboard() {
     { day: "Thu", cases: 25 }, { day: "Fri", cases: 30 }, { day: "Sat", cases: 22 },
     { day: "Sun", cases: stats.total },
   ];
+
+  const categoryStats = useMemo(() => {
+    const counts = {};
+    safeProblems.forEach(p => {
+       const cat = p.category || "General";
+       counts[cat] = (counts[cat] || 0) + 1;
+    });
+    const total = safeProblems.length || 1;
+    // Fix: Percentages sum to 100% properly
+    const raw = Object.keys(counts).map(name => ({
+      name,
+      value: counts[name],
+      percent: Math.round((counts[name] / total) * 100)
+    })).sort((a,b) => b.value - a.value).slice(0, 5);
+
+    // Normalize last one to ensure 100%
+    const sum = raw.reduce((a, b) => a + b.percent, 0);
+    if (sum > 0 && sum !== 100 && raw.length > 0) {
+       raw[0].percent += (100 - sum);
+    }
+    return raw;
+  }, [safeProblems]);
 
   const handleLocateToggle = () => {
     const nextState = !isLocated;
@@ -140,7 +165,6 @@ export default function Dashboard() {
       <PageWrapper>
         <main className="max-w-7xl mx-auto pt-28 px-6 lg:px-8">
           
-          {/* HEADER */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-8">
             <div>
               <h1 className="text-4xl font-black tracking-tighter uppercase mb-2">Command Center</h1>
@@ -157,13 +181,12 @@ export default function Dashboard() {
             </Link>
           </div>
 
-          {/* POLISHED STATS GRID (STEP 10) */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {[
               { label: "Critical", value: stats.critical, color: "border-red-500/30" },
               { label: "High Priority", value: stats.high, color: "border-orange-500/30" },
               { label: "Medium", value: stats.medium, color: "border-yellow-500/30" },
-              { label: "Minor", value: stats.low, color: "border-emerald-500/30" }
+              { label: "Low Urgency", value: stats.low, color: "border-emerald-500/30" }
             ].map((s, i) => (
               <div key={i} className={`card !p-8 !rounded-[2.5rem] hover:bg-white/[0.02] transition-all border ${s.color}`}>
                 <p className="text-[10px] font-black tracking-[0.2em] text-gray-500 uppercase mb-4">{s.label}</p>
@@ -172,33 +195,45 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {/* ANALYTICS */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
             <div className="lg:col-span-4 card !p-8 !rounded-[2.5rem] flex flex-col justify-between bg-white/[0.01]">
               <div className="space-y-6">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500">Live Mission Matrix</h3>
                 <div className="space-y-3">
                   {[
-                    { l: "Ongoing Operations", v: progressCount, c: "text-amber-500", b: "bg-amber-500/5" },
-                    { l: "Resolved Nodes", v: resolvedCount, c: "text-emerald-500", b: "bg-emerald-500/5" },
-                    { l: "Total Reports", v: stats.total, c: "text-purple-500", b: "bg-purple-500/5" }
+                    { l: "Ongoing Operations", v: progressCount, c: "text-white", b: "bg-white/5" },
+                    { l: "Resolved Nodes", v: resolvedCount, c: "text-white", b: "bg-white/5" },
+                    { l: "Total Reports", v: stats.total, c: "text-white", b: "bg-white/5" }
                   ].map(stat => (
                     <div key={stat.l} className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5">
                       <span className="text-[11px] font-bold text-gray-400 uppercase tracking-tight">{stat.l}</span>
-                      <span className={`text-xs font-black ${stat.c} ${stat.b} px-3 py-1 rounded-lg border border-current/10`}>{stat.v}</span>
+                      <span className={`text-xs font-black ${stat.c} ${stat.b} px-3 py-1 rounded-lg border border-white/10`}>{stat.v}</span>
                     </div>
                   ))}
                 </div>
               </div>
-              <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mt-8">Last Sync: {lastUpdate}</p>
+              
+              <div className="mt-10 space-y-4">
+                 <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">Sector Categories</h3>
+                 <div className="grid grid-cols-1 gap-2">
+                    {categoryStats.map(c => (
+                      <div key={c.name} className="flex items-center justify-between text-[11px] font-bold">
+                        <span className="text-gray-400 uppercase">{c.name}</span>
+                        <div className="flex items-center gap-3">
+                          <div className="w-24 h-1 bg-white/5 rounded-full overflow-hidden">
+                             <div className="h-full bg-purple-500" style={{ width: `${c.percent}%` }} />
+                          </div>
+                          <span className="text-white w-8 text-right">{c.percent}%</span>
+                        </div>
+                      </div>
+                    ))}
+                 </div>
+              </div>
             </div>
 
             <div className="lg:col-span-8 card !p-8 !rounded-[2.5rem] bg-white/[0.01]">
               <div className="flex justify-between items-center mb-10">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500">7-Day Tactical Trajectory</h3>
-                <div className="flex gap-4">
-                  <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-purple-600 shadow-lg shadow-purple-500/50" /><span className="text-[9px] font-black text-gray-500 uppercase">Active Crises</span></div>
-                </div>
               </div>
               <div className="h-[280px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -214,11 +249,9 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* ROLE DASHBOARD */}
           <div className="mb-12">{renderRoleSpecific()}</div>
 
-          {/* MAP & ACTIVITY */}
-          <div className="grid grid-cols-1 lg:grid-cols-1 gap-12">
+          <div className="grid grid-cols-1 gap-12">
             <div className="card p-4 !rounded-[2.5rem] overflow-hidden">
               <div className="p-8 flex flex-col md:flex-row justify-between items-center gap-6">
                 <div>
@@ -236,24 +269,10 @@ export default function Dashboard() {
                 <MapView problems={safeProblems} type="problems" height="100%" zoom={userLoc ? 15 : 6} center={userLoc ? [userLoc.lat, userLoc.lng] : [22.3, 87.3]} />
               </div>
             </div>
-
-            <div className="space-y-10 py-10">
-              <div className="flex justify-between items-end border-b border-white/5 pb-8">
-                <div>
-                  <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Recent Dispatch</h2>
-                  <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mt-1">Latest field reports</p>
-                </div>
-                <button onClick={() => router.push("/problems")} className="text-[10px] font-black text-purple-400 uppercase tracking-widest hover:text-white transition-colors">View Directory →</button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {safeProblems.slice(0, 3).map(p => <ProblemCard key={p._id} problem={p} />)}
-              </div>
-            </div>
           </div>
 
         </main>
       </PageWrapper>
-      <style jsx global>{` .custom-scrollbar::-webkit-scrollbar { width: 4px; } .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; } `}</style>
     </div>
   );
 }

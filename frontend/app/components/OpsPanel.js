@@ -212,24 +212,34 @@ export default function OpsPanel() {
                   )}
                 </div>
 
-                <div className="p-4 border-t border-white/10 bg-white/[0.01]">
-                   <div className="relative flex gap-2">
-                      <input
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && consultAI(input)}
-                        placeholder={activeTab === 'ai' ? "Consult AI Copilot..." : "Global Comms Offline"}
-                        disabled={activeTab === 'alerts' || loading}
-                        className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[11px] text-white focus:border-purple-500 outline-none transition-all placeholder:text-gray-600 disabled:opacity-50"
-                      />
+                <div className="p-4 border-t border-white/10 bg-[#0B1120] relative z-20">
+                   <div className="relative flex items-center gap-3">
+                      <div className="flex-1 relative">
+                        <input
+                          value={input}
+                          onChange={(e) => setInput(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && consultAI(input)}
+                          placeholder={activeTab === 'ai' ? "Consult AI Copilot..." : "Live Feed Active"}
+                          disabled={activeTab === 'alerts' || loading}
+                          className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-[11px] text-white focus:border-purple-500 outline-none transition-all placeholder:text-gray-600 disabled:opacity-50 font-bold"
+                        />
+                      </div>
                       <button 
                         onClick={() => consultAI(input)}
-                        disabled={activeTab === 'alerts' || loading}
-                        className="w-11 h-11 bg-purple-600 hover:bg-purple-500 text-white rounded-xl flex items-center justify-center transition-all disabled:opacity-50"
+                        disabled={activeTab === 'alerts' || loading || !input.trim()}
+                        className="w-12 h-12 bg-purple-600 hover:bg-purple-500 text-white rounded-2xl flex items-center justify-center transition-all disabled:opacity-20 shadow-lg shadow-purple-500/20 active:scale-90"
                       >
-                        {loading ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>}
+                        {loading ? (
+                          <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                          </svg>
+                        )}
                       </button>
                    </div>
+                   <p className="text-[8px] text-gray-700 font-black uppercase tracking-[0.2em] text-center mt-3">Neural-Link-V2 // Secure Hub</p>
                 </div>
               </div>
             </motion.div>

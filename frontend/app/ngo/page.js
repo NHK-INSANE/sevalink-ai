@@ -21,14 +21,17 @@ function NGOContent() {
   const [ngoQuery, setNgoQuery] = useState("");
 
   const [showRequestModal, setShowRequestModal] = useState(false);
-  const [requestType, setRequestType] = useState("assign"); // "assign" or "lead"
+  const [requestType, setRequestType] = useState("assign"); // "assign", "lead", "other"
   const [selectedProbId, setSelectedProbId] = useState("");
+  const [inputUserId, setInputUserId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedNgo, setSelectedNgo] = useState(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setCurrentUser(JSON.parse(localStorage.getItem("seva_user") || "null"));
+      const u = JSON.parse(localStorage.getItem("seva_user") || "null");
+      setCurrentUser(u);
+      if (u) setInputUserId(u.id || u._id);
     }
     fetchData();
   }, []);
@@ -39,9 +42,9 @@ function NGOContent() {
         axios.get(`${API_BASE}/api/users`),
         axios.get(`${API_BASE}/api/problems`)
       ]);
-      const onlyNgos = uRes.data.filter(u => u.role?.toLowerCase() === "ngo");
+      const onlyNgos = (Array.isArray(uRes.data) ? uRes.data : []).filter(u => u.role?.toLowerCase() === "ngo");
       setNgos(onlyNgos);
-      setProblems(pRes.data.data || []);
+      setProblems(Array.isArray(pRes.data) ? pRes.data : pRes.data.data || []);
     } catch (err) {
       toast.error("Failed to sync partners.");
     } finally {
@@ -61,19 +64,21 @@ function NGOContent() {
   };
 
   const submitRequest = async () => {
+    if (requestType === "other") {
+       handleConnect(selectedNgo);
+       return;
+    }
     if (!selectedProbId) return toast.error("Select a target mission.");
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem("token");
-      // Using the Request model via requestRoutes
-      await axios.post(`${API_BASE}/api/requests`, {
-        ngoId: selectedNgo._id,
-        problemId: selectedProbId,
-        type: requestType
+      // This sends an automated message to the NGO as requested
+      await axios.post(`${API_BASE}/api/problems/${selectedProbId}/${requestType}`, {
+        targetUserId: inputUserId
       }, {
         headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
       });
-      toast.success("Deployment request transmitted to partner.");
+      toast.success(`Request transmitted to ${selectedNgo.name}.`);
       setShowRequestModal(false);
     } catch (err) {
       toast.error(err.response?.data?.error || "Transmission failed.");
@@ -87,7 +92,7 @@ function NGOContent() {
       const loc = await getUserLocation();
       setUserLoc(loc);
       setSortBy("nearest");
-      toast.success("GPS Lock: Proximity sorting active.");
+      toast.success("GPS Lock: Proximity active.");
     } catch (err) {
       toast.error("Location services unavailable.");
     }
@@ -105,8 +110,8 @@ function NGOContent() {
   const filteredNgos = ngos.filter(n => {
     if (ngoQuery) {
       const q = ngoQuery.toLowerCase();
-      const code = (n.displayId || n.customId || n._id).toLowerCase();
-      const name = (n.ngoName || n.name || "").toLowerCase();
+      const code = String(n.displayId || n.customId || n._id).toLowerCase();
+      const name = String(n.ngoName || n.name || "").toLowerCase();
       if (!code.includes(q) && !name.includes(q)) return false;
     }
     return true;
@@ -118,152 +123,147 @@ function NGOContent() {
       const d2 = getDistance(userLoc.lat, userLoc.lng, b.location?.lat, b.location?.lng);
       return d1 - d2;
     }
-    const nameA = (a.ngoName || a.name || "").toLowerCase();
-    const nameB = (b.ngoName || b.name || "").toLowerCase();
+    const nameA = String(a.ngoName || a.name || "").toLowerCase();
+    const nameB = String(b.ngoName || b.name || "").toLowerCase();
     return nameA.localeCompare(nameB);
   });
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)]">
+    <div className="min-h-screen bg-[#080B14] text-white pb-24 font-inter">
       <Navbar />
-      <PageWrapper className="pt-28 pb-20 px-6">
-        <div className="max-w-7xl mx-auto space-y-12">
+      <PageWrapper className="pt-28 px-6">
+        <div className="max-w-7xl mx-auto">
           
-          {/* HEADER */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-12 border-b border-white/5 pb-10">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2 uppercase tracking-tight">NGO Partners</h1>
-              <p className="text-sm text-gray-500 font-medium">Coordinate with mission-control authorized organizations.</p>
+              <h1 className="text-4xl font-black tracking-tighter uppercase mb-2">NGO Partners</h1>
+              <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em]">Coordinate with authorized mission organizations.</p>
             </div>
             
             <div className="flex flex-wrap items-center gap-4">
-               <input
-                 placeholder="Search by ID or Name..."
-                 value={ngoQuery}
-                 onChange={(e) => setNgoQuery(e.target.value)}
-                 className="!w-64 !rounded-xl !py-3 !px-5"
-               />
+               <div className="relative group">
+                 <input
+                   placeholder="Search by ID or Name..."
+                   value={ngoQuery}
+                   onChange={(e) => setNgoQuery(e.target.value)}
+                   className="w-64 bg-black/40 border border-white/10 rounded-2xl py-3.5 pl-12 pr-6 text-xs text-white focus:border-purple-500 outline-none transition-all placeholder:text-gray-700 font-bold"
+                 />
+                 <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-purple-500 transition-colors" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+               </div>
+               
                <select 
                 value={sortBy} 
                 onChange={(e) => e.target.value === "nearest" ? handleLocate() : setSortBy(e.target.value)}
-                className="!bg-white/5 !border-none !rounded-xl !py-3 !px-4 !text-xs !font-bold uppercase tracking-widest text-gray-400 cursor-pointer"
+                className="bg-black/40 border border-white/10 rounded-2xl py-3.5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400 outline-none cursor-pointer focus:border-purple-500"
                >
-                  <option value="name">Sort: Name</option>
-                  <option value="nearest">Sort: Nearest</option>
+                  <option value="name">Sort by Name</option>
+                  <option value="nearest">Sort by Nearest</option>
                </select>
             </div>
           </div>
 
-          {/* GRID */}
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[...Array(6)].map((_, i) => <div key={i} className="card h-64 animate-pulse" />)}
-            </div>
-          ) : sortedNgos.length === 0 ? (
-            <div className="py-32 text-center card border-dashed border-white/10">
-              <p className="text-gray-500 font-bold uppercase tracking-[0.2em] text-[10px]">No partners found in this sector</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {sortedNgos.map((ngo) => {
-                return (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <AnimatePresence>
+              {loading ? (
+                [...Array(6)].map((_, i) => <div key={i} className="card h-64 animate-pulse !rounded-[2.5rem] bg-white/5" />)
+              ) : sortedNgos.length === 0 ? (
+                <div className="col-span-full py-32 text-center bg-white/[0.01] border border-dashed border-white/10 rounded-[3rem]">
+                  <p className="text-gray-600 font-black uppercase tracking-[0.2em] text-[10px]">No partners found in this sector</p>
+                </div>
+              ) : (
+                sortedNgos.map((ngo) => (
                   <motion.div 
-                    layout key={ngo._id} 
-                    className="card !p-8 flex flex-col gap-6 group relative overflow-hidden"
+                    layout key={ngo._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="card !p-10 flex flex-col gap-8 group relative overflow-hidden !rounded-[2.5rem] bg-white/[0.01] hover:bg-white/[0.02] border border-white/5 transition-all shadow-2xl"
                   >
-                    <div className="space-y-1">
-                       <h3 className="text-lg font-bold text-white group-hover:text-purple-400 transition-colors truncate">{ngo.ngoName || ngo.name || "Partner NGO"}</h3>
-                       <p className="text-[10px] font-bold text-gray-600 uppercase tracking-tighter">ID: {ngo.customId || ngo.displayId || ngo._id.slice(-6).toUpperCase()}</p>
+                    <div className="space-y-2">
+                       <h3 className="text-2xl font-black text-white group-hover:text-purple-400 transition-colors truncate tracking-tighter uppercase">{ngo.ngoName || ngo.name || "Partner NGO"}</h3>
+                       <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest">ID: {ngo.customId || ngo.displayId || ngo._id.slice(-6).toUpperCase()}</p>
                     </div>
 
-                    <div className="space-y-4">
-                       <div className="flex items-center gap-3 text-xs font-medium text-gray-400">
-                          <span className="text-purple-400">📍</span>
-                          <span className="truncate">{ngo.address || ngo.location?.address || "Region Office"}</span>
-                       </div>
-                       <div className="flex items-center gap-3 text-xs font-medium text-gray-400">
-                          <span className="text-purple-400">📧</span>
-                          <span className="truncate">{ngo.email || "Contact Pending"}</span>
-                       </div>
-                       <div className="flex items-center gap-3 text-xs font-medium text-gray-400">
-                          <span className="text-purple-400">🌐</span>
-                          <span className="truncate">{ngo.website || "No digital portal"}</span>
+                    <div className="space-y-6">
+                       <div className="space-y-3">
+                          <div className="flex items-center gap-3 text-[10px] font-bold text-gray-500 uppercase tracking-tight truncate">
+                             <span className="text-emerald-500">📍</span>
+                             <span className="truncate">{ngo.address || ngo.location?.address || "Region Office"}</span>
+                          </div>
+                          <div className="flex items-center gap-3 text-[10px] font-bold text-gray-500 uppercase tracking-tight truncate">
+                             <span className="text-purple-400">📧</span>
+                             <span className="truncate">{ngo.email || "Contact Pending"}</span>
+                          </div>
+                          <div className="flex items-center gap-3 text-[10px] font-bold text-gray-500 uppercase tracking-tight truncate">
+                             <span className="text-blue-400">🌐</span>
+                             <span className="truncate">{ngo.ngoContact || ngo.website || "No digital portal"}</span>
+                          </div>
                        </div>
                     </div>
 
-                    <div className="mt-auto pt-4 flex gap-2">
+                    <div className="mt-auto pt-6 flex gap-3 border-t border-white/5">
                        <button 
                         onClick={() => handleConnect(ngo)}
-                        className="flex-1 btn-secondary !py-2.5 !text-[10px] !font-black uppercase tracking-widest"
+                        className="flex-1 btn-secondary !py-3 !text-[9px] !font-black uppercase tracking-widest !rounded-xl"
                        >
                           Contact
                        </button>
                        <button 
                         onClick={() => handleOpenRequest(ngo)}
-                        className="flex-1 btn-primary !py-2.5 !text-[10px] !font-black uppercase tracking-widest"
+                        className="flex-1 btn-primary !py-3 !text-[9px] !font-black uppercase tracking-widest !rounded-xl"
                        >
                           Request Help
                        </button>
                     </div>
                   </motion.div>
-                );
-              })}
-            </div>
-          )}
+                ))
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </PageWrapper>
 
-      {/* REQUEST MODAL */}
       <AnimatePresence>
         {showRequestModal && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6">
+          <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowRequestModal(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} 
-              className="relative w-full max-w-md card !p-10 space-y-8 shadow-2xl"
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} 
+              className="relative w-full max-w-md card !p-12 space-y-10 shadow-[0_0_50px_rgba(147,51,234,0.1)] !rounded-[3rem] bg-[#0B1120] border-white/10"
             >
               <div className="text-center">
-                <h2 className="text-xl font-bold text-white uppercase tracking-widest mb-1">Deployment Request</h2>
-                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Transmitting request to {selectedNgo?.ngoName || selectedNgo?.name}</p>
+                <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-2">Request Assistance</h2>
+                <p className="text-[10px] text-purple-400 font-black uppercase tracking-widest">Transmitting to {selectedNgo?.ngoName || selectedNgo?.name}</p>
               </div>
 
               <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-600 ml-2">Target Mission</label>
-                  <select 
-                    value={selectedProbId}
-                    onChange={(e) => setSelectedProbId(e.target.value)}
-                    className="w-full !rounded-2xl !p-4 !text-sm"
-                  >
-                    <option value="">-- Active Mission List --</option>
-                    {problems.map(p => (
-                      <option key={p._id} value={p._id}>{p.title} ({p.problemId})</option>
-                    ))}
-                  </select>
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 ml-1">Mission Identification</label>
+                  <input placeholder="Enter Problem ID" value={selectedProbId} onChange={(e) => setSelectedProbId(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-sm text-white focus:border-purple-500 outline-none font-bold" />
+                  <input placeholder="Enter User ID" value={inputUserId} onChange={(e) => setInputUserId(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-sm text-white focus:border-purple-500 outline-none font-bold" />
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-600 ml-2">Request Type</label>
-                  <select 
-                    value={requestType}
-                    onChange={(e) => setRequestType(e.target.value)}
-                    className="w-full !rounded-2xl !p-4 !text-sm"
-                  >
-                    <option value="assign">Assign Me to Mission</option>
-                    <option value="lead">Request Leadership Authority</option>
-                  </select>
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 ml-1">Tactical Selection</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {["assign", "lead", "other"].map(t => (
+                      <button 
+                        key={t} onClick={() => setRequestType(t)}
+                        className={`py-3 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${requestType === t ? "bg-purple-600 text-white border-transparent" : "bg-white/5 text-gray-600 border-white/5"}`}
+                      >
+                        {t === 'assign' ? 'Assign Request' : t === 'lead' ? 'Leadership' : 'Others'}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-4">
                  <button 
                   onClick={submitRequest} 
-                  disabled={isSubmitting || !selectedProbId}
-                  className="btn-primary !py-4 !text-[10px] !font-black uppercase tracking-[0.2em]"
+                  disabled={isSubmitting || (!selectedProbId && requestType !== 'other')}
+                  className="bg-purple-600 hover:bg-purple-500 text-white py-5 text-xs font-black uppercase tracking-[0.3em] rounded-2xl shadow-2xl shadow-purple-500/20 transition-all active:scale-95 disabled:opacity-20"
                  >
-                   {isSubmitting ? "Transmitting..." : "Send Request"}
+                   {isSubmitting ? "TRANSMITTING..." : "Transmit Request"}
                  </button>
-                 <button onClick={() => setShowRequestModal(false)} className="text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Abort</button>
+                 <button onClick={() => setShowRequestModal(false)} className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-700 hover:text-white transition-colors">Abort</button>
               </div>
             </motion.div>
           </div>
@@ -275,7 +275,7 @@ function NGOContent() {
 
 export default function NGOPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[var(--bg)] flex items-center justify-center text-white font-black uppercase tracking-[0.3em] animate-pulse">Syncing Command Grid...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#080B14] flex items-center justify-center text-white font-black uppercase tracking-[0.4em] animate-pulse">Syncing Command Hub...</div>}>
       <NGOContent />
     </Suspense>
   );

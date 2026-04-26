@@ -11,7 +11,7 @@ import axios from "axios";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
 const ROLE_FILTERS = [
-  { key: "all",       label: "All Helpers" },
+  { key: "all",       label: "All Personnel" },
   { key: "volunteer", label: "Volunteers"  },
   { key: "worker",    label: "Field Workers" },
 ];
@@ -48,11 +48,11 @@ function VolunteersContent() {
         axios.get(`${API_BASE}/api/problems`)
       ]);
       
-      const helpers = uRes.data.filter(u => 
-        ["volunteer", "worker"].includes(u.role?.toLowerCase())
+      const helpers = (Array.isArray(uRes.data) ? uRes.data : []).filter(u => 
+        ["volunteer", "worker", "Volunteer", "Worker"].includes(u.role?.toLowerCase())
       );
       setUsers(helpers);
-      setProblems(pRes.data.filter(p => p.status !== "RESOLVED"));
+      setProblems((Array.isArray(pRes.data) ? pRes.data : pRes.data.data || []).filter(p => p.status !== "RESOLVED"));
     } catch (err) {
       toast.error("Network synchronization failed.");
     } finally {
@@ -65,7 +65,7 @@ function VolunteersContent() {
       const loc = await getUserLocation();
       setUserLoc(loc);
       setSortBy("nearest");
-      toast.success("GPS Lock: Proximity sorting active.");
+      toast.success("GPS Proximity Locked");
     } catch (err) {
       toast.error("Location services unavailable.");
     }
@@ -101,11 +101,10 @@ function VolunteersContent() {
     return (a.name || "").localeCompare(b.name || "");
   });
 
-  const canAssign = (targetRole) => {
+  const canAssign = () => {
     if (!currentUser) return false;
     const myRole = currentUser.role?.toLowerCase();
-    if (["ngo", "admin"].includes(myRole)) return true;
-    return false;
+    return ["ngo", "admin"].includes(myRole);
   };
 
   const submitAssignment = async () => {
@@ -128,44 +127,46 @@ function VolunteersContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)]">
+    <div className="min-h-screen bg-[#080B14] text-white pb-24 font-inter">
       <Navbar />
-      <PageWrapper className="pt-28 pb-20 px-6">
-        <div className="max-w-7xl mx-auto space-y-12">
+      <PageWrapper className="pt-28 px-6">
+        <div className="max-w-7xl mx-auto">
           
-          {/* HEADER */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-12 border-b border-white/5 pb-10">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2 uppercase tracking-tight">Helpers</h1>
-              <p className="text-sm text-gray-500 font-medium">Coordinate with field specialists and verified volunteers.</p>
+              <h1 className="text-4xl font-black tracking-tighter uppercase mb-2">Coworkers</h1>
+              <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em]">Coordinate with field specialists and verified helpers.</p>
             </div>
             
             <div className="flex flex-wrap items-center gap-4">
-               <input
-                 placeholder="Search by ID or Name..."
-                 value={searchQuery}
-                 onChange={(e) => setSearchQuery(e.target.value)}
-                 className="!w-64 !rounded-xl !py-3 !px-5"
-               />
+               <div className="relative group">
+                 <input
+                   placeholder="Search by ID or Name..."
+                   value={searchQuery}
+                   onChange={(e) => setSearchQuery(e.target.value)}
+                   className="w-64 bg-black/40 border border-white/10 rounded-2xl py-3.5 pl-12 pr-6 text-xs text-white focus:border-purple-500 outline-none transition-all placeholder:text-gray-700 font-bold"
+                 />
+                 <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-purple-500 transition-colors" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+               </div>
+               
                <select 
                 value={sortBy} 
                 onChange={(e) => e.target.value === "nearest" ? handleLocate() : setSortBy(e.target.value)}
-                className="!bg-white/5 !border-none !rounded-xl !py-3 !px-4 !text-xs !font-bold uppercase tracking-widest text-gray-400 cursor-pointer"
+                className="bg-black/40 border border-white/10 rounded-2xl py-3.5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400 outline-none cursor-pointer focus:border-purple-500"
                >
-                  <option value="name">Sort: Name</option>
-                  <option value="nearest">Sort: Nearest</option>
+                  <option value="name">Sort by Name</option>
+                  <option value="nearest">Sort by Nearest</option>
                </select>
             </div>
           </div>
 
-          {/* FILTERS */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 mb-10">
             {ROLE_FILTERS.map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => setFilterRole(key)}
-                className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                  filterRole === key ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20" : "bg-white/5 text-gray-500 border border-white/5 hover:border-white/10"
+                className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                  filterRole === key ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20" : "bg-white/5 text-gray-600 border border-white/5 hover:border-white/10"
                 }`}
               >
                 {label}
@@ -173,103 +174,103 @@ function VolunteersContent() {
             ))}
           </div>
 
-          {/* GRID */}
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => <div key={i} className="card h-64 animate-pulse" />)}
-            </div>
-          ) : sorted.length === 0 ? (
-            <div className="py-32 text-center card border-dashed border-white/10">
-              <p className="text-gray-500 font-bold uppercase tracking-[0.2em] text-[10px]">No helpers found in this sector</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {sorted.map((u) => {
-                const skills = Array.from(new Set([...(u.skills || []), u.skill].filter(Boolean)));
-                const dist = userLoc ? getDistance(userLoc.lat, userLoc.lng, u.location?.lat, u.location?.lng) : null;
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <AnimatePresence>
+              {loading ? (
+                [...Array(8)].map((_, i) => <div key={i} className="card h-64 animate-pulse !rounded-[2.5rem] bg-white/5" />)
+              ) : sorted.length === 0 ? (
+                <div className="col-span-full py-32 text-center bg-white/[0.01] border border-dashed border-white/10 rounded-[3rem]">
+                  <p className="text-gray-600 font-black uppercase tracking-[0.2em] text-[10px]">No verified coworkers found in this sector</p>
+                </div>
+              ) : (
+                sorted.map((u) => {
+                  const skills = Array.from(new Set([...(u.skills || []), u.skill].filter(Boolean)));
+                  return (
+                    <motion.div 
+                      layout key={u._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      className="card !p-10 flex flex-col gap-8 group relative overflow-hidden !rounded-[2.5rem] bg-white/[0.01] hover:bg-white/[0.02] border border-white/5 transition-all shadow-2xl"
+                    >
+                      <div className="space-y-2">
+                         <h3 className="text-2xl font-black text-white group-hover:text-purple-400 transition-colors truncate tracking-tighter uppercase">{u.name}</h3>
+                         <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest">ID: {u.customId || u.displayId || u._id.slice(-6).toUpperCase()}</p>
+                      </div>
 
-                return (
-                  <motion.div 
-                    layout key={u._id} 
-                    className="card !p-8 flex flex-col gap-6 group relative overflow-hidden"
-                  >
-                    <div className="space-y-1">
-                       <h3 className="text-lg font-bold text-white group-hover:text-purple-400 transition-colors truncate">{u.name}</h3>
-                       <p className="text-[10px] font-bold text-gray-600 uppercase tracking-tighter">ID: {u.customId || u.displayId || u._id.slice(-6).toUpperCase()}</p>
-                    </div>
+                      <div className="space-y-6">
+                         <div className="space-y-2">
+                            <p className="text-[9px] font-black text-gray-700 uppercase tracking-widest">Expertise Unit</p>
+                            <div className="flex flex-wrap gap-1.5">
+                               {skills.slice(0, 3).map(s => (
+                                 <span key={s} className="px-3 py-1 bg-white/5 border border-white/5 rounded-lg text-[9px] font-black text-gray-400 uppercase tracking-widest">{s}</span>
+                               ))}
+                            </div>
+                         </div>
+                         <div className="flex items-center gap-3 text-[10px] font-bold text-gray-500 uppercase tracking-tight truncate">
+                            <span className="text-emerald-500">📍</span>
+                            <span className="truncate">{u.address || u.location?.address || "Field Operator"}</span>
+                         </div>
+                      </div>
 
-                    <div className="space-y-4">
-                       <div className="space-y-1">
-                          <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Expertise</p>
-                          <p className="text-xs text-gray-300 font-medium truncate">{skills.join(", ") || "General Support"}</p>
-                       </div>
-                       <div className="flex items-center gap-2 text-[10px] font-medium text-gray-500">
-                          <span>📍</span>
-                          <span className="truncate">{u.address || u.location?.address || "Field Operator"}</span>
-                       </div>
-                    </div>
-
-                    <div className="mt-auto pt-4 flex gap-2">
-                       <button 
-                        onClick={() => router.push(`/profile/${u._id}`)}
-                        className="flex-1 btn-secondary !py-2.5 !text-[10px] !font-black uppercase tracking-widest"
-                       >
-                          View
-                       </button>
-                       {canAssign(u.role) && (
+                      <div className="mt-auto pt-6 flex gap-3 border-t border-white/5">
                          <button 
-                          onClick={() => { setSelectedUser(u); setShowAssignModal(true); }}
-                          className="flex-1 btn-primary !py-2.5 !text-[10px] !font-black uppercase tracking-widest"
+                          onClick={() => router.push(`/profile/${u._id}`)}
+                          className="flex-1 btn-secondary !py-3 !text-[9px] !font-black uppercase tracking-widest !rounded-xl"
                          >
-                            Assign
+                            Intel
                          </button>
-                       )}
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
+                         {canAssign() && (
+                           <button 
+                            onClick={() => { setSelectedUser(u); setShowAssignModal(true); }}
+                            className="flex-1 btn-primary !py-3 !text-[9px] !font-black uppercase tracking-widest !rounded-xl"
+                           >
+                              Deploy
+                           </button>
+                         )}
+                      </div>
+                    </motion.div>
+                  );
+                })
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </PageWrapper>
 
-      {/* ASSIGN MODAL */}
       <AnimatePresence>
         {showAssignModal && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6">
+          <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowAssignModal(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} 
-              className="relative w-full max-w-md card !p-10 space-y-8 shadow-2xl"
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} 
+              className="relative w-full max-w-md card !p-12 space-y-10 shadow-[0_0_50px_rgba(147,51,234,0.1)] !rounded-[3rem] bg-[#0B1120] border-white/10"
             >
               <div className="text-center">
-                <h2 className="text-xl font-bold text-white uppercase tracking-widest mb-1">Mission Deployment</h2>
-                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Assigning {selectedUser?.name} to Active Duty</p>
+                <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-2">Mobilize Unit</h2>
+                <p className="text-[10px] text-purple-400 font-black uppercase tracking-widest">Assigning {selectedUser?.name} to Active Mission</p>
               </div>
 
               <div className="space-y-4">
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-600">Select Active Mission</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 ml-1">Operational Node Selection</label>
                 <select 
                   value={selectedProbId}
                   onChange={(e) => setSelectedProbId(e.target.value)}
-                  className="w-full !rounded-2xl !p-4 !text-sm"
+                  className="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-sm text-white focus:border-purple-500 outline-none transition-all font-bold"
                 >
-                  <option value="">-- Mission List --</option>
+                  <option value="" className="bg-[#0B1120]">-- SELECT MISSION ID --</option>
                   {problems.map(p => (
-                    <option key={p._id} value={p._id}>{p.title} ({p.problemId})</option>
+                    <option key={p._id} value={p._id} className="bg-[#0B1120]">{p.title} ({p.problemId})</option>
                   ))}
                 </select>
               </div>
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-4">
                  <button 
                   onClick={submitAssignment} 
                   disabled={isSubmitting || !selectedProbId}
-                  className="btn-primary !py-4 !text-[10px] !font-black uppercase tracking-[0.2em]"
+                  className="bg-purple-600 hover:bg-purple-500 text-white py-5 text-xs font-black uppercase tracking-[0.3em] rounded-2xl shadow-2xl shadow-purple-500/20 transition-all active:scale-95 disabled:opacity-20"
                  >
-                   {isSubmitting ? "Processing..." : "Confirm Deployment"}
+                   {isSubmitting ? "TRANSMITTING..." : "Confirm Deployment"}
                  </button>
-                 <button onClick={() => setShowAssignModal(false)} className="text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Abort</button>
+                 <button onClick={() => setShowAssignModal(false)} className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-700 hover:text-white transition-colors">Abort Logic</button>
               </div>
             </motion.div>
           </div>
@@ -281,7 +282,7 @@ function VolunteersContent() {
 
 export default function VolunteersPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[var(--bg)] flex items-center justify-center text-white font-black uppercase tracking-[0.3em] animate-pulse">Syncing Network...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#080B14] flex items-center justify-center text-white font-black uppercase tracking-[0.4em] animate-pulse">Syncing Tactical Network...</div>}>
       <VolunteersContent />
     </Suspense>
   );

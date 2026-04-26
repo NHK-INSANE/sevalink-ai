@@ -233,9 +233,10 @@ router.post("/:id/team/respond", auth, authorize("ngo", "admin"), async (req, re
       request.status = "accepted";
       
       // Add to team
-      if (!problem.team.find(m => m.userId.toString() === request.userId.toString())) {
+        const joiningUser = await User.findById(request.userId);
         problem.team.push({
           userId: request.userId,
+          name: joiningUser ? joiningUser.name : "Personnel",
           role: request.role,
           isLeader: false
         });
@@ -294,6 +295,11 @@ router.post("/:id/team/remove", auth, authorize("ngo", "admin"), async (req, res
 
     problem.team = problem.team.filter(m => m.userId.toString() !== userId);
     
+    // Clear leader field if this person was the leader
+    if (problem.leader?.toString() === userId) {
+      problem.leader = null;
+    }
+
     // System Message
     problem.messages.push({
       senderId: "SYSTEM",
@@ -304,6 +310,26 @@ router.post("/:id/team/remove", auth, authorize("ngo", "admin"), async (req, res
     });
 
     await problem.save();
+
+    // Broadcast update
+    const io = req.app.get("io");
+    if (io) io.emit("problem-updated", problem);
+
+    // Remove from Team Chat
+    const Chat = require("../models/Chat");
+    await Chat.updateOne(
+      { problemId: problem._id, type: "team" },
+      { $pull: { participants: userId } }
+    );
+
+    // Notify User
+    await sendNotification(io, {
+      userId,
+      type: "alert",
+      message: `TACTICAL DISENGAGEMENT: You have been removed from mission: ${problem.title}`,
+      data: { problemId: problem._id }
+    });
+
     res.json({ success: true, message: "Member removed from mission." });
   } catch (err) {
     res.status(500).json({ error: "Removal failed." });
@@ -317,7 +343,10 @@ router.post("/:id/team/leader", auth, authorize("ngo", "admin"), async (req, res
     const problem = await Problem.findById(req.params.id);
     if (!problem) return res.status(404).json({ error: "Problem not found" });
 
-    // Only one leader
+    // Sync leader field
+    problem.leader = userId;
+
+    // Update isLeader flag in team array
     problem.team.forEach(m => {
       m.isLeader = m.userId.toString() === userId;
     });
@@ -326,12 +355,25 @@ router.post("/:id/team/leader", auth, authorize("ngo", "admin"), async (req, res
     problem.messages.push({
       senderId: "SYSTEM",
       senderName: "Mission Control",
-      text: `Mission Leadership established: ID-${userId.toString().slice(-4).toUpperCase()} is now the Mission Leader.`,
+      text: `Mission Leadership established: Personnel ${userId.toString().slice(-4).toUpperCase()} is now the Mission Leader.`,
       type: "system",
       createdAt: new Date()
     });
 
     await problem.save();
+
+    // Broadcast update
+    const io = req.app.get("io");
+    if (io) io.emit("problem-updated", problem);
+
+    // Notify User
+    await sendNotification(io, {
+      userId,
+      type: "alert",
+      message: `COMMAND PROMOTION: You have been appointed LEADER of mission: ${problem.title}`,
+      data: { problemId: problem._id }
+    });
+
     res.json({ success: true, message: "Mission leadership updated." });
   } catch (err) {
     res.status(500).json({ error: "Leadership update failed." });

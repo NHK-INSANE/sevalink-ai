@@ -17,12 +17,12 @@ function ChatContent() {
   const targetProblemId = searchParams.get("problemId");
   
   const [user, setUser] = useState(null);
-  const [conversations, setConversations] = useState({ helpers: [], ngos: [], missions: [] });
+  const [conversations, setConversations] = useState({ personnel: [], partners: [], missions: [] });
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("helpers"); // helpers | ngos | missions
+  const [activeTab, setActiveTab] = useState("personnel"); // personnel | partners | missions
   const [uploading, setUploading] = useState(false);
 
   const messagesEndRef = useRef(null);
@@ -45,31 +45,32 @@ function ChatContent() {
         axios.get(`${API_BASE}/api/chat/missions`, { headers: { Authorization: `Bearer ${encodeURIComponent(token)}` } })
       ]);
       
-      const chats = chatRes.data;
+      const chats = Array.isArray(chatRes.data) ? chatRes.data : [];
+      const missions = Array.isArray(missionRes.data) ? missionRes.data : [];
+
       const sorted = {
-        helpers: chats.filter(c => c.type === "direct" && c.participants.some(p => ["volunteer", "worker"].includes(p.role?.toLowerCase()))),
-        ngos: chats.filter(c => c.type === "direct" && c.participants.some(p => p.role?.toLowerCase() === "ngo")),
-        missions: missionRes.data
+        personnel: chats.filter(c => c.type === "direct" && c.participants.some(p => ["volunteer", "worker", "Volunteer", "Worker", "user"].includes(p.role?.toLowerCase()))),
+        partners: chats.filter(c => c.type === "direct" && c.participants.some(p => p.role?.toLowerCase() === "ngo")),
+        missions: missions
       };
       
       setConversations(sorted);
 
-      // Auto-select logic
       if (targetUserId) {
         const existing = chats.find(c => c.participants.some(p => p._id === targetUserId));
         if (existing) {
           setSelectedChat(existing);
-          setActiveTab(existing.participants.some(p => p.role?.toLowerCase() === "ngo") ? "ngos" : "helpers");
+          setActiveTab(existing.participants.some(p => p.role?.toLowerCase() === "ngo") ? "partners" : "personnel");
         } else {
           const createRes = await axios.post(`${API_BASE}/api/chat/direct`, { targetUserId }, {
             headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
           });
           const newChat = createRes.data;
           setSelectedChat(newChat);
-          setActiveTab(newChat.participants.some(p => p.role?.toLowerCase() === "ngo") ? "ngos" : "helpers");
+          setActiveTab(newChat.participants.some(p => p.role?.toLowerCase() === "ngo") ? "partners" : "personnel");
         }
       } else if (targetProblemId) {
-        const mission = missionRes.data.find(m => m._id === targetProblemId);
+        const mission = missions.find(m => m._id === targetProblemId);
         if (mission) {
           setSelectedChat(mission);
           setActiveTab("missions");
@@ -158,7 +159,7 @@ function ChatContent() {
       const res = await axios.post(`${API_BASE}/api/upload`, formData, {
         headers: { Authorization: `Bearer ${encodeURIComponent(token)}`, "Content-Type": "multipart/form-data" }
       });
-      sendMessage("Shared a file", "image", res.data.data.url);
+      sendMessage("Shared an attachment", "image", res.data.data.url);
     } catch (err) {
       toast.error("Upload failed.");
     } finally {
@@ -179,22 +180,21 @@ function ChatContent() {
     <div className="min-h-screen bg-[#080B14] flex flex-col h-screen overflow-hidden text-white font-inter">
       <Navbar />
       <PageWrapper className="flex-1 flex flex-col overflow-hidden pt-[100px] pb-6 px-4 md:px-8">
-        <div className="flex-1 flex w-full mx-auto bg-[#0f172a]/40 border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl backdrop-blur-3xl">
+        <div className="flex-1 flex w-full mx-auto bg-[#0f172a]/40 border border-white/5 rounded-[3rem] overflow-hidden shadow-2xl backdrop-blur-3xl">
           
-          {/* SIDEBAR */}
-          <div className={`${selectedChat ? "hidden md:flex" : "flex"} w-full md:w-[380px] flex-col border-r border-white/5 bg-black/20`}>
-            <div className="p-8 border-b border-white/5 space-y-6">
+          <div className={`${selectedChat ? "hidden md:flex" : "flex"} w-full md:w-[400px] flex-col border-r border-white/5 bg-black/20`}>
+            <div className="p-10 border-b border-white/5 space-y-8">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-black uppercase tracking-tighter text-white">Comms</h2>
-                <div className="flex gap-2">
+                <h2 className="text-3xl font-black uppercase tracking-tighter text-white">Comms Hub</h2>
+                <div className="flex items-center gap-2">
                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                   <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">Live</span>
+                   <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400">Live Grid</span>
                 </div>
               </div>
-              <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5">
-                 {["helpers", "ngos", "missions"].map(t => (
-                   <button key={t} onClick={() => setActiveTab(t)} className={`flex-1 py-2.5 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === t ? "bg-purple-600 shadow-lg text-white" : "text-gray-500 hover:text-gray-300"}`}>
-                     {t === "missions" ? "Units" : t}
+              <div className="flex bg-white/[0.02] p-1.5 rounded-2xl border border-white/5">
+                 {["personnel", "partners", "missions"].map(t => (
+                   <button key={t} onClick={() => setActiveTab(t)} className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === t ? "bg-purple-600 shadow-xl text-white" : "text-gray-500 hover:text-gray-300"}`}>
+                     {t === "personnel" ? "Helpers" : t === "partners" ? "NGOs" : "Units"}
                    </button>
                  ))}
               </div>
@@ -202,33 +202,33 @@ function ChatContent() {
             
             <div className="flex-1 overflow-y-auto custom-scrollbar">
               {loading ? (
-                <div className="p-6 space-y-4">
-                  {[...Array(6)].map((_, i) => <div key={i} className="h-20 bg-white/5 rounded-3xl animate-pulse" />)}
+                <div className="p-8 space-y-6">
+                  {[...Array(6)].map((_, i) => <div key={i} className="h-24 bg-white/5 rounded-[2rem] animate-pulse" />)}
                 </div>
               ) : filteredItems.length === 0 ? (
-                <div className="p-12 text-center">
-                  <div className="text-4xl mb-4 opacity-20">📡</div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-600">No active {activeTab} channels found</p>
+                <div className="p-16 text-center">
+                  <div className="text-5xl mb-6 opacity-10">📡</div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-700 leading-relaxed">No active {activeTab} signatures detected</p>
                 </div>
               ) : (
                 filteredItems.map(c => {
                   const other = getOtherParticipant(c);
                   const isSelected = selectedChat?._id === c._id;
                   return (
-                    <div key={c._id} onClick={() => setSelectedChat(c)} className={`p-6 cursor-pointer transition-all flex items-center gap-5 relative group ${isSelected ? "bg-white/5" : "hover:bg-white/[0.02]"}`}>
-                      {isSelected && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-10 bg-purple-500 rounded-r-full" />}
-                      <div className={`w-14 h-14 rounded-[1.2rem] flex items-center justify-center text-white font-black text-xl shadow-xl transition-transform group-hover:scale-105 ${c.type === "team" ? "bg-gradient-to-br from-red-600 to-purple-600" : "bg-gradient-to-br from-indigo-600 to-blue-600"}`}>
-                        {c.type === "team" ? "🚨" : (other.name?.charAt(0) || "U")}
+                    <div key={c._id} onClick={() => setSelectedChat(c)} className={`p-8 cursor-pointer transition-all flex items-center gap-6 relative group ${isSelected ? "bg-white/[0.03]" : "hover:bg-white/[0.01]"}`}>
+                      {isSelected && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-purple-500 rounded-r-full shadow-[4px_0_15px_rgba(168,85,247,0.5)]" />}
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-2xl transition-all group-hover:scale-105 border border-white/10 ${c.type === "team" ? "bg-gradient-to-br from-red-600 to-purple-600" : "bg-gradient-to-br from-indigo-600 to-blue-600"}`}>
+                        {c.type === "team" ? "⚡" : (other.name?.charAt(0) || "U")}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start mb-1">
-                          <span className={`font-bold text-sm truncate uppercase tracking-tight ${isSelected ? "text-white" : "text-gray-300"}`}>{other.name}</span>
-                          <span className="text-[8px] text-gray-600 font-black">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className={`font-black text-sm truncate uppercase tracking-tight ${isSelected ? "text-white" : "text-gray-400 group-hover:text-white"}`}>{other.name}</span>
+                          <span className="text-[8px] text-gray-700 font-black uppercase tracking-widest">
                             {c.updatedAt ? new Date(c.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ""}
                           </span>
                         </div>
-                        <p className="text-[11px] text-gray-500 truncate font-medium">
-                          {c.lastMessage?.text || c.lastMessage?.message || "Encrypted Link Active..."}
+                        <p className="text-[11px] text-gray-600 truncate font-bold uppercase tracking-tight">
+                          {c.lastMessage?.text || c.lastMessage?.message || "Tactical Link Established..."}
                         </p>
                       </div>
                     </div>
@@ -238,58 +238,59 @@ function ChatContent() {
             </div>
           </div>
 
-          {/* MAIN CHAT WINDOW */}
           <div className={`${!selectedChat ? "hidden md:flex" : "flex"} flex-1 flex flex-col relative bg-[#0B1220]/60`}>
             {selectedChat ? (
               <>
-                {/* CHAT HEADER */}
-                <div className="px-10 py-6 border-b border-white/5 bg-[#0f172a]/90 backdrop-blur-2xl z-20 flex items-center justify-between">
-                  <div className="flex items-center gap-5">
-                    <button onClick={() => setSelectedChat(null)} className="md:hidden w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-gray-400 hover:text-white">←</button>
-                    <div className="w-12 h-12 rounded-2xl bg-purple-600/10 border border-purple-500/20 flex items-center justify-center text-purple-400 font-black text-xl">
+                <div className="px-10 py-8 border-b border-white/5 bg-[#0f172a]/95 backdrop-blur-3xl z-20 flex items-center justify-between">
+                  <div className="flex items-center gap-6">
+                    <button onClick={() => setSelectedChat(null)} className="md:hidden w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-gray-400 hover:text-white border border-white/5 shadow-xl">←</button>
+                    <div className="w-14 h-14 rounded-2xl bg-purple-600/10 border border-purple-500/20 flex items-center justify-center text-purple-400 font-black text-2xl shadow-inner">
                       {getOtherParticipant(selectedChat).name?.charAt(0) || "M"}
                     </div>
                     <div>
-                      <h3 className="text-lg font-black text-white tracking-tighter uppercase flex items-center gap-3">
+                      <h3 className="text-xl font-black text-white tracking-tighter uppercase flex items-center gap-4">
                         {getOtherParticipant(selectedChat).name}
-                        {selectedChat.type === "team" && <span className="text-[8px] bg-red-500/20 text-red-400 px-3 py-1 rounded-full border border-red-500/10 uppercase tracking-widest font-black">Tactical</span>}
+                        {selectedChat.type === "team" && <span className="text-[9px] bg-red-600 text-white px-3 py-1 rounded-lg border border-red-500/20 uppercase tracking-widest font-black shadow-lg">Live Mission</span>}
                       </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Node Sync Active</span>
+                      <div className="flex items-center gap-2.5 mt-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_12px_rgba(16,185,129,0.6)]" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600">Secure Neural Link Active</span>
                       </div>
                     </div>
                   </div>
+                  <div className="hidden lg:flex gap-3">
+                     <button className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-gray-600 hover:text-white transition-all">🔍</button>
+                     <button className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-gray-600 hover:text-white transition-all">⚙️</button>
+                  </div>
                 </div>
                 
-                {/* MESSAGES */}
-                <div className="flex-1 overflow-y-auto p-10 space-y-8 custom-scrollbar bg-[url('/grid.svg')] bg-repeat">
+                <div className="flex-1 overflow-y-auto p-12 space-y-10 custom-scrollbar bg-[url('/grid.svg')] bg-repeat opacity-95">
                   {messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center opacity-40">
-                      <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-600/5 flex items-center justify-center mx-auto mb-6 text-indigo-400 text-3xl border border-dashed border-white/10">🔐</div>
-                      <h4 className="text-[11px] font-black text-white uppercase tracking-[0.3em] mb-3">Protocol: Neural-L4</h4>
-                      <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.15em] max-w-[300px] leading-relaxed">End-to-End Encrypted tactical link. Automated deletion sequence in 14 days.</p>
+                    <div className="flex flex-col items-center justify-center h-full text-center opacity-30">
+                      <div className="w-24 h-24 rounded-[3rem] bg-indigo-600/5 flex items-center justify-center mx-auto mb-8 text-indigo-400 text-4xl border border-dashed border-white/10">🔐</div>
+                      <h4 className="text-[12px] font-black text-white uppercase tracking-[0.4em] mb-4">Encryption: Neural-Alpha</h4>
+                      <p className="text-[10px] text-gray-600 font-black uppercase tracking-[0.2em] max-w-[320px] leading-relaxed">End-to-End tactical synchronization. Mission history strictly classified.</p>
                     </div>
                   ) : (
                     messages.map((m, idx) => {
                       const isMe = (m.senderId?._id || m.senderId) === (user.id || user._id);
                       return (
                         <div key={m._id || idx} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className={`max-w-[85%] md:max-w-[65%] px-6 py-4 rounded-[2rem] shadow-2xl relative ${isMe ? "bg-purple-600 text-white rounded-tr-none" : "bg-[#1e293b] text-gray-200 rounded-tl-none border border-white/10 shadow-purple-500/5"}`}>
-                            {!isMe && selectedChat.type === "team" && <p className="text-[9px] font-black text-purple-400 uppercase tracking-widest mb-2 flex items-center gap-2"><span className="w-1 h-1 bg-purple-500 rounded-full" /> {m.senderName || "Responder"}</p>}
+                          <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className={`max-w-[85%] md:max-w-[70%] px-8 py-5 rounded-[2.5rem] shadow-2xl relative ${isMe ? "bg-purple-600 text-white rounded-tr-none shadow-purple-500/10" : "bg-[#1e293b] text-gray-200 rounded-tl-none border border-white/5"}`}>
+                            {!isMe && selectedChat.type === "team" && <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest mb-3 flex items-center gap-2"><span className="w-1.5 h-1.5 bg-purple-500 rounded-full" /> {m.senderName || "Responder"}</p>}
                             
                             {m.type === "image" ? (
-                              <div className="space-y-3">
-                                <img src={m.mediaUrl} alt="Attached tactical intel" className="rounded-2xl w-full max-h-[300px] object-cover border border-white/10" />
-                                <p className="text-[13px] leading-relaxed font-medium italic opacity-80">{m.message}</p>
+                              <div className="space-y-4">
+                                <img src={m.mediaUrl} alt="Tactical Intel" className="rounded-2xl w-full max-h-[400px] object-cover border border-white/10 shadow-2xl" />
+                                <p className="text-[14px] leading-relaxed font-bold italic opacity-90 uppercase tracking-tight">{m.message}</p>
                               </div>
                             ) : (
-                              <p className="text-[13px] leading-relaxed font-medium">{m.message}</p>
+                              <p className="text-[14px] leading-relaxed font-bold tracking-tight">{m.message}</p>
                             )}
 
-                            <div className="flex justify-end items-center gap-2 mt-2 text-[8px] font-black opacity-40 uppercase tracking-widest">
+                            <div className="flex justify-end items-center gap-3 mt-3 text-[9px] font-black opacity-30 uppercase tracking-[0.2em]">
                               {new Date(m.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                              {isMe && <span className="text-emerald-400">SYNCED</span>}
+                              {isMe && <span className="text-emerald-400 font-black">SYNCED</span>}
                             </div>
                           </motion.div>
                         </div>
@@ -299,37 +300,49 @@ function ChatContent() {
                   <div ref={messagesEndRef} />
                 </div>
 
-                {/* INPUT AREA */}
-                <div className="p-8 bg-[#0f172a]/95 backdrop-blur-3xl border-t border-white/5 flex items-center gap-4 z-20">
+                <div className="p-10 bg-[#0f172a]/95 backdrop-blur-3xl border-t border-white/5 flex items-center gap-5 z-20 shadow-[0_-10px_50px_rgba(0,0,0,0.5)]">
                   <div className="relative group">
-                    <button onClick={() => fileInputRef.current.click()} className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 text-gray-400 flex items-center justify-center hover:bg-white/10 hover:text-white transition-all shadow-xl">
-                      {uploading ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : "+"}
+                    <button onClick={() => fileInputRef.current.click()} className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 text-gray-500 flex items-center justify-center hover:bg-white/10 hover:text-white transition-all shadow-xl active:scale-95">
+                      {uploading ? <div className="w-5 h-5 border-3 border-white/20 border-t-white rounded-full animate-spin" /> : <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 5v14M5 12h14"/></svg>}
                     </button>
                     <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" />
                   </div>
-                  <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && sendMessage()} placeholder="Transmit secure data..." className="flex-1 bg-black/40 border border-white/10 rounded-[1.5rem] px-8 py-5 text-[14px] text-white placeholder-gray-700 outline-none focus:border-purple-500/50 transition-all shadow-inner font-medium" />
-                  <button onClick={() => sendMessage()} disabled={!inputText.trim() && !uploading} className="w-16 h-16 rounded-[1.5rem] bg-purple-600 text-white flex items-center justify-center hover:bg-purple-500 disabled:opacity-20 transition-all active:scale-90 shadow-2xl shadow-purple-500/40 font-black text-xl">➤</button>
+                  <input 
+                    type="text" 
+                    value={inputText} 
+                    onChange={(e) => setInputText(e.target.value)} 
+                    onKeyDown={(e) => e.key === 'Enter' && sendMessage()} 
+                    placeholder="Transmit encrypted mission data..." 
+                    className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-8 py-5 text-[15px] text-white placeholder-gray-800 outline-none focus:border-purple-500/30 transition-all shadow-inner font-bold tracking-tight" 
+                  />
+                  <button 
+                    onClick={() => sendMessage()} 
+                    disabled={!inputText.trim() && !uploading} 
+                    className="w-20 h-14 rounded-2xl bg-purple-600 text-white flex items-center justify-center hover:bg-purple-500 disabled:opacity-20 transition-all active:scale-95 shadow-2xl shadow-purple-500/40"
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  </button>
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-10 relative bg-[url('/grid.svg')] bg-repeat opacity-80">
-                <div className="w-24 h-24 bg-white/[0.02] rounded-[3rem] flex items-center justify-center text-5xl mb-6 border border-dashed border-white/10 animate-float shadow-2xl shadow-purple-500/5">🛰️</div>
-                <h3 className="text-2xl font-black text-white uppercase tracking-[0.3em] mb-4">Tactical Comms Offline</h3>
-                <p className="text-gray-500 text-[11px] font-black uppercase tracking-[0.2em] max-w-[300px] leading-relaxed mx-auto">
-                  Select a secure channel from the left terminal to initialize neural link synchronization.
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-16 relative bg-[url('/grid.svg')] bg-repeat opacity-60">
+                <div className="w-32 h-32 bg-white/[0.02] rounded-[4rem] flex items-center justify-center text-6xl mb-10 border border-dashed border-white/10 animate-float shadow-2xl shadow-purple-500/10">🛰️</div>
+                <h3 className="text-3xl font-black text-white uppercase tracking-[0.4em] mb-6">Tactical Comms Offline</h3>
+                <p className="text-gray-600 text-[11px] font-black uppercase tracking-[0.3em] max-w-[340px] leading-relaxed mx-auto">
+                  Initialize a secure neural link by selecting an active node signature from the left terminal.
                 </p>
-                <div className="mt-12 flex gap-12 opacity-30">
-                   <div className="text-center space-y-2">
-                     <p className="text-[9px] font-black uppercase">AES-256</p>
-                     <p className="text-[8px] font-bold">ENCRYPTION</p>
+                <div className="mt-16 flex gap-16 opacity-20">
+                   <div className="text-center space-y-3">
+                     <p className="text-[10px] font-black uppercase tracking-widest text-white">SHA-512</p>
+                     <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">ENCRYPTION</p>
                    </div>
-                   <div className="text-center space-y-2">
-                     <p className="text-[9px] font-black uppercase">REAL-TIME</p>
-                     <p className="text-[8px] font-bold">SYNC</p>
+                   <div className="text-center space-y-3">
+                     <p className="text-[10px] font-black uppercase tracking-widest text-white">LOW-LATENCY</p>
+                     <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">TRANSMISSION</p>
                    </div>
-                   <div className="text-center space-y-2">
-                     <p className="text-[9px] font-black uppercase">AUTO</p>
-                     <p className="text-[8px] font-bold">PURGE</p>
+                   <div className="text-center space-y-3">
+                     <p className="text-[10px] font-black uppercase tracking-widest text-white">AUTO-PURGE</p>
+                     <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">PROTOCOL</p>
                    </div>
                 </div>
               </div>
@@ -339,10 +352,10 @@ function ChatContent() {
       </PageWrapper>
 
       <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
-        .animate-float { animation: float 6s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
+        .animate-float { animation: float 8s ease-in-out infinite; }
       `}</style>
     </div>
   );
@@ -350,7 +363,7 @@ function ChatContent() {
 
 export default function ChatPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#080B14] flex items-center justify-center text-white text-xs font-black uppercase tracking-widest animate-pulse">Initializing Comm-Link...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#080B14] flex items-center justify-center text-white text-[10px] font-black uppercase tracking-[0.5em] animate-pulse">Syncing Tactical Grid...</div>}>
       <ChatContent />
     </Suspense>
   );
