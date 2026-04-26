@@ -51,18 +51,18 @@ function calculateAIScore(user, problem) {
   // 3. Availability (20% weight)
   const availability = user.availability !== false ? 100 : 0;
 
-  // Final Weighted Score with high-precision jitter for demo realism
-  const jitter = (Math.random() * 4) - 2; // -2% to +2% jitter
-  const finalScore = Math.max(5, Math.min(99.4, 
-    (skillScore * 0.5) + (distanceScore * 0.3) + (availability * 0.2) + jitter
-  ));
+  // Final Weighted Score
+  const finalScore =
+    (skillScore * 0.5) +
+    (distanceScore * 0.3) +
+    (availability * 0.2);
 
   let priority = "low";
   if (distance < 5) priority = "high";
   else if (distance < 20) priority = "medium";
 
   return {
-    score: parseFloat(finalScore.toFixed(1)),
+    score: Math.round(Math.min(finalScore, 100)),
     distance: distance.toFixed(1),
     priority,
     skillMatches

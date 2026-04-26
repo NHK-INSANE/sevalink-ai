@@ -57,7 +57,6 @@ const problemSchema = new mongoose.Schema({
   team: [
     {
       userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-      name: String,
       role: String,
       isLeader: { type: Boolean, default: false }
     }
@@ -141,6 +140,5 @@ problemSchema.virtual('displayId').get(function() {
 // Performance Indexes
 problemSchema.index({ status: 1, isArchived: 1, severity: 1 });
 problemSchema.index({ createdAt: -1 });
-problemSchema.index({ autoDeleteAt: 1 }, { expireAfterSeconds: 0 }); // TTL Index
 
 module.exports = mongoose.model("Problem", problemSchema);

@@ -13,11 +13,11 @@ import Link from "next/link";
 
 const MapPicker = dynamic(() => import("../components/MapPicker"), { 
   ssr: false,
-  loading: () => <div className="h-full w-full bg-slate-900 animate-pulse rounded-[2.5rem]" />
+  loading: () => <div className="h-full w-full bg-slate-900 animate-pulse rounded-[2rem]" />
 });
 
-const CATEGORIES = ["Medical", "Food & Water", "Shelter", "Rescue", "Infrastructure", "Fire", "Safety", "Industrial", "Education", "Medicine Supply", "Technical", "Other"];
-const SKILLS = ["First Aid", "Heavy Lifting", "Logistics", "Cooking", "Communication", "Technical", "Security", "Medical Pro", "Search & Rescue", "Other"];
+const CATEGORIES = ["Medical", "Food & Water", "Shelter", "Rescue", "Infrastructure", "Fire", "Safety", "Other"];
+const SKILLS = ["First Aid", "Heavy Lifting", "Logistics", "Cooking", "Communication", "Technical", "Security", "Other"];
 
 const SEVERITY_LEVELS = {
   critical: { label: "Critical", color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/20", icon: "🚨", desc: "Life-threatening emergency" },
@@ -79,7 +79,7 @@ export default function SubmitPage() {
       const res = await getAISuggestion(form.description);
       if (res.result) {
         setAiSuggestion(res.result);
-        toast.success("AI Summarization ready!");
+        toast.success("AI suggestion generated!");
       }
     } catch (err) {
       toast.error("AI failed to think.");
@@ -91,7 +91,7 @@ export default function SubmitPage() {
   const applySuggestion = () => {
     setForm(prev => ({ ...prev, description: aiSuggestion }));
     setAiSuggestion("");
-    toast.success("AI Explained version applied");
+    toast.success("AI text applied");
   };
 
   const detectLocation = () => {
@@ -135,18 +135,18 @@ export default function SubmitPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-[#080B14] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center p-6">
         <div className="max-w-md w-full text-center space-y-8 animate-in zoom-in duration-500">
           <div className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto border border-emerald-500/20">
             <span className="text-5xl">✅</span>
           </div>
           <div className="space-y-3">
-            <h1 className="text-3xl font-black text-white uppercase tracking-tighter">Mission Transmitted</h1>
-            <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">Emergency protocols initiated. Responders alerted.</p>
+            <h1 className="text-3xl font-bold text-white">Mission Transmitted</h1>
+            <p className="text-sm text-gray-400">Emergency protocols have been initiated. Responders in your sector have been alerted.</p>
           </div>
           <div className="flex flex-col gap-3">
-            <button onClick={() => setSuccess(false)} className="btn-primary w-full py-4 !rounded-2xl">Report Another</button>
-            <Link href="/problems" className="btn-secondary w-full py-4 text-center !rounded-2xl">View Global Grid</Link>
+            <button onClick={() => setSuccess(false)} className="btn-primary w-full py-4">Report Another</button>
+            <Link href="/problems" className="btn-secondary w-full py-4 text-center">View Global Grid</Link>
           </div>
         </div>
       </div>
@@ -154,51 +154,52 @@ export default function SubmitPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#080B14] text-white pb-32 font-inter">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] pb-32">
       <Navbar />
       <PageWrapper className="pt-28 px-6">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           
-          <div className="mb-12 border-b border-white/5 pb-8">
-            <h1 className="text-4xl font-black text-white mb-2 uppercase tracking-tighter">Report Emergency</h1>
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em]">Deploy AI-assisted crisis reporting for immediate coordination.</p>
+          <div className="mb-12">
+            <h1 className="text-3xl font-bold text-white mb-2">Report Emergency</h1>
+            <p className="text-sm text-gray-400 font-medium">Deploy AI-assisted crisis reporting for immediate response coordination.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-12">
             
+            {/* 1. TITLE & DESCRIPTION */}
             <section className="space-y-6">
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Crisis Title *</label>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Incident Header *</label>
                 <input
                   value={form.title}
                   onChange={(e) => setForm({...form, title: e.target.value})}
                   placeholder="e.g. Flash flood at Riverside Sector"
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 px-6 text-sm focus:border-purple-500 outline-none transition-all placeholder:text-gray-700 font-bold"
+                  className="w-full !rounded-xl !py-4 !px-6"
                 />
               </div>
 
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Incident Report *</label>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Tactical Description *</label>
                 <div className="relative">
                   <textarea
                     value={form.description}
                     onChange={(e) => setForm({...form, description: e.target.value})}
                     placeholder="Describe the situation in detail..."
-                    rows={8}
-                    className="w-full bg-white/5 border border-white/10 rounded-[2rem] py-6 px-8 text-sm focus:border-purple-500 outline-none transition-all placeholder:text-gray-700 font-medium leading-relaxed resize-none"
+                    rows={6}
+                    className="w-full !rounded-[1.5rem] !py-5 !px-6 !resize-none"
                   />
-                  <div className="absolute bottom-6 right-6 flex gap-2">
+                  <div className="absolute bottom-4 right-4 flex gap-2">
                     <button 
                       type="button" onClick={handleAIScore} disabled={aiLoading}
-                      className="bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/10 rounded-xl px-4 py-2.5 text-[9px] font-black text-white uppercase tracking-widest transition-all"
+                      className="bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/10 rounded-xl px-4 py-2.5 text-[10px] font-bold text-gray-400 transition-all"
                     >
-                      {aiLoading ? "..." : "🤖 Get AI Score"}
+                      {aiLoading ? "Analyzing..." : "🤖 Get AI Score"}
                     </button>
                     <button 
                       type="button" onClick={handleAISuggest} disabled={suggestLoading}
-                      className="bg-purple-600 hover:bg-purple-500 backdrop-blur-md border border-purple-400/20 rounded-xl px-4 py-2.5 text-[9px] font-black text-white uppercase tracking-widest transition-all shadow-lg shadow-purple-500/20"
+                      className="bg-purple-600/20 hover:bg-purple-600/40 backdrop-blur-md border border-purple-500/20 rounded-xl px-4 py-2.5 text-[10px] font-bold text-purple-400 transition-all"
                     >
-                      {suggestLoading ? "..." : "🤖 AI Summarization"}
+                      {suggestLoading ? "Thinking..." : "🤖 AI Refine"}
                     </button>
                   </div>
                 </div>
@@ -211,13 +212,13 @@ export default function SubmitPage() {
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden"
                     >
-                      <div className="p-8 rounded-[2rem] bg-purple-500/5 border border-purple-500/10 space-y-4">
+                      <div className="p-6 rounded-2xl bg-purple-500/5 border border-purple-500/10 space-y-4">
                         <div className="flex justify-between items-center">
-                          <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest">AI Intelligence: Explained Version</p>
+                          <p className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">AI Intelligence Suggestion</p>
                           <button onClick={() => setAiSuggestion("")} className="text-gray-500 hover:text-white">✕</button>
                         </div>
-                        <p className="text-sm font-medium text-gray-300 leading-relaxed italic">"{aiSuggestion}"</p>
-                        <button type="button" onClick={applySuggestion} className="bg-purple-600 text-white font-black text-[9px] uppercase tracking-widest py-2 px-5 rounded-xl">Apply Explained Version</button>
+                        <p className="text-sm italic text-gray-300 leading-relaxed">"{aiSuggestion}"</p>
+                        <button type="button" onClick={applySuggestion} className="btn-primary !py-2 !px-4 !text-[10px] !rounded-lg">Apply Optimized Text</button>
                       </div>
                     </motion.div>
                   )}
@@ -225,44 +226,46 @@ export default function SubmitPage() {
               </div>
             </section>
 
+            {/* 2. AI SEVERITY INDICATOR */}
             <section className="space-y-4">
-              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Tactical Severity Estimate</label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">AI Detected Severity</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {Object.entries(SEVERITY_LEVELS).map(([key, val]) => (
                   <button
                     key={key}
                     type="button"
                     onClick={() => setAiUrgency(key)}
-                    className={`p-6 rounded-[1.5rem] border transition-all text-left group ${
+                    className={`p-4 rounded-2xl border transition-all text-left group ${
                       (aiUrgency || form.userSeverity) === key 
                         ? `${val.bg} ${val.border}` 
                         : "bg-white/[0.02] border-white/5 opacity-50 grayscale hover:grayscale-0 hover:opacity-100"
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-2xl">{val.icon}</span>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xl">{val.icon}</span>
                       <div className={`w-2 h-2 rounded-full ${val.bg} border ${val.border}`} />
                     </div>
-                    <p className={`text-[10px] font-black uppercase tracking-widest ${val.color}`}>{val.label}</p>
-                    <p className="text-[8px] text-gray-600 mt-1 font-black uppercase tracking-tight">{val.desc}</p>
+                    <p className={`text-[10px] font-bold uppercase tracking-widest ${val.color}`}>{val.label}</p>
+                    <p className="text-[8px] text-gray-500 mt-1 font-medium">{val.desc}</p>
                   </button>
                 ))}
               </div>
               {aiScore && (
-                <p className="text-[9px] text-purple-400 font-black uppercase tracking-[0.2em] ml-1">AI Confidence Rating: {aiScore}%</p>
+                <p className="text-[9px] text-purple-400 font-bold uppercase tracking-widest ml-1">AI Confidence: {aiScore}%</p>
               )}
             </section>
 
-            <section className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            {/* 3. CATEGORIES & SKILLS */}
+            <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-4">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Incident Categories</label>
-                <div className="grid grid-cols-2 gap-2">
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Mission Category</label>
+                <div className="flex flex-wrap gap-2">
                   {CATEGORIES.map(c => (
                     <button
                       key={c} type="button"
                       onClick={() => toggleSelection("categories", c)}
-                      className={`px-4 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all text-center ${
-                        form.categories.includes(c) ? "bg-purple-600 text-white border-transparent shadow-lg shadow-purple-500/20" : "bg-white/5 text-gray-600 border-white/5"
+                      className={`px-4 py-2 rounded-xl text-[10px] font-bold border transition-all ${
+                        form.categories.includes(c) ? "bg-purple-600 text-white border-transparent" : "bg-white/5 text-gray-500 border-white/5"
                       }`}
                     >
                       {c}
@@ -272,14 +275,14 @@ export default function SubmitPage() {
               </div>
 
               <div className="space-y-4">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Required Expertise</label>
-                <div className="grid grid-cols-2 gap-2">
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Specialized Skills Needed</label>
+                <div className="flex flex-wrap gap-2">
                   {SKILLS.map(s => (
                     <button
                       key={s} type="button"
                       onClick={() => toggleSelection("requiredSkills", s)}
-                      className={`px-4 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all text-center ${
-                        form.requiredSkills.includes(s) ? "bg-blue-600 text-white border-transparent shadow-lg shadow-blue-500/20" : "bg-white/5 text-gray-600 border-white/5"
+                      className={`px-4 py-2 rounded-xl text-[10px] font-bold border transition-all ${
+                        form.requiredSkills.includes(s) ? "bg-purple-600 text-white border-transparent" : "bg-white/5 text-gray-500 border-white/5"
                       }`}
                     >
                       {s}
@@ -289,29 +292,32 @@ export default function SubmitPage() {
               </div>
             </section>
 
+            {/* 4. LOCATION */}
             <section className="space-y-4">
               <div className="flex justify-between items-end">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Mission Geolocation *</label>
-                  <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest">Pin exact deployment sector.</p>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Mission Geolocation *</label>
+                  <p className="text-[9px] text-gray-600 font-medium">Pin the exact incident location for responders.</p>
                 </div>
-                <button type="button" onClick={detectLocation} className="text-[9px] font-black text-purple-400 hover:text-white transition-colors uppercase tracking-widest">
+                <button type="button" onClick={detectLocation} className="text-[10px] font-bold text-purple-400 hover:text-white transition-colors">
                   📍 Auto-Detect GPS
                 </button>
               </div>
-              <div className="h-[400px] rounded-[2.5rem] overflow-hidden border border-white/10 bg-slate-900 shadow-2xl group">
+              <div className="h-[350px] rounded-[2rem] overflow-hidden border border-white/5 bg-slate-900 shadow-inner group">
                 <MapPicker setLocation={setLocation} setAddress={setAddress} initialLocation={location} />
               </div>
-              {address && <p className="text-[9px] text-emerald-500 font-black uppercase tracking-widest ml-2">📍 {address}</p>}
+              {address && <p className="text-[9px] text-gray-500 italic ml-2">📍 {address}</p>}
             </section>
 
-            <div className="pt-10 flex justify-center">
+            {/* 5. SUBMIT */}
+            <div className="pt-6">
               <button 
                 type="submit" disabled={loading}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white w-full max-w-md py-5 text-xs font-black uppercase tracking-[0.3em] shadow-2xl shadow-emerald-500/20 transition-all active:scale-95 rounded-2xl"
+                className="btn-primary w-full py-5 text-sm font-black uppercase tracking-[0.2em] shadow-xl shadow-purple-500/10"
               >
-                {loading ? "TRANSMITTING..." : "Initiate Emergency Broadcast"}
+                {loading ? "Transmitting..." : "Initiate Emergency Broadcast"}
               </button>
+              <p className="text-center text-[9px] text-gray-600 mt-6 font-medium">By submitting, you agree to the tactical transmission protocols of SevaLink AI.</p>
             </div>
 
           </form>
