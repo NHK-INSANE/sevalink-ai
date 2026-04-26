@@ -2,57 +2,33 @@
 import { useEffect, useState, useRef } from "react";
 import { socket } from "../../lib/socket";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
 export default function OpsPanel() {
   const [events, setEvents] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("alerts"); // alerts, ai
-  const [loading, setLoading] = useState(false);
-  
-  // AI Knowledge State
-  const [problems, setProblems] = useState([]);
-  const [userMissions, setUserMissions] = useState([]);
-  const [user, setUser] = useState(null);
-
+  const [sosConfirm, setSosConfirm] = useState(false);
   const scrollRef = useRef(null);
+  const chatScrollRef = useRef(null);
 
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem("seva_user") || "null");
-    setUser(userData);
-    fetchKnowledge();
-
     socket.emit("join_ops");
+
     socket.on("ops_event", (event) => {
       setEvents((prev) => [event, ...prev].slice(0, 50));
     });
 
+    socket.on("receive_global_message", (msg) => {
+      setMessages((prev) => [...prev, msg]);
+    });
+
     return () => {
       socket.off("ops_event");
+      socket.off("receive_global_message");
     };
   }, []);
-
-  const fetchKnowledge = async () => {
-    try {
-      const res = await axios.get(`${API_BASE}/api/problems`);
-      const allProbs = Array.isArray(res.data) ? res.data : (res.data.data || []);
-      setProblems(allProbs);
-
-      const userData = JSON.parse(localStorage.getItem("seva_user") || "null");
-      if (userData) {
-        const myMissions = allProbs.filter(p => 
-          p.team?.some(m => m._id === userData._id || m.userId === userData._id) || 
-          p.leader === userData._id
-        );
-        setUserMissions(myMissions);
-      }
-    } catch (err) {
-      console.error("AI Knowledge Sync Error", err);
-    }
-  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -60,177 +36,264 @@ export default function OpsPanel() {
     }
   }, [events]);
 
-  const consultAI = async (query) => {
-    if (!query.trim() || loading) return;
-    setLoading(true);
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }
+  }, [messages, activeTab]);
 
-    // 1. Add user query to events
-    const userMsg = {
-      type: "USER",
+  const sendMessage = () => {
+    if (!input.trim()) return;
+    const user = JSON.parse(localStorage.getItem("seva_user") || "{}");
+    const msg = {
+      text: input.trim(),
+      senderName: user.name || "Responder",
       time: new Date(),
-      payload: { message: query }
     };
-    setEvents(prev => [userMsg, ...prev]);
+    socket.emit("send_global_message", msg);
+    setInput("");
+  };
 
-    // 2. Logic-based response
-    setTimeout(() => {
-      let response = "";
-      const q = query.toLowerCase();
-
-      if (q.includes("assigned") || q.includes("my mission")) {
-        if (userMissions.length > 0) {
-          response = `You are currently assigned to ${userMissions.length} missions: ${userMissions.map(m => m.title).join(", ")}. Focus on completing high-priority objectives first.`;
-        } else {
-          response = "You are not currently assigned to any missions. Use the 'AI Match' tool to find compatible crisis nodes.";
-        }
-      } 
-      else if (q.includes("active") || q.includes("status")) {
-        const critical = problems.filter(p => p.severity?.toLowerCase() === "critical").length;
-        response = `Operational Status: ${problems.length} active crises detected globally. ${critical} nodes are currently at CRITICAL severity level.`;
-      }
-      else if (q.includes("resource") || q.includes("gap")) {
-        response = "Predictive analysis shows a resource gap in medical supplies and technical rescue units in the Siliguri sector. High recommendation to mobilize additional volunteers.";
-      }
-      else if (q.includes("what should i do") || q.includes("help")) {
-        response = "Strategic recommendation: Navigate to the 'Problems' tab and filter by 'Critical' severity. Your skills are best utilized in high-density rescue scenarios.";
-      }
-      else {
-        response = "Acknowledged. I am analyzing the tactical grid. Based on current telemetry, all units should maintain high alert for escalation in low-lying areas.";
-      }
-
-      setEvents(prev => [{
-        type: "AI",
-        time: new Date(),
-        payload: { message: response }
-      }, ...prev]);
-      setLoading(false);
-      setInput("");
-    }, 1000);
+  const sendSOS = () => {
+    const user = JSON.parse(localStorage.getItem("seva_user") || "{}");
+    socket.emit("sos_alert", {
+      senderName: user.name || "Anonymous",
+      location: "Current Dashboard Node",
+      timestamp: new Date()
+    });
+    setSosConfirm(false);
+    // Add a local event for feedback
+    setEvents(prev => [{
+      type: "SOS",
+      time: new Date(),
+      payload: { message: "CRITICAL: SOS Signal Transmitted to all units." }
+    }, ...prev]);
   };
 
   const getEventStyles = (type) => {
     switch (type) {
       case "CRISIS": return "border-red-500/30 bg-red-500/5 text-red-400";
       case "SOS":    return "border-orange-500/30 bg-orange-500/5 text-orange-400";
-      case "AI":     return "border-purple-500/30 bg-purple-500/5 text-purple-400 font-bold";
-      case "USER":   return "border-white/10 bg-white/5 text-white italic";
+      case "AI":     return "border-purple-500/30 bg-purple-500/5 text-purple-400";
       case "SYSTEM": return "border-blue-500/30 bg-blue-500/5 text-blue-400";
+      case "DISPATCH": return "border-emerald-500/30 bg-emerald-500/5 text-emerald-400";
+      case "NEAREST": return "border-yellow-500/30 bg-yellow-500/5 text-yellow-400";
       default:       return "border-white/10 bg-white/5 text-gray-400";
     }
   };
 
+  const getEventIcon = (type) => {
+    switch (type) {
+      case "CRISIS": return "🚨";
+      case "SOS":    return "🆘";
+      case "AI":     return "🧠";
+      case "SYSTEM": return "⚙️";
+      case "DISPATCH": return "📡";
+      case "NEAREST": return "📍";
+      default:       return "🔔";
+    }
+  };
+
+  const [broadcastMsg, setBroadcastMsg] = useState("");
+  const [showBroadcastInput, setShowBroadcastInput] = useState(false);
+
+  const sendBroadcast = () => {
+    if (!broadcastMsg.trim()) return;
+    socket.emit("broadcast_alert", { message: broadcastMsg });
+    setEvents(prev => [{
+      type: "SYSTEM",
+      time: new Date(),
+      payload: { message: `BROADCAST: ${broadcastMsg}` }
+    }, ...prev]);
+    setBroadcastMsg("");
+    setShowBroadcastInput(false);
+  };
+
+  const consultAI = (query) => {
+    // Local simulation for now, or could emit to backend
+    setEvents(prev => [{
+      type: "AI",
+      time: new Date(),
+      payload: { message: `🧠 ANALYZING: ${query}... Standby for tactical guidance.` }
+    }, ...prev]);
+    
+    setTimeout(() => {
+       setEvents(prev => [{
+        type: "AI",
+        time: new Date(),
+        payload: { message: `🤖 ADVISORY: Based on current data, prioritize high-urgency zones in the eastern sector. Deploy additional units to waterlogged areas.` }
+      }, ...prev]);
+    }, 2000);
+  };
+
+  const tabs = [
+    { id: "alerts", label: "Alerts", icon: "🔔" },
+    { id: "ai", label: "AI", icon: "🤖" },
+  ];
+
   return (
     <>
       {/* Floating Button */}
-      <div className="fixed bottom-[20px] right-[16px] z-[1000]">
+      <div className="fixed bottom-[20px] right-[16px] z-[40]">
         <button
           onClick={() => setIsOpen(true)}
-          className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-95 bg-purple-600 text-white hover:bg-purple-500 relative border-4 border-[#0B1120]"
+          className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-95 bg-purple-600 text-white hover:bg-purple-500 relative ${events.some(e => e.type === "CRISIS" || e.type === "SOS") ? "animate-pulse shadow-red-500/50" : "shadow-purple-500/50"}`}
         >
           <div className="flex flex-col items-center">
              <span className="text-[10px] font-black tracking-widest leading-none mb-1">OPS</span>
              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M2 12h20"/></svg>
           </div>
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full border-2 border-[#0B1120]">LIVE</span>
+          {events.length > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-[#0B1120]">
+              {events.length > 9 ? "9+" : events.length}
+            </span>
+          )}
         </button>
       </div>
 
+      {/* Side Panel */}
       <AnimatePresence>
         {isOpen && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsOpen(false)} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]" />
-            <motion.div 
-              initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} 
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed top-0 right-0 w-[340px] h-full bg-[#0B1120] border-l border-white/10 shadow-2xl z-[2001] flex flex-col"
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1000]"
+            />
+
+            {/* Panel */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 w-[320px] h-full bg-[#0B1120] border-l border-white/10 shadow-2xl z-[1001] flex flex-col"
             >
-              <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
+              {/* Header */}
+              <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
                 <div>
-                  <h2 className="text-sm font-black uppercase tracking-[0.2em] text-white">Ops Control Center</h2>
-                  <p className="text-[10px] text-purple-400 font-bold uppercase tracking-widest mt-1">Status: Node Active</p>
+                  <h2 className="text-sm font-black uppercase tracking-[0.2em] text-white">OPS Control</h2>
+                  <p className="text-[10px] text-purple-400 font-bold uppercase tracking-widest mt-1">Status: Active</p>
                 </div>
-                <button onClick={() => setIsOpen(false)} className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-gray-500 hover:text-white transition-colors">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                <button 
+                  onClick={() => setIsOpen(false)}
+                  className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-gray-500 hover:text-white transition-colors"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
               </div>
 
+              {/* Tabs */}
               <div className="flex border-b border-white/10">
-                {["alerts", "ai"].map(id => (
+                {tabs.map(tab => (
                   <button
-                    key={id}
-                    onClick={() => setActiveTab(id)}
-                    className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === id ? "text-purple-400 border-b-2 border-purple-400 bg-purple-400/5" : "text-gray-500"}`}
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab.id ? "text-purple-400 border-b-2 border-purple-400 bg-purple-400/5" : "text-gray-500 hover:text-gray-300"}`}
                   >
-                    {id === 'alerts' ? 'Tactical Feed' : 'AI Copilot'}
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-sm">{tab.icon}</span>
+                      {tab.label}
+                    </div>
                   </button>
                 ))}
               </div>
 
+              {/* Content */}
               <div className="flex-1 overflow-hidden flex flex-col">
-                <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar" ref={scrollRef}>
-                  {activeTab === "alerts" ? (
-                    events.length === 0 ? (
-                      <div className="h-full flex flex-col items-center justify-center opacity-20 text-center p-8">
-                        <div className="w-12 h-12 border-2 border-dashed border-white/20 rounded-full mb-4 animate-spin" />
-                        <p className="text-[10px] font-bold uppercase tracking-widest">Awaiting Live Telemetry...</p>
-                      </div>
-                    ) : (
-                      events.map((e, i) => (
-                        <div key={i} className={`p-4 rounded-xl border ${getEventStyles(e.type)} transition-all`}>
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="text-[8px] font-black uppercase tracking-widest">{e.type}</span>
-                            <span className="text-[8px] opacity-40 font-mono">{new Date(e.time).toLocaleTimeString()}</span>
-                          </div>
-                          <p className="text-[11px] leading-relaxed">
-                            {typeof e.payload === 'string' ? e.payload : (e.payload.message || e.payload.title)}
-                          </p>
+                <AnimatePresence mode="wait">
+                  {activeTab === "alerts" && (
+                    <motion.div
+                      key="alerts"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar"
+                      ref={scrollRef}
+                    >
+                      {events.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center opacity-30 text-center p-8">
+                          <div className="w-12 h-12 border-2 border-dashed border-white/20 rounded-full mb-4 animate-spin-slow" />
+                          <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Monitoring Secure Frequencies...</p>
                         </div>
-                      ))
-                    )
-                  ) : (
-                    <div className="space-y-6">
-                      <div className="bg-purple-600/10 border border-purple-500/20 rounded-2xl p-6 text-center space-y-3">
-                         <div className="w-12 h-12 bg-purple-600/20 rounded-full flex items-center justify-center mx-auto border border-purple-500/30 text-2xl">🤖</div>
-                         <h3 className="text-xs font-bold uppercase tracking-widest text-white">AI Guidance</h3>
-                         <p className="text-[10px] text-gray-400 font-medium leading-relaxed italic">"Operational metrics synced. Ask me for mission summaries or resource analysis."</p>
+                      ) : (
+                        events.map((e, i) => (
+                          <div key={i} className={`p-4 rounded-xl border ${getEventStyles(e.type)} transition-all`}>
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
+                                {getEventIcon(e.type)} {e.type}
+                              </span>
+                              <span className="text-[8px] font-mono opacity-50">
+                                {new Date(e.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <p className="text-[11px] font-medium leading-relaxed">
+                              {typeof e.payload === 'string' ? e.payload : (e.payload.message || e.payload.title || "New System Event")}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </motion.div>
+                  )}
+
+
+                  {activeTab === "ai" && (
+                    <motion.div
+                      key="ai"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="flex-1 p-6 flex flex-col"
+                    >
+                      <div className="bg-purple-600/10 border border-purple-500/20 rounded-2xl p-6 text-center space-y-4 mb-6">
+                        <div className="w-16 h-16 bg-purple-600/20 rounded-full flex items-center justify-center mx-auto mb-2 border border-purple-500/30">
+                          <span className="text-3xl animate-pulse">🤖</span>
+                        </div>
+                        <h3 className="text-sm font-bold uppercase tracking-widest text-white">AI Copilot</h3>
+                        <p className="text-[11px] text-gray-400 leading-relaxed">
+                          "I am monitoring all crisis nodes. Ask me for guidance or resource allocation strategies."
+                        </p>
                       </div>
-                      
+
                       <div className="space-y-2">
-                        {["What am I assigned to?", "Summarize active crises", "Analyze resource gaps"].map(q => (
-                          <button key={q} onClick={() => consultAI(q)} className="w-full bg-white/5 hover:bg-white/10 border border-white/5 p-3 rounded-xl text-left text-[10px] text-gray-400 font-bold uppercase tracking-tight transition-all">
-                            ⚡ {q}
+                        {[
+                          "What should I do right now?",
+                          "Summarize active crises",
+                          "Analyze resource gaps"
+                        ].map((query) => (
+                          <button 
+                            key={query}
+                            onClick={() => consultAI(query)}
+                            className="w-full bg-white/5 hover:bg-white/10 border border-white/10 p-3 rounded-xl text-left text-[11px] text-gray-300 font-medium transition-all flex items-center gap-3"
+                          >
+                            <span className="text-purple-400 text-xs">⚡</span> {query}
                           </button>
                         ))}
                       </div>
 
-                      {events.filter(e => e.type === "AI" || e.type === "USER").map((e, i) => (
-                        <div key={i} className={`p-4 rounded-xl border ${getEventStyles(e.type)}`}>
-                          <p className="text-[11px] leading-relaxed">{e.payload.message}</p>
-                        </div>
-                      ))}
-                    </div>
+                      <div className="mt-auto pt-6 border-t border-white/10">
+                         <div className="relative flex gap-2">
+                            <input
+                              value={input}
+                              onChange={(e) => setInput(e.target.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && (consultAI(input), setInput(""))}
+                              placeholder="Type to consult AI..."
+                              className="flex-1 bg-black/40 border border-purple-500/30 rounded-xl px-4 py-3 text-[12px] text-white outline-none focus:border-purple-500 transition-all placeholder:text-gray-600"
+                            />
+                            <button 
+                              onClick={() => { consultAI(input); setInput(""); }}
+                              className="w-11 h-11 bg-purple-600 hover:bg-purple-500 rounded-xl flex items-center justify-center text-white transition-all shadow-lg shadow-purple-500/20"
+                            >
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                            </button>
+                         </div>
+                      </div>
+                    </motion.div>
                   )}
-                </div>
-
-                <div className="p-4 border-t border-white/10 bg-white/[0.01]">
-                   <div className="relative flex gap-2">
-                      <input
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && consultAI(input)}
-                        placeholder={activeTab === 'ai' ? "Consult AI Copilot..." : "Global Comms Offline"}
-                        disabled={activeTab === 'alerts' || loading}
-                        className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[11px] text-white focus:border-purple-500 outline-none transition-all placeholder:text-gray-600 disabled:opacity-50"
-                      />
-                      <button 
-                        onClick={() => consultAI(input)}
-                        disabled={activeTab === 'alerts' || loading}
-                        className="w-11 h-11 bg-purple-600 hover:bg-purple-500 text-white rounded-xl flex items-center justify-center transition-all disabled:opacity-50"
-                      >
-                        {loading ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>}
-                      </button>
-                   </div>
-                </div>
+                </AnimatePresence>
               </div>
             </motion.div>
           </>
@@ -238,8 +301,26 @@ export default function OpsPanel() {
       </AnimatePresence>
 
       <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+          animation: spin-slow 8s linear infinite;
+        }
       `}</style>
     </>
   );

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -14,31 +14,47 @@ import VolunteerDashboard from "../components/dashboards/VolunteerDashboard";
 import AdminDashboard from "../components/dashboards/AdminDashboard";
 import NgoDashboard from "../components/dashboards/NgoDashboard";
 import { motion, AnimatePresence } from "framer-motion";
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { getUserLocation } from "../utils/location";
+import { useMemo } from "react";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area } from "recharts";
+import LiveLegend from "../components/LiveLegend";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
 const MapView = dynamic(() => import("../components/MapView"), { 
   ssr: false,
-  loading: () => <div className="h-full w-full bg-slate-900 animate-pulse rounded-[2rem]" />
+  loading: () => <div className="h-full w-full bg-slate-900 animate-pulse rounded-xl" />
 });
+
+function SkeletonStats() {
+  return (
+    <div className="card h-28 flex flex-col justify-center gap-3">
+      <div className="h-2 w-16 bg-white/5 rounded-full" />
+      <div className="h-8 w-24 bg-white/5 rounded-lg" />
+    </div>
+  );
+}
 
 function Counter({ value }) {
   const [count, setCount] = useState(0);
   useEffect(() => {
     let start = 0;
-    const end = parseInt(value) || 0;
-    if (start === end) { setCount(end); return; }
+    const end = parseInt(value);
+    if (start === end) return;
     let totalDuration = 1000;
     let increment = end / (totalDuration / 16);
     let timer = setInterval(() => {
       start += increment;
-      if (start >= end) { setCount(end); clearInterval(timer); }
-      else { setCount(Math.floor(start)); }
+      if (start >= end) {
+        setCount(end);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(start));
+      }
     }, 16);
     return () => clearInterval(timer);
   }, [value]);
-  return <span className="text-white">{count}</span>;
+  return <>{count}</>;
 }
 
 export default function Dashboard() {
@@ -48,212 +64,447 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [userLoc, setUserLoc] = useState(null);
   const [isLocated, setIsLocated] = useState(false);
-  const [user, setUser] = useState(null);
+  const [mapZoom, setMapZoom] = useState(6);
+  const [sortNearest, setSortNearest] = useState(false);
+  const [user, setUser] = useState({ role: "volunteer", name: "Guest" });
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [counts, setCounts] = useState({ total: 0, volunteers: 0, workers: 0, ngos: 0 });
 
   const fetchDashboardData = async () => {
     try {
-      const [problemData, userData] = await Promise.all([getProblems(), getUsers()]);
+      const [problemData, userData, statsData] = await Promise.all([
+        getProblems(),
+        getUsers(),
+        getStats()
+      ]);
+
       setProblems(Array.isArray(problemData) ? problemData : []);
       setUsersList(Array.isArray(userData) ? userData : []);
+      
+      const pCount = Array.isArray(problemData) ? problemData.length : 0;
+      const uList = Array.isArray(userData) ? userData : [];
+
+      setCounts({
+        total: statsData?.problems || pCount,
+        volunteers: statsData?.responders || uList.filter(u => String(u?.role || "").toLowerCase() === "volunteer").length,
+        workers: statsData?.workers || uList.filter(u => String(u?.role || "").toLowerCase() === "worker").length,
+        ngos: statsData?.ngos || uList.filter(u => String(u?.role || "").toLowerCase() === "ngo").length
+      });
+
       setLastUpdate(new Date().toLocaleTimeString());
     } catch (e) {
-      console.error("Dashboard Sync Error", e);
+      console.error("❌ DASHBOARD FETCH ERROR:", e);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleLocateToggle = () => {
+    if (!isLocated) {
+      toast.promise(
+        new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+              setIsLocated(true);
+              resolve();
+            },
+            (err) => reject(err)
+          );
+        }),
+        {
+          loading: 'Acquiring GPS coordinates...',
+          success: 'Location locked 📍',
+          error: 'GPS access denied.',
+        }
+      );
+    } else {
+      setIsLocated(false);
+      setUserLoc(null);
+    }
+  };
+
+  const handleSos = () => {
+    toast.error("SOS Signal Transmitted! 🚨 Emergency responders in your sector have been alerted.", {
+      duration: 10000,
+      position: "top-center"
+    });
+    socket.emit("sos_broadcast", { 
+      user: user.name, 
+      location: userLoc,
+      time: new Date().toISOString()
+    });
+  };
+
   useEffect(() => {
     const loggedUser = getUser();
-    setUser(loggedUser || { role: "guest", name: "Guest Observer" });
+    if (loggedUser) {
+      setUser(loggedUser);
+    } else {
+      setUser({ role: "guest", name: "Guest" });
+    }
+    
     fetchDashboardData();
     
     socket.on("new-problem", (newProb) => {
       if (!newProb?._id) return;
-      toast.success(`NEW CRISIS: ${newProb.title}`, { position: "top-right" });
-      setProblems(prev => prev.find(p => p._id === newProb._id) ? prev : [newProb, ...prev]);
+      toast.success(`NEW CRISIS DETECTED: ${newProb.title || "Unknown Incident"}`, {
+        duration: 5000,
+        position: "top-right",
+        style: { background: "#0f172a", color: "#fff", border: "1px solid #ef4444" }
+      });
+      setProblems(prev => {
+        if (prev.find(p => p._id === newProb._id)) return prev;
+        return [newProb, ...prev];
+      });
     });
 
-    socket.on("escalation", (p) => {
-      toast.error(`CRITICAL ESCALATION: ${p.title}`);
-      setProblems(prev => prev.map(old => old._id === p._id ? p : old));
+    socket.on("escalation", (escalatedProb) => {
+      if (!escalatedProb?._id) return;
+      toast(`⚠️ CRISIS ESCALATED TO CRITICAL: ${escalatedProb.title}`, {
+        duration: 8000,
+        icon: '⚠️',
+        style: { background: "#7f1d1d", color: "#fff", border: "1px solid #ef4444", fontWeight: "bold" }
+      });
+      setProblems(prev => prev.map(p => p._id === escalatedProb._id ? escalatedProb : p));
     });
+
+    socket.on("problem-updated", (updatedProb) => {
+      setProblems(prev => prev.map(p => p._id === updatedProb._id ? updatedProb : p));
+    });
+
+    socket.on("responder_moved", (data) => {
+      setUsersList(prev => prev.map(u => 
+        u._id === data.id ? { ...u, location: { lat: data.lat, lng: data.lng } } : u
+      ));
+    });
+
+    socket.on("pre_alert", (data) => {
+      toast(`🔮 PREDICTIVE ALERT: ${data.message}`, {
+        duration: 10000,
+        icon: '🔮',
+        style: { background: "#4c1d95", color: "#fff", border: "1px solid #a855f7", fontWeight: "bold" }
+      });
+    });
+
+    const handleDenied = () => setIsLocated(false);
+    window.addEventListener("map-user-denied", handleDenied);
 
     return () => {
       socket.off("new-problem");
       socket.off("escalation");
+      socket.off("problem-updated");
+      socket.off("responder_moved");
+      socket.off("pre_alert");
+      window.removeEventListener("map-user-denied", handleDenied);
     };
   }, []);
 
   const safeProblems = useMemo(() => Array.isArray(problems) ? problems : [], [problems]);
   const safeUsers = useMemo(() => Array.isArray(usersList) ? usersList : [], [usersList]);
 
-  // FINAL POLISH COUNTS (Step 10)
-  const stats = useMemo(() => {
-    const p = safeProblems;
-    return {
-      critical: p.filter(x => x.severity?.toLowerCase() === "critical").length,
-      high: p.filter(x => x.severity?.toLowerCase() === "high").length,
-      medium: p.filter(x => x.severity?.toLowerCase() === "medium").length,
-      low: p.filter(x => x.severity?.toLowerCase() === "low").length,
-      total: p.length
-    };
+  const openCount = useMemo(() => safeProblems.filter(p => String(p?.status || "").toLowerCase() === "open").length, [safeProblems]);
+  const resolvedCount = useMemo(() => safeProblems.filter(p => String(p?.status || "").toLowerCase() === "resolved").length, [safeProblems]);
+  const progressCount = useMemo(() => safeProblems.filter(p => {
+    const s = String(p?.status || "").toLowerCase();
+    return s === "in_progress" || s === "in progress" || s === "in-progress";
+  }).length, [safeProblems]);
+
+  const criticalCount = useMemo(() => safeProblems.filter(p => String(p?.severity || p?.urgency || "").toLowerCase() === "critical").length, [safeProblems]);
+  const highCount = useMemo(() => safeProblems.filter(p => String(p?.severity || p?.urgency || "").toLowerCase() === "high").length, [safeProblems]);
+  const mediumCount = useMemo(() => safeProblems.filter(p => String(p?.severity || p?.urgency || "").toLowerCase() === "medium").length, [safeProblems]);
+  const lowCount = useMemo(() => safeProblems.filter(p => String(p?.severity || p?.urgency || "").toLowerCase() === "low").length, [safeProblems]);
+
+  const volunteersCount = useMemo(() => safeUsers.filter(u => String(u?.role || "").toLowerCase() === "volunteer").length, [safeUsers]);
+  const workersCount = useMemo(() => safeUsers.filter(u => String(u?.role || "").toLowerCase() === "worker").length, [safeUsers]);
+  const ngosCount = useMemo(() => safeUsers.filter(u => String(u?.role || "").toLowerCase() === "ngo").length, [safeUsers]);
+
+  const categoryCount = {};
+  safeProblems.forEach(p => {
+    const cat = p?.category || "Other";
+    categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+  });
+  const totalProblems = safeProblems.length || 1;
+  const categoryData = useMemo(() => Object.keys(categoryCount).map(cat => ({
+    name: cat,
+    value: categoryCount[cat],
+    percent: ((categoryCount[cat] / totalProblems) * 100).toFixed(1)
+  })).sort((a, b) => b.value - a.value), [categoryCount, totalProblems]);
+
+  const predictedHotspots = useMemo(() => {
+    const zones = {};
+    safeProblems.forEach(p => {
+      if (!p.location?.lat) return;
+      const key = `${Math.round(p.location.lat)},${Math.round(p.location.lng)}`;
+      zones[key] = (zones[key] || 0) + 1;
+    });
+    return Object.entries(zones)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3);
   }, [safeProblems]);
 
-  const progressCount = safeProblems.filter(p => ["in_progress", "in progress"].includes(p.status?.toLowerCase())).length;
-  const resolvedCount = safeProblems.filter(p => p.status?.toLowerCase() === "resolved").length;
-
+  // Dummy data for trend chart
   const trendData = [
-    { day: "Mon", cases: 12 }, { day: "Tue", cases: 18 }, { day: "Wed", cases: 10 },
-    { day: "Thu", cases: 25 }, { day: "Fri", cases: 30 }, { day: "Sat", cases: 22 },
-    { day: "Sun", cases: stats.total },
+    { day: "Mon", cases: 12 },
+    { day: "Tue", cases: 18 },
+    { day: "Wed", cases: 10 },
+    { day: "Thu", cases: 25 },
+    { day: "Fri", cases: 30 },
+    { day: "Sat", cases: 22 },
+    { day: "Sun", cases: openCount },
   ];
 
   const handleLocateToggle = () => {
     const nextState = !isLocated;
     setIsLocated(nextState);
+    window.dispatchEvent(new CustomEvent("map-toggle-user", { detail: { show: nextState } }));
+    
     if (nextState) {
-      navigator.geolocation.getCurrentPosition(p => setUserLoc({ lat: p.coords.latitude, lng: p.coords.longitude }));
-      toast.success("Locating Terminal... 📍");
+      toast.success("Locating system... 📍");
     } else {
-      setUserLoc(null);
+      toast("Operations hidden", { icon: "🕶️" });
     }
   };
 
+  function getDistance(lat1, lon1, lat2, lon2) {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+  }
+
+  const sortedProblems = [...safeProblems].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const recentProblems = sortedProblems.slice(0, 3);
+
   const renderRoleSpecific = () => {
-    const role = user?.role?.toLowerCase() || "volunteer";
+    const role = String(user?.role || "").toLowerCase() || "volunteer";
     if (role === "admin") return <AdminDashboard problems={safeProblems} usersList={safeUsers} lastUpdate={lastUpdate} />;
     if (role === "ngo") return <NgoDashboard problems={safeProblems} usersList={safeUsers} />;
     return <VolunteerDashboard problems={safeProblems} userLoc={userLoc} />;
   };
 
-  if (loading) return (
-    <div className="min-h-screen bg-[#080B14] flex items-center justify-center">
-      <div className="text-xs font-black uppercase tracking-[0.4em] text-white animate-pulse">Initializing Ops Dashboard...</div>
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#080B14] text-white pb-24">
+        <Navbar />
+        <PageWrapper className="pt-28 px-6">
+          <div className="max-w-7xl mx-auto space-y-8">
+            <div className="h-10 bg-white/5 rounded-2xl w-64" />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+              {[1, 2, 3, 4].map((i) => <SkeletonStats key={i} />)}
+            </div>
+            <div className="h-[400px] bg-white/5 rounded-3xl" />
+          </div>
+        </PageWrapper>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#080B14] text-white pb-24 font-inter">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] pb-24">
       <Navbar />
+      
       <PageWrapper>
         <main className="max-w-7xl mx-auto pt-28 px-6 lg:px-8">
           
           {/* HEADER */}
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-6">
             <div>
-              <h1 className="text-4xl font-black tracking-tighter uppercase mb-2">Command Center</h1>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+              <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
+                Command Center
+              </h1>
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-emerald-500">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Neural Link Active
-                </div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600">{user?.name} | {user?.role}</span>
+                  System Online
+                </span>
+                <span className="w-px h-3 bg-white/10" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{user?.name || "Guest Observer"}</span>
               </div>
             </div>
-            <Link href="/submit" className="btn-primary !px-10 !py-4 shadow-2xl shadow-purple-500/40 !rounded-2xl font-black text-xs uppercase tracking-widest">
+
+            <Link href="/submit" className="btn-primary !px-8 !py-4 shadow-xl shadow-purple-500/20">
               Report Incident
             </Link>
           </div>
 
-          {/* POLISHED STATS GRID (STEP 10) */}
+          {/* GUEST ALERT */}
+          {!getUser() && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-12 p-6 rounded-2xl bg-purple-500/5 border border-purple-500/10 flex flex-col md:flex-row items-center justify-between gap-4 backdrop-blur-md"
+            >
+              <p className="text-sm text-gray-400 font-medium">Viewing as a Guest. Some features like discussion and AI unit assignment are restricted.</p>
+              <div className="flex gap-4">
+                <Link href="/login" className="text-xs font-bold text-gray-500 hover:text-white transition-colors">Login</Link>
+                <Link href="/register" className="btn-secondary !py-2 !px-5 !text-xs">Register</Link>
+              </div>
+            </motion.div>
+          )}
+
+          {/* STATS CARDS */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {[
-              { label: "Critical", value: stats.critical, color: "border-red-500/30" },
-              { label: "High Priority", value: stats.high, color: "border-orange-500/30" },
-              { label: "Medium", value: stats.medium, color: "border-yellow-500/30" },
-              { label: "Minor", value: stats.low, color: "border-emerald-500/30" }
+              { label: "Active Reports", value: counts.total, color: "text-purple-400" },
+              { label: "Total Helpers",  value: counts.volunteers, color: "text-blue-400" },
+              { label: "NGO Partners",   value: counts.ngos, color: "text-emerald-400" },
+              { label: "Field Staff",    value: counts.workers, color: "text-orange-400" },
             ].map((s, i) => (
-              <div key={i} className={`card !p-8 !rounded-[2.5rem] hover:bg-white/[0.02] transition-all border ${s.color}`}>
-                <p className="text-[10px] font-black tracking-[0.2em] text-gray-500 uppercase mb-4">{s.label}</p>
-                <h2 className="text-4xl font-black tracking-tighter"><Counter value={s.value} /></h2>
+              <div key={i} className="card p-6 !rounded-2xl hover:border-purple-500/30 transition-all group">
+                <p className="text-[10px] font-bold tracking-widest text-gray-500 uppercase mb-4">{s.label}</p>
+                <p className={`text-4xl font-bold ${s.color} tracking-tight group-hover:scale-105 transition-transform origin-left`}>
+                  <Counter value={s.value} />
+                </p>
               </div>
             ))}
           </div>
 
-          {/* ANALYTICS */}
+          {/* ANALYTICS & TRENDS */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
-            <div className="lg:col-span-4 card !p-8 !rounded-[2.5rem] flex flex-col justify-between bg-white/[0.01]">
-              <div className="space-y-6">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500">Live Mission Matrix</h3>
-                <div className="space-y-3">
+            {/* Operational Flow */}
+            <div className="lg:col-span-4 card p-8 !rounded-3xl flex flex-col justify-between">
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-6">Operational Status</h3>
+                <div className="space-y-4">
                   {[
-                    { l: "Ongoing Operations", v: progressCount, c: "text-amber-500", b: "bg-amber-500/5" },
-                    { l: "Resolved Nodes", v: resolvedCount, c: "text-emerald-500", b: "bg-emerald-500/5" },
-                    { l: "Total Reports", v: stats.total, c: "text-purple-500", b: "bg-purple-500/5" }
-                  ].map(stat => (
-                    <div key={stat.l} className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                      <span className="text-[11px] font-bold text-gray-400 uppercase tracking-tight">{stat.l}</span>
-                      <span className={`text-xs font-black ${stat.c} ${stat.b} px-3 py-1 rounded-lg border border-current/10`}>{stat.v}</span>
+                    { label: "Critical Priority", value: criticalCount, color: "text-red-500", bg: "bg-red-500/10" },
+                    { label: "Active Missions", value: progressCount, color: "text-amber-500", bg: "bg-amber-500/10" },
+                    { label: "Resolved Nodes", value: resolvedCount, color: "text-emerald-500", bg: "bg-emerald-500/10" }
+                  ].map((stat) => (
+                    <div key={stat.label} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                      <span className="text-xs font-medium text-gray-400">{stat.label}</span>
+                      <span className={`text-xs font-bold ${stat.color} ${stat.bg} px-2.5 py-1 rounded-lg`}>{stat.value}</span>
                     </div>
                   ))}
                 </div>
               </div>
-              <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mt-8">Last Sync: {lastUpdate}</p>
+              <div className="mt-8 pt-6 border-t border-white/5">
+                <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest leading-relaxed">
+                  Last telemetry update: <span className="text-gray-400">{lastUpdate || "Synchronizing..."}</span>
+                </p>
+              </div>
             </div>
 
-            <div className="lg:col-span-8 card !p-8 !rounded-[2.5rem] bg-white/[0.01]">
-              <div className="flex justify-between items-center mb-10">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500">7-Day Tactical Trajectory</h3>
-                <div className="flex gap-4">
-                  <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-purple-600 shadow-lg shadow-purple-500/50" /><span className="text-[9px] font-black text-gray-500 uppercase">Active Crises</span></div>
+            {/* Main Trend Chart */}
+            <div className="lg:col-span-8 card p-8 !rounded-3xl">
+              <div className="flex justify-between items-center mb-8">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500">Crisis Trajectory (7 Days)</h3>
+                <div className="flex gap-2">
+                  <span className="w-3 h-3 rounded-full bg-purple-600 shadow-[0_0_10px_rgba(147,51,234,0.5)]" />
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active Cases</span>
                 </div>
               </div>
-              <div className="h-[280px]">
+              <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={trendData}>
-                    <defs><linearGradient id="cT" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#9333ea" stopOpacity={0.3}/><stop offset="95%" stopColor="#9333ea" stopOpacity={0}/></linearGradient></defs>
+                    <defs>
+                      <linearGradient id="colorTrajectory" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#9333ea" stopOpacity={0.2}/>
+                        <stop offset="95%" stopColor="#9333ea" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
-                    <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", fontSize: "10px" }} />
-                    <Area type="monotone" dataKey="cases" stroke="#a855f7" strokeWidth={4} fill="url(#cT)" />
-                    <XAxis dataKey="day" stroke="#334155" fontSize={10} axisLine={false} tickLine={false} />
+                    <Tooltip 
+                      contentStyle={{ background: "rgba(15, 23, 42, 0.9)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "16px", fontSize: "11px", fontWeight: "bold" }}
+                      itemStyle={{ color: "#a855f7" }}
+                    />
+                    <Area type="monotone" dataKey="cases" stroke="#9333ea" strokeWidth={3} fillOpacity={1} fill="url(#colorTrajectory)" />
+                    <XAxis dataKey="day" stroke="rgba(255,255,255,0.2)" fontSize={10} axisLine={false} tickLine={false} tick={{dy: 10}} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
             </div>
           </div>
 
-          {/* ROLE DASHBOARD */}
-          <div className="mb-12">{renderRoleSpecific()}</div>
+          {/* ROLE-SPECIFIC GRID */}
+          <div className="mb-12">
+            {renderRoleSpecific()}
+          </div>
 
-          {/* MAP & ACTIVITY */}
-          <div className="grid grid-cols-1 lg:grid-cols-1 gap-12">
-            <div className="card p-4 !rounded-[2.5rem] overflow-hidden">
-              <div className="p-8 flex flex-col md:flex-row justify-between items-center gap-6">
-                <div>
-                  <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Satellite Grid</h2>
-                  <p className="text-[9px] text-gray-500 font-black uppercase tracking-[0.25em] mt-1">Live Telemetry Feed</p>
-                </div>
-                <div className="flex gap-3">
-                  <button onClick={() => router.push('/map')} className="btn-secondary !py-3 !px-8 !text-[10px] !font-black uppercase tracking-widest !rounded-xl">Full Tactical View</button>
-                  <button onClick={handleLocateToggle} className={`!py-3 !px-8 !text-[10px] !font-black uppercase tracking-widest !rounded-xl transition-all ${isLocated ? "bg-emerald-600 text-white" : "btn-secondary"}`}>
-                    {isLocated ? "GPS Locked" : "Locate Unit"}
-                  </button>
-                </div>
+          {/* LIVE OPERATIONS MAP */}
+          <div className="card p-4 !rounded-[2rem] overflow-hidden group">
+            <div className="p-6 flex justify-between items-center">
+              <div>
+                <h2 className="text-lg font-bold text-white mb-1 flex items-center gap-3">
+                  Live Operations Map
+                  {isLocated && (
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                  )}
+                </h2>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em]">Real-time Global Satellite Feed</p>
               </div>
-              <div className="h-[500px] border border-white/5 rounded-[2rem] overflow-hidden">
-                <MapView problems={safeProblems} type="problems" height="100%" zoom={userLoc ? 15 : 6} center={userLoc ? [userLoc.lat, userLoc.lng] : [22.3, 87.3]} />
+              <div className="flex gap-2">
+                <button 
+                  onClick={handleSos}
+                  className="btn-danger !py-2 !px-5 !text-[10px] !font-black uppercase tracking-widest shadow-lg shadow-red-500/20"
+                >
+                  🚨 SOS
+                </button>
+                <button 
+                  onClick={handleLocateToggle}
+                  className={`!py-2 !px-5 !text-[10px] !font-black uppercase tracking-widest transition-all ${
+                    isLocated ? "btn-secondary text-emerald-400 border-emerald-500/20 bg-emerald-500/5" : "btn-secondary"
+                  }`}
+                >
+                  {isLocated ? "GPS Locked" : "Locate Me"}
+                </button>
+                <button 
+                  onClick={() => router.push('/map')}
+                  className="btn-primary !py-2 !px-5 !text-[10px] shadow-lg shadow-purple-500/20"
+                >
+                  Full Screen View
+                </button>
               </div>
             </div>
 
-            <div className="space-y-10 py-10">
-              <div className="flex justify-between items-end border-b border-white/5 pb-8">
-                <div>
-                  <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Recent Dispatch</h2>
-                  <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mt-1">Latest field reports</p>
-                </div>
-                <button onClick={() => router.push("/problems")} className="text-[10px] font-black text-purple-400 uppercase tracking-widest hover:text-white transition-colors">View Directory →</button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {safeProblems.slice(0, 3).map(p => <ProblemCard key={p._id} problem={p} />)}
-              </div>
+            <div className="relative rounded-xl overflow-hidden border border-white/10 shadow-2xl h-[500px]">
+              <MapView 
+                problems={safeProblems} 
+                type="problems" 
+                height="100%" 
+                zoom={userLoc ? 14 : 6} 
+                center={userLoc ? [userLoc.lat, userLoc.lng] : [22.3, 87.3]} 
+                showHeatmap={true} 
+                zoomToUser={true}
+                onZoomChange={setMapZoom}
+              />
             </div>
           </div>
 
+          {/* ── RECENT ACTIVITY ── */}
+          <div className="space-y-10 px-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-white tracking-tight mb-1">Recent Activity</h2>
+                <p className="text-sm text-gray-500 font-medium">Latest reports from the last 24 hours</p>
+              </div>
+              <button 
+                onClick={() => router.push("/problems")}
+                className="group flex items-center gap-2 text-indigo-400 text-sm font-bold hover:underline"
+              >
+                View All Problems
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {recentProblems.length === 0 ? (
+                <div className="col-span-full py-24 text-center border-2 border-dashed border-white/5 rounded-3xl">
+                  <p className="text-gray-600 font-medium italic">No recent reports found in this sector.</p>
+                </div>
+              ) : (
+                recentProblems.map((p) => (
+                  <ProblemCard key={p._id} problem={p} />
+                ))
+              )}
+            </div>
+          </div>
         </main>
       </PageWrapper>
-      <style jsx global>{` .custom-scrollbar::-webkit-scrollbar { width: 4px; } .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; } `}</style>
     </div>
   );
 }
