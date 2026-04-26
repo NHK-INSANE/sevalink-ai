@@ -6,7 +6,7 @@ const { validate, userSchema } = require("../middleware/validation");
 const { auth } = require("../middleware/auth");
 
 // POST /api/users/register
-router.post("/register", validate(userSchema), async (req, res, next) => {
+router.post("/register", validate(userSchema), async (req, res) => {
   console.log("📥 Registration Attempt Payload:", req.body);
   try {
     const { email, username } = req.body;
@@ -21,9 +21,7 @@ router.post("/register", validate(userSchema), async (req, res, next) => {
       else if (existing.email === email) field = "Email";
       else if (existing.username === username) field = "Username";
       
-      const error = new Error(`${field} already registered`);
-      error.status = 409;
-      throw error;
+      return res.status(409).json({ error: `${field} already registered` });
     }
 
     const user = new User(req.body);
@@ -36,20 +34,22 @@ router.post("/register", validate(userSchema), async (req, res, next) => {
     );
 
     const safeUser = await User.findById(user._id).select("-password");
-    res.status(201).json({ success: true, data: { user: safeUser, token } });
+    res.status(201).json({ user: safeUser, token });
   } catch (err) {
-    next(err);
+    console.error("🔥 REGISTRATION ERROR:", err);
+    res.status(500).json({ 
+      error: "Registration failed. Please try again.",
+      details: err.message 
+    });
   }
 });
 
 // POST /api/users/login
-router.post("/login", async (req, res, next) => {
+router.post("/login", async (req, res) => {
   try {
     const { identifier, password } = req.body;
     if (!identifier || !password) {
-      const error = new Error("Missing identifier or password");
-      error.status = 400;
-      throw error;
+      return res.status(400).json({ error: "Missing identifier or password" });
     }
 
     const user = await User.findOne({
@@ -57,9 +57,7 @@ router.post("/login", async (req, res, next) => {
     });
 
     if (!user || !(await user.comparePassword(password))) {
-      const error = new Error("Invalid credentials");
-      error.status = 401;
-      throw error;
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
     const token = jwt.sign(
@@ -69,24 +67,20 @@ router.post("/login", async (req, res, next) => {
     );
 
     const safeUser = await User.findById(user._id).select("-password");
-    res.json({ success: true, data: { user: safeUser, token } });
+    res.json({ user: safeUser, token });
   } catch (err) {
-    next(err);
+    res.status(500).json({ error: "Login failed." });
   }
 });
 
 // GET /api/users/profile
-router.get("/profile", auth, async (req, res, next) => {
+router.get("/profile", auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
-    if (!user) {
-      const error = new Error("User not found");
-      error.status = 404;
-      throw error;
-    }
-    res.json({ success: true, data: user });
+    if (!user) return res.status(404).json({ error: "User not found" });
+    res.json(user);
   } catch (err) {
-    next(err);
+    res.status(500).json({ error: "Failed to fetch profile" });
   }
 });
 
@@ -127,16 +121,12 @@ router.patch("/:id/notifications/read", auth, async (req, res) => {
 });
 
 // PUT /api/users/update-profile
-router.put("/update-profile", auth, async (req, res, next) => {
+router.put("/update-profile", auth, async (req, res) => {
   try {
     const { name, email, phone, address, location, bio, skill, skills, status } = req.body;
 
     const user = await User.findById(req.user.id);
-    if (!user) {
-      const error = new Error("User not found");
-      error.status = 404;
-      throw error;
-    }
+    if (!user) return res.status(404).json({ error: "User not found" });
 
     if (name) user.name = name;
     if (email) user.email = email;
@@ -147,23 +137,25 @@ router.put("/update-profile", auth, async (req, res, next) => {
     if (skill) user.skill = skill;
     if (skills) user.skills = skills;
     if (status) user.status = status;
+    if (skills) user.skills = skills;
 
     await user.save();
 
     const safeUser = await User.findById(user._id).select("-password");
-    res.json({ success: true, data: safeUser });
+    res.json(safeUser);
   } catch (err) {
-    next(err);
+    console.error("Update Profile Error:", err);
+    res.status(500).json({ error: "Update failed" });
   }
 });
 
 // GET /api/users — Public list
-router.get("/", async (req, res, next) => {
+router.get("/", async (req, res) => {
   try {
     const users = await User.find().select("name role location ngoName ngoContact skill skills latitude longitude email phone address bio");
-    res.json({ success: true, data: users });
+    res.json(users);
   } catch (err) {
-    next(err);
+    res.status(500).json({ error: "Failed to fetch users" });
   }
 });
 

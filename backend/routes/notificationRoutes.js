@@ -4,61 +4,51 @@ const Notification = require("../models/Notification");
 const { auth } = require("../middleware/auth");
 
 // Get all notifications for logged in user
-router.get("/", auth, async (req, res, next) => {
+router.get("/", auth, async (req, res) => {
   try {
     const notifications = await Notification.find({ userId: req.user.id })
       .sort({ createdAt: -1 })
       .limit(20);
-    res.json({ success: true, data: notifications });
+    res.json(notifications);
   } catch (err) {
-    next(err);
+    res.status(500).json({ error: err.message });
   }
 });
 
 // Mark notification as read
-router.patch("/:id/read", auth, async (req, res, next) => {
+router.patch("/:id/read", auth, async (req, res) => {
   try {
     const notification = await Notification.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.id },
       { isRead: true },
       { new: true }
     );
-    if (!notification) {
-      const error = new Error("Notification not found");
-      error.status = 404;
-      throw error;
-    }
-    res.json({ success: true, data: notification });
+    res.json(notification);
   } catch (err) {
-    next(err);
+    res.status(500).json({ error: err.message });
   }
 });
 
 // Mark all as read
-router.patch("/read-all", auth, async (req, res, next) => {
+router.patch("/read-all", auth, async (req, res) => {
   try {
     await Notification.updateMany(
       { userId: req.user.id, isRead: false },
       { isRead: true }
     );
-    res.json({ success: true, data: { message: "All notifications marked as read" } });
+    res.json({ success: true });
   } catch (err) {
-    next(err);
+    res.status(500).json({ error: err.message });
   }
 });
 
 // Delete a notification
-router.delete("/:id", auth, async (req, res, next) => {
+router.delete("/:id", auth, async (req, res) => {
   try {
-    const result = await Notification.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
-    if (!result) {
-      const error = new Error("Notification not found");
-      error.status = 404;
-      throw error;
-    }
-    res.json({ success: true, data: { message: "Notification deleted" } });
+    await Notification.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
+    res.json({ success: true });
   } catch (err) {
-    next(err);
+    res.status(500).json({ error: err.message });
   }
 });
 

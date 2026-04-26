@@ -3,7 +3,7 @@ const router = express.Router();
 const User = require("../models/User");
 const Problem = require("../models/Problem");
 
-router.get("/stats", async (req, res, next) => {
+router.get("/stats", async (req, res) => {
   try {
     const userCount = await User.countDocuments();
     const problemCount = await Problem.countDocuments({ status: { $regex: /^(open|in progress|in-progress)$/i } });
@@ -24,17 +24,15 @@ router.get("/stats", async (req, res, next) => {
     });
     
     res.json({
-      success: true,
-      data: {
-        users: userCount,
-        problems: activeProblems,
-        citizens: citizenCount,
-        responders: volunteerCount,
-        ngos: ngoCount
-      }
+      users: userCount,
+      problems: activeProblems,
+      citizens: citizenCount,
+      responders: volunteerCount,
+      ngos: ngoCount
     });
   } catch (err) {
-    next(err);
+    console.error("Stats Error:", err);
+    res.status(500).json({ error: "Failed to fetch stats" });
   }
 });
 

@@ -13,10 +13,7 @@ export default function NgoDashboard({ problems = [], usersList = [] }) {
   const [requests, setRequests] = useState([]);
   const safeProbs = Array.isArray(problems) ? problems : [];
   const openProblems = safeProbs.filter(p => String(p?.status || "").toLowerCase() === "open");
-  const inProgress = safeProbs.filter(p => {
-    const s = String(p?.status || "").toLowerCase();
-    return s === "in_progress" || s === "in progress" || s === "in-progress";
-  });
+  const inProgress = safeProbs.filter(p => String(p?.status || "").toLowerCase() === "in progress" || String(p?.status || "").toLowerCase() === "in-progress");
 
   useEffect(() => {
     const fetchRequests = async () => {
@@ -51,61 +48,58 @@ export default function NgoDashboard({ problems = [], usersList = [] }) {
   };
 
   return (
-    <div className="space-y-8">
-      {/* STATS */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
-        {[
-          { label: "Unassigned Cases", value: openProblems.length, color: "text-red-500" },
-          { label: "Active Missions", value: inProgress.length, color: "text-blue-500" },
-          { label: "Pending Requests", value: requests.length, color: "text-purple-500" }
-        ].map((stat) => (
-          <div key={stat.label} className="card p-6 !rounded-2xl">
-            <p className="text-[10px] font-bold tracking-widest text-gray-500 uppercase mb-4">{stat.label}</p>
-            <p className={`text-3xl font-bold ${stat.color} tracking-tight`}>
-              <Counter value={stat.value} />
-            </p>
-          </div>
-        ))}
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="card">
+          <p className="text-[11px] tracking-widest text-gray-500 mb-2 uppercase">Unassigned Cases</p>
+          <p className="text-2xl font-bold text-red-400"><Counter value={openProblems.length} /></p>
+        </div>
+        <div className="card">
+          <p className="text-[11px] tracking-widest text-gray-500 mb-2 uppercase">Active Missions</p>
+          <p className="text-2xl font-bold text-indigo-400"><Counter value={inProgress.length} /></p>
+        </div>
+        <div className="card">
+          <p className="text-[11px] tracking-widest text-gray-500 mb-2 uppercase">Pending Requests</p>
+          <p className="text-2xl font-bold text-purple-400"><Counter value={requests.length} /></p>
+        </div>
       </div>
 
-      {/* MISSION REQUESTS */}
-      <div className="card overflow-hidden">
-        <div className="px-8 py-6 border-b border-white/5 bg-white/[0.02]">
-          <h3 className="text-sm font-bold uppercase tracking-widest text-white">Personnel Deployments</h3>
+      {/* Mission Requests */}
+      <div className="card !p-0 overflow-hidden">
+        <div className="px-6 py-4 border-b border-white/5 bg-white/[0.02] flex justify-between items-center">
+          <h3 className="text-xs font-black uppercase tracking-widest text-white">Incoming Mission Requests</h3>
         </div>
-        <div className="p-8">
+        <div className="p-6">
           {requests.length === 0 ? (
-            <div className="py-16 text-center border border-dashed border-white/10 rounded-3xl">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-widest">No pending deployments found.</p>
+            <div className="py-12 text-center border border-dashed border-white/10 rounded-2xl">
+              <p className="text-[11px] font-bold text-gray-600 uppercase tracking-widest">No pending deployments</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {requests.map(req => (
-                <div key={req._id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-white/[0.02] border border-white/5 rounded-2xl hover:border-purple-500/20 transition-all gap-4">
+                <div key={req._id} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/[0.07] transition-all">
                   <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xs ${req.type === 'lead' ? 'bg-purple-500/10 text-purple-400' : 'bg-blue-500/10 text-blue-400'}`}>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs ${req.type === 'lead' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}`}>
                       {req.type === 'lead' ? 'LD' : 'JN'}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-bold text-white">{req.userId?.name}</span>
-                        <span className="text-[10px] font-bold text-gray-600 uppercase">[{req.userId?.customId || "NEW"}]</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-white">{req.userId?.name}</span>
+                        <span className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">[{req.userId?.customId}]</span>
                       </div>
-                      <p className="text-xs text-gray-500 font-medium">
-                        Deployment to <span className="text-purple-400 font-bold">{req.problemId?.title}</span>
-                      </p>
+                      <p className="text-[10px] font-bold text-gray-500 mt-0.5">Wants to {req.type === 'lead' ? 'lead' : 'join'} mission: <span className="text-indigo-400">{req.problemId?.title}</span></p>
                     </div>
                   </div>
                   <div className="flex gap-2">
                     <button 
                       onClick={() => handleRequestAction(req._id, "approved")}
-                      className="btn-secondary !bg-emerald-500/10 !text-emerald-500 !border-emerald-500/20 !py-2 !px-5 !text-[11px]"
+                      className="px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 text-[10px] font-black uppercase rounded-lg border border-emerald-500/20 transition-all"
                     >
                       Approve
                     </button>
                     <button 
                       onClick={() => handleRequestAction(req._id, "rejected")}
-                      className="btn-secondary !bg-red-500/10 !text-red-500 !border-red-500/20 !py-2 !px-5 !text-[11px]"
+                      className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[10px] font-black uppercase rounded-lg border border-red-500/20 transition-all"
                     >
                       Reject
                     </button>

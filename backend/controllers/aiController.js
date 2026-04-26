@@ -9,13 +9,13 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
  * are still handled correctly. Falls back to "Low" if nothing matches.
  */
 const cleanUrgency = (text) => {
-  const valid = ["critical", "high", "medium", "low"];
+  const valid = ["Critical", "High", "Medium", "Low"];
   for (const word of valid) {
     if (text.toLowerCase().includes(word.toLowerCase())) {
       return word;
     }
   }
-  return "low"; // safe fallback
+  return "Low"; // safe fallback
 };
 
 /**
@@ -34,7 +34,7 @@ const getFallbackUrgency = (text) => {
     lower.includes("no food") ||
     lower.includes("no water")
   ) {
-    return { severity: "critical", score: 95 };
+    return { urgency: "Critical", score: 95 };
   }
   if (
     lower.includes("medical") || 
@@ -42,7 +42,7 @@ const getFallbackUrgency = (text) => {
     lower.includes("damage") ||
     lower.includes("urgent")
   ) {
-    return { severity: "high", score: 75 };
+    return { urgency: "High", score: 75 };
   }
   if (
     lower.includes("water") || 
@@ -50,17 +50,17 @@ const getFallbackUrgency = (text) => {
     lower.includes("electricity") ||
     lower.includes("school")
   ) {
-    return { severity: "medium", score: 50 };
+    return { urgency: "Medium", score: 50 };
   }
 
-  return { severity: "low", score: 20 };
+  return { urgency: "Low", score: 20 };
 };
 
-exports.getUrgency = async (req, res, next) => {
+exports.getUrgency = async (req, res) => {
   const { description } = req.body;
 
   if (!description) {
-    return res.status(400).json({ success: false, message: "Description is required" });
+    return res.status(400).json({ error: "Description is required" });
   }
 
   try {
@@ -71,18 +71,18 @@ You are an emergency response AI.
 
 Classify the severity STRICTLY based on rules:
 
-critical:
+CRITICAL:
 - Deaths reported
 - Multiple severe injuries
 - Building collapse, fire, disaster
 
-high:
+HIGH:
 - Injuries but no deaths
 
-medium:
+MEDIUM:
 - Minor injuries or risk
 
-low:
+LOW:
 - No immediate danger
 
 Also determine the required responders (e.g., Ambulance, Fire Brigade, Police, NGO, Medical).
@@ -93,7 +93,7 @@ Now analyze:
 
 Return JSON:
 {
-  "severity": "critical | high | medium | low",
+  "severity": "CRITICAL | HIGH | MEDIUM | LOW",
   "confidence": number (0-100),
   "reason": "short explanation",
   "responders": ["Ambulance", "Fire Brigade"]
@@ -111,34 +111,28 @@ Return JSON:
       data = {};
     }
 
-    const severityRaw = data.severity || text;
-    const severity = cleanUrgency(severityRaw);
+    const urgencyRaw = data.severity || text;
+    const urgency = cleanUrgency(urgencyRaw);
     const score = data.confidence ?? 10;
     const responders = Array.isArray(data.responders) ? data.responders : [];
 
-    res.json({ 
-      success: true, 
-      data: { severity, score, reason: data.reason, responders } 
-    });
+    res.json({ urgency, score, reason: data.reason, responders });
   } catch (err) {
     console.error("AI failed, using fallback:", err.message);
 
     const fallback = getFallbackUrgency(description);
     res.json({
-      success: true,
-      data: {
-        ...fallback,
-        note: "AI unavailable, local fallback assigned",
-      }
+      ...fallback,
+      note: "AI unavailable, local fallback assigned",
     });
   }
 };
 
-exports.suggestDescription = async (req, res, next) => {
+exports.suggestDescription = async (req, res) => {
   const { text } = req.body;
 
   if (!text) {
-    return res.status(400).json({ success: false, message: "Text is required" });
+    return res.status(400).json({ error: "Text is required" });
   }
 
   try {
@@ -165,7 +159,7 @@ Return ONLY the improved report without any markdown blocks.
     const result = await model.generateContent(prompt);
     const suggestion = result.response.text().trim();
 
-    res.json({ success: true, data: { result: suggestion } });
+    res.json({ result: suggestion });
   } catch (err) {
     console.error("AI Suggestion failed, using fallback:", err.message);
     
@@ -177,11 +171,8 @@ Return ONLY the improved report without any markdown blocks.
     }
     
     res.json({ 
-      success: true,
-      data: {
-        result: suggestion,
-        note: "Local fallback suggestion" 
-      }
+      result: suggestion,
+      note: "Local fallback suggestion" 
     });
   }
 };
@@ -199,19 +190,19 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
 };
 
 const calculateMatch = (user, problem) => {
-  let score = 0;
-
-  // 1. Skill match (sub-categories)
+  // Skill match
   const userSkills = Array.isArray(user.skills) ? user.skills : (user.skills ? [user.skills] : []);
-  const subCats = Array.isArray(problem.subCategories) ? problem.subCategories : [problem.category || "general"];
+  const reqSkills = Array.isArray(problem.requiredSkills) ? problem.requiredSkills : (problem.requiredSkill ? [problem.requiredSkill] : []);
   
-  const skillMatches = userSkills.filter(skill =>
-    subCats.some(sub => sub.toLowerCase().includes(skill.toLowerCase()))
-  ).length;
+  if (reqSkills.length === 0) return 0.5; // base match if no skills required
 
-  score += skillMatches * 20;
+  const matchSkills = reqSkills.filter(skill =>
+    userSkills.some(s => s.toLowerCase().includes(skill.toLowerCase()))
+  );
 
-  // 2. Distance score
+  const skillScore = matchSkills.length / reqSkills.length;
+
+  // Distance score
   const distance = getDistance(
     user.location?.lat,
     user.location?.lng,
@@ -219,25 +210,25 @@ const calculateMatch = (user, problem) => {
     problem.location?.lng
   );
 
-  if (distance < 10) score += 30;
-  else if (distance < 50) score += 10;
+  const distanceScore = distance < 10 ? 1 : distance < 50 ? 0.5 : 0.2;
 
-  // 3. Availability Bonus
-  if (user.availability !== false) score += 20;
+  // Urgency score
+  const urgencyMap = { "Critical": 1, "High": 0.8, "Medium": 0.5, "Low": 0.2 };
+  const urgencyScore = urgencyMap[problem.urgency] || 0.5;
 
-  // Final Score (0-100)
-  return Math.min(Math.round(score), 100);
+  // Final Score
+  return Math.round((skillScore * 0.5 + distanceScore * 0.3 + urgencyScore * 0.2) * 100);
 };
 
-exports.matchProblemsForUser = async (req, res, next) => {
+exports.matchProblemsForUser = async (req, res) => {
   try {
     const User = require("../models/User");
     const Problem = require("../models/Problem");
     
     const user = await User.findById(req.params.userId);
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    if (!user) return res.status(404).json({ error: "User not found" });
     
-    const problems = await Problem.find({ status: "open" });
+    const problems = await Problem.find({ status: "Open" });
 
     const matches = problems.map(p => ({
       problem: p,
@@ -246,19 +237,19 @@ exports.matchProblemsForUser = async (req, res, next) => {
 
     matches.sort((a, b) => b.score - a.score);
 
-    res.json({ success: true, data: matches.slice(0, 10) });
+    res.json(matches.slice(0, 10));
   } catch (err) {
-    next(err);
+    res.status(500).json({ error: "Matching failed" });
   }
 };
 
-exports.matchUsersForProblem = async (req, res, next) => {
+exports.matchUsersForProblem = async (req, res) => {
   try {
     const User = require("../models/User");
     const Problem = require("../models/Problem");
     
     const problem = await Problem.findById(req.params.problemId);
-    if (!problem) return res.status(404).json({ success: false, message: "Problem not found" });
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
     
     const users = await User.find({ role: { $in: ["volunteer", "worker"] } });
 
@@ -272,13 +263,13 @@ exports.matchUsersForProblem = async (req, res, next) => {
 
     matches.sort((a, b) => b.score - a.score);
 
-    res.json({ success: true, data: matches.slice(0, 10) });
+    res.json(matches.slice(0, 10));
   } catch (err) {
-    next(err);
+    res.status(500).json({ error: "Matching failed" });
   }
 };
 
-exports.autoAssign = async (req, res, next) => {
+exports.autoAssign = async (req, res) => {
   try {
     const Problem = require("../models/Problem");
     const User = require("../models/User");
@@ -286,7 +277,7 @@ exports.autoAssign = async (req, res, next) => {
     const { problemId } = req.params;
 
     const problem = await Problem.findById(problemId);
-    if (!problem) return res.status(404).json({ success: false, message: "Problem not found" });
+    if (!problem) return res.status(404).json({ error: "Problem not found" });
 
     const responders = await User.find({ role: { $in: ["volunteer", "worker"] }, status: "available" });
     
@@ -336,13 +327,14 @@ exports.autoAssign = async (req, res, next) => {
     await problem.save();
     if (io) io.emit("problem-updated", problem);
 
-    res.json({ success: true, data: { suggestions: bestUsers.length } });
+    res.json({ success: true, suggestions: bestUsers.length });
   } catch (err) {
-    next(err);
+    console.error("AutoAssign Error:", err);
+    res.status(500).json({ error: "Auto-assignment failed" });
   }
 };
 
-exports.copilot = async (req, res, next) => {
+exports.copilot = async (req, res) => {
   const { messages, report } = req.body;
 
   try {
@@ -358,8 +350,8 @@ You are SevaLink AI Copilot, an emergency field commander.
 CRISIS CONTEXT:
 - Problem: ${report?.title || "Unknown Incident"}
 - Description: ${report?.description || "No description provided."}
-- Severity: ${report?.severity || "unknown"}
-- Location: ${JSON.stringify(report?.location || "unknown")}
+- Severity: ${report?.urgency || "Unknown"}
+- Location: ${JSON.stringify(report?.location || "Unknown")}
 
 RECENT CHAT HISTORY:
 ${contextMessages}
@@ -379,14 +371,11 @@ Response (Text only, no markdown):
     const result = await model.generateContent(prompt);
     const reply = result.response.text().trim();
 
-    res.json({ success: true, data: { reply } });
+    res.json({ reply });
   } catch (err) {
     console.error("AI Copilot Error:", err);
     res.json({ 
-      success: true,
-      data: {
-        reply: "⚠️ System Note: AI Engine offline. Proceed with standard emergency protocols. Prioritize safety and clear communication." 
-      }
+      reply: "⚠️ System Note: AI Engine offline. Proceed with standard emergency protocols. Prioritize safety and clear communication." 
     });
   }
 };

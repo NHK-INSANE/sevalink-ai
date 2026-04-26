@@ -292,8 +292,8 @@ io.on("connection", (socket) => {
         ? "Water levels rising rapidly. 50+ households trapped. Need immediate evacuation."
         : "Commercial structure collapse. Multiple casualties reported. Structural fire detected.",
       location: config.location || { lat: 22.57, lng: 88.36 },
-      category: [config.type || "general"],
-      severity: "critical",
+      category: [config.type || "GENERAL"],
+      urgency: "CRITICAL",
       time: new Date()
     };
 
@@ -308,7 +308,7 @@ io.on("connection", (socket) => {
 
     io.emit("global_alert", {
       message: `🧪 SIMULATION ACTIVE: ${fakeCrisis.title}`,
-      type: "critical"
+      type: "CRITICAL"
     });
   });
 
@@ -386,7 +386,6 @@ const teamRoutes = require("./routes/teamRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const requestRoutes = require("./routes/requestRoutes");
 const chatRoutes = require("./routes/chatRoutes");
-const errorHandler = require("./middleware/errorHandler");
 
 app.use("/api/problems", problemRoutes);
 app.use("/api/ai", aiRoutes);
@@ -399,17 +398,9 @@ app.use("/api/chat", chatRoutes);
 app.use("/api", statsRoutes);
 
 // Media Upload Route
-app.post("/api/upload", auth, upload.single("file"), (req, res, next) => {
-  try {
-    if (!req.file) {
-      const error = new Error("No file uploaded");
-      error.status = 400;
-      throw error;
-    }
-    res.json({ success: true, data: { url: `${process.env.API_URL || ""}/uploads/${req.file.filename}` } });
-  } catch (error) {
-    next(error);
-  }
+app.post("/api/upload", auth, upload.single("file"), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+  res.json({ url: `${process.env.API_URL || ""}/uploads/${req.file.filename}` });
 });
 
 // Rate limiter for SOS
@@ -420,16 +411,9 @@ const sosLimiter = rateLimit({
 });
 
 // SOS Emergency Broadcast to Nearest Responders
-app.post("/api/sos", sosLimiter, async (req, res, next) => {
+app.post("/api/sos", sosLimiter, async (req, res) => {
   try {
     const { latitude, longitude, message, senderName } = req.body;
-    
-    if (!latitude || !longitude) {
-      const error = new Error("Location coordinates missing");
-      error.status = 400;
-      throw error;
-    }
-
     const sos = new SOS({
       latitude,
       longitude,
@@ -488,20 +472,18 @@ app.post("/api/sos", sosLimiter, async (req, res, next) => {
       } catch (err) {}
     }, 5 * 60 * 1000);
 
-    res.json({ success: true, data: { sos, notifiedCount: nearest.length } });
+    res.json({ success: true, sos, notifiedCount: nearest.length });
   } catch (err) {
-    next(err);
+    res.status(500).json({ error: err.message });
   }
 });
 
 // Social Connect Request
-app.post("/api/connect", auth, async (req, res, next) => {
+app.post("/api/connect", auth, async (req, res) => {
   try {
     const { fromUser, toUser, fromName, message } = req.body;
     if (!fromUser || !toUser) {
-      const error = new Error("Missing fromUser or toUser");
-      error.status = 400;
-      throw error;
+      return res.status(400).json({ error: "Missing fromUser or toUser" });
     }
 
     // 1. Save to DB
@@ -522,7 +504,7 @@ app.post("/api/connect", auth, async (req, res, next) => {
 
     res.json({ success: true, message: "Connection request broadcasted!" });
   } catch (err) {
-    next(err);
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -548,7 +530,12 @@ app.get("/api/db-status", (req, res) => {
 });
 
 // Global Error Handler
-app.use(errorHandler);
+app.use((err, req, res, next) => {
+  console.error("🔥 Global Error:", err);
+  res.status(500).json({
+    error: err.message || "Internal Server Error"
+  });
+});
 
 // Connect DB & Start
 const startServer = async () => {

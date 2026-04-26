@@ -118,155 +118,240 @@ export default function Navbar() {
         Offline Mode: Connection to Neural Link Lost. Retrying...
       </div>
     )}
-    <header className="navbar">
-      <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
-        {/* LEFT: Logo (Desktop) / Hamburger (Mobile) */}
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-            className="lg:hidden p-2 text-gray-400 hover:text-white transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16m-7 6h7"} />
-            </svg>
-          </button>
-          
+    <header
+      className="navbar"
+      style={{
+        position: "sticky",
+        top: isOffline ? "24px" : 0,
+        zIndex: 9999,
+        background: scrolled ? "rgba(8, 12, 26, 0.95)" : "rgba(8, 12, 26, 0.8)",
+        backdropFilter: "blur(20px)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        transition: "all 0.3s ease",
+      }}
+    >
+      <div className="navbar-grid">
+        
+        {/* nav-left: Brand */}
+        <div className="nav-left">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform">
-              <span className="text-white font-black text-xs">SL</span>
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 shadow-md">
+              <Link2 size={16} className="text-white" />
+              <MapPin size={14} className="text-white -ml-1" />
             </div>
-            <span className="text-lg font-bold tracking-tight text-white hidden sm:block">
-              SEVALINK <span className="text-purple-500">AI</span>
+            <span className="text-lg font-semibold tracking-wide text-white">
+              SEVALINK <span className="text-purple-400">AI</span>
             </span>
           </Link>
         </div>
 
-        {/* CENTER: Navigation (Desktop Only) */}
-        <nav className="hidden lg:flex items-center gap-1">
-          {navLinks.map((link) => {
-            const isActive = pathname === link.href;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`px-4 py-2 rounded-xl text-[13px] font-semibold transition-all ${
-                  isActive ? "text-white" : "text-gray-400 hover:text-white"
-                }`}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* RIGHT: Notifications & Profile */}
-        <div className="flex items-center gap-3">
-          {user ? (
-            <>
-              {/* Notification Bell */}
-              <div className="relative" ref={notifRef}>
-                <button 
-                  onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); }}
-                  className="p-2 text-gray-400 hover:text-white transition-all relative"
-                >
-                  <Bell size={20} />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-purple-500 rounded-full border-2 border-[#0b1220]" />
-                  )}
-                </button>
-                
-                <AnimatePresence>
-                  {notifOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-3 w-80 bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[1000]"
-                    >
-                      <div className="p-4 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
-                        <span className="text-xs font-bold text-white uppercase tracking-widest">Notifications</span>
-                        {unreadCount > 0 && <button onClick={markAllAsRead} className="text-[10px] text-purple-400 font-bold uppercase">Mark all read</button>}
-                      </div>
-                      <div className="max-h-[350px] overflow-y-auto">
-                        {notifications.length === 0 ? (
-                          <div className="p-8 text-center text-gray-500 text-xs font-medium">No new alerts.</div>
-                        ) : (
-                          notifications.map((n) => (
-                            <div key={n._id} onClick={() => markAsRead(n._id)} className={`p-4 border-b border-white/5 hover:bg-white/[0.02] cursor-pointer transition-colors ${!n.isRead ? "bg-purple-500/5" : "opacity-60"}`}>
-                              <p className="text-[12px] text-gray-200 leading-snug">{n.message}</p>
-                              <span className="text-[9px] text-gray-500 mt-2 block font-bold">{new Date(n.createdAt).toLocaleTimeString()}</span>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Profile Menu */}
-              <div className="relative" ref={profileRef}>
-                <button 
-                  onClick={() => { setProfileOpen(!profileOpen); setNotifOpen(false); }}
-                  className="w-9 h-9 rounded-full bg-gray-800 border border-white/10 flex items-center justify-center hover:border-purple-500/50 transition-all overflow-hidden"
-                >
-                  <span className="text-xs font-bold text-gray-400">{user.name?.[0]?.toUpperCase()}</span>
-                </button>
-
-                <AnimatePresence>
-                  {profileOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-3 w-56 bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden p-2 z-[1000]"
-                    >
-                      <div className="px-4 py-3 border-b border-white/5 mb-1">
-                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-none mb-1">Active User</p>
-                        <p className="text-xs font-bold text-white truncate">{user.name}</p>
-                      </div>
-                      <Link href="/profile" className="flex items-center px-4 py-2.5 text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all">Profile Overview</Link>
-                      <button onClick={handleLogout} className="w-full text-left flex items-center px-4 py-2.5 text-xs font-semibold text-red-400 hover:bg-red-500/5 rounded-xl transition-all">Logout Terminal</button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </>
-          ) : (
-            <div className="flex items-center gap-3">
-              <Link href="/login" className="text-xs font-bold text-gray-400 hover:text-white px-2">Login</Link>
-              <Link href="/register" className="btn-primary !py-2 !px-4 !text-xs">Join Mission</Link>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* MOBILE DRAWER */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-[#0b1220] border-t border-white/5 overflow-hidden shadow-2xl"
-          >
-            <div className="p-4 flex flex-col gap-1">
-              {navLinks.map((link) => (
+        {/* nav-center: Desktop Nav */}
+        <div className="nav-center hidden lg:flex">
+          <nav className="flex items-center gap-1">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                    pathname === link.href ? "bg-purple-600/10 text-purple-400" : "text-gray-400 hover:text-white"
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                    isActive ? "bg-white/10 text-white" : "text-gray-400 hover:text-white hover:bg-white/5"
                   }`}
                 >
                   {link.label}
                 </Link>
-              ))}
-              {!user && (
-                <div className="mt-4 pt-4 border-t border-white/5 flex flex-col gap-3">
-                  <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="w-full py-3 text-center text-sm font-bold text-gray-400">Login</Link>
-                  <Link href="/register" onClick={() => setMobileMenuOpen(false)} className="w-full py-3 text-center text-sm font-bold text-white bg-purple-600 rounded-xl">Get Started</Link>
+              );
+            })}
+            {isAdmin && (
+              <Link
+                href="/admin/simulate"
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  pathname === "/admin/simulate" ? "bg-indigo-600/20 text-indigo-400 border border-indigo-500/20" : "text-purple-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                Simulate
+              </Link>
+            )}
+          </nav>
+        </div>
+
+        {/* nav-right: Actions */}
+        <div className="nav-right">
+          <div className="flex items-center gap-2 sm:gap-4">
+            {user ? (
+              <>
+                {/* Notification Bell - ALWAYS VISIBLE */}
+                <div className="relative" ref={notifRef}>
+                  <button 
+                    onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); }}
+                    className="relative p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-all"
+                  >
+                    <Bell size={18} />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+                    )}
+                  </button>
+
+                  <AnimatePresence>
+                    {notifOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute right-0 mt-3 w-72 bg-[#0f172a] border border-white/10 rounded-xl shadow-xl p-4 z-50 overflow-hidden"
+                      >
+                        <p className="text-xs text-gray-400 mb-3 font-semibold">Notifications</p>
+                        
+                        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                          {notifications.length === 0 ? (
+                            <div className="py-8 px-4 text-center border border-dashed border-white/5 rounded-xl bg-white/[0.02]">
+                              <Bell size={20} className="mx-auto mb-2 text-gray-700 opacity-20" />
+                              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">No Tactical Alerts</p>
+                            </div>
+                          ) : (
+                            notifications.map((n) => (
+                              <div 
+                                key={n._id} 
+                                onClick={() => markAsRead(n._id)}
+                                className={`p-3 rounded-lg bg-white/5 cursor-pointer hover:bg-white/10 transition-colors ${!n.isRead ? "border-l-2 border-purple-500" : "opacity-60"}`}
+                              >
+                                <p className="text-[11px] text-gray-200 leading-tight mb-1">{n.message}</p>
+                                <p className="text-[9px] text-gray-500 font-bold uppercase">
+                                  {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                        <div className="flex justify-between mt-3 pt-3 border-t border-white/5">
+                          <Link href="/notifications" onClick={() => setNotifOpen(false)} className="text-[10px] font-bold text-gray-400 hover:text-white transition-colors uppercase tracking-widest text-center">View All</Link>
+                          {unreadCount > 0 && (
+                            <button onClick={markAllAsRead} className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors uppercase tracking-widest text-center">Mark all</button>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Profile - ALWAYS VISIBLE */}
+                <div className="relative" ref={profileRef}>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => { 
+                      setProfileOpen(!profileOpen); 
+                      setNotifOpen(false); 
+                    }}
+                    className="flex items-center justify-center w-9 h-9 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all"
+                  >
+                    <div className="w-6 h-6 rounded-md bg-indigo-600 flex items-center justify-center text-white font-black text-[10px]">
+                      {user.name?.[0]?.toUpperCase() || "U"}
+                    </div>
+                  </motion.button>
+
+                  <AnimatePresence>
+                    {profileOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute right-0 mt-3 w-56 bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden p-2"
+                        style={{ zIndex: 999999 }}
+                      >
+                        <div className="px-3 py-3 mb-2 border-b border-white/5">
+                           <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Session Active</p>
+                           <p className="text-xs font-bold text-white truncate">{user.name || user.email}</p>
+                        </div>
+
+                        <Link href="/profile" className="flex items-center gap-3 px-3 py-2 text-xs font-bold text-gray-300 hover:bg-white/5 hover:text-white rounded-xl transition-all">
+                          Account Details
+                        </Link>
+                        
+                        <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-red-400 hover:bg-red-500/10 rounded-xl transition-all">
+                          Logout System
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </>
+            ) : (
+              <div className="hidden sm:flex items-center gap-2">
+                <Link href="/login" className="text-xs font-bold text-gray-400 hover:text-white px-4">Login</Link>
+                <Link href="/register" className="btn-primary !text-[11px] !px-5 !py-2 !rounded-xl">Register</Link>
+              </div>
+            )}
+
+            {/* Mobile Menu Toggle (⋮) - ALWAYS VISIBLE */}
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+              className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white bg-white/5 rounded-xl border border-white/10 text-xl font-bold transition-all active:scale-95 shadow-lg"
+            >
+              {mobileMenuOpen ? "✕" : "⋮"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Drawer */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="lg:hidden fixed top-[var(--navbar-height)] left-0 w-full bg-[#080c1a]/95 backdrop-blur-xl border-b border-white/10 z-[999]"
+          >
+            <div className="px-6 py-8 flex flex-col gap-4">
+              {navLinks.map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`text-lg font-bold transition-all ${
+                      isActive ? "text-indigo-400" : "text-gray-400 hover:text-white"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+              {isAdmin && (
+                <Link
+                  href="/admin/simulate"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`text-lg font-bold transition-all ${
+                    pathname === "/admin/simulate" ? "text-indigo-400" : "text-purple-400 hover:text-white"
+                  }`}
+                >
+                  Simulate (Admin)
+                </Link>
+              )}
+              {user ? (
+                <div className="pt-4 border-t border-white/5 flex flex-col gap-3">
+                  <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 py-3 text-gray-300 font-bold">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-xs">
+                      {user.name?.[0]?.toUpperCase() || "U"}
+                    </div>
+                    My Account
+                  </Link>
+                  <button 
+                    onClick={() => { handleLogout(); setMobileMenuOpen(false); }} 
+                    className="w-full text-left py-3 text-red-400 font-bold flex items-center gap-3"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                    </div>
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <div className="pt-4 border-t border-white/5 flex flex-col gap-3">
+                  <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="text-center py-3 text-gray-400 font-bold">Login</Link>
+                  <Link href="/register" onClick={() => setMobileMenuOpen(false)} className="btn-primary py-3 rounded-xl">Get Started</Link>
                 </div>
               )}
             </div>

@@ -212,7 +212,6 @@ export default function MapPage() {
           longitude:  position.coords.longitude,
           message:    "Emergency! Immediate help needed!",
           senderName: user?.name || "Anonymous",
-          severity:   "critical"
         }),
       });
 
@@ -220,8 +219,7 @@ export default function MapPage() {
       socket.emit("sos_alert", {
         location: { lat: position.coords.latitude, lng: position.coords.longitude },
         message: "Emergency! Immediate help needed!",
-        senderName: user?.name || "Anonymous",
-        severity: "critical"
+        senderName: user?.name || "Anonymous"
       });
 
       toast.success("SOS sent to all connected users!");
@@ -315,7 +313,7 @@ export default function MapPage() {
             { label: "Active Reports",    val: problems.length,                                                               color: "text-red-400",     dot: "bg-red-500"     },
             { label: "Partner NGOs",      val: ngos.length,                                                                   color: "text-blue-400",    dot: "bg-blue-500"    },
             { label: "Available Assets",  val: helpers.length,                                                                color: "text-emerald-400", dot: "bg-emerald-500" },
-            { label: "Critical Priority", val: problems.filter(p => (p.severity || p.urgency || "").toLowerCase() === "critical").length,         color: "text-orange-400",  dot: "bg-orange-500"  },
+            { label: "Critical Priority", val: problems.filter(p => p.urgency?.toLowerCase() === "critical").length,         color: "text-orange-400",  dot: "bg-orange-500"  },
           ].map((s) => (
             <div key={s.label} className="stat-card flex items-center gap-4">
               <span className={`w-3 h-3 rounded-full shrink-0 ${s.dot}`} />
@@ -354,11 +352,11 @@ export default function MapPage() {
             <div className="space-y-1">
               <h2 className="text-sm font-bold text-white uppercase tracking-widest">Real-time Geospatial Visualization</h2>
               {mapZoom >= 8 && <LiveLegend showCount={true} stats={{
-                critical: problems.filter(p => (p.severity || p.urgency || "").toLowerCase() === "critical").length,
-                high:     problems.filter(p => (p.severity || p.urgency || "").toLowerCase() === "high").length,
-                medium:   problems.filter(p => (p.severity || p.urgency || "").toLowerCase() === "medium").length,
-                low:      problems.filter(p => (p.severity || p.urgency || "").toLowerCase() === "low").length,
-                ngos:     ngos.length
+                critical: problems.filter(p => p.urgency?.toLowerCase() === "critical").length,
+                high: problems.filter(p => p.urgency?.toLowerCase() === "high").length,
+                medium: problems.filter(p => p.urgency?.toLowerCase() === "medium").length,
+                low: problems.filter(p => p.urgency?.toLowerCase() === "low").length,
+                ngos: ngos.length
               }} />}
             </div>
             <div className="flex gap-3 mb-2">

@@ -14,9 +14,9 @@ function detectSeverity(text) {
   if (d.includes("collapsed") || d.includes("falling") || d.includes("debris")) score += 3;
   if (d.includes("flood") || d.includes("water") || d.includes("drowning")) score += 4;
 
-  if (score >= 7) return "critical";
-  if (score >= 4) return "high";
-  return "medium";
+  if (score >= 7) return "CRITICAL";
+  if (score >= 4) return "HIGH";
+  return "MEDIUM";
 }
 
 function recommendResources(type) {
@@ -38,19 +38,19 @@ function classifyCrisis(text) {
   const d = String(text || "").toLowerCase();
   
   if (d.includes("injured") || d.includes("dead") || d.includes("medical") || d.includes("blood")) {
-    return { type: "MEDICAL", severity: detectSeverity(d) };
+    return { type: "MEDICAL", priority: detectSeverity(d) };
   }
   if (d.includes("fire") || d.includes("smoke") || d.includes("burn")) {
-    return { type: "FIRE", severity: detectSeverity(d) };
+    return { type: "FIRE", priority: detectSeverity(d) };
   }
   if (d.includes("flood") || d.includes("water") || d.includes("rain")) {
-    return { type: "FLOOD", severity: detectSeverity(d) };
+    return { type: "FLOOD", priority: detectSeverity(d) };
   }
   if (d.includes("collapsed") || d.includes("trapped") || d.includes("earthquake")) {
-    return { type: "RESCUE", severity: detectSeverity(d) };
+    return { type: "RESCUE", priority: detectSeverity(d) };
   }
 
-  return { type: "GENERAL", severity: detectSeverity(d) };
+  return { type: "GENERAL", priority: detectSeverity(d) };
 }
 
 function generateTasks(description) {
@@ -87,10 +87,10 @@ function generateTasks(description) {
 
 function getPriority(task) {
   const t = task.toLowerCase();
-  if (t.includes("rescue") || t.includes("life") || t.includes("evacuate")) return "critical";
-  if (t.includes("ambulance") || t.includes("aid") || t.includes("medical") || t.includes("fire")) return "high";
-  if (t.includes("perimeter") || t.includes("secure") || t.includes("stabilize")) return "medium";
-  return "low";
+  if (t.includes("rescue") || t.includes("life") || t.includes("evacuate")) return "CRITICAL";
+  if (t.includes("ambulance") || t.includes("aid") || t.includes("medical") || t.includes("fire")) return "HIGH";
+  if (t.includes("perimeter") || t.includes("secure") || t.includes("stabilize")) return "MEDIUM";
+  return "LOW";
 }
 
 // Basic skill-matching logic. In a real system, `task` could be embedded using an LLM.

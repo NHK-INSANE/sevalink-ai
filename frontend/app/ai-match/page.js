@@ -62,10 +62,8 @@ function AIMatchContent() {
           const res = await axios.get(`${API_BASE}/api/ai/match/users/${p._id}`, {
             headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
           });
-          const volunteers = res.data?.success ? res.data.data : (Array.isArray(res.data) ? res.data : []);
-          return { problem: p, volunteers: volunteers };
+          return { problem: p, volunteers: Array.isArray(res.data) ? res.data : [] };
         } catch (err) {
-          console.error("Match error for problem", p._id, err);
           return { problem: p, volunteers: [] };
         }
       }));
@@ -87,15 +85,11 @@ function AIMatchContent() {
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.post(`${API_BASE}/api/ai/auto-assign/${problemId}`, {}, {
+      await axios.post(`${API_BASE}/api/ai/auto-assign/${problemId}`, {}, {
         headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
       });
-      if (res.data?.success) {
-        toast.success("AI Dispatcher engaged. Suggestions transmitted.");
-        fetchMatches();
-      } else {
-        throw new Error(res.data?.message || "Auto-assign failed");
-      }
+      toast.success("AI Dispatcher engaged. Suggestions transmitted.");
+      fetchMatches();
     } catch (err) {
       toast.error("AI Auto-Assign failed.");
     } finally {
@@ -107,14 +101,10 @@ function AIMatchContent() {
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.post(`${API_BASE}/api/problems/${problemId}/assign`, { userId }, {
+      await axios.post(`${API_BASE}/api/problems/${problemId}/assign`, { userId }, {
         headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
       });
-      if (res.data?.success) {
-        toast.success("Assignment request transmitted.");
-      } else {
-        throw new Error(res.data?.message || "Request failed.");
-      }
+      toast.success("Assignment request transmitted.");
     } catch (err) {
       toast.error(err.response?.data?.error || "Request failed.");
     } finally {

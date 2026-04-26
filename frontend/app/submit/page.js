@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
 import PageWrapper from "../components/PageWrapper";
-import { createProblem, getSeverity, getAISuggestion } from "../utils/api";
+import { createProblem, getUrgency, getAISuggestion } from "../utils/api";
 import { socket } from "../../lib/socket";
 import { getUser } from "../utils/auth";
 import toast from "react-hot-toast";
@@ -37,10 +37,10 @@ const SKILLS = [
 ];
 
 const URGENCY_INFO = {
-  critical: { color: "text-red-400", bg: "bg-red-500/10 border-red-500/30", desc: "Immediate threat to life" },
-  high: { color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/30", desc: "Urgent, needs action today" },
-  medium: { color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/30", desc: "Important, needs attention soon" },
-  low: { color: "text-green-400", bg: "bg-green-500/10 border-green-500/30", desc: "Minor issue, can wait" },
+  Critical: { color: "text-red-400", bg: "bg-red-500/10 border-red-500/30", desc: "Immediate threat to life" },
+  High: { color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/30", desc: "Urgent, needs action today" },
+  Medium: { color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/30", desc: "Important, needs attention soon" },
+  Low: { color: "text-green-400", bg: "bg-green-500/10 border-green-500/30", desc: "Minor issue, can wait" },
 };
 
 export default function SubmitPage() {
@@ -109,8 +109,8 @@ export default function SubmitPage() {
     if (!form.description.trim()) return;
     setAiLoading(true);
     try {
-      const result = await getSeverity(form.description);
-      setAiUrgency(result.severity);
+      const result = await getUrgency(form.description);
+      setAiUrgency(result.urgency);
       setAiScore(result.score ?? null);
       if (result.responders && result.responders.length > 0) {
         setForm(prev => ({
@@ -128,7 +128,7 @@ export default function SubmitPage() {
         message: `AI Analysis: ${result.urgency} priority detected.`
       });
     } catch {
-      setAiUrgency("medium");
+      setAiUrgency("Medium");
       setAiScore(null);
     } finally {
       setAiLoading(false);
@@ -185,8 +185,8 @@ export default function SubmitPage() {
       let urgency = aiUrgency;
       let score = aiScore;
       if (!urgency) {
-        const result = await getSeverity(form.description);
-        urgency = result.severity;
+        const result = await getUrgency(form.description);
+        urgency = result.urgency;
         score = result.score ?? 0;
         setAiUrgency(urgency);
         setAiScore(score);
@@ -205,7 +205,7 @@ export default function SubmitPage() {
         description: form.description,
         category: finalCategories, // Now sending array
         requiredSkills: finalSkills, // Now sending array
-        severity: (urgency || "medium").toLowerCase(), 
+        urgency, 
         score: score ?? 0, 
         location: {
           lat: location?.lat || 22.3,
@@ -219,7 +219,7 @@ export default function SubmitPage() {
       // 🔥 Emit to OPS Command Center
       socket.emit("new_crisis", {
         title: form.title,
-        severity: (urgency || "medium").toLowerCase(),
+        urgency: urgency,
         location: { lat: location?.lat, lng: location?.lng },
         message: form.description
       });
@@ -268,7 +268,7 @@ export default function SubmitPage() {
           <p className="text-[var(--text-secondary)] mb-10 text-sm font-medium">
             AI has classified this incident as{" "}
             <span className={`badge ${URGENCY_INFO[aiUrgency]?.color} !text-[10px] !px-4`}>
-              {aiUrgency?.toLowerCase()}
+              {aiUrgency}
             </span>{" "}
             priority. Emergency protocols initiated.
           </p>
@@ -386,14 +386,14 @@ export default function SubmitPage() {
             <div className="space-y-3">
               <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] ml-1">Your Severity Estimate</label>
               <select
-                value={form.userSeverity || "medium"}
+                value={form.userSeverity || "Medium"}
                 onChange={(e) => setForm(prev => ({ ...prev, userSeverity: e.target.value }))}
                 className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:border-[var(--primary)] outline-none transition-all text-white"
               >
-                <option value="low">Low (No immediate danger)</option>
-                <option value="medium">Medium (Minor risk)</option>
-                <option value="high">High (Serious issue)</option>
-                <option value="critical">Critical (Life-threatening)</option>
+                <option value="Low">Low (No immediate danger)</option>
+                <option value="Medium">Medium (Minor risk)</option>
+                <option value="High">High (Serious issue)</option>
+                <option value="Critical">Critical (Life-threatening)</option>
               </select>
             </div>
 

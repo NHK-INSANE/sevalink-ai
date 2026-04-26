@@ -4,30 +4,29 @@
    DESIGN TOKEN SYSTEM
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 :root {
-  /* ── Professional Dark Palette ── */
-  --bg: #0b1220;
+  /* ── Deep Premium Dark Palette ── */
+  --bg: #080b14;
   --card: #0f172a;
-  --surface: #111827;
-  --border: rgba(255, 255, 255, 0.06);
-  --border-hover: rgba(255, 255, 255, 0.12);
+  --surface: #0f172a;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.15);
 
   /* ── Refined Typography ── */
-  --text-primary: #f8fafc;
+  --text-primary: #ffffff;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
 
   /* ── Brand & Accents ── */
-  --primary: #8b5cf6;
-  --primary-hover: #7c3aed;
-  --secondary: rgba(255, 255, 255, 0.05);
-  --danger: #ef4444;
-  --success: #10b981;
+  --accent: #6366f1;
+  --primary-purple: #8b5cf6;
+  --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
 
   /* ── Spacing System ── */
+  --space-unit: 4px;
   --navbar-height: 64px;
   --content-max: 1200px;
-  --radius-xl: 16px;
-  --radius-lg: 12px;
+  --mobile-pad: 16px;
+  --mobile-gap: 12px;
 }
 
 /* ── MAP CLUSTERS ── */
@@ -55,7 +54,7 @@ body {
 }
 
 h1 {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--text-primary);
@@ -63,18 +62,19 @@ h1 {
 
 h2 {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   color: var(--text-primary);
 }
 
 h3 {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
 p {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-secondary);
   line-height: 1.6;
 }
@@ -156,15 +156,17 @@ a {
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .card {
   background: var(--card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  padding: 16px;
-  transition: all 0.2s ease;
+  border-radius: 16px;
+  padding: var(--mobile-pad);
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), border-color 0.2s ease;
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--mobile-gap);
 }
 
 .card:hover {
@@ -191,75 +193,58 @@ a {
    BUTTON SYSTEM
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .btn-primary {
-  background: var(--primary);
+  background: var(--accent);
   color: white;
-  padding: 10px 20px;
-  border-radius: var(--radius-lg);
+  padding: 10px 24px;
+  border-radius: 12px;
   font-size: 14px;
   font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
   transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
-  border: none;
 }
 
 .btn-primary:hover {
-  background: var(--primary-hover);
-  transform: translateY(-1px);
+  background: #4f46e5;
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
 }
 
 .btn-secondary {
-  background: var(--secondary);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
-  padding: 10px 20px;
-  border-radius: var(--radius-lg);
+  padding: 10px 24px;
+  border-radius: 12px;
   font-size: 14px;
   font-weight: 600;
   border: 1px solid var(--border);
   cursor: pointer;
   transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .btn-secondary:hover {
   background: rgba(255, 255, 255, 0.08);
-}
-
-.btn-danger {
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--danger);
-  padding: 10px 20px;
-  border-radius: var(--radius-lg);
-  font-size: 14px;
-  font-weight: 600;
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-danger:hover {
-  background: rgba(239, 68, 68, 0.2);
+  border-color: var(--border-hover);
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    NAVBAR (Strict z-index)
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .navbar {
-  background: rgba(11, 18, 32, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
+  background: var(--glass-strong);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-bottom: 1px solid var(--glass-border);
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
   height: var(--navbar-height);
-  z-index: 1000;
+  z-index: var(--z-navbar);
+  /* No glow/shadow that bleeds onto content */
 }
 
 .nav-link {
@@ -307,11 +292,11 @@ a {
 }
 
 /* FAB (add report button): above chat but not overlapping content */
-.ops-button {
+.fab {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 100;
+  bottom: 100px;  /* 28px chat + 44px chat-bubble + gap */
+  right: 28px;
+  z-index: var(--z-fab);
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

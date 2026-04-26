@@ -11,48 +11,48 @@ const problemSchema = new mongoose.Schema({
     required: true,
   },
   category: {
-    type: String,
-    default: "general",
-    lowercase: true
-  },
-  subCategories: {
-    type: [String],
-    default: []
+    type: [String], // ✅ Support multiple categories
+    default: ["General"],
   },
   location: {
     lat: { type: Number, default: 22.3 },
     lng: { type: Number, default: 87.3 },
     address: { type: String, default: "" },
   },
-  reportedBy: {
-    userId: { type: String, required: true },
-    name: { type: String, default: "Anonymous" }
-  },
-  severity: {
+  createdBy: {
     type: String,
-    enum: ["critical", "high", "medium", "low"],
-    default: "medium",
-    lowercase: true
+    required: true,
   },
-  status: {
+  urgency: {
     type: String,
-    enum: ["open", "in_progress", "resolved"],
-    default: "open",
-    lowercase: true
+    enum: ["Critical", "High", "Medium", "Low"],
+    default: "Medium",
   },
   score: {
     type: Number,
     default: 0,
   },
-  assignedTo: {
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: "User",
-    default: []
+  requiredSkills: {
+    type: [String], // ✅ Support multiple skills
+    default: [],
   },
-  leader: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    default: null
+  requiredSkill: { // Keep for backward compatibility
+    type: String,
+    default: "",
+  },
+  status: {
+    type: String,
+    enum: ["OPEN", "IN PROGRESS", "RESOLVED"],
+    default: "OPEN",
+    uppercase: true
+  },
+  submittedByName: {
+    type: String,
+    default: "Anonymous"
+  },
+  isArchived: {
+    type: Boolean,
+    default: false
   },
   team: [
     {
@@ -69,11 +69,17 @@ const problemSchema = new mongoose.Schema({
       createdAt: { type: Date, default: Date.now }
     }
   ],
+  leadRequests: [
+    {
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      createdAt: { type: Date, default: Date.now }
+    }
+  ],
   tasks: [
     {
       title: { type: String, required: true },
-      priority: { type: String, enum: ["critical", "high", "medium", "low"], default: "medium" },
-      status: { type: String, enum: ["pending", "in_progress", "completed"], default: "pending" },
+      priority: { type: String, enum: ["CRITICAL", "HIGH", "MEDIUM", "LOW"], default: "MEDIUM" },
+      status: { type: String, enum: ["PENDING", "IN_PROGRESS", "COMPLETED"], default: "PENDING" },
       assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
       assignedName: { type: String, default: null },
       createdAt: { type: Date, default: Date.now }
@@ -95,17 +101,12 @@ const problemSchema = new mongoose.Schema({
       senderName: String,
       text: String,
       type: { type: String, enum: ["text", "image", "voice", "system"], default: "text" },
-      read: { type: Boolean, default: false },
       createdAt: { type: Date, default: Date.now }
     }
   ],
-  autoDeleteAt: {
+  createdAt: {
     type: Date,
-    default: null
-  },
-  isArchived: {
-    type: Boolean,
-    default: false
+    default: Date.now,
   },
 }, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
 
@@ -115,30 +116,19 @@ problemSchema.pre("save", async function (next) {
   if (!this.problemId) {
     this.problemId = "PRB-" + generateHexId(8);
   }
-  
-  // Auto-set autoDeleteAt when resolved
-  if (this.status === "resolved" && !this.autoDeleteAt) {
-    this.autoDeleteAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  } else if (this.status !== "resolved") {
-    this.autoDeleteAt = null;
-  }
-  
   next();
 });
 
 // Add virtual for display if field is missing
-problemSchema.virtual('id').get(function() {
-  return this.problemId;
-});
-
 problemSchema.virtual('displayId').get(function() {
   if (this.problemId) return this.problemId;
+  // Fallback for legacy records
   const hex = this._id.toString().slice(-8).toUpperCase();
   return `PRB-${hex}`;
 });
 
 // Performance Indexes
-problemSchema.index({ status: 1, isArchived: 1, severity: 1 });
+problemSchema.index({ status: 1, isArchived: 1, urgency: 1 });
 problemSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model("Problem", problemSchema);

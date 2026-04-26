@@ -3,9 +3,9 @@ const router = express.Router();
 const { getUrgency, suggestDescription, matchProblemsForUser, matchUsersForProblem, autoAssign } = require("../controllers/aiController");
 
 /**
- * @route POST /api/ai/severity
+ * @route POST /api/ai/urgency
  */
-router.post("/severity", getUrgency);
+router.post("/urgency", getUrgency);
 
 /**
  * @route POST /api/ai/suggest
