@@ -99,44 +99,8 @@ export default function Dashboard() {
     }
   };
 
-  const handleLocateToggle = () => {
-    if (!isLocated) {
-      toast.promise(
-        new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => {
-              setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-              setIsLocated(true);
-              resolve();
-            },
-            (err) => reject(err)
-          );
-        }),
-        {
-          loading: 'Acquiring GPS coordinates...',
-          success: 'Location locked 📍',
-          error: 'GPS access denied.',
-        }
-      );
-    } else {
-      setIsLocated(false);
-      setUserLoc(null);
-    }
-  };
-
-  const handleSos = () => {
-    toast.error("SOS Signal Transmitted! 🚨 Emergency responders in your sector have been alerted.", {
-      duration: 10000,
-      position: "top-center"
-    });
-    socket.emit("sos_broadcast", { 
-      user: user.name, 
-      location: userLoc,
-      time: new Date().toISOString()
-    });
-  };
-
   useEffect(() => {
+    // Single initialization
     const loggedUser = getUser();
     if (loggedUser) {
       setUser(loggedUser);
@@ -145,6 +109,7 @@ export default function Dashboard() {
     }
     
     fetchDashboardData();
+    
     
     socket.on("new-problem", (newProb) => {
       if (!newProb?._id) return;
@@ -231,6 +196,7 @@ export default function Dashboard() {
     percent: ((categoryCount[cat] / totalProblems) * 100).toFixed(1)
   })).sort((a, b) => b.value - a.value), [categoryCount, totalProblems]);
 
+  // Risk Prediction Engine
   const predictedHotspots = useMemo(() => {
     const zones = {};
     safeProblems.forEach(p => {
@@ -430,49 +396,44 @@ export default function Dashboard() {
           <div className="card p-4 !rounded-[2rem] overflow-hidden group">
             <div className="p-6 flex justify-between items-center">
               <div>
-                <h2 className="text-lg font-bold text-white mb-1 flex items-center gap-3">
-                  Live Operations Map
-                  {isLocated && (
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                  )}
-                </h2>
-                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em]">Real-time Global Satellite Feed</p>
+                <h2 className="text-lg font-bold text-white mb-1">Live Grid Overlay</h2>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em]">Real-time Satellite Feed</p>
               </div>
-              <div className="flex gap-2">
-                <button 
-                  onClick={handleSos}
-                  className="btn-danger !py-2 !px-5 !text-[10px] !font-black uppercase tracking-widest shadow-lg shadow-red-500/20"
+              <button 
+                onClick={() => router.push('/map')}
+                className="btn-secondary !py-2 !px-5 !text-[10px]"
+              >
+                Full Screen View
+              </button>
+            </div>
+            <div className="h-[500px] rounded-[1.5rem] overflow-hidden border border-white/5 shadow-inner">
                 >
                   🚨 SOS
                 </button>
                 <button 
                   onClick={handleLocateToggle}
-                  className={`!py-2 !px-5 !text-[10px] !font-black uppercase tracking-widest transition-all ${
-                    isLocated ? "btn-secondary text-emerald-400 border-emerald-500/20 bg-emerald-500/5" : "btn-secondary"
+                  className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-lg transition-all ${
+                    isLocated ? "bg-gray-700 text-gray-300 border-white/10" : "bg-white text-black border-white hover:bg-gray-200"
                   }`}
                 >
-                  {isLocated ? "GPS Locked" : "Locate Me"}
-                </button>
-                <button 
-                  onClick={() => router.push('/map')}
-                  className="btn-primary !py-2 !px-5 !text-[10px] shadow-lg shadow-purple-500/20"
-                >
-                  Full Screen View
+                  {isLocated ? "Hide Me" : "Locate Me"}
                 </button>
               </div>
             </div>
 
-            <div className="relative rounded-xl overflow-hidden border border-white/10 shadow-2xl h-[500px]">
-              <MapView 
-                problems={safeProblems} 
-                type="problems" 
-                height="100%" 
-                zoom={userLoc ? 14 : 6} 
-                center={userLoc ? [userLoc.lat, userLoc.lng] : [22.3, 87.3]} 
-                showHeatmap={true} 
-                zoomToUser={true}
-                onZoomChange={setMapZoom}
-              />
+            <div className="relative rounded-xl overflow-hidden border border-white/10 shadow-2xl">
+              <div className="h-[500px]">
+                <MapView 
+                  problems={safeProblems} 
+                  type="problems" 
+                  height="100%" 
+                  zoom={userLoc ? 14 : 6} 
+                  center={[22.3, 87.3]} 
+                  showHeatmap={true} 
+                  zoomToUser={true}
+                  onZoomChange={setMapZoom}
+                />
+              </div>
             </div>
           </div>
 
