@@ -121,91 +121,103 @@ io.on("connection", (socket) => {
     socket.to(problemId).emit("user-stop-typing", { userId: socket.id });
   });
 
-  // 🔥 NEW CHAT LOGIC
-  socket.on("join_problem", (id) => {
-    socket.join(id);
-    console.log(`💬 Joined problem room: ${id}`);
+  // 🔥 CHAT SYSTEM (Step 9)
+  socket.on("join_chat", (chatId) => {
+    socket.join(chatId);
+    console.log(`💬 Joined Chat Channel: ${chatId}`);
   });
 
-  socket.on("send_message", async ({ problemId, text, senderId, senderName, type }) => {
+  socket.on("send_message", async (data) => {
     try {
-      const problem = await Problem.findById(problemId);
-      if (!problem) return;
+      const Message = require("./models/Message");
+      const Chat = require("./models/Chat");
+      const Problem = require("./models/Problem");
 
-      // Security: Only team members or NGO can send messages
-      const isMember = problem.team?.some(m => m.userId.toString() === senderId);
-      const isNGO = problem.createdBy?.toString() === senderId; // Simplified check or handle via role
-      
-      const newMessage = {
-        senderId,
-        senderName,
-        text,
-        type: type || "text",
-        createdAt: new Date()
-      };
+      const { chatId, problemId, senderId, senderName, text, type, mediaUrl } = data;
 
-      problem.messages.push(newMessage);
-      await problem.save();
+      // 1. Handle Mission Team Chat
+      if (problemId) {
+        const problem = await Problem.findById(problemId);
+        if (!problem) return;
 
-      io.to(problemId).emit("receive_message", newMessage);
-
-      // 🔥 AI DISPATCHER AUTO-REPLY
-      if (text.toLowerCase().includes("help") || text.toLowerCase().includes("status")) {
-        const aiMsg = { 
-          text: "🤖 AI DISPATCHER: Status logged. Nearby units alerted.", 
-          senderName: "AI Dispatcher", 
-          type: "system",
-          createdAt: new Date() 
-        };
-        problem.messages.push(aiMsg);
+        const newMessage = { senderId, senderName, text, type: type || "text", mediaUrl, createdAt: new Date() };
+        problem.messages.push(newMessage);
         await problem.save();
-        io.to(problemId).emit("receive_message", aiMsg);
+
+        io.to(problemId).emit("receive_message", { ...newMessage, problemId });
+        
+        // AI Auto-Ack for Help/Status
+        if (text?.toLowerCase().includes("help") || text?.toLowerCase().includes("status")) {
+          const aiMsg = { text: "🤖 AI AUTO-ACK: Message received by Ops. Analyzing tactical priority.", senderName: "AI Dispatcher", type: "system", createdAt: new Date(), problemId };
+          problem.messages.push(aiMsg);
+          await problem.save();
+          io.to(problemId).emit("receive_message", aiMsg);
+        }
+      } 
+      // 2. Handle Direct Chat
+      else if (chatId) {
+        const chat = await Chat.findById(chatId);
+        if (!chat) return;
+
+        const newMessage = await Message.create({ chatId, senderId, message: text, type: type || "text", mediaUrl });
+        await newMessage.populate("senderId", "name");
+
+        chat.lastMessage = newMessage._id;
+        await chat.save();
+
+        // Broadcast to participants
+        chat.participants.forEach(pId => {
+          const sid = userSockets.get(pId.toString());
+          if (sid && sid !== socket.id) { // Don't notify sender via event (they have optimistic UI)
+            io.to(sid).emit("receive_message", { ...newMessage.toObject(), chatId });
+          } else if (sid === socket.id) {
+            // Echo back for confirmation if needed, but usually frontend handles it
+            socket.emit("message_sent", newMessage);
+          }
+        });
       }
     } catch (err) {
-      console.error("Socket send_message error:", err);
+      console.error("Socket send_message failure:", err);
     }
   });
 
 
-  // 🏥 OPS COMMAND CENTER LOGIC
-  let liveLocations = {};
-
+  // 🏥 OPS COMMAND CENTER (Step 10 Polish)
   socket.on("join_ops", () => {
     socket.join("ops_room");
-    console.log(`📡 Socket ${socket.id} joined OPS Command Center`);
-    // Send current live locations to the joined user
-    socket.emit("live_locations", liveLocations);
+    console.log(`📡 Ops Terminal Active: ${socket.id}`);
   });
 
   socket.on("update_location", (data) => {
-    // data: { userId, lat, lng, name, role }
     if (!data.userId) return;
-    liveLocations[data.userId] = {
-      ...data,
-      lastUpdate: new Date()
-    };
-    
-    // Broadcast to everyone (or just OPS)
-    io.emit("live_locations", liveLocations);
+    liveLocations[data.userId] = { ...data, lastUpdate: new Date() };
+    io.emit("live_locations", liveLocations); // Broad broadcast for map synchronization
+  });
 
-    // 🔥 Sync with OPS Command Center (Throttled/Clean)
-    if (data.name && data.name !== "undefined" && data.name !== "null" && data.name.trim() !== "") {
-       const now = Date.now();
-       const lastUpdate = lastOpsUpdate.get(data.userId) || 0;
-       
-       if (now - lastUpdate > 30000) { // 30 second throttle
-          lastOpsUpdate.set(data.userId, now);
-          io.to("ops_room").emit("ops_event", {
-            type: "SYSTEM",
-            payload: { 
-              message: `Unit ${data.name} moving to target`, 
-              location: { lat: data.lat, lng: data.lng }, 
-              isTracking: true 
-            },
-            time: new Date()
-          });
-       }
+  socket.on("new_crisis", async (data) => {
+    // 1. Trigger Tactical Feed for Ops
+    io.to("ops_room").emit("ops_event", {
+      type: "CRISIS",
+      payload: { message: `🔴 NEW CRISIS: ${data.title} reported at ${data.location?.address || "Field"}` },
+      time: new Date()
+    });
+
+    // 2. Intelligence processing
+    const { detectSeverity } = require("./engine/intelligence");
+    const severity = detectSeverity(data.message || data.description);
+
+    if (severity === "CRITICAL") {
+      io.emit("global_alert", { message: `🚨 CRITICAL ALERT: ${data.title}`, type: "CRITICAL" });
+      io.to("ops_room").emit("ops_event", { type: "AI", payload: { message: `🧠 AI: Severity analyzed as CRITICAL. Immediate escalation initiated.` }, time: new Date() });
     }
+  });
+
+  socket.on("sos_alert", (data) => {
+    io.to("ops_room").emit("ops_event", {
+      type: "SOS",
+      payload: { message: `🆘 SOS SIGNAL: responder ${data.senderName} has triggered emergency beacon.` },
+      time: new Date()
+    });
   });
 
   socket.on("new_crisis", async (data) => {

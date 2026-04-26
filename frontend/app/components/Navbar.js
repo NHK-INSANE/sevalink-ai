@@ -143,6 +143,24 @@ export default function Navbar() {
 
         {/* CENTER: Navigation (Desktop Only) */}
         <nav className="hidden lg:flex items-center gap-1">
+          {/* SEARCH BAR (Step 14) */}
+          <div className="mr-6 relative">
+             <input 
+               type="text" 
+               placeholder="Search Ops..." 
+               className="bg-white/5 border border-white/10 rounded-full px-5 py-2 text-[11px] font-bold text-white w-48 focus:w-64 transition-all outline-none focus:border-purple-500/50 placeholder-gray-600"
+               onKeyDown={(e) => {
+                 if (e.key === "Enter" && e.target.value.trim()) {
+                   router.push(`/search?q=${encodeURIComponent(e.target.value.trim())}`);
+                   e.target.value = "";
+                 }
+               }}
+             />
+             <span className="absolute right-4 top-1/2 -translate-y-1/2 opacity-30 pointer-events-none">
+               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+             </span>
+          </div>
+          
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (

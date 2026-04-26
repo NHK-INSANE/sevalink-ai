@@ -11,9 +11,9 @@ import axios from "axios";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
 const ROLE_FILTERS = [
-  { key: "all",       label: "All Personnel" },
+  { key: "all",       label: "All Helpers" },
   { key: "volunteer", label: "Volunteers"  },
-  { key: "worker",    label: "Field Staff" },
+  { key: "worker",    label: "Field Workers" },
 ];
 
 function VolunteersContent() {
@@ -48,12 +48,11 @@ function VolunteersContent() {
         axios.get(`${API_BASE}/api/problems`)
       ]);
       
-      const helpers = Array.isArray(uRes.data) ? uRes.data.filter(u => 
+      const helpers = uRes.data.filter(u => 
         ["volunteer", "worker"].includes(u.role?.toLowerCase())
-      ) : [];
-      
+      );
       setUsers(helpers);
-      setProblems(Array.isArray(pRes.data.data) ? pRes.data.data.filter(p => p.status !== "resolved") : []);
+      setProblems(pRes.data.filter(p => p.status !== "RESOLVED"));
     } catch (err) {
       toast.error("Network synchronization failed.");
     } finally {
@@ -85,7 +84,7 @@ function VolunteersContent() {
     if (currentUser && (u._id === currentUser._id || u._id === currentUser.id)) return false;
     if (searchQuery) {
       const s = searchQuery.toLowerCase();
-      const code = String(u.customId || u.displayId || u._id).toLowerCase();
+      const code = String(u.customId || u.displayId || "").toLowerCase();
       const name = String(u.name || "").toLowerCase();
       if (!code.includes(s) && !name.includes(s)) return false;
     }
@@ -102,14 +101,15 @@ function VolunteersContent() {
     return (a.name || "").localeCompare(b.name || "");
   });
 
-  const canAssign = () => {
+  const canAssign = (targetRole) => {
     if (!currentUser) return false;
     const myRole = currentUser.role?.toLowerCase();
-    return ["ngo", "admin"].includes(myRole);
+    if (["ngo", "admin"].includes(myRole)) return true;
+    return false;
   };
 
   const submitAssignment = async () => {
-    if (!selectedProbId) return toast.error("Select a mission target.");
+    if (!selectedProbId) return toast.error("Select a target mission.");
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem("token");
@@ -118,10 +118,10 @@ function VolunteersContent() {
       }, {
         headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
       });
-      toast.success(`${selectedUser.name} added to deployment queue.`);
+      toast.success(`${selectedUser.name} mobilization request sent.`);
       setShowAssignModal(false);
     } catch (err) {
-      toast.error(err.response?.data?.error || "Mobilization failed.");
+      toast.error(err.response?.data?.error || "Deployment failed.");
     } finally {
       setIsSubmitting(false);
     }
@@ -136,36 +136,36 @@ function VolunteersContent() {
           {/* HEADER */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">Responder Network</h1>
-              <p className="text-sm text-gray-500 font-medium">Verify and coordinate specialized field personnel.</p>
+              <h1 className="text-3xl font-bold text-white mb-2 uppercase tracking-tight">Helpers</h1>
+              <p className="text-sm text-gray-500 font-medium">Coordinate with field specialists and verified volunteers.</p>
             </div>
             
-            <div className="flex flex-wrap items-center gap-3">
-              <input
-                placeholder="Search ID or Name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="!w-64 !rounded-xl !py-3 !px-5"
-              />
-              <select 
+            <div className="flex flex-wrap items-center gap-4">
+               <input
+                 placeholder="Search by ID or Name..."
+                 value={searchQuery}
+                 onChange={(e) => setSearchQuery(e.target.value)}
+                 className="!w-64 !rounded-xl !py-3 !px-5"
+               />
+               <select 
                 value={sortBy} 
                 onChange={(e) => e.target.value === "nearest" ? handleLocate() : setSortBy(e.target.value)}
                 className="!bg-white/5 !border-none !rounded-xl !py-3 !px-4 !text-xs !font-bold uppercase tracking-widest text-gray-400 cursor-pointer"
-              >
-                <option value="name">Sort: Name</option>
-                <option value="nearest">Sort: Nearest</option>
-              </select>
+               >
+                  <option value="name">Sort: Name</option>
+                  <option value="nearest">Sort: Nearest</option>
+               </select>
             </div>
           </div>
 
           {/* FILTERS */}
-          <div className="flex flex-wrap gap-2 p-1 bg-white/[0.02] border border-white/5 rounded-2xl w-fit">
+          <div className="flex flex-wrap gap-2">
             {ROLE_FILTERS.map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => setFilterRole(key)}
                 className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                  filterRole === key ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20" : "text-gray-500 hover:text-white"
+                  filterRole === key ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20" : "bg-white/5 text-gray-500 border border-white/5 hover:border-white/10"
                 }`}
               >
                 {label}
@@ -176,80 +176,54 @@ function VolunteersContent() {
           {/* GRID */}
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => <div key={i} className="card h-80 animate-pulse" />)}
+              {[...Array(8)].map((_, i) => <div key={i} className="card h-64 animate-pulse" />)}
             </div>
           ) : sorted.length === 0 ? (
             <div className="py-32 text-center card border-dashed border-white/10">
-              <p className="text-gray-500 font-bold uppercase tracking-[0.2em] text-[10px]">No personnel matching criteria</p>
+              <p className="text-gray-500 font-bold uppercase tracking-[0.2em] text-[10px]">No helpers found in this sector</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {sorted.map((u) => {
                 const skills = Array.from(new Set([...(u.skills || []), u.skill].filter(Boolean)));
-                const isVol = u.role?.toLowerCase() === "volunteer";
-                const isBusy = u.status === "busy";
                 const dist = userLoc ? getDistance(userLoc.lat, userLoc.lng, u.location?.lat, u.location?.lng) : null;
 
                 return (
                   <motion.div 
                     layout key={u._id} 
-                    className="card flex flex-col group relative overflow-hidden"
+                    className="card !p-8 flex flex-col gap-6 group relative overflow-hidden"
                   >
-                    <div className="p-6 pb-0 flex justify-between items-start">
-                       <div className="w-12 h-12 rounded-2xl bg-purple-600/10 flex items-center justify-center text-xl font-bold text-purple-400 border border-purple-500/20">
-                          {u.name?.[0]?.toUpperCase()}
-                       </div>
-                       <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${isBusy ? "border-red-500/20 text-red-500 bg-red-500/5" : "border-emerald-500/20 text-emerald-500 bg-emerald-500/5"}`}>
-                          {isBusy ? "Busy" : "Ready"}
-                       </span>
+                    <div className="space-y-1">
+                       <h3 className="text-lg font-bold text-white group-hover:text-purple-400 transition-colors truncate">{u.name}</h3>
+                       <p className="text-[10px] font-bold text-gray-600 uppercase tracking-tighter">ID: {u.customId || u.displayId || u._id.slice(-6).toUpperCase()}</p>
                     </div>
 
-                    <div className="p-6 flex-1 space-y-4">
-                       <div>
-                          <h3 className="text-lg font-bold text-white group-hover:text-purple-400 transition-colors truncate">{u.name}</h3>
-                          <div className="flex items-center gap-2 mt-1">
-                             <span className={`text-[9px] font-black uppercase tracking-widest ${isVol ? "text-emerald-500" : "text-blue-500"}`}>
-                                {isVol ? "Volunteer" : "Field Staff"}
-                             </span>
-                             <span className="text-[8px] font-bold text-gray-600 uppercase tracking-tighter">ID: {String(u.customId || u.displayId || u._id).slice(-6).toUpperCase()}</span>
-                          </div>
+                    <div className="space-y-4">
+                       <div className="space-y-1">
+                          <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Expertise</p>
+                          <p className="text-xs text-gray-300 font-medium truncate">{skills.join(", ") || "General Support"}</p>
                        </div>
-
-                       <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-[10px] font-medium text-gray-500">
-                             <span>📍</span>
-                             <span className="truncate">{u.address || "Sector Unassigned"}</span>
-                          </div>
-                          {dist !== null && (
-                            <div className="text-[9px] font-bold text-purple-400 uppercase tracking-widest bg-purple-500/5 w-fit px-2 py-0.5 rounded-md">
-                               {dist.toFixed(1)} km away
-                            </div>
-                          )}
-                       </div>
-
-                       <div className="flex flex-wrap gap-1.5">
-                          {skills.slice(0, 3).map(s => (
-                            <span key={s} className="px-2 py-0.5 bg-white/5 border border-white/5 rounded-md text-[9px] font-bold text-gray-400 uppercase tracking-tight">{s}</span>
-                          ))}
-                          {skills.length > 3 && <span className="text-[9px] font-bold text-gray-600">+{skills.length - 3}</span>}
+                       <div className="flex items-center gap-2 text-[10px] font-medium text-gray-500">
+                          <span>📍</span>
+                          <span className="truncate">{u.address || u.location?.address || "Field Operator"}</span>
                        </div>
                     </div>
 
-                    <div className="p-6 pt-0 mt-auto flex flex-col gap-2">
-                       {canAssign() && (
+                    <div className="mt-auto pt-4 flex gap-2">
+                       <button 
+                        onClick={() => router.push(`/profile/${u._id}`)}
+                        className="flex-1 btn-secondary !py-2.5 !text-[10px] !font-black uppercase tracking-widest"
+                       >
+                          View
+                       </button>
+                       {canAssign(u.role) && (
                          <button 
                           onClick={() => { setSelectedUser(u); setShowAssignModal(true); }}
-                          className="btn-primary !py-2.5 !text-[10px] !font-black uppercase tracking-widest"
+                          className="flex-1 btn-primary !py-2.5 !text-[10px] !font-black uppercase tracking-widest"
                          >
-                            Mobilize
+                            Assign
                          </button>
                        )}
-                       <button 
-                        onClick={() => router.push(`/chat?id=${u._id}`)}
-                        className="btn-secondary !py-2.5 !text-[10px] !font-black uppercase tracking-widest"
-                       >
-                          Establish Link
-                       </button>
                     </div>
                   </motion.div>
                 );
@@ -269,12 +243,12 @@ function VolunteersContent() {
               className="relative w-full max-w-md card !p-10 space-y-8 shadow-2xl"
             >
               <div className="text-center">
-                <h2 className="text-xl font-bold text-white uppercase tracking-widest mb-1">Personnel Mobilization</h2>
-                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Deploying {selectedUser?.name} to Active Duty</p>
+                <h2 className="text-xl font-bold text-white uppercase tracking-widest mb-1">Mission Deployment</h2>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Assigning {selectedUser?.name} to Active Duty</p>
               </div>
 
               <div className="space-y-4">
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-600">Select Mission Target</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-600">Select Active Mission</label>
                 <select 
                   value={selectedProbId}
                   onChange={(e) => setSelectedProbId(e.target.value)}
@@ -293,7 +267,7 @@ function VolunteersContent() {
                   disabled={isSubmitting || !selectedProbId}
                   className="btn-primary !py-4 !text-[10px] !font-black uppercase tracking-[0.2em]"
                  >
-                   {isSubmitting ? "Processing..." : "Authorize Deployment"}
+                   {isSubmitting ? "Processing..." : "Confirm Deployment"}
                  </button>
                  <button onClick={() => setShowAssignModal(false)} className="text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Abort</button>
               </div>

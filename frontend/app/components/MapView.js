@@ -2,579 +2,182 @@
 
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
-import HeatmapLayer from "./HeatmapLayer";
 import { useEffect, useState, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 // Fix Leaflet Icon Bug
-// Default Leaflet icon override to prevent image loads
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: null,
   iconUrl: null,
   shadowUrl: null,
 });
 
-// Inject keyframe animation once
+// Inject marker styles
 if (typeof document !== "undefined") {
-  if (!document.getElementById("seva-marker-style")) {
+  if (!document.getElementById("map-system-style")) {
     const style = document.createElement("style");
-    style.id = "seva-marker-style";
+    style.id = "map-system-style";
     style.textContent = `
-      @keyframes sevaMarkerPulse {
-        0%   { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); transform: scale(1); }
-        50%  { box-shadow: 0 0 0 8px rgba(239,68,68,0); transform: scale(1.3); }
-        100% { box-shadow: 0 0 0 0 rgba(239,68,68,0);  transform: scale(1); }
+      @keyframes mapPulse {
+        0%   { box-shadow: 0 0 0 0 var(--pulse-color); transform: scale(1); }
+        70%  { box-shadow: 0 0 0 10px rgba(0,0,0,0); transform: scale(1.1); }
+        100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); transform: scale(1); }
       }
-      @keyframes sosPulse {
-        0%   { box-shadow: 0 0 0 0 rgba(239,68,68,0.8); transform: scale(1); }
-        50%  { box-shadow: 0 0 0 16px rgba(239,68,68,0); transform: scale(1.5); }
-        100% { box-shadow: 0 0 0 0 rgba(239,68,68,0);   transform: scale(1); }
-      }
-      .custom-cluster {
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        border: 2px solid white;
-        box-shadow: 0 0 15px rgba(0,0,0,0.4);
-        transition: all 0.3s ease;
-      }
-      .cluster-wrapper {
-        background: transparent !important;
-        border: none !important;
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-      }
-      @keyframes markerPulseHighlight {
-        0% { transform: scale(0.5); opacity: 1; }
-        100% { transform: scale(1.5); opacity: 0; }
-      }
-      .pulse-marker {
-        width: 20px;
-        height: 20px;
-        background: #ef4444;
-        border-radius: 50%;
-        border: 3px solid white;
-        position: relative;
-        box-shadow: 0 0 10px rgba(0,0,0,0.5);
-      }
-      .pulse-marker::after {
-        content: "";
-        position: absolute;
-        width: 40px;
-        height: 40px;
-        background: rgba(239, 68, 68, 0.4);
-        border-radius: 50%;
-        top: -13px;
-        left: -13px;
-        animation: markerPulseHighlight 1.5s infinite;
-      }
-      .blue-pulse-marker {
-        width: 18px;
-        height: 18px;
+      .cluster-dot {
+        width: 14px;
+        height: 14px;
         background: #3b82f6;
         border-radius: 50%;
-        border: 3px solid white;
-        position: relative;
-        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        border: 2px solid white;
+        box-shadow: 0 0 10px rgba(59,130,246,0.5);
       }
-      .blue-pulse-marker::after {
-        content: "";
-        position: absolute;
-        width: 36px;
-        height: 36px;
-        background: rgba(59, 130, 246, 0.4);
+      .marker-dot {
+        width: 12px;
+        height: 12px;
         border-radius: 50%;
-        top: -12px;
-        left: -12px;
-        animation: markerPulseHighlight 1.5s infinite;
+        border: 2px solid white;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        animation: mapPulse 2s infinite;
       }
-      .highlight-wrapper {
-        background: transparent !important;
-        border: none !important;
-      }
-      .map-popup-card {
-        padding: 5px;
-        font-family: 'Inter', system-ui, sans-serif;
-      }
-      .map-popup-title {
-        font-weight: 800;
-        font-size: 14px;
-        color: #111827;
-        margin-bottom: 8px;
-        display: block;
-      }
-      .map-coords-row {
-        background: #f1f5f9;
-        padding: 8px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 11px;
-        color: #475569;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-      .map-action-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 6px;
-      }
-      .map-copy-btn {
-        background: #1e293b;
-        color: white;
-        border: none;
-        padding: 6px 4px;
-        border-radius: 6px;
-        font-size: 10px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.2s;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
-      .map-copy-btn:hover {
-        background: #6366f1;
-        transform: translateY(-1px);
-      }
-      .map-copy-btn:active {
-        transform: translateY(0);
-      }
-      .map-copy-btn.full {
-        grid-column: span 2;
-        background: #4f46e5;
+      .leaflet-container {
+        background: #0f172a !important;
       }
     `;
     document.head.appendChild(style);
   }
 }
 
-// ── Urgency Color Map ─────────────────────────────────────────────────────────
-function getUrgencyColor(urgency) {
-  switch (String(urgency || "").toLowerCase()) {
-    case "critical": return { bg: "#ef4444", glow: "rgba(239,68,68,0.5)" };
-    case "high":     return { bg: "#f97316", glow: "rgba(249,115,22,0.5)" };
-    case "medium":   return { bg: "#eab308", glow: "rgba(234,179,8,0.5)" };
-    case "low":      return { bg: "#22c55e", glow: "rgba(34,197,94,0.5)" };
-    default:         return { bg: "#3b82f6", glow: "rgba(59,130,246,0.5)" };
-  }
-}
-
-// ── Pulse Icon Factory ────────────────────────────────────────────────────────
-function makePulseIcon(color, glowColor, size = 12, type = "normal") {
-  return new L.DivIcon({
-    type,
-    className: "",
-    html: `<div style="
-      position: relative;
-      width: ${size + 6}px;
-      height: ${size + 6}px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    ">
-      <div style="
-        width: ${size}px;
-        height: ${size}px;
-        border-radius: 50%;
-        background: ${color};
-        box-shadow: 0 0 0 0 ${glowColor};
-        animation: sevaMarkerPulse 2s ease-in-out infinite;
-      "></div>
-    </div>`,
-    iconSize:    [size + 6, size + 6],
-    iconAnchor:  [(size + 6) / 2, (size + 6) / 2],
-    popupAnchor: [0, -12],
+function createIcon(color) {
+  return L.divIcon({
+    html: `<div class="marker-dot" style="background: ${color}; --pulse-color: ${color}80"></div>`,
+    className: "custom-marker-icon",
+    iconSize: [12, 12],
+    iconAnchor: [6, 6],
+    popupAnchor: [0, -10]
   });
 }
 
-// SOS Icon — bigger + faster pulse
-const sosIcon = new L.DivIcon({
-  className: "",
-  html: `<div style="
-    width: 28px; height: 28px;
-    display: flex; align-items: center; justify-content: center;
-  ">
-    <div style="
-      width: 20px; height: 20px;
-      border-radius: 50%;
-      background: #dc2626;
-      border: 3px solid #fff;
-      box-shadow: 0 0 0 0 rgba(220,38,38,0.8);
-      animation: sosPulse 1s ease-in-out infinite;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 10px; color: white; font-weight: 900;
-    ">SOS</div>
-  </div>`,
-  iconSize:    [28, 28],
-  iconAnchor:  [14, 14],
-  popupAnchor: [0, -14],
-});
+const NGO_ICON = createIcon("#3b82f6"); // Blue
+const CRITICAL_ICON = createIcon("#dc2626"); // Red
+const HIGH_ICON = createIcon("#f97316"); // Orange
+const MEDIUM_ICON = createIcon("#eab308"); // Yellow
+const LOW_ICON = createIcon("#10b981"); // Green
 
-const helperIcon = makePulseIcon("#2563eb", "rgba(37,99,235,0.5)", 12, "helper");
-const ngoIcon    = makePulseIcon("#3b82f6", "rgba(59,130,246,0.5)", 12, "ngo"); // blue
-
-// 🔥 Live Pulse Icon (Green for active movement)
-const liveHelperIcon = makePulseIcon("#10b981", "rgba(16,185,129,0.5)", 14, "live");
-
-// ── User Marker Toggle Hook ──────────────────────────────────────────────────
 function UserMarkerToggle() {
   const map = useMap();
-  const [userLocation, setUserLocation] = useState(null);
-  const markerRef = useRef(null);
-
-  const userPinIcon = L.divIcon({
-    className: "",
-    html: `<div style="
-      width: 24px; height: 24px;
-      background: #9333ea;
-      border: 3px solid white;
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
-      box-shadow: -2px 2px 5px rgba(0,0,0,0.3);
-      display: flex; align-items: center; justify-content: center;
-    ">
-      <div style="width: 8px; height: 8px; background: white; border-radius: 50%;"></div>
-    </div>`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 24],
-    popupAnchor: [0, -24],
-  });
+  const [pos, setPos] = useState(null);
 
   useEffect(() => {
     const handleToggle = (e) => {
       const { show } = e.detail;
-      if (!show) {
-        setUserLocation(null);
-        return;
-      }
-
-      if (!navigator.geolocation) {
-        toast.error("Geolocation not supported");
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const latlng = [pos.coords.latitude, pos.coords.longitude];
-          setUserLocation(latlng);
-          map.flyTo(latlng, 14, { duration: 1.5 });
-        },
-        () => {
-          toast.error("Location permission denied");
-          window.dispatchEvent(new CustomEvent("map-user-denied"));
-        }
-      );
+      if (!show) return setPos(null);
+      navigator.geolocation.getCurrentPosition((p) => {
+        const coords = [p.coords.latitude, p.coords.longitude];
+        setPos(coords);
+        map.flyTo(coords, 14);
+      });
     };
-
     window.addEventListener("map-toggle-user", handleToggle);
     return () => window.removeEventListener("map-toggle-user", handleToggle);
   }, [map]);
 
-  if (!userLocation) return null;
-
+  if (!pos) return null;
   return (
-    <Marker position={userLocation} icon={userPinIcon}>
-      <Popup>You are here 📍</Popup>
+    <Marker position={pos} icon={L.divIcon({ 
+      html: '<div style="width:16px;height:16px;background:#9333ea;border:3px solid white;border-radius:50%;box-shadow:0 0 10px rgba(0,0,0,0.5)"></div>',
+      iconSize:[16,16], iconAnchor:[8,8]
+    })}>
+      <Popup>Deployment Position 📍</Popup>
     </Marker>
   );
 }
 
-// ── Focus Problem/NGO ───────────────────────────────────────────────────────
-function FocusProblem() {
-  const map = useMap();
-  const [highlighted, setHighlighted] = useState(null);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const lat = params.get("lat");
-      const lng = params.get("lng");
-      const title = params.get("title");
-      const id = params.get("problemId");
-      const ngoId = params.get("ngoId");
-
-      if (lat && lng) {
-        const target = [parseFloat(lat), parseFloat(lng)];
-        map.flyTo(target, 15, { duration: 1.5 });
-        
-        if (id || ngoId) {
-          setHighlighted({ 
-            pos: target, 
-            title: title ? decodeURIComponent(title) : (ngoId ? "NGO Partner" : "Selected Crisis"),
-            isNgo: !!ngoId
-          });
-        } else if (title) {
-          setTimeout(() => {
-            L.popup({ closeButton: true })
-              .setLatLng(target)
-              .setContent(`<div style="font-weight:bold;font-size:13px;padding:4px;">${decodeURIComponent(title)}</div>`)
-              .openOn(map);
-          }, 1500);
-        }
-      }
-    }
-  }, [map]);
-
-  if (!highlighted) return null;
-
-  const pulseClass = highlighted.isNgo ? "blue-pulse-marker" : "pulse-marker";
-
-  const highlightIcon = L.divIcon({
-    html: `<div class="${pulseClass}"></div>`,
-    className: "highlight-wrapper",
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
-  });
-
-  return (
-    <Marker position={highlighted.pos} icon={highlightIcon}>
-      <Popup>
-        <div style={{ fontWeight: "bold", padding: "2px" }}>{highlighted.title}</div>
-      </Popup>
-    </Marker>
-  );
-}
-
-// ── Zoom Listener ───────────────────────────────────────────────────────────
-function MapZoomListener({ setShowClusters, onZoomChange }) {
-  const map = useMap();
-  useEffect(() => {
-    const handleZoom = () => {
-      const z = map.getZoom();
-      setShowClusters(z >= 8);
-      if (onZoomChange) onZoomChange(z);
-    };
-    handleZoom();
-    map.on("zoomend", handleZoom);
-    return () => map.off("zoomend", handleZoom);
-  }, [map, setShowClusters, onZoomChange]);
-  return null;
-}
-
-
-/**
- * MapView — urgency-colored markers, SOS markers, live-count legend,
- * Locate Me button. Tiles always stay OSM light (unaffected by dark mode).
- */
-export default function MapView({
-  problems,
-  ngos,
-  helpers,
-  sosMarkers,
-  type = "all",
-  height = "400px",
-  center = [22.57, 88.36],
-  zoom = 6,
-  zoomToUser = true,
-  showHeatmap = false,
-  heatmapData = [],
-  onZoomChange
-}) {
-  const [showClusters, setShowClusters] = useState(true);
-
-  // Safety checks
-  const safeProblems = Array.isArray(problems) ? problems : [];
-  const safeNgos = Array.isArray(ngos) ? ngos : [];
-  const safeHelpers = Array.isArray(helpers) ? helpers : [];
-  const safeSosMarkers = Array.isArray(sosMarkers) ? sosMarkers : [];
-
-  if (!problems && !ngos && !helpers && !sosMarkers) return null;
-
-  const copyToClipboard = (text) => {
-    if (typeof navigator !== "undefined") {
-      navigator.clipboard.writeText(text);
-      toast.success("Coordinates Copied!", {
-        style: { borderRadius: '10px', background: '#1e293b', color: '#fff', fontSize: '12px' }
-      });
-    }
+export default function MapView({ problems = [], ngos = [], type = "all", height = "100%", zoom = 6 }) {
+  const router = useRouter();
+  
+  const copyLocation = (lat, lng) => {
+    navigator.clipboard.writeText(`${lat}, ${lng}`);
+    toast.success("Coordinates Copied");
   };
 
   return (
-    <div style={{ height, width: "100%", position: "relative" }}
-      className="rounded-xl overflow-hidden shadow-md border border-gray-200 bg-white">
+    <MapContainer
+      center={[22.3, 87.3]}
+      zoom={zoom}
+      style={{ height, width: "100%" }}
+      zoomControl={false}
+      attributionControl={false}
+    >
+      <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+      <UserMarkerToggle />
 
-      <MapContainer
-        center={center}
-        zoom={zoom}
-        style={{ height: "100%", width: "100%" }}
-        scrollWheelZoom={true}
-        attributionControl={false}
+      <MarkerClusterGroup
+        showCoverageOnHover={false}
+        maxClusterRadius={40}
+        disableClusteringAtZoom={13}
+        iconCreateFunction={() => L.divIcon({ html: '<div class="cluster-dot"></div>', className: 'cluster-wrapper', iconSize:[14,14] })}
       >
-        {/* Always light OSM tiles — dark mode does NOT affect map */}
-        <TileLayer
-          attribution=""
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-
-        {zoomToUser && <UserMarkerToggle />}
-        <FocusProblem />
-        <MapZoomListener setShowClusters={setShowClusters} onZoomChange={onZoomChange} />
-
-        {/* 🔥 Custom Crisis Heatmap Layer */}
-        {showHeatmap && (
-          <HeatmapLayer 
-            points={heatmapData.length > 0 
-              ? heatmapData 
-              : safeProblems
-                .filter(p => p.location?.lat && p.location?.lng)
-                .map(p => ({
-                  lat: p.location.lat,
-                  lng: p.location.lng,
-                  intensity: (p.severity || p.urgency || "").toLowerCase() === "critical" ? 1.0 : 0.6
-                }))
-            } 
-          />
-        )}
-
-        <MarkerClusterGroup 
-          chunkedLoading
-          maxClusterRadius={40}
-          spiderfyOnMaxZoom={true}
-          showCoverageOnHover={false}
-          disableClusteringAtZoom={15}
-          iconCreateFunction={(cluster) => {
-            return L.divIcon({
-              html: `<div class="cluster-dot" style="background: #3b82f6; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px rgba(59,130,246,0.5);"></div>`,
-              className: "cluster-wrapper",
-              iconSize: L.point(20, 20)
-            });
-          }}
-        >
-
-          {/* 🚨 SOS Markers */}
-          {safeSosMarkers.map((s, i) => (
-            s.latitude && s.longitude ? (
-              <Marker key={`sos-${i}`} position={[s.latitude, s.longitude]} icon={sosIcon}>
-                <Popup>
-                  <div style={{ minWidth: 180, fontFamily: "system-ui, sans-serif" }}>
-                    <div style={{ color: "#dc2626", fontWeight: "700", fontSize: "13px", marginBottom: 4 }}>
-                      SOS EMERGENCY
-                    </div>
-                    <div style={{ fontSize: "12px", color: "#374151", marginBottom: 4 }}>
-                      {s.message}
-                    </div>
-                    <div style={{ fontSize: "10px", color: "#6b7280" }}>
-                      From: {s.senderName || "Anonymous"} · {s.time ? new Date(s.time).toLocaleTimeString() : ""}
-                    </div>
+        {/* NGO MARKERS */}
+        {(type === "all" || type === "ngo") && ngos.map(n => {
+          const lat = n.location?.lat || n.latitude;
+          const lng = n.location?.lng || n.longitude;
+          if (!lat || !lng) return null;
+          return (
+            <Marker key={n._id} position={[lat, lng]} icon={NGO_ICON}>
+              <Popup>
+                <div className="p-2 space-y-3">
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-900">{n.ngoName || n.name}</h4>
+                    <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Partner NGO Node</p>
                   </div>
-                </Popup>
-              </Marker>
-            ) : null
-          ))}
+                  <div className="flex flex-col gap-1.5">
+                    <button onClick={() => copyLocation(lat, lng)} className="w-full py-2 bg-slate-100 text-[9px] font-bold uppercase rounded-lg hover:bg-slate-200 transition-all">Copy Coordinates</button>
+                    <button onClick={() => router.push(`/chat?id=${n._id}`)} className="w-full py-2 bg-blue-600 text-white text-[9px] font-bold uppercase rounded-lg shadow-lg shadow-blue-500/20">Establish Link</button>
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
 
-          {/* 🔴 Problems — color by urgency */}
-          {(type === "all" || type === "problems") &&
-            safeProblems.filter(p => (p.location?.lat && p.location?.lng) || (p.latitude && p.longitude)).slice(0, 100).map((p, i) => {
-              const sev = (p.severity || p.urgency || "medium").toLowerCase();
-              const { bg, glow } = getUrgencyColor(sev);
-              const icon = makePulseIcon(bg, glow, 12, sev);
-              const lat = p.location?.lat || p.latitude;
-              const lng = p.location?.lng || p.longitude;
-              return (
-                <Marker key={`p-${p._id || i}`} position={[lat, lng]} icon={icon}>
-                  <Popup minWidth={220}>
-                    <div className="map-popup-card">
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-                        <strong className="map-popup-title">{p.title}</strong>
-                        <span style={{
-                          fontSize: "10px", fontWeight: "700", padding: "2px 6px", borderRadius: 4, marginLeft: 6, flexShrink: 0,
-                          background: sev === "critical" ? "#fee2e2" : sev === "high" ? "#ffedd5" : sev === "medium" ? "#fef9c3" : "#dcfce7",
-                          color: sev === "critical" ? "#dc2626" : sev === "high" ? "#ea580c" : sev === "medium" ? "#ca8a04" : "#16a34a",
-                        }}>{p.severity || p.urgency}</span>
-                      </div>
-                      
-                      <div className="map-coords-row">
-                        <div>LAT: {lat.toFixed(6)}</div>
-                        <div>LNG: {lng.toFixed(6)}</div>
-                      </div>
+        {/* PROBLEM MARKERS */}
+        {(type === "all" || type === "problems") && problems.map(p => {
+          const lat = p.location?.lat || p.latitude;
+          const lng = p.location?.lng || p.longitude;
+          if (!lat || !lng) return null;
+          
+          const sev = (p.severity || p.urgency || "medium").toLowerCase();
+          let icon = MEDIUM_ICON;
+          if (sev === "critical") icon = CRITICAL_ICON;
+          else if (sev === "high") icon = HIGH_ICON;
+          else if (sev === "low") icon = LOW_ICON;
 
-                      <div className="map-action-grid">
-                        <button className="map-copy-btn" onClick={() => copyToClipboard(lat.toFixed(6))}>Copy Lat</button>
-                        <button className="map-copy-btn" onClick={() => copyToClipboard(lng.toFixed(6))}>Copy Lng</button>
-                        <button className="map-copy-btn full" onClick={() => copyToClipboard(`${lat.toFixed(6)}, ${lng.toFixed(6)}`)}>Copy Full Location</button>
-                      </div>
-
-                      <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: "10px", color: "#9ca3af" }}>{Array.isArray(p.category) ? p.category.join(", ") : (p.category || "General")}</span>
-                        {p.status && (
-                          <span style={{
-                            fontSize: "10px", fontWeight: "700", padding: "1px 6px", borderRadius: 4,
-                            background: String(p.status || "").toLowerCase() === "open" ? "#eff6ff" : (String(p.status || "").toLowerCase().includes("progress") ? "#fefce8" : "#f0fdf4"),
-                            color: String(p.status || "").toLowerCase() === "open" ? "#2563eb" : (String(p.status || "").toLowerCase().includes("progress") ? "#ca8a04" : "#16a34a"),
-                          }}>{p.status.replace("_", " ")}</span>
-                        )}
-                      </div>
+          return (
+            <Marker key={p._id} position={[lat, lng]} icon={icon}>
+              <Popup>
+                <div className="p-2 space-y-3 min-w-[180px]">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-900">{p.title}</h4>
+                      <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Incident Report</p>
                     </div>
-                  </Popup>
-                </Marker>
-              );
-            })}
-
-          {/* 🟢 NGOs */}
-          {(type === "all" || type === "ngo") &&
-            safeNgos.filter(n => (n.location?.lat && n.location?.lng) || (n.latitude && n.longitude)).slice(0, 50).map((n, i) => {
-              const lat = n.location?.lat || n.latitude;
-              const lng = n.location?.lng || n.longitude;
-              return (
-                <Marker key={`n-${n._id || i}`} position={[lat, lng]} icon={ngoIcon}>
-                  <Popup minWidth={220}>
-                    <div className="map-popup-card">
-                      <strong className="map-popup-title">{n.ngoName || n.name}</strong>
-                      <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: 10 }}>{n.ngoContact || n.email}</div>
-                      
-                      <div className="map-coords-row">
-                        <div>LAT: {lat.toFixed(6)}</div>
-                        <div>LNG: {lng.toFixed(6)}</div>
-                      </div>
-
-                      <div className="map-action-grid">
-                        <button className="map-copy-btn" onClick={() => copyToClipboard(lat.toFixed(6))}>Copy Lat</button>
-                        <button className="map-copy-btn" onClick={() => copyToClipboard(lng.toFixed(6))}>Copy Lng</button>
-                        <button className="map-copy-btn full" onClick={() => copyToClipboard(`${lat.toFixed(6)}, ${lng.toFixed(6)}`)}>Copy HQ Location</button>
-                      </div>
-
-                      <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #f1f5f9" }}>
-                        <span style={{ fontSize: "10px", fontWeight: "700", color: "#15803d", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "2px 8px", borderRadius: "20px" }}>NGO PARTNER</span>
-                      </div>
-                    </div>
-                  </Popup>
-                </Marker>
-              );
-            })}
-
-          {/* 🟢 Responders / Helpers */}
-          {(type === "all" || type === "helpers") &&
-            safeHelpers.filter(h => (h.location?.lat && h.location?.lng) || (h.latitude && h.longitude)).map((h, i) => {
-              const lat = h.location?.lat || h.latitude;
-              const lng = h.location?.lng || h.longitude;
-              const icon = h.isLive ? liveHelperIcon : helperIcon;
-              return (
-                <Marker key={`h-${h._id || i}`} position={[lat, lng]} icon={icon}>
-                  <Popup minWidth={220}>
-                    <div className="map-popup-card">
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                        <strong className="map-popup-title">{h.name}</strong>
-                        {h.isLive && <span style={{ fontSize: "9px", fontWeight: "900", color: "#10b981", background: "#f0fdf4", padding: "2px 6px", borderRadius: "10px", border: "1px solid #bbf7d0" }}>LIVE</span>}
-                      </div>
-                      <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: 10 }}>Role: {h.role || "Volunteer"}</div>
-                      <div className="map-coords-row">
-                        <div>LAT: {lat.toFixed(6)}</div>
-                        <div>LNG: {lng.toFixed(6)}</div>
-                      </div>
-                      <div className="map-action-grid">
-                        <button className="map-copy-btn full" onClick={() => copyToClipboard(`${lat.toFixed(6)}, ${lng.toFixed(6)}`)}>Copy Position</button>
-                      </div>
-                    </div>
-                  </Popup>
-                </Marker>
-              );
-            })}
-
-        </MarkerClusterGroup>
-      </MapContainer>
-    </div>
+                    <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded ${
+                      sev === 'critical' ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-600'
+                    }`}>{sev}</span>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <button onClick={() => copyLocation(lat, lng)} className="w-full py-2 bg-slate-100 text-[9px] font-bold uppercase rounded-lg hover:bg-slate-200 transition-all">Copy Location</button>
+                    <button onClick={() => router.push(`/problems?id=${p._id}`)} className="w-full py-2 bg-purple-600 text-white text-[9px] font-bold uppercase rounded-lg shadow-lg shadow-purple-500/20">View Briefing</button>
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
+      </MarkerClusterGroup>
+    </MapContainer>
   );
 }
