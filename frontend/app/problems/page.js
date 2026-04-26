@@ -113,15 +113,14 @@ export default function ProblemsPage() {
           <div className="space-y-6 mb-12">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
               {/* Search */}
-              <div className="lg:col-span-5 relative">
+              <div className="lg:col-span-5">
                 <input
                   type="text"
-                  placeholder="Search incidents..."
+                  placeholder="Search incidents by ID, title, or description..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full !rounded-xl !py-3.5 pl-12"
+                  className="w-full !rounded-xl !py-3.5 !px-6"
                 />
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">🔍</span>
               </div>
 
               {/* Filters & Sort */}
@@ -129,7 +128,7 @@ export default function ProblemsPage() {
                 <select 
                   value={sortBy} 
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="!rounded-xl !py-3 !px-4 !text-xs !font-bold uppercase tracking-wider !bg-white/5 border-none cursor-pointer"
+                  className="!rounded-xl !py-3 !px-4 !text-xs !font-bold uppercase tracking-wider !bg-white/5 border-none cursor-pointer text-gray-300"
                 >
                   <option value="newest">Latest First</option>
                   <option value="nearest">Nearest First</option>
@@ -138,6 +137,7 @@ export default function ProblemsPage() {
 
                 <div className="h-8 w-[1px] bg-white/10 hidden sm:block mx-1" />
 
+                {/* Severity Filter */}
                 <div className="flex gap-1.5 p-1 bg-white/[0.03] rounded-xl border border-white/5 overflow-x-auto">
                   {["all", "critical", "high", "medium", "low"].map(u => (
                     <button
@@ -150,6 +150,7 @@ export default function ProblemsPage() {
                   ))}
                 </div>
 
+                {/* Status Filter */}
                 <div className="flex gap-1.5 p-1 bg-white/[0.03] rounded-xl border border-white/5 overflow-x-auto">
                   {["all", "open", "in_progress", "resolved"].map(s => (
                     <button
@@ -182,7 +183,7 @@ export default function ProblemsPage() {
             <div className="py-24 text-center bg-white/[0.02] border border-dashed border-white/10 rounded-3xl">
               <div className="text-4xl mb-4">🔎</div>
               <h2 className="text-lg font-bold text-white mb-2">No problems found</h2>
-              <p className="text-sm text-gray-500 max-w-xs mx-auto">Try changing filters or search terms to find specific reports.</p>
+              <p className="text-sm text-gray-500 max-w-xs mx-auto">Adjust your filters or search terms to find specific reports.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
