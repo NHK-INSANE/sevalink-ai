@@ -14,18 +14,13 @@ import VolunteerDashboard from "../components/dashboards/VolunteerDashboard";
 import AdminDashboard from "../components/dashboards/AdminDashboard";
 import NgoDashboard from "../components/dashboards/NgoDashboard";
 import { motion, AnimatePresence } from "framer-motion";
-// Recharts moved to dynamic component
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://sevalink-backend-bmre.onrender.com";
 
 const MapView = dynamic(() => import("../components/MapView"), { 
   ssr: false,
   loading: () => <div className="h-full w-full bg-slate-900 animate-pulse rounded-[2rem]" />
-});
-
-const TacticalChart = dynamic(() => import("../components/TacticalChart"), { 
-  ssr: false,
-  loading: () => <div className="h-full w-full bg-black/20 animate-pulse" />
 });
 
 function Counter({ value }) {
@@ -241,7 +236,15 @@ export default function Dashboard() {
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500">7-Day Tactical Trajectory</h3>
               </div>
               <div className="h-[280px]">
-                <TacticalChart data={trendData} />
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={trendData}>
+                    <defs><linearGradient id="cT" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#9333ea" stopOpacity={0.3}/><stop offset="95%" stopColor="#9333ea" stopOpacity={0}/></linearGradient></defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
+                    <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", fontSize: "10px" }} />
+                    <Area type="monotone" dataKey="cases" stroke="#a855f7" strokeWidth={4} fill="url(#cT)" />
+                    <XAxis dataKey="day" stroke="#334155" fontSize={10} axisLine={false} tickLine={false} />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             </div>
           </div>

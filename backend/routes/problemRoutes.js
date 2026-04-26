@@ -259,6 +259,7 @@ router.post("/:id/team/respond", auth, authorize("ngo", "admin"), async (req, re
           { problemId: problem._id, type: "team" },
           { $addToSet: { participants: request.userId } }
         );
+      }
     } else {
       request.status = "rejected";
     }

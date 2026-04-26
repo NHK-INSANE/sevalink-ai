@@ -4,7 +4,7 @@ import "leaflet/dist/leaflet.css";
 import { Toaster } from "react-hot-toast";
 import { Providers } from "./providers";
 import CursorGlow from "./components/CursorGlow";
-import React, { Component } from "react";
+import React from "react";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -34,7 +34,7 @@ function GlobalErrorFallback({ error, reset }) {
 }
 
 // Custom Error Boundary Component (Step 15)
-class ErrorBoundary extends Component {
+class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false, error: null };
