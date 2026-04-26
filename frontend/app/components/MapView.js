@@ -423,7 +423,7 @@ export default function MapView({
                 .map(p => ({
                   lat: p.location.lat,
                   lng: p.location.lng,
-                  intensity: p.urgency?.toLowerCase() === "critical" ? 1.0 : 0.6
+                  intensity: (p.severity || p.urgency || "").toLowerCase() === "critical" ? 1.0 : 0.6
                 }))
             } 
           />
@@ -468,8 +468,9 @@ export default function MapView({
           {/* 🔴 Problems — color by urgency */}
           {(type === "all" || type === "problems") &&
             safeProblems.filter(p => (p.location?.lat && p.location?.lng) || (p.latitude && p.longitude)).slice(0, 100).map((p, i) => {
-              const { bg, glow } = getUrgencyColor(p.urgency);
-              const icon = makePulseIcon(bg, glow, 12, String(p.urgency || "").toLowerCase() || "normal");
+              const sev = (p.severity || p.urgency || "medium").toLowerCase();
+              const { bg, glow } = getUrgencyColor(sev);
+              const icon = makePulseIcon(bg, glow, 12, sev);
               const lat = p.location?.lat || p.latitude;
               const lng = p.location?.lng || p.longitude;
               return (
@@ -480,9 +481,9 @@ export default function MapView({
                         <strong className="map-popup-title">{p.title}</strong>
                         <span style={{
                           fontSize: "10px", fontWeight: "700", padding: "2px 6px", borderRadius: 4, marginLeft: 6, flexShrink: 0,
-                          background: String(p.urgency || "").toLowerCase() === "critical" ? "#fee2e2" : String(p.urgency || "").toLowerCase() === "high" ? "#ffedd5" : String(p.urgency || "").toLowerCase() === "medium" ? "#fef9c3" : "#dcfce7",
-                          color: String(p.urgency || "").toLowerCase() === "critical" ? "#dc2626" : String(p.urgency || "").toLowerCase() === "high" ? "#ea580c" : String(p.urgency || "").toLowerCase() === "medium" ? "#ca8a04" : "#16a34a",
-                        }}>{p.urgency}</span>
+                          background: sev === "critical" ? "#fee2e2" : sev === "high" ? "#ffedd5" : sev === "medium" ? "#fef9c3" : "#dcfce7",
+                          color: sev === "critical" ? "#dc2626" : sev === "high" ? "#ea580c" : sev === "medium" ? "#ca8a04" : "#16a34a",
+                        }}>{p.severity || p.urgency}</span>
                       </div>
                       
                       <div className="map-coords-row">
@@ -501,9 +502,9 @@ export default function MapView({
                         {p.status && (
                           <span style={{
                             fontSize: "10px", fontWeight: "700", padding: "1px 6px", borderRadius: 4,
-                            background: String(p.status || "").toLowerCase() === "open" ? "#eff6ff" : String(p.status || "").toLowerCase() === "in progress" ? "#fefce8" : "#f0fdf4",
-                            color: String(p.status || "").toLowerCase() === "open" ? "#2563eb" : String(p.status || "").toLowerCase() === "in progress" ? "#ca8a04" : "#16a34a",
-                          }}>{p.status}</span>
+                            background: String(p.status || "").toLowerCase() === "open" ? "#eff6ff" : (String(p.status || "").toLowerCase().includes("progress") ? "#fefce8" : "#f0fdf4"),
+                            color: String(p.status || "").toLowerCase() === "open" ? "#2563eb" : (String(p.status || "").toLowerCase().includes("progress") ? "#ca8a04" : "#16a34a"),
+                          }}>{p.status.replace("_", " ")}</span>
                         )}
                       </div>
                     </div>

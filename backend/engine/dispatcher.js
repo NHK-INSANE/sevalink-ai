@@ -21,7 +21,7 @@ async function autoDispatch(crisis, io, userSockets) {
     const { analysis, agentReports } = runMultiAgentAnalysis(crisis);
     const resources = recommendResources(analysis.type);
     
-    console.log(`📊 AI ANALYSIS: Type [${analysis.type}] Priority [${analysis.priority}]`);
+    console.log(`📊 AI ANALYSIS: Type [${analysis.type}] Severity [${analysis.severity}]`);
     console.log(`🤖 AGENT REPORTS: ${agentReports.length} agents active.`);
 
     // 2. Find Nearest Responders
@@ -44,7 +44,7 @@ async function autoDispatch(crisis, io, userSockets) {
     io.to("ops_room").emit("ops_event", {
       type: "AI",
       payload: { 
-        message: `🧠 AI DISPATCHER: Crisis analyzed. Severity: ${analysis.priority}. Suggestions: ${resources.join(", ")}`,
+        message: `🧠 AI DISPATCHER: Crisis analyzed. Severity: ${analysis.severity}. Suggestions: ${resources.join(", ")}`,
         crisisTitle: crisis.title,
         isAutoReply: true
       },
@@ -66,7 +66,7 @@ async function autoDispatch(crisis, io, userSockets) {
           payload: { 
             chatId: missionChat._id, 
             title: crisis.title,
-            priority: analysis.priority,
+            severity: analysis.severity,
             analysis
           },
           time: new Date()

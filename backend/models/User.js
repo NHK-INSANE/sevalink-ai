@@ -28,6 +28,8 @@ const userSchema = new mongoose.Schema({
       date: { type: Date, default: Date.now },
     }
   ],
+  availability: { type: Boolean, default: true },
+  assignedProblems: [{ type: mongoose.Schema.Types.ObjectId, ref: "Problem" }],
   status: { type: String, enum: ["available", "busy"], default: "available" },
   customId: { type: String, unique: true },
 }, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
@@ -64,6 +66,10 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
 };
 
 // Add virtual for display if field is missing
+userSchema.virtual('id').get(function() {
+  return this.customId;
+});
+
 userSchema.virtual('displayId').get(function() {
   if (this.customId) return this.customId;
   const hex = this._id.toString().slice(-8).toUpperCase();

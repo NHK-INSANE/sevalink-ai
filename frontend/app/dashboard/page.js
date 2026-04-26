@@ -168,17 +168,17 @@ export default function Dashboard() {
   const safeProblems = useMemo(() => Array.isArray(problems) ? problems : [], [problems]);
   const safeUsers = useMemo(() => Array.isArray(usersList) ? usersList : [], [usersList]);
 
-  const openCount = useMemo(() => safeProblems.filter(p => String(p?.status || "").trim().toUpperCase() === "OPEN").length, [safeProblems]);
-  const resolvedCount = useMemo(() => safeProblems.filter(p => String(p?.status || "").trim().toUpperCase() === "RESOLVED").length, [safeProblems]);
+  const openCount = useMemo(() => safeProblems.filter(p => String(p?.status || "").toLowerCase() === "open").length, [safeProblems]);
+  const resolvedCount = useMemo(() => safeProblems.filter(p => String(p?.status || "").toLowerCase() === "resolved").length, [safeProblems]);
   const progressCount = useMemo(() => safeProblems.filter(p => {
-    const s = String(p?.status || "").trim().toUpperCase();
-    return s === "IN PROGRESS" || s === "IN-PROGRESS";
+    const s = String(p?.status || "").toLowerCase();
+    return s === "in_progress" || s === "in progress" || s === "in-progress";
   }).length, [safeProblems]);
 
-  const criticalCount = useMemo(() => safeProblems.filter(p => String(p?.urgency || "").trim().toUpperCase() === "CRITICAL").length, [safeProblems]);
-  const highCount = useMemo(() => safeProblems.filter(p => String(p?.urgency || "").trim().toUpperCase() === "HIGH").length, [safeProblems]);
-  const mediumCount = useMemo(() => safeProblems.filter(p => String(p?.urgency || "").trim().toUpperCase() === "MEDIUM").length, [safeProblems]);
-  const lowCount = useMemo(() => safeProblems.filter(p => String(p?.urgency || "").trim().toUpperCase() === "LOW").length, [safeProblems]);
+  const criticalCount = useMemo(() => safeProblems.filter(p => String(p?.severity || p?.urgency || "").toLowerCase() === "critical").length, [safeProblems]);
+  const highCount = useMemo(() => safeProblems.filter(p => String(p?.severity || p?.urgency || "").toLowerCase() === "high").length, [safeProblems]);
+  const mediumCount = useMemo(() => safeProblems.filter(p => String(p?.severity || p?.urgency || "").toLowerCase() === "medium").length, [safeProblems]);
+  const lowCount = useMemo(() => safeProblems.filter(p => String(p?.severity || p?.urgency || "").toLowerCase() === "low").length, [safeProblems]);
 
   const volunteersCount = useMemo(() => safeUsers.filter(u => String(u?.role || "").toLowerCase() === "volunteer").length, [safeUsers]);
   const workersCount = useMemo(() => safeUsers.filter(u => String(u?.role || "").toLowerCase() === "worker").length, [safeUsers]);
@@ -271,183 +271,142 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#080B14] text-white pb-24">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] pb-24">
       <Navbar />
       
       <PageWrapper>
-        <main className="page-wrapper pt-10 px-6 lg:px-10 space-y-8 pb-32">
+        <main className="max-w-7xl mx-auto pt-28 px-6 lg:px-8">
           
-          {/* ── HEADER ── */}
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-6 px-2 mt-4">
+          {/* HEADER */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-6">
             <div>
-              <h1 className="text-4xl font-bold tracking-tight mb-2 bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
-                Command Dashboard
+              <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
+                Command Center
               </h1>
-              <div className="flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
-                <div className="flex items-center gap-1.5 font-bold">
-                  System Live
-                </div>
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-emerald-500">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  System Online
+                </span>
                 <span className="w-px h-3 bg-white/10" />
-                <span className="text-indigo-400">{user?.name || "Guest Observer"}</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{user?.name || "Guest Observer"}</span>
               </div>
             </div>
 
-            <div className="flex justify-end">
-              <Link href="/submit" className="bg-purple-600 hover:bg-purple-700 px-6 py-2.5 rounded-lg text-white font-bold transition-all shadow-lg shadow-purple-500/20">
-                Report New Crisis
-              </Link>
-            </div>
+            <Link href="/submit" className="btn-primary !px-8 !py-4 shadow-xl shadow-purple-500/20">
+              Report Incident
+            </Link>
           </div>
 
-          {/* ── GUEST ALERT ── */}
+          {/* GUEST ALERT */}
           {!getUser() && (
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-12 p-6 rounded-3xl bg-indigo-500/5 border border-indigo-500/10 flex flex-col md:flex-row items-center justify-between gap-4 backdrop-blur-xl"
+              className="mb-12 p-6 rounded-2xl bg-purple-500/5 border border-purple-500/10 flex flex-col md:flex-row items-center justify-between gap-4 backdrop-blur-md"
             >
-              <div className="flex items-center gap-4">
-                <p className="text-sm text-gray-300 font-medium">Viewing as a Guest. Some features like discussion and AI unit assignment are restricted.</p>
-              </div>
-              <div className="flex gap-3">
-                <Link href="/login" className="px-5 py-2 text-xs font-bold text-gray-400 hover:text-white transition-colors">Login</Link>
-                <Link href="/register" className="px-5 py-2 text-xs font-bold text-indigo-400 bg-indigo-400/10 rounded-xl hover:bg-indigo-400/20 transition-all">Register</Link>
+              <p className="text-sm text-gray-400 font-medium">Viewing as a Guest. Some features like discussion and AI unit assignment are restricted.</p>
+              <div className="flex gap-4">
+                <Link href="/login" className="text-xs font-bold text-gray-500 hover:text-white transition-colors">Login</Link>
+                <Link href="/register" className="btn-secondary !py-2 !px-5 !text-xs">Register</Link>
               </div>
             </motion.div>
           )}
 
-          {/* ── STATS CARDS ── */}
+          {/* STATS CARDS */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {[
-              { label: "Active Reports", value: counts.total },
-              { label: "Total Helpers",  value: counts.volunteers },
-              { label: "NGO Partners",   value: counts.ngos },
-              { label: "Field Staff",    value: counts.workers },
+              { label: "Active Reports", value: counts.total, color: "text-purple-400" },
+              { label: "Total Helpers",  value: counts.volunteers, color: "text-blue-400" },
+              { label: "NGO Partners",   value: counts.ngos, color: "text-emerald-400" },
+              { label: "Field Staff",    value: counts.workers, color: "text-orange-400" },
             ].map((s, i) => (
-              <div key={i} className="glass-card hover-premium p-8">
-                <div className="mb-4">
-                  <p className="text-[10px] font-bold tracking-widest text-gray-500 uppercase">{s.label}</p>
-                </div>
-                <p className="text-4xl font-bold text-white tracking-tight">
+              <div key={i} className="card p-6 !rounded-2xl hover:border-purple-500/30 transition-all group">
+                <p className="text-[10px] font-bold tracking-widest text-gray-500 uppercase mb-4">{s.label}</p>
+                <p className={`text-4xl font-bold ${s.color} tracking-tight group-hover:scale-105 transition-transform origin-left`}>
                   <Counter value={s.value} />
                 </p>
               </div>
             ))}
           </div>
 
-
-          {/* ── ANALYTICS ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+          {/* ANALYTICS & TRENDS */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
             {/* Operational Flow */}
-            <div className="glass-card p-6 border border-white/10">
-              <h3 className="mb-4 font-semibold text-white">Operational Flow</h3>
-
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Open</span>
-                  <span className="text-red-400 font-bold">{openCount}</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-400">In Progress</span>
-                  <span className="text-yellow-400 font-bold">{progressCount}</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Resolved</span>
-                  <span className="text-green-400 font-bold">{resolvedCount}</span>
+            <div className="lg:col-span-4 card p-8 !rounded-3xl flex flex-col justify-between">
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-6">Operational Status</h3>
+                <div className="space-y-4">
+                  {[
+                    { label: "Critical Priority", value: criticalCount, color: "text-red-500", bg: "bg-red-500/10" },
+                    { label: "Active Missions", value: progressCount, color: "text-amber-500", bg: "bg-amber-500/10" },
+                    { label: "Resolved Nodes", value: resolvedCount, color: "text-emerald-500", bg: "bg-emerald-500/10" }
+                  ].map((stat) => (
+                    <div key={stat.label} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                      <span className="text-xs font-medium text-gray-400">{stat.label}</span>
+                      <span className={`text-xs font-bold ${stat.color} ${stat.bg} px-2.5 py-1 rounded-lg`}>{stat.value}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
-
-              <hr className="my-4 border-white/10" />
-
-              <h4 className="mb-2 text-sm text-gray-500 font-semibold uppercase tracking-wider">Urgency Levels</h4>
-
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Critical</span>
-                  <span className="text-red-500 font-bold">{criticalCount}</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-400">High</span>
-                  <span className="text-orange-400 font-bold">{highCount}</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Medium</span>
-                  <span className="text-yellow-400 font-bold">{mediumCount}</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Low</span>
-                  <span className="text-green-400 font-bold">{lowCount}</span>
-                </div>
+              <div className="mt-8 pt-6 border-t border-white/5">
+                <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest leading-relaxed">
+                  Last telemetry update: <span className="text-gray-400">{lastUpdate || "Synchronizing..."}</span>
+                </p>
               </div>
             </div>
 
-            {/* Categories */}
-            <div className="card lg:col-span-1">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-8">Incident Categories</h3>
-              <div className="space-y-5">
-                {categoryData.length === 0 ? (
-                   <p className="text-xs text-gray-600 text-center py-10 italic">Awaiting data...</p>
-                ) : categoryData.slice(0, 4).map(c => (
-                  <div key={c.name} className="space-y-2 group">
-                    <div className="flex justify-between items-end">
-                      <span className="text-xs font-bold text-gray-400 group-hover:text-gray-200 transition-colors truncate">{c.name}</span>
-                      <span className="text-[10px] font-black text-indigo-400">{c.percent}%</span>
-                    </div>
-                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-out" 
-                        style={{ width: `${c.percent}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
+            {/* Main Trend Chart */}
+            <div className="lg:col-span-8 card p-8 !rounded-3xl">
+              <div className="flex justify-between items-center mb-8">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500">Crisis Trajectory (7 Days)</h3>
+                <div className="flex gap-2">
+                  <span className="w-3 h-3 rounded-full bg-purple-600 shadow-[0_0_10px_rgba(147,51,234,0.5)]" />
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active Cases</span>
+                </div>
               </div>
-            </div>
-
-            {/* Incident Trend Chart */}
-            <div className="card lg:col-span-1">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-8">Incident Trend (Last 7 Days)</h3>
-              <div className="h-[300px] w-full" style={{ minHeight: '300px' }}>
-                <ResponsiveContainer width="100%" height="100%" minHeight={300}>
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={trendData}>
                     <defs>
-                      <linearGradient id="colorCases" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                      <linearGradient id="colorTrajectory" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#9333ea" stopOpacity={0.2}/>
+                        <stop offset="95%" stopColor="#9333ea" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
                     <Tooltip 
-                      contentStyle={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", fontSize: "10px" }}
+                      contentStyle={{ background: "rgba(15, 23, 42, 0.9)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "16px", fontSize: "11px", fontWeight: "bold" }}
+                      itemStyle={{ color: "#a855f7" }}
                     />
-                    <Area type="monotone" dataKey="cases" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorCases)" />
-                    <XAxis dataKey="day" stroke="#4b5563" fontSize={10} axisLine={false} tickLine={false} />
+                    <Area type="monotone" dataKey="cases" stroke="#9333ea" strokeWidth={3} fillOpacity={1} fill="url(#colorTrajectory)" />
+                    <XAxis dataKey="day" stroke="rgba(255,255,255,0.2)" fontSize={10} axisLine={false} tickLine={false} tick={{dy: 10}} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
             </div>
           </div>
 
-          {/* ── ROLE-SPECIFIC SECTION ── */}
-          <div className="mb-16">
+          {/* ROLE-SPECIFIC GRID */}
+          <div className="mb-12">
             {renderRoleSpecific()}
           </div>
 
-          {/* ── LIVE MAP ── */}
-          <div className="space-y-4 mb-20 px-2">
-            <div className="flex justify-between items-end mb-2">
-              <div className="space-y-1">
-                <h2 className="text-lg font-semibold text-white tracking-tight">Live Operations Map</h2>
-                {mapZoom >= 8 && <LiveLegend showCount={true} stats={{ critical: criticalCount, high: highCount, medium: mediumCount, low: lowCount, ngos: ngosCount }} />}
+          {/* LIVE OPERATIONS MAP */}
+          <div className="card p-4 !rounded-[2rem] overflow-hidden group">
+            <div className="p-6 flex justify-between items-center">
+              <div>
+                <h2 className="text-lg font-bold text-white mb-1">Live Grid Overlay</h2>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em]">Real-time Satellite Feed</p>
               </div>
-              <div className="flex gap-2 mb-2">
-                <button 
-                  onClick={() => router.push('/map')}
-                  className="bg-red-600 hover:bg-red-700 px-5 py-2 rounded-lg text-white text-[9px] font-black uppercase tracking-widest shadow-xl shadow-red-500/20 transition-all flex items-center justify-center gap-2"
+              <button 
+                onClick={() => router.push('/map')}
+                className="btn-secondary !py-2 !px-5 !text-[10px]"
+              >
+                Full Screen View
+              </button>
+            </div>
+            <div className="h-[500px] rounded-[1.5rem] overflow-hidden border border-white/5 shadow-inner">
                 >
                   🚨 SOS
                 </button>

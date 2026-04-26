@@ -5,9 +5,14 @@ const messageSchema = new mongoose.Schema({
   senderId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   message: { type: String, required: true },
   type: { type: String, enum: ["text", "image", "video", "voice"], default: "text" },
+  read: { type: Boolean, default: false },
   mediaUrl: { type: String }, // Used if type is not text
   createdAt: { type: Date, default: Date.now },
   expiresAt: { type: Date, expires: 0 } // TTL index
+});
+
+messageSchema.virtual('id').get(function() {
+  return this._id.toHexString();
 });
 
 // Set default expiry to 14 days from creation

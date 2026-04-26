@@ -62,8 +62,10 @@ function AIMatchContent() {
           const res = await axios.get(`${API_BASE}/api/ai/match/users/${p._id}`, {
             headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
           });
-          return { problem: p, volunteers: Array.isArray(res.data) ? res.data : [] };
+          const volunteers = res.data?.success ? res.data.data : (Array.isArray(res.data) ? res.data : []);
+          return { problem: p, volunteers: volunteers };
         } catch (err) {
+          console.error("Match error for problem", p._id, err);
           return { problem: p, volunteers: [] };
         }
       }));
@@ -85,11 +87,15 @@ function AIMatchContent() {
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem("token");
-      await axios.post(`${API_BASE}/api/ai/auto-assign/${problemId}`, {}, {
+      const res = await axios.post(`${API_BASE}/api/ai/auto-assign/${problemId}`, {}, {
         headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
       });
-      toast.success("AI Dispatcher engaged. Suggestions transmitted.");
-      fetchMatches();
+      if (res.data?.success) {
+        toast.success("AI Dispatcher engaged. Suggestions transmitted.");
+        fetchMatches();
+      } else {
+        throw new Error(res.data?.message || "Auto-assign failed");
+      }
     } catch (err) {
       toast.error("AI Auto-Assign failed.");
     } finally {
@@ -101,10 +107,14 @@ function AIMatchContent() {
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem("token");
-      await axios.post(`${API_BASE}/api/problems/${problemId}/assign`, { userId }, {
+      const res = await axios.post(`${API_BASE}/api/problems/${problemId}/assign`, { userId }, {
         headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
       });
-      toast.success("Assignment request transmitted.");
+      if (res.data?.success) {
+        toast.success("Assignment request transmitted.");
+      } else {
+        throw new Error(res.data?.message || "Request failed.");
+      }
     } catch (err) {
       toast.error(err.response?.data?.error || "Request failed.");
     } finally {

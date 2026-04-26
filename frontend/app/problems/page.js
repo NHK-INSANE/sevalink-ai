@@ -17,8 +17,8 @@ export default function ProblemsPage() {
   const [problems, setProblems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filterUrgency, setFilterUrgency] = useState("All");
-  const [filterStatus, setFilterStatus] = useState("All");
+  const [filterSeverity, setFilterSeverity] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [userLoc, setUserLoc] = useState(null);
 
@@ -32,11 +32,11 @@ export default function ProblemsPage() {
         url += `sort=${sortBy}&`;
       }
       
-      if (filterUrgency !== "All") url += `urgency=${filterUrgency}&`;
-      if (filterStatus !== "All") url += `status=${filterStatus}&`;
+      if (filterSeverity !== "all") url += `severity=${filterSeverity}&`;
+      if (filterStatus !== "all") url += `status=${filterStatus}&`;
 
       const res = await axios.get(url);
-      setProblems(res.data);
+      setProblems(res.data.success ? res.data.data : res.data);
     } catch (err) {
       toast.error("Failed to load mission data.");
     } finally {
@@ -64,7 +64,7 @@ export default function ProblemsPage() {
       socket.off("problem-updated");
       socket.off("problem-deleted");
     };
-  }, [sortBy, filterUrgency, filterStatus, userLoc]);
+  }, [sortBy, filterSeverity, filterStatus, userLoc]);
 
   const [errorShown, setErrorShown] = useState(false);
 
@@ -93,96 +93,99 @@ export default function ProblemsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#080B14] text-white">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)]">
       <Navbar />
       <PageWrapper className="pt-28 pb-20 px-6">
-        <div className="max-w-7xl mx-auto space-y-10">
+        <div className="max-w-7xl mx-auto">
           
-          {/* ── HEADER ── */}
-          <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-white/5 pb-8">
-            <div className="space-y-2">
-              <h1 className="text-4xl font-black tracking-tighter uppercase">Crisis Archive</h1>
-              <p className="text-gray-500 text-sm font-bold uppercase tracking-widest">Autonomous Incident Repository & Response Grid</p>
+          {/* HEADER */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Crisis Archive</h1>
+              <p className="text-sm text-gray-400 font-medium">Real-time incident monitoring and response coordination.</p>
             </div>
-            <Link href="/submit" className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-indigo-500/20 transition-all">
-              Initiate Report
+            <Link href="/submit" className="btn-primary !px-8 !py-4 shadow-xl shadow-purple-500/20">
+              Report Incident
             </Link>
           </div>
 
-          {/* ── TOOLBAR ── */}
-          <div className="flex flex-col lg:flex-row gap-6">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                placeholder="Search by ID, Title or Description..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-[#0f172a]/40 border border-white/10 rounded-[1.5rem] px-6 py-4 text-sm text-white focus:border-indigo-500 outline-none transition-all placeholder:text-gray-600"
-              />
-              <div className="absolute right-6 top-4 text-gray-700">🔍</div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Sort Dropdown */}
-              <select 
-                value={sortBy} 
-                onChange={(e) => setSortBy(e.target.value)}
-                className="bg-[#0f172a] border border-white/10 rounded-xl px-4 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-indigo-500 transition-all cursor-pointer"
-              >
-                <option value="newest">Latest</option>
-                <option value="nearest">Nearest</option>
-                <option value="score">Urgency</option>
-              </select>
-
-              {/* Urgency Filters */}
-              <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/5">
-                {["All", "Critical", "High", "Medium"].map(u => (
-                  <button
-                    key={u}
-                    onClick={() => setFilterUrgency(u)}
-                    className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterUrgency === u ? "bg-indigo-600 text-white" : "text-gray-500 hover:text-gray-300"}`}
-                  >
-                    {u}
-                  </button>
-                ))}
+          {/* TOOLBAR */}
+          <div className="space-y-6 mb-12">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+              {/* Search */}
+              <div className="lg:col-span-5 relative">
+                <input
+                  type="text"
+                  placeholder="Search incidents..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full !rounded-xl !py-3.5 pl-12"
+                />
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">🔍</span>
               </div>
 
-              {/* Status Filters */}
-              <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/5">
-                {["All", "Open", "In Progress", "Resolved"].map(s => (
-                  <button
-                    key={s}
-                    onClick={() => setFilterStatus(s)}
-                    className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterStatus === s ? "bg-white/10 text-white" : "text-gray-500 hover:text-gray-300"}`}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
+              {/* Filters & Sort */}
+              <div className="lg:col-span-7 flex flex-wrap items-center gap-3">
+                <select 
+                  value={sortBy} 
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="!rounded-xl !py-3 !px-4 !text-xs !font-bold uppercase tracking-wider !bg-white/5 border-none cursor-pointer"
+                >
+                  <option value="newest">Latest First</option>
+                  <option value="nearest">Nearest First</option>
+                  <option value="name">Sort by Name</option>
+                </select>
 
-              <button 
-                onClick={handleLocate}
-                className={`p-4 rounded-xl border transition-all ${userLoc ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-white/5 border-white/10 text-gray-400 hover:border-white/30"}`}
-                title="Locate Me"
-              >
-                📍
-              </button>
+                <div className="h-8 w-[1px] bg-white/10 hidden sm:block mx-1" />
+
+                <div className="flex gap-1.5 p-1 bg-white/[0.03] rounded-xl border border-white/5 overflow-x-auto">
+                  {["all", "critical", "high", "medium", "low"].map(u => (
+                    <button
+                      key={u}
+                      onClick={() => setFilterSeverity(u)}
+                      className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${filterSeverity === u ? "bg-purple-600 text-white" : "text-gray-500 hover:text-gray-300"}`}
+                    >
+                      {u}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex gap-1.5 p-1 bg-white/[0.03] rounded-xl border border-white/5 overflow-x-auto">
+                  {["all", "open", "in_progress", "resolved"].map(s => (
+                    <button
+                      key={s}
+                      onClick={() => setFilterStatus(s)}
+                      className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${filterStatus === s ? "bg-white/10 text-white" : "text-gray-500 hover:text-gray-300"}`}
+                    >
+                      {s.replace("_", " ")}
+                    </button>
+                  ))}
+                </div>
+
+                <button 
+                  onClick={handleLocate}
+                  className={`p-3 rounded-xl border transition-all ${userLoc ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}
+                  title="Locate Me"
+                >
+                  📍
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* ── GRID ── */}
+          {/* GRID */}
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="py-20 text-center bg-[#0f172a]/20 border border-white/5 rounded-[2rem] space-y-4">
-              <div className="text-4xl">🔎</div>
-              <p className="text-gray-400 font-bold">No problems found</p>
-              <p className="text-gray-600 text-xs uppercase tracking-widest">Adjust filters or check back later</p>
+            <div className="py-24 text-center bg-white/[0.02] border border-dashed border-white/10 rounded-3xl">
+              <div className="text-4xl mb-4">🔎</div>
+              <h2 className="text-lg font-bold text-white mb-2">No problems found</h2>
+              <p className="text-sm text-gray-500 max-w-xs mx-auto">Try changing filters or search terms to find specific reports.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filtered.map((p) => (
                 <ProblemCard key={p._id} problem={p} />
               ))}

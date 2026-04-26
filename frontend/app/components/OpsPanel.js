@@ -252,40 +252,43 @@ export default function OpsPanel() {
                         <div className="w-16 h-16 bg-purple-600/20 rounded-full flex items-center justify-center mx-auto mb-2 border border-purple-500/30">
                           <span className="text-3xl animate-pulse">🤖</span>
                         </div>
-                        <h3 className="text-sm font-black uppercase tracking-widest text-white">AI Copilot</h3>
+                        <h3 className="text-sm font-bold uppercase tracking-widest text-white">AI Copilot</h3>
                         <p className="text-[11px] text-gray-400 leading-relaxed">
                           "I am monitoring all crisis nodes. Ask me for guidance or resource allocation strategies."
                         </p>
                       </div>
 
-                      <div className="space-y-3">
-                        <button 
-                          onClick={() => consultAI("What should I do right now?")}
-                          className="w-full bg-white/5 hover:bg-white/10 border border-white/10 p-3 rounded-xl text-left text-[11px] text-gray-300 font-medium transition-all flex items-center gap-3"
-                        >
-                          <span className="text-purple-400">⚡</span> "What should I do right now?"
-                        </button>
-                        <button 
-                          onClick={() => consultAI("Summarize active crises")}
-                          className="w-full bg-white/5 hover:bg-white/10 border border-white/10 p-3 rounded-xl text-left text-[11px] text-gray-300 font-medium transition-all flex items-center gap-3"
-                        >
-                          <span className="text-purple-400">⚡</span> "Summarize active crises"
-                        </button>
-                        <button 
-                          onClick={() => consultAI("Analyze resource gaps")}
-                          className="w-full bg-white/5 hover:bg-white/10 border border-white/10 p-3 rounded-xl text-left text-[11px] text-gray-300 font-medium transition-all flex items-center gap-3"
-                        >
-                          <span className="text-purple-400">⚡</span> "Analyze resource gaps"
-                        </button>
+                      <div className="space-y-2">
+                        {[
+                          "What should I do right now?",
+                          "Summarize active crises",
+                          "Analyze resource gaps"
+                        ].map((query) => (
+                          <button 
+                            key={query}
+                            onClick={() => consultAI(query)}
+                            className="w-full bg-white/5 hover:bg-white/10 border border-white/10 p-3 rounded-xl text-left text-[11px] text-gray-300 font-medium transition-all flex items-center gap-3"
+                          >
+                            <span className="text-purple-400 text-xs">⚡</span> {query}
+                          </button>
+                        ))}
                       </div>
 
                       <div className="mt-auto pt-6 border-t border-white/10">
-                         <div className="relative">
+                         <div className="relative flex gap-2">
                             <input
+                              value={input}
+                              onChange={(e) => setInput(e.target.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && (consultAI(input), setInput(""))}
                               placeholder="Type to consult AI..."
-                              className="w-full bg-black/40 border border-purple-500/30 rounded-xl px-4 py-3 text-[12px] text-white outline-none focus:border-purple-500 transition-all placeholder:text-gray-600"
+                              className="flex-1 bg-black/40 border border-purple-500/30 rounded-xl px-4 py-3 text-[12px] text-white outline-none focus:border-purple-500 transition-all placeholder:text-gray-600"
                             />
-                            <div className="absolute right-3 top-3 text-[10px] font-black text-purple-500 animate-pulse">LIVE</div>
+                            <button 
+                              onClick={() => { consultAI(input); setInput(""); }}
+                              className="w-11 h-11 bg-purple-600 hover:bg-purple-500 rounded-xl flex items-center justify-center text-white transition-all shadow-lg shadow-purple-500/20"
+                            >
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                            </button>
                          </div>
                       </div>
                     </motion.div>

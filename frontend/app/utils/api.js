@@ -53,5 +53,5 @@ export const updateProblemStatus = (id, status) => {
 
 export const deleteProblem = (id, userId) => api.delete(`/api/problems/${id}`);
 
-export const getUrgency = (description) => api.post("/api/ai/urgency", { description }).catch(() => ({ urgency: "Low", score: 0 }));
+export const getSeverity = (description) => api.post("/api/ai/severity", { description }).catch(() => ({ severity: "low", score: 0 }));
 export const getAISuggestion = (text) => api.post("/api/ai/suggest", { text });

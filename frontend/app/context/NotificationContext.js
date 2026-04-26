@@ -12,6 +12,7 @@ export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const socketRef = useRef(null);
+  const lastAlertTimeRef = useRef(0);
 
   const fetchNotifications = async () => {
     try {
@@ -22,10 +23,10 @@ export const NotificationProvider = ({ children }) => {
         headers: { Authorization: `Bearer ${encodeURIComponent(token)}` }
       });
       const data = await res.json();
-      if (Array.isArray(data)) {
-        setNotifications(data);
-        setUnreadCount(data.filter(n => !n.isRead).length);
-      }
+      const notificationList = data.success ? data.data : (Array.isArray(data) ? data : []);
+      
+      setNotifications(notificationList);
+      setUnreadCount(notificationList.filter(n => !n.isRead).length);
     } catch (err) {
       console.error("Failed to fetch notifications:", err);
     }
@@ -77,6 +78,11 @@ export const NotificationProvider = ({ children }) => {
       });
       setUnreadCount(prev => prev + 1);
       
+      // 🛠 Alert Throttle (1 min)
+      const now = Date.now();
+      if (now - lastAlertTimeRef.current < 60000) return;
+      lastAlertTimeRef.current = now;
+
       let icon = "🔔";
       const type = notification.type?.toUpperCase();
       if (type === "SOS") icon = "🚨";

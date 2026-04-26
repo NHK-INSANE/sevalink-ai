@@ -15,19 +15,25 @@ function getDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-const matchSkills = (userSkills = [], problemSkills = []) => {
-  let match = 0;
+const matchSkills = (userSkills = [], problemSubCats = []) => {
   if (!Array.isArray(userSkills)) userSkills = [userSkills];
-  if (!Array.isArray(problemSkills)) problemSkills = [problemSkills];
+  if (!Array.isArray(problemSubCats)) problemSubCats = [problemSubCats];
 
-  problemSkills.forEach(skill => {
-    if (userSkills.some(s => s.toLowerCase().includes(skill.toLowerCase()))) match++;
-  });
+  const matched = userSkills.filter(skill =>
+    problemSubCats.some(sub => sub.toLowerCase().includes(skill.toLowerCase()))
+  ).length;
 
-  return (match / (problemSkills.length || 1)) * 100; 
+  return matched;
 };
 
 function calculateAIScore(user, problem) {
+  let score = 0;
+
+  // 1. Skill Match (20 points per matched sub-category)
+  const skillMatches = matchSkills(user.skills, problem.subCategories || [problem.category]);
+  score += skillMatches * 20;
+
+  // 2. Distance Scoring
   const distance = getDistance(
     problem.location?.lat,
     problem.location?.lng,
@@ -35,24 +41,19 @@ function calculateAIScore(user, problem) {
     user.location?.lng
   );
 
-  const skillScore = matchSkills(user.skills, problem.category || []); // Using category as skills for now if skills not explicitly in problem
-  
-  // availability: 1 if user.status === "available", else 0.5?
-  const availability = user.status === "available" ? 1 : 0.5;
+  if (distance < 10) score += 30;
+  else if (distance < 50) score += 10;
 
-  // Score = (skillScore * 0.5) + ((1 / distance) * 0.3) + (availability * 0.2);
-  // Normalize 1/distance to be meaningful, e.g., 100/distance capped at 100
-  const distFactor = Math.min(100, 100 / (distance || 1));
-  
-  const score = (skillScore * 0.5) + (distFactor * 0.3) + (availability * 20); // Scaled availability
+  // 3. Availability Bonus
+  if (user.availability !== false) score += 20;
 
-  // Smart Routing Priority
-  let priority = "LOW";
-  if (distance < 5) priority = "HIGH";
-  else if (distance < 20) priority = "MEDIUM";
+  // Final priority based on distance
+  let priority = "low";
+  if (distance < 5) priority = "high";
+  else if (distance < 20) priority = "medium";
 
   return {
-    score,
+    score: Math.min(score, 100),
     distance: distance.toFixed(2),
     priority
   };

@@ -23,13 +23,13 @@ function getDistance(lat1, lon1, lat2, lon2) {
 }
 
 // ── GET /api/problems — Get all problems with Smart Sorting & Filtering ──────
-router.get("/", async (req, res) => {
+router.get("/", async (req, res, next) => {
   try {
-    const { lat, lng, sort, urgency, status } = req.query;
+    const { lat, lng, sort, severity, status } = req.query;
     let query = {};
 
-    if (urgency) query.urgency = urgency.toUpperCase();
-    if (status && status !== "All") query.status = status.toUpperCase();
+    if (severity && severity !== "all") query.severity = severity.toLowerCase();
+    if (status && status !== "all") query.status = status.toLowerCase();
 
     console.log("🔍 Problem Query:", query);
     let problems = await Problem.find(query).sort({ createdAt: -1 }).lean();
@@ -65,16 +65,21 @@ router.get("/", async (req, res) => {
       });
     }
 
-    res.json(problems);
+    res.json({ success: true, data: problems });
   } catch (err) {
-    console.error("Fetch Problems Error:", err);
-    res.status(500).json({ error: "Failed to fetch problems." });
+    next(err);
   }
 });
 
 // ── POST /api/problems — Create a new problem ─────────────────────────────────
-router.post("/", auth, validate(problemSchema), async (req, res) => {
+router.post("/", auth, validate(problemSchema), async (req, res, next) => {
   try {
+    if (!req.user) {
+      const error = new Error("User not authenticated");
+      error.status = 401;
+      throw error;
+    }
+
     const user = await User.findById(req.user.id);
     const { generateTasks, getPriority } = require("../engine/intelligence");
     const aiTasks = generateTasks(req.body.description);
@@ -87,8 +92,13 @@ router.post("/", auth, validate(problemSchema), async (req, res) => {
 
     const problem = new Problem({
       ...req.body,
-      createdBy: req.user.id.toString(),
-      submittedByName: user ? user.name : "Anonymous",
+      category: req.body.category?.toLowerCase() || "general",
+      severity: req.body.severity?.toLowerCase() || req.body.urgency?.toLowerCase() || "medium",
+      status: "open",
+      reportedBy: {
+        userId: req.user.id.toString(),
+        name: user ? user.name : "Anonymous"
+      },
       tasks: taskObjects,
       timeline: [{ text: "🚨 Crisis reported to Neural Link. AI Task generation complete." }]
     });
@@ -106,10 +116,9 @@ router.post("/", auth, validate(problemSchema), async (req, res) => {
     const io = req.app.get("io");
     if (io) io.emit("new-problem", problem);
 
-    res.status(201).json(problem);
+    res.status(201).json({ success: true, data: problem });
   } catch (err) {
-    console.error("Create Problem Error:", err);
-    res.status(500).json({ error: "Failed to create problem" });
+    next(err);
   }
 });
 
@@ -121,20 +130,28 @@ const requestLimiter = rateLimit({
 });
 
 // ── POST /api/problems/:id/assign — Request to Join Team ───────────────────────
-router.post("/:id/assign", auth, authorize("volunteer", "worker", "ngo", "admin"), async (req, res) => {
+router.post("/:id/assign", auth, authorize("volunteer", "worker", "ngo", "admin"), async (req, res, next) => {
   try {
     const userId = req.user.id;
     const problem = await Problem.findById(req.params.id);
-    if (!problem) return res.status(404).json({ error: "Problem not found" });
+    if (!problem) {
+      const error = new Error("Problem not found");
+      error.status = 404;
+      throw error;
+    }
 
     // Check if already in team
     if (problem.team.find(m => m.userId.toString() === userId)) {
-      return res.status(400).json({ error: "Already assigned to this team." });
+      const error = new Error("Already assigned to this team.");
+      error.status = 400;
+      throw error;
     }
 
     // Check if already requested
     if (problem.requests.find(r => r.userId.toString() === userId && r.status === "pending")) {
-      return res.status(400).json({ error: "Request already pending." });
+      const error = new Error("Request already pending.");
+      error.status = 400;
+      throw error;
     }
 
     problem.requests.push({
@@ -156,9 +173,9 @@ router.post("/:id/assign", auth, authorize("volunteer", "worker", "ngo", "admin"
       });
     }
 
-    res.json({ success: true, message: "Assignment request transmitted." });
+    res.json({ success: true, data: { message: "Assignment request transmitted." } });
   } catch (err) {
-    res.status(500).json({ error: "Request failed." });
+    next(err);
   }
 });
 
@@ -223,7 +240,7 @@ router.post("/:id/team/respond", auth, authorize("ngo", "admin"), async (req, re
           isLeader: false
         });
         
-        problem.status = "IN PROGRESS";
+        problem.status = "in_progress";
         problem.timeline.push({ text: `Member accepted into tactical unit: ${request.role}` });
         
         // System Message for Chat
@@ -322,26 +339,32 @@ router.post("/:id/team/leader", auth, authorize("ngo", "admin"), async (req, res
 });
 
 // ── PATCH /api/problems/:id/status — Update status (Leader/NGO/Admin only) ────
-router.patch("/:id/status", auth, async (req, res) => {
+router.patch("/:id/status", auth, async (req, res, next) => {
   try {
     const { status } = req.body;
     const userId = req.user.id.toString();
 
     const problem = await Problem.findById(req.params.id);
-    if (!problem) return res.status(404).json({ error: "Problem not found" });
+    if (!problem) {
+      const error = new Error("Problem not found");
+      error.status = 404;
+      throw error;
+    }
 
     const isLeader = problem.team?.some(m => m.userId.toString() === userId && m.isLeader);
-    const isCreator = problem.createdBy === userId;
+    const isCreator = problem.reportedBy?.userId === userId;
     const isAdmin = req.user.role === "admin" || req.user.role === "ngo";
 
     if (!isLeader && !isCreator && !isAdmin) {
-      return res.status(403).json({ error: "Unauthorized status control." });
+      const error = new Error("Unauthorized status control.");
+      error.status = 403;
+      throw error;
     }
 
-    problem.status = status.toUpperCase();
+    problem.status = status.toLowerCase();
     problem.timeline.push({ text: `Status updated to ${status} by ${req.user.name}` });
     
-    if (status.toUpperCase() === "RESOLVED") {
+    if (status.toLowerCase() === "resolved") {
       problem.timeline.push({ text: "🏁 Operation concluded successfully." });
     }
 
@@ -350,9 +373,9 @@ router.patch("/:id/status", auth, async (req, res) => {
     const io = req.app.get("io");
     if (io) io.emit("problem-updated", problem);
 
-    res.json(problem);
+    res.json({ success: true, data: problem });
   } catch (err) {
-    res.status(500).json({ error: "Failed to update status" });
+    next(err);
   }
 });
 
@@ -362,7 +385,7 @@ router.delete("/:id", auth, async (req, res) => {
     const problem = await Problem.findById(req.params.id);
     if (!problem) return res.status(404).json({ error: "Problem not found" });
 
-    const isOwner = problem.createdBy === req.user.id.toString();
+    const isOwner = problem.reportedBy?.userId === req.user.id.toString();
     const isNGO = req.user.role === "ngo" || req.user.role === "admin";
 
     if (!isOwner && !isNGO) {
@@ -381,24 +404,35 @@ router.delete("/:id", auth, async (req, res) => {
 });
 
 // ── GET /api/problems/:id/team — Get full team details ────────────────────────
-router.get("/:id/team", auth, async (req, res) => {
+router.get("/:id/team", auth, async (req, res, next) => {
   try {
     const problem = await Problem.findById(req.params.id).populate("team leader", "name email role phone skills bio");
-    if (!problem) return res.status(404).json({ error: "Problem not found" });
+    if (!problem) {
+      const error = new Error("Problem not found");
+      error.status = 404;
+      throw error;
+    }
     res.json({
-      leader: problem.leader,
-      members: problem.team
+      success: true,
+      data: {
+        leader: problem.leader,
+        members: problem.team
+      }
     });
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch team data." });
+    next(err);
   }
 });
 
 // ── POST /api/problems/:id/ai-assign — AI Assignment Engine ───────────────────
-router.post("/:id/ai-assign", auth, authorize("ngo", "admin"), async (req, res) => {
+router.post("/:id/ai-assign", auth, authorize("ngo", "admin"), async (req, res, next) => {
   try {
     const problem = await Problem.findById(req.params.id);
-    if (!problem) return res.status(404).json({ error: "Problem not found" });
+    if (!problem) {
+      const error = new Error("Problem not found");
+      error.status = 404;
+      throw error;
+    }
 
     const users = await User.find({ 
       role: { $in: ["worker", "volunteer", "Worker", "Volunteer"] },
@@ -451,23 +485,31 @@ router.post("/:id/ai-assign", auth, authorize("ngo", "admin"), async (req, res) 
     problem.timeline.push({ text: `🧠 AI Intelligence: Recommended ${topMatches.length} specialists for mobilization.` });
     await problem.save();
 
-    res.json({ success: true, message: "AI recommendations processed." });
+    res.json({ success: true, data: { message: "AI recommendations processed." } });
   } catch (err) {
-    res.status(500).json({ error: "AI Dispatcher failed." });
+    next(err);
   }
 });
 
 // ── POST /api/problems/:id/tasks/auto-assign — Smart Assignment Flow ────────
-router.post("/:id/tasks/auto-assign", auth, async (req, res) => {
+router.post("/:id/tasks/auto-assign", auth, async (req, res, next) => {
   try {
     const { assignTask } = require("../engine/intelligence");
     const problem = await Problem.findById(req.params.id).populate("team");
-    if (!problem) return res.status(404).json({ error: "Problem not found" });
+    if (!problem) {
+      const error = new Error("Problem not found");
+      error.status = 404;
+      throw error;
+    }
 
     // Validate authority
     const isLeader = problem.leader?.toString() === req.user.id.toString();
     const isNGO = req.user.role === "ngo" || req.user.role === "admin";
-    if (!isLeader && !isNGO) return res.status(403).json({ error: "Only the Leader or Command can trigger auto-assign." });
+    if (!isLeader && !isNGO) {
+      const error = new Error("Only the Leader or Command can trigger auto-assign.");
+      error.status = 403;
+      throw error;
+    }
 
     let assignmentsMade = 0;
 
@@ -500,21 +542,29 @@ router.post("/:id/tasks/auto-assign", auth, async (req, res) => {
       if (io) io.emit("problem-updated", problem);
     }
 
-    res.json({ success: true, assignments: assignmentsMade });
+    res.json({ success: true, data: { assignments: assignmentsMade } });
   } catch (err) {
-    res.status(500).json({ error: "AI Assignment failed." });
+    next(err);
   }
 });
 
 // ── PATCH /api/problems/:id/tasks/:taskId — Edit/Override Task ──────────────
-router.patch("/:id/tasks/:taskId", auth, async (req, res) => {
+router.patch("/:id/tasks/:taskId", auth, async (req, res, next) => {
   try {
     const { title, priority, status, assignedTo, assignedName } = req.body;
     const problem = await Problem.findById(req.params.id);
-    if (!problem) return res.status(404).json({ error: "Problem not found" });
+    if (!problem) {
+      const error = new Error("Problem not found");
+      error.status = 404;
+      throw error;
+    }
 
     const task = problem.tasks.id(req.params.taskId);
-    if (!task) return res.status(404).json({ error: "Task not found" });
+    if (!task) {
+      const error = new Error("Task not found");
+      error.status = 404;
+      throw error;
+    }
 
     // Authority checks
     const isLeader = problem.leader?.toString() === req.user.id.toString();
@@ -522,7 +572,9 @@ router.patch("/:id/tasks/:taskId", auth, async (req, res) => {
     const isAssigned = task.assignedTo?.toString() === req.user.id.toString();
 
     if (!isLeader && !isNGO && !isAssigned) {
-      return res.status(403).json({ error: "Unauthorized access to task." });
+      const error = new Error("Unauthorized access to task.");
+      error.status = 403;
+      throw error;
     }
 
     // Only leaders/ngo can change everything. Assignee can only change status.
@@ -541,9 +593,9 @@ router.patch("/:id/tasks/:taskId", auth, async (req, res) => {
     const io = req.app.get("io");
     if (io) io.emit("problem-updated", problem);
 
-    res.json(problem);
+    res.json({ success: true, data: problem });
   } catch (err) {
-    res.status(500).json({ error: "Failed to update task." });
+    next(err);
   }
 });
 
@@ -571,17 +623,23 @@ router.delete("/:id/tasks/:taskId", auth, async (req, res) => {
 
 
 // ── GET /api/problems/:id/history — Fetch Mission Chat History ────────────────
-router.get("/:id/history", auth, async (req, res) => {
+router.get("/:id/history", auth, async (req, res, next) => {
   try {
     const problem = await Problem.findById(req.params.id);
-    if (!problem) return res.status(404).json({ error: "Mission not found" });
+    if (!problem) {
+      const error = new Error("Mission not found");
+      error.status = 404;
+      throw error;
+    }
 
     // Access Control: Team or NGO only
     const isMember = problem.team?.some(m => m.userId.toString() === req.user.id);
     const isNGO = req.user.role === "ngo" || req.user.role === "admin";
     
     if (!isMember && !isNGO) {
-      return res.status(403).json({ error: "Access Denied: Tactical Channel restricted." });
+      const error = new Error("Access Denied: Tactical Channel restricted.");
+      error.status = 403;
+      throw error;
     }
 
     // Part 8: 14 Day Retention Logic
@@ -595,24 +653,30 @@ router.get("/:id/history", auth, async (req, res) => {
       await problem.save();
     }
 
-    res.json(messages);
+    res.json({ success: true, data: messages });
   } catch (err) {
-    res.status(500).json({ error: "History fetch failed." });
+    next(err);
   }
 });
 
 // ── POST /api/problems/:id/messages — Fallback Message Save ────────────────────
-router.post("/:id/messages", auth, async (req, res) => {
+router.post("/:id/messages", auth, async (req, res, next) => {
   try {
     const { text, type } = req.body;
     const problem = await Problem.findById(req.params.id);
-    if (!problem) return res.status(404).json({ error: "Mission not found" });
+    if (!problem) {
+      const error = new Error("Mission not found");
+      error.status = 404;
+      throw error;
+    }
 
     const isMember = problem.team?.some(m => m.userId.toString() === req.user.id);
     const isNGO = req.user.role === "ngo" || req.user.role === "admin";
     
     if (!isMember && !isNGO) {
-      return res.status(403).json({ error: "Unauthorized" });
+      const error = new Error("Unauthorized");
+      error.status = 403;
+      throw error;
     }
 
     const newMessage = {
@@ -626,9 +690,9 @@ router.post("/:id/messages", auth, async (req, res) => {
     problem.messages.push(newMessage);
     await problem.save();
 
-    res.json(newMessage);
+    res.json({ success: true, data: newMessage });
   } catch (err) {
-    res.status(500).json({ error: "Save failed." });
+    next(err);
   }
 });
 
